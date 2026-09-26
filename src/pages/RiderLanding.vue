@@ -18,19 +18,12 @@ async function handleSubmit() {
 function goToBooking() {
   router.push('/')
 }
-
-const routes = [
-  { from: 'Cable Beach', to: 'Downtown Nassau', price: '$8', time: '12 min' },
-  { from: 'LPIA Airport', to: 'Bahamar', price: '$12', time: '18 min' },
-  { from: 'Paradise Island', to: 'Bay Street', price: '$10', time: '15 min' },
-  { from: 'Carmichael Road', to: 'Downtown', price: '$7', time: '10 min' },
-]
 </script>
 
 <template>
   <div class="min-h-screen bg-white text-[#1a1a1a] font-[var(--font-sans)]">
 
-    <!-- Nav Bar -->
+    <!-- ==================== NAV BAR ==================== -->
     <nav class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#1a1a1a]/8">
       <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         <router-link to="/" class="font-serif text-xl font-semibold">Ride<span class="text-[#58cc02]">Up</span></router-link>
@@ -50,389 +43,418 @@ const routes = [
       </div>
     </nav>
 
-    <!-- ==================== HERO ==================== -->
-    <section class="relative overflow-hidden bg-[#1a1a1a]">
-      <!-- Large decorative gradient blobs -->
-      <div class="absolute inset-0 pointer-events-none">
-        <div class="absolute -top-20 -left-20 w-[500px] h-[500px] rounded-full opacity-30" style="background: radial-gradient(circle, rgba(88,204,2,0.4), transparent 70%);"></div>
-        <div class="absolute top-1/2 -right-32 w-[400px] h-[400px] rounded-full opacity-20" style="background: radial-gradient(circle, rgba(88,204,2,0.5), transparent 70%);"></div>
-      </div>
-      <!-- Dot grid overlay -->
-      <div class="absolute inset-0 pointer-events-none opacity-[0.15]" style="background-image: radial-gradient(circle, rgba(255,255,255,0.4) 0.8px, transparent 0.8px); background-size: 28px 28px;"></div>
-      <!-- Floating map pins -->
-      <svg class="absolute top-16 left-[12%] opacity-[0.12] hidden md:block" width="32" height="44" viewBox="0 0 32 44" fill="none">
-        <path d="M16 0C7.16 0 0 7.16 0 16c0 12 16 28 16 28s16-16 16-28C32 7.16 24.84 0 16 0z" fill="#58cc02"/>
-        <circle cx="16" cy="16" r="6" fill="white"/>
-      </svg>
-      <svg class="absolute top-40 right-[18%] opacity-[0.08] hidden lg:block" width="24" height="33" viewBox="0 0 32 44" fill="none">
-        <path d="M16 0C7.16 0 0 7.16 0 16c0 12 16 28 16 28s16-16 16-28C32 7.16 24.84 0 16 0z" fill="#58cc02"/>
-        <circle cx="16" cy="16" r="6" fill="white"/>
-      </svg>
-      <svg class="absolute bottom-24 left-[25%] opacity-[0.06] hidden lg:block" width="20" height="28" viewBox="0 0 32 44" fill="none">
-        <path d="M16 0C7.16 0 0 7.16 0 16c0 12 16 28 16 28s16-16 16-28C32 7.16 24.84 0 16 0z" fill="white"/>
-        <circle cx="16" cy="16" r="6" fill="#1a1a1a"/>
-      </svg>
-      <!-- Decorative route line -->
-      <svg class="absolute right-[6%] top-12 opacity-[0.1] hidden lg:block" width="140" height="380" viewBox="0 0 140 380" fill="none">
-        <path d="M70 0 L70 60 Q70 100 110 120 L120 125 Q140 140 140 170 L140 230 Q140 270 100 290 L70 310 Q30 330 30 380" stroke="#58cc02" stroke-width="2.5" stroke-dasharray="6 5" />
-        <circle cx="70" cy="0" r="5" fill="#58cc02" />
-        <rect x="24" y="374" width="10" height="10" rx="2" fill="#58cc02" opacity="0.6" />
-      </svg>
+    <!-- ==================== HERO SECTION ==================== -->
+    <section class="relative overflow-hidden bg-[#fafdf6]">
+      <!-- Subtle dot pattern -->
+      <div class="absolute inset-0 pointer-events-none opacity-[0.4]" style="background-image: radial-gradient(circle, #58cc02 0.5px, transparent 0.5px); background-size: 40px 40px;"></div>
 
-      <div class="relative max-w-6xl mx-auto px-6 pt-16 pb-20 md:pt-20 md:pb-28 grid md:grid-cols-[1.1fr_0.9fr] gap-12 items-center">
-        <!-- Left: copy -->
-        <div>
-          <h1 class="font-serif text-[40px] sm:text-[52px] lg:text-[62px] leading-[1.05] font-medium tracking-tight mb-5 text-white">
-            Request a ride,<br>hop in, and go.
-          </h1>
-          <p class="text-white/60 text-[16px] leading-relaxed max-w-md mb-10">
-            Flat upfront pricing across New Providence. Verified, background-checked drivers. Available 24/7.
-          </p>
-          <div class="flex flex-wrap items-center gap-x-8 gap-y-4">
-            <div>
-              <div class="font-serif text-2xl font-semibold text-white">4.9<span class="text-[#58cc02]">&#9733;</span></div>
-              <div class="text-white/50 text-[12px]">Rider rating</div>
+      <div class="relative max-w-6xl mx-auto px-6 pt-16 pb-20 md:pt-20 md:pb-28">
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
+          <!-- Left: Copy + Booking Widget -->
+          <div>
+            <!-- Green label -->
+            <div class="inline-flex items-center gap-2 bg-[#58cc02]/10 text-[#58cc02] text-[13px] font-bold px-4 py-1.5 rounded-full mb-6">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              Book a Ride
             </div>
-            <div class="w-px h-9 bg-[#1cb0f6]/40 hidden sm:block"></div>
-            <div>
-              <div class="font-serif text-2xl font-semibold text-white">5 min</div>
-              <div class="text-white/50 text-[12px]">Avg. pickup</div>
+
+            <!-- Heading -->
+            <h1 class="font-serif text-[36px] sm:text-[48px] lg:text-[56px] leading-[1.08] font-semibold tracking-tight mb-5 text-[#1a1a1a]">
+              On Time, Safe &<br><span class="text-[#58cc02]">Affordable</span> Rides
+            </h1>
+            <p class="text-[#1a1a1a]/55 text-[16px] leading-relaxed max-w-lg mb-8">
+              Request a ride across Nassau with upfront pricing, verified drivers, and 24/7 availability. The modern way to get around New Providence.
+            </p>
+
+            <!-- Booking Widget Row -->
+            <div class="flex flex-col sm:flex-row gap-3 mb-10">
+              <button @click="goToBooking" class="flex-1 flex items-center gap-3 bg-white rounded-2xl px-5 py-4 text-left border border-[#1a1a1a]/8 hover:border-[#58cc02]/30 transition-colors shadow-sm">
+                <div class="w-3 h-3 rounded-full bg-[#58cc02] shrink-0"></div>
+                <span class="text-[14px] text-[#1a1a1a]/45">Pickup location</span>
+              </button>
+              <button @click="goToBooking" class="flex-1 flex items-center gap-3 bg-white rounded-2xl px-5 py-4 text-left border border-[#1a1a1a]/8 hover:border-[#58cc02]/30 transition-colors shadow-sm">
+                <div class="w-3 h-3 rounded-sm bg-[#1a1a1a]/25 shrink-0"></div>
+                <span class="text-[14px] text-[#1a1a1a]/45">Where to?</span>
+              </button>
+              <button @click="goToBooking"
+                      class="px-8 py-4 bg-[#58cc02] text-white font-bold rounded-2xl text-[15px] hover:bg-[#4ab300] transition-colors active:scale-[0.98] shadow-lg shadow-[#58cc02]/20 whitespace-nowrap">
+                Book Ride
+              </button>
             </div>
-            <div class="w-px h-9 bg-[#1cb0f6]/40 hidden sm:block"></div>
-            <div>
-              <div class="font-serif text-2xl font-semibold text-white">24/7</div>
-              <div class="text-white/50 text-[12px]">Availability</div>
+
+            <!-- Stats Row -->
+            <div class="flex flex-wrap items-center gap-x-10 gap-y-4">
+              <div>
+                <div class="font-serif text-[28px] font-bold text-[#1a1a1a]">1,000+</div>
+                <div class="text-[#1a1a1a]/45 text-[13px] font-medium">Travelers</div>
+              </div>
+              <div class="w-px h-10 bg-[#1a1a1a]/10 hidden sm:block"></div>
+              <div>
+                <div class="font-serif text-[28px] font-bold text-[#1a1a1a]">5,000+</div>
+                <div class="text-[#1a1a1a]/45 text-[13px] font-medium">Safe Rides</div>
+              </div>
+              <div class="w-px h-10 bg-[#1a1a1a]/10 hidden sm:block"></div>
+              <div>
+                <div class="font-serif text-[28px] font-bold text-[#1a1a1a]">24/7</div>
+                <div class="text-[#1a1a1a]/45 text-[13px] font-medium">Availability</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Car Illustration + Trust Badge + Feature Pills -->
+          <div class="relative flex items-center justify-center min-h-[400px] hidden lg:flex">
+            <!-- Background decorative circle -->
+            <div class="absolute w-[360px] h-[360px] rounded-full bg-[#58cc02]/[0.06] border border-[#58cc02]/10"></div>
+            <div class="absolute w-[280px] h-[280px] rounded-full bg-[#58cc02]/[0.04]"></div>
+
+            <!-- SVG Car Illustration -->
+            <svg class="relative z-10" width="320" height="180" viewBox="0 0 320 180" fill="none">
+              <!-- Road -->
+              <rect x="0" y="140" width="320" height="4" rx="2" fill="#1a1a1a" opacity="0.08"/>
+              <!-- Car body -->
+              <path d="M60 120 L70 80 Q75 65 90 60 L200 55 Q220 55 230 65 L260 120 Z" fill="#58cc02"/>
+              <!-- Car roof -->
+              <path d="M95 60 L105 35 Q110 25 125 25 L185 25 Q200 25 205 35 L215 60" fill="#4ab300"/>
+              <!-- Windows -->
+              <path d="M108 58 L115 38 Q118 32 128 32 L155 32 L155 58 Z" fill="white" opacity="0.85"/>
+              <path d="M162 58 L162 32 L190 32 Q198 32 200 38 L208 58 Z" fill="white" opacity="0.85"/>
+              <!-- Car bottom -->
+              <rect x="55" y="118" width="210" height="22" rx="8" fill="#4ab300"/>
+              <!-- Headlight -->
+              <rect x="255" y="108" width="12" height="10" rx="3" fill="#FFD700"/>
+              <!-- Taillight -->
+              <rect x="54" y="108" width="8" height="10" rx="3" fill="#ff4444" opacity="0.7"/>
+              <!-- Front wheel -->
+              <circle cx="100" cy="140" r="18" fill="#1a1a1a"/>
+              <circle cx="100" cy="140" r="10" fill="#555"/>
+              <circle cx="100" cy="140" r="4" fill="#888"/>
+              <!-- Rear wheel -->
+              <circle cx="220" cy="140" r="18" fill="#1a1a1a"/>
+              <circle cx="220" cy="140" r="10" fill="#555"/>
+              <circle cx="220" cy="140" r="4" fill="#888"/>
+              <!-- Ground shadow -->
+              <ellipse cx="160" cy="160" rx="130" ry="6" fill="#1a1a1a" opacity="0.06"/>
+              <!-- Motion lines -->
+              <line x1="30" y1="100" x2="10" y2="100" stroke="#58cc02" stroke-width="2" opacity="0.3" stroke-linecap="round"/>
+              <line x1="35" y1="110" x2="5" y2="110" stroke="#58cc02" stroke-width="2" opacity="0.2" stroke-linecap="round"/>
+              <line x1="38" y1="120" x2="15" y2="120" stroke="#58cc02" stroke-width="2" opacity="0.15" stroke-linecap="round"/>
+            </svg>
+
+            <!-- Trust Badge (floating card) -->
+            <div class="absolute top-4 right-0 bg-white rounded-2xl p-4 shadow-xl shadow-black/8 border border-[#1a1a1a]/5 trust-float">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-[#58cc02]/10 flex items-center justify-center">
+                  <svg class="w-5 h-5 text-[#58cc02]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="text-[13px] font-bold text-[#1a1a1a]">Trusted by Nassau Riders</div>
+                  <div class="text-[12px] text-[#1a1a1a]/50">4.9 <span class="text-[#58cc02]">&#9733;&#9733;&#9733;&#9733;&#9733;</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Floating pill: Comfortable -->
+            <div class="absolute bottom-16 left-0 bg-white rounded-full px-5 py-2.5 shadow-lg shadow-black/6 border border-[#1a1a1a]/5 pill-float-1">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#58cc02]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                </svg>
+                <span class="text-[13px] font-semibold text-[#1a1a1a]">Comfortable</span>
+              </div>
+            </div>
+
+            <!-- Floating pill: Safe Ride -->
+            <div class="absolute bottom-4 right-8 bg-white rounded-full px-5 py-2.5 shadow-lg shadow-black/6 border border-[#1a1a1a]/5 pill-float-2">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#58cc02]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+                <span class="text-[13px] font-semibold text-[#1a1a1a]">Safe Ride</span>
+              </div>
             </div>
           </div>
         </div>
-
-        <!-- Right: booking widget -->
-        <div class="bg-white rounded-2xl p-6 shadow-2xl shadow-black/20">
-          <h2 class="text-[15px] font-bold mb-4 text-[#1a1a1a]">Get a ride</h2>
-          <div class="space-y-2.5 mb-4">
-            <button @click="goToBooking" class="w-full flex items-center gap-3 bg-[#1a1a1a]/[0.04] rounded-xl px-4 py-3.5 text-left">
-              <div class="w-2.5 h-2.5 rounded-full bg-[#58cc02] shrink-0"></div>
-              <span class="text-[14px] text-[#1a1a1a]/50">Pickup location</span>
-            </button>
-            <button @click="goToBooking" class="w-full flex items-center gap-3 bg-[#1a1a1a]/[0.04] rounded-xl px-4 py-3.5 text-left">
-              <div class="w-2.5 h-2.5 rounded-sm bg-[#1a1a1a]/30 shrink-0"></div>
-              <span class="text-[14px] text-[#1a1a1a]/50">Where to?</span>
-            </button>
-          </div>
-          <button @click="goToBooking"
-                  class="w-full py-3.5 bg-[#58cc02] text-white font-bold rounded-xl text-[14px] hover:bg-[#4ab300] transition-colors active:scale-[0.99]">
-            See prices
-          </button>
-          <p class="text-[12px] text-[#1a1a1a]/50 text-center mt-3">No surge pricing. The price you see is the price you pay.</p>
-        </div>
-      </div>
-
-      <!-- Wave divider into next section -->
-      <div class="absolute bottom-0 left-0 right-0">
-        <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full" preserveAspectRatio="none">
-          <path d="M0 40C240 80 480 0 720 40C960 80 1200 0 1440 40V80H0V40Z" fill="white"/>
-        </svg>
       </div>
     </section>
 
-    <!-- ==================== WHY RIDEUP ==================== -->
-    <section class="relative overflow-hidden">
-      <!-- Floating decorative circles -->
-      <div class="absolute top-10 right-[10%] w-48 h-48 rounded-full border-2 border-[#58cc02]/8 hidden lg:block"></div>
-      <div class="absolute bottom-20 left-[5%] w-32 h-32 rounded-full border border-[#58cc02]/6 hidden lg:block"></div>
-      <div class="relative max-w-6xl mx-auto px-6 py-20 md:py-24">
-        <h2 class="font-serif text-[28px] sm:text-[36px] font-medium mb-4">Why ride with RideUp?</h2>
-        <p class="text-[#1a1a1a]/50 text-[15px] mb-12 max-w-lg">Everything you need for a smooth ride across New Providence.</p>
+    <!-- ==================== BECOME A DRIVER ==================== -->
+    <section class="relative overflow-hidden bg-white">
+      <div class="max-w-6xl mx-auto px-6 py-20 md:py-28">
+        <!-- Top: Label + Heading + Description -->
+        <div class="grid lg:grid-cols-2 gap-8 mb-14">
+          <div>
+            <div class="inline-flex items-center gap-2 bg-[#58cc02]/10 text-[#58cc02] text-[13px] font-bold px-4 py-1.5 rounded-full mb-5">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+              Become a Driver
+            </div>
+            <h2 class="font-serif text-[30px] sm:text-[40px] lg:text-[46px] font-semibold leading-[1.1] text-[#1a1a1a]">
+              Drive on your time,<br>Earn when you want
+            </h2>
+          </div>
+          <div class="flex items-end">
+            <p class="text-[#1a1a1a]/55 text-[16px] leading-relaxed max-w-md">
+              Join the RideUp driver network in Nassau. Keep 80% of every fare, set your own hours, and get paid instantly. No boss, no office, no limits.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature Cards + Driver Avatar -->
         <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <div class="bg-[#58cc02]/[0.06] rounded-2xl p-7 border border-[#58cc02]/10 hover:border-[#58cc02]/20 transition-colors">
-            <div class="w-14 h-14 rounded-2xl bg-[#58cc02]/15 flex items-center justify-center mb-5">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[#58cc02]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <!-- Card 1: Green gradient -->
+          <div class="rounded-3xl p-7 bg-gradient-to-br from-[#58cc02] to-[#3da301] text-white relative overflow-hidden">
+            <div class="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10"></div>
+            <div class="relative">
+              <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-5">
+                <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <h3 class="text-[18px] font-bold mb-2">Reliable Income</h3>
+              <p class="text-white/80 text-[14px] leading-relaxed">Keep 80% of every fare. Earn more per ride than any other platform in Nassau.</p>
+            </div>
+          </div>
+
+          <!-- Card 2: White -->
+          <div class="rounded-3xl p-7 bg-white border border-[#1a1a1a]/8 hover:border-[#58cc02]/20 transition-colors">
+            <div class="w-12 h-12 rounded-2xl bg-[#58cc02]/10 flex items-center justify-center mb-5">
+              <svg class="w-6 h-6 text-[#58cc02]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
             </div>
-            <h3 class="text-[17px] font-bold mb-2">Upfront pricing</h3>
-            <p class="text-[#1a1a1a]/50 text-[14px] leading-relaxed">Know the exact fare before you book. No surge, no surprises — the price you see is the price you pay.</p>
+            <h3 class="text-[18px] font-bold mb-2 text-[#1a1a1a]">Flexibility in Scheduling</h3>
+            <p class="text-[#1a1a1a]/50 text-[14px] leading-relaxed">Drive when it works for you. Morning, evening, weekends -- you decide your hours.</p>
           </div>
-          <div class="bg-[#58cc02]/[0.06] rounded-2xl p-7 border border-[#58cc02]/10 hover:border-[#58cc02]/20 transition-colors">
-            <div class="w-14 h-14 rounded-2xl bg-[#58cc02]/15 flex items-center justify-center mb-5">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[#58cc02]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+
+          <!-- Card 3: White -->
+          <div class="rounded-3xl p-7 bg-white border border-[#1a1a1a]/8 hover:border-[#58cc02]/20 transition-colors">
+            <div class="w-12 h-12 rounded-2xl bg-[#58cc02]/10 flex items-center justify-center mb-5">
+              <svg class="w-6 h-6 text-[#58cc02]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
             </div>
-            <h3 class="text-[17px] font-bold mb-2">Verified, safe drivers</h3>
-            <p class="text-[#1a1a1a]/50 text-[14px] leading-relaxed">Every driver is verified, background-checked, and vehicle-inspected before their first ride. Track your trip in real-time.</p>
+            <h3 class="text-[18px] font-bold mb-2 text-[#1a1a1a]">Instant Payment Available</h3>
+            <p class="text-[#1a1a1a]/50 text-[14px] leading-relaxed">Cash out your earnings instantly. No waiting for weekly payouts.</p>
           </div>
-          <div class="bg-[#58cc02]/[0.06] rounded-2xl p-7 border border-[#58cc02]/10 hover:border-[#58cc02]/20 transition-colors">
-            <div class="w-14 h-14 rounded-2xl bg-[#58cc02]/15 flex items-center justify-center mb-5">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[#58cc02]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+
+          <!-- Driver Avatar Placeholder -->
+          <div class="rounded-3xl bg-[#f0f9e8] border border-[#58cc02]/10 flex items-center justify-center relative overflow-hidden">
+            <!-- Decorative shapes -->
+            <div class="absolute -bottom-6 -right-6 w-28 h-28 rounded-full bg-[#58cc02]/10"></div>
+            <div class="absolute top-6 left-6 w-8 h-8 rounded-full bg-[#58cc02]/15"></div>
+            <!-- Driver silhouette -->
+            <div class="text-center py-8">
+              <div class="w-20 h-20 rounded-full bg-[#58cc02]/15 mx-auto mb-4 flex items-center justify-center">
+                <svg class="w-10 h-10 text-[#58cc02]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+              </div>
+              <div class="text-[14px] font-bold text-[#1a1a1a]">Join Today</div>
+              <div class="text-[12px] text-[#1a1a1a]/45 mt-1">200+ Drivers Active</div>
             </div>
-            <h3 class="text-[17px] font-bold mb-2">Fast pickups</h3>
-            <p class="text-[#1a1a1a]/50 text-[14px] leading-relaxed">Average pickup in under 5 minutes. Drivers across New Providence available around the clock.</p>
           </div>
-          <div class="bg-[#58cc02]/[0.06] rounded-2xl p-7 border border-[#58cc02]/10 hover:border-[#58cc02]/20 transition-colors">
-            <div class="w-14 h-14 rounded-2xl bg-[#58cc02]/15 flex items-center justify-center mb-5">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[#58cc02]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-              </svg>
-            </div>
-            <h3 class="text-[17px] font-bold mb-2">Local support</h3>
-            <p class="text-[#1a1a1a]/50 text-[14px] leading-relaxed">Real people in Nassau you can call anytime. Not a chatbot, not a call center overseas.</p>
-          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="mt-10 text-center">
+          <router-link to="/drive" class="inline-flex items-center gap-2 px-8 py-4 bg-[#1a1a1a] text-white font-bold rounded-2xl text-[15px] hover:bg-[#1a1a1a]/90 transition-colors active:scale-[0.98]">
+            Start Driving
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+            </svg>
+          </router-link>
         </div>
       </div>
     </section>
 
-    <!-- ==================== PHONE MOCKUP + HOW IT WORKS ==================== -->
-    <section class="relative overflow-hidden bg-[#f0f9e8]">
-      <!-- Wave divider top -->
-      <div class="absolute top-0 left-0 right-0 -translate-y-[1px]">
-        <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full" preserveAspectRatio="none">
-          <path d="M0 60V20C360 60 720 0 1080 20C1260 30 1380 50 1440 60H0Z" fill="#f0f9e8"/>
-        </svg>
-      </div>
-      <!-- Decorative topographic lines -->
-      <svg class="absolute left-0 top-1/4 opacity-[0.06] hidden lg:block" width="300" height="300" viewBox="0 0 300 300" fill="none">
-        <ellipse cx="0" cy="150" rx="280" ry="100" stroke="#1a1a1a" stroke-width="1"/>
-        <ellipse cx="0" cy="150" rx="220" ry="80" stroke="#1a1a1a" stroke-width="1"/>
-        <ellipse cx="0" cy="150" rx="160" ry="60" stroke="#1a1a1a" stroke-width="1"/>
-        <ellipse cx="0" cy="150" rx="100" ry="40" stroke="#1a1a1a" stroke-width="1"/>
-      </svg>
+    <!-- ==================== CHOOSE YOUR PERFECT RIDE ==================== -->
+    <section class="relative overflow-hidden bg-[#fafdf6]">
+      <div class="max-w-6xl mx-auto px-6 py-20 md:py-28">
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
+          <!-- Left: Big Typography -->
+          <div>
+            <h2 class="font-serif text-[48px] sm:text-[64px] lg:text-[80px] font-bold leading-[0.95] tracking-tight">
+              <span class="text-[#1a1a1a]">CHOOSE<br>YOUR</span><br>
+              <span class="text-[#58cc02]">PERFECT<br>RIDE</span>
+            </h2>
+          </div>
 
-      <div class="relative max-w-6xl mx-auto px-6 py-20 md:py-28 grid md:grid-cols-2 gap-16 items-center">
-        <!-- Left: Phone mockup -->
-        <div class="flex justify-center">
-          <div class="relative">
-            <!-- Phone frame -->
-            <div class="w-[260px] h-[520px] bg-[#1a1a1a] rounded-[40px] p-3 shadow-2xl shadow-[#1a1a1a]/20">
-              <div class="w-full h-full bg-white rounded-[30px] overflow-hidden flex flex-col">
-                <!-- Phone status bar -->
-                <div class="bg-[#1a1a1a] text-white px-5 pt-3 pb-4">
-                  <div class="flex justify-between text-[10px] mb-3 opacity-60">
-                    <span>9:41</span>
-                    <div class="flex gap-1">
-                      <div class="w-4 h-2 border border-white/60 rounded-sm"><div class="w-3 h-1 bg-white/60 rounded-sm m-px"></div></div>
-                    </div>
-                  </div>
-                  <div class="text-[15px] font-bold font-serif">Ride<span class="text-[#58cc02]">Up</span></div>
+          <!-- Right: Description + Vehicle Options -->
+          <div>
+            <p class="text-[#1a1a1a]/55 text-[16px] leading-relaxed mb-10 max-w-md">
+              Whether you need an everyday ride or something more comfortable, RideUp has the right vehicle for every trip across Nassau and New Providence.
+            </p>
+
+            <!-- Vehicle Option Cards -->
+            <div class="space-y-4">
+              <!-- Standard -->
+              <div class="flex items-center gap-5 bg-white rounded-2xl p-5 border border-[#1a1a1a]/8 hover:border-[#58cc02]/20 transition-colors cursor-pointer group" @click="goToBooking">
+                <div class="w-14 h-14 rounded-2xl bg-[#58cc02]/10 flex items-center justify-center shrink-0">
+                  <svg class="w-7 h-5 text-[#58cc02]" viewBox="0 0 28 20" fill="currentColor">
+                    <path d="M4 14l2-6h16l2 6H4zm3 4a2 2 0 100-4 2 2 0 000 4zm14 0a2 2 0 100-4 2 2 0 000 4z"/>
+                  </svg>
                 </div>
-                <!-- App content mockup -->
-                <div class="flex-1 p-4 bg-white">
-                  <div class="text-[13px] font-bold text-[#1a1a1a] mb-3">Where are you going?</div>
-                  <div class="space-y-2 mb-4">
-                    <div class="flex items-center gap-2 bg-[#1a1a1a]/[0.04] rounded-lg px-3 py-2.5">
-                      <div class="w-2 h-2 rounded-full bg-[#58cc02]"></div>
-                      <span class="text-[11px] text-[#1a1a1a]/40">Pickup location</span>
-                    </div>
-                    <div class="flex items-center gap-2 bg-[#1a1a1a]/[0.04] rounded-lg px-3 py-2.5">
-                      <div class="w-2 h-2 rounded-sm bg-[#1a1a1a]/25"></div>
-                      <span class="text-[11px] text-[#1a1a1a]/40">Where to?</span>
-                    </div>
-                  </div>
-                  <!-- Mini map area -->
-                  <div class="rounded-xl bg-[#58cc02]/[0.08] h-28 flex items-center justify-center mb-3 relative overflow-hidden">
-                    <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle, #1a1a1a 0.5px, transparent 0.5px); background-size: 12px 12px;"></div>
-                    <!-- Mini route -->
-                    <svg class="relative" width="80" height="60" viewBox="0 0 80 60" fill="none">
-                      <path d="M15 50 Q15 25 40 25 Q65 25 65 10" stroke="#58cc02" stroke-width="2" stroke-dasharray="4 3"/>
-                      <circle cx="15" cy="50" r="4" fill="#58cc02"/>
-                      <rect x="61" y="6" width="8" height="8" rx="1.5" fill="#1a1a1a"/>
-                    </svg>
-                  </div>
-                  <!-- Ride options -->
-                  <div class="space-y-1.5">
-                    <div class="flex items-center justify-between bg-[#58cc02]/10 rounded-lg px-3 py-2 border border-[#58cc02]/20">
-                      <div class="flex items-center gap-2">
-                        <svg class="w-5 h-4 text-[#1a1a1a]" viewBox="0 0 24 16" fill="currentColor"><path d="M3 11l1.5-5h13l1.5 5H3zm2.5 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm13 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg>
-                        <span class="text-[10px] font-semibold text-[#1a1a1a]">Standard</span>
-                      </div>
-                      <span class="text-[11px] font-bold text-[#1a1a1a]">$8.50</span>
-                    </div>
-                    <div class="flex items-center justify-between bg-[#1a1a1a]/[0.03] rounded-lg px-3 py-2">
-                      <div class="flex items-center gap-2">
-                        <svg class="w-5 h-4 text-[#1a1a1a]/40" viewBox="0 0 24 16" fill="currentColor"><path d="M3 11l1.5-5h13l1.5 5H3zm2.5 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm13 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg>
-                        <span class="text-[10px] font-medium text-[#1a1a1a]/50">Comfort</span>
-                      </div>
-                      <span class="text-[11px] font-bold text-[#1a1a1a]/50">$12.00</span>
-                    </div>
-                  </div>
+                <div class="flex-1">
+                  <h4 class="text-[16px] font-bold text-[#1a1a1a] group-hover:text-[#58cc02] transition-colors">Standard</h4>
+                  <p class="text-[13px] text-[#1a1a1a]/45">Everyday rides. Affordable, reliable, and always nearby.</p>
                 </div>
-                <!-- Bottom button -->
-                <div class="px-4 pb-5">
-                  <div class="bg-[#58cc02] text-white text-[12px] font-bold text-center py-2.5 rounded-xl">Confirm ride</div>
+                <svg class="w-5 h-5 text-[#1a1a1a]/25 group-hover:text-[#58cc02] transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+              </div>
+
+              <!-- Comfort -->
+              <div class="flex items-center gap-5 bg-white rounded-2xl p-5 border border-[#1a1a1a]/8 hover:border-[#58cc02]/20 transition-colors cursor-pointer group" @click="goToBooking">
+                <div class="w-14 h-14 rounded-2xl bg-[#1a1a1a]/[0.06] flex items-center justify-center shrink-0">
+                  <svg class="w-7 h-5 text-[#1a1a1a]" viewBox="0 0 28 20" fill="currentColor">
+                    <path d="M4 14l2-6h16l2 6H4zm3 4a2 2 0 100-4 2 2 0 000 4zm14 0a2 2 0 100-4 2 2 0 000 4z"/>
+                    <circle cx="14" cy="7" r="2" fill="#58cc02" opacity="0.6"/>
+                  </svg>
+                </div>
+                <div class="flex-1">
+                  <h4 class="text-[16px] font-bold text-[#1a1a1a] group-hover:text-[#58cc02] transition-colors">Comfort</h4>
+                  <p class="text-[13px] text-[#1a1a1a]/45">Premium vehicles. Extra legroom, newer models, top-rated drivers.</p>
+                </div>
+                <svg class="w-5 h-5 text-[#1a1a1a]/25 group-hover:text-[#58cc02] transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SAFETY SECTION ==================== -->
+    <section class="relative overflow-hidden bg-white">
+      <div class="max-w-6xl mx-auto px-6 py-20 md:py-28">
+        <div class="grid lg:grid-cols-2 gap-16 items-center">
+          <!-- Left: Copy + Cards -->
+          <div>
+            <!-- Green label -->
+            <div class="inline-flex items-center gap-2 bg-[#58cc02]/10 text-[#58cc02] text-[13px] font-bold px-4 py-1.5 rounded-full mb-5">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+              Stay Safe with Us
+            </div>
+
+            <h2 class="font-serif text-[30px] sm:text-[40px] lg:text-[46px] font-semibold leading-[1.1] text-[#1a1a1a] mb-5">
+              Your Safety always comes first without any compromise
+            </h2>
+            <p class="text-[#1a1a1a]/55 text-[16px] leading-relaxed mb-10 max-w-lg">
+              Every RideUp driver is background-checked and verified. Share your trip with family, track your ride in real-time, and reach our local support team anytime -- day or night.
+            </p>
+
+            <!-- Safety Feature Cards -->
+            <div class="grid sm:grid-cols-2 gap-4">
+              <!-- 24/7 Local Support -->
+              <div class="rounded-2xl p-6 bg-[#fafdf6] border border-[#58cc02]/10">
+                <div class="w-12 h-12 rounded-2xl bg-[#58cc02]/10 flex items-center justify-center mb-4">
+                  <svg class="w-6 h-6 text-[#58cc02]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                  </svg>
+                </div>
+                <h4 class="text-[16px] font-bold text-[#1a1a1a] mb-1">24/7 Local Support</h4>
+                <p class="text-[13px] text-[#1a1a1a]/45 leading-relaxed">Real people in Nassau ready to help. Call anytime, get answers fast.</p>
+              </div>
+
+              <!-- Track Your Ride -->
+              <div class="rounded-2xl p-6 bg-[#fafdf6] border border-[#58cc02]/10">
+                <div class="w-12 h-12 rounded-2xl bg-[#58cc02]/10 flex items-center justify-center mb-4">
+                  <svg class="w-6 h-6 text-[#58cc02]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                </div>
+                <h4 class="text-[16px] font-bold text-[#1a1a1a] mb-1">Track Your Ride</h4>
+                <p class="text-[13px] text-[#1a1a1a]/45 leading-relaxed">Share your live location with family and friends on every trip.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Family/Safety Illustration -->
+          <div class="relative flex items-center justify-center">
+            <!-- Main shape: rounded rectangle with subtle styling -->
+            <div class="w-full max-w-[400px] aspect-square rounded-3xl bg-[#f0f9e8] border border-[#58cc02]/10 relative overflow-hidden flex items-center justify-center">
+              <!-- Decorative circles -->
+              <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[#58cc02]/[0.08]"></div>
+              <div class="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-[#58cc02]/[0.06]"></div>
+
+              <!-- Shield + People SVG -->
+              <svg class="relative z-10" width="180" height="200" viewBox="0 0 180 200" fill="none">
+                <!-- Shield -->
+                <path d="M90 20 L150 45 L150 100 Q150 155 90 180 Q30 155 30 100 L30 45 Z" fill="#58cc02" opacity="0.15" stroke="#58cc02" stroke-width="2"/>
+                <!-- Checkmark in shield -->
+                <path d="M70 100 L85 115 L115 80" stroke="#58cc02" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                <!-- Person 1 -->
+                <circle cx="70" cy="55" r="8" fill="#58cc02" opacity="0.3"/>
+                <path d="M58 72 Q58 64 70 64 Q82 64 82 72" fill="#58cc02" opacity="0.2"/>
+                <!-- Person 2 -->
+                <circle cx="110" cy="55" r="8" fill="#58cc02" opacity="0.3"/>
+                <path d="M98 72 Q98 64 110 64 Q122 64 122 72" fill="#58cc02" opacity="0.2"/>
+                <!-- Person 3 (child) -->
+                <circle cx="90" cy="145" r="6" fill="#58cc02" opacity="0.3"/>
+                <path d="M80 158 Q80 152 90 152 Q100 152 100 158" fill="#58cc02" opacity="0.2"/>
+              </svg>
+
+              <!-- Floating verified badge -->
+              <div class="absolute top-6 right-6 bg-white rounded-xl px-3 py-2 shadow-md">
+                <div class="flex items-center gap-1.5">
+                  <svg class="w-4 h-4 text-[#58cc02]" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                  </svg>
+                  <span class="text-[11px] font-bold text-[#1a1a1a]">Verified</span>
                 </div>
               </div>
             </div>
-            <!-- Glow behind phone -->
-            <div class="absolute -inset-8 -z-10 rounded-full opacity-40" style="background: radial-gradient(circle, rgba(88,204,2,0.2), transparent 70%);"></div>
-          </div>
-        </div>
-
-        <!-- Right: How it works -->
-        <div>
-          <h2 class="font-serif text-[28px] sm:text-[36px] font-medium mb-4">How RideUp works</h2>
-          <p class="text-[#1a1a1a]/50 text-[15px] mb-10">Get from A to B in three easy steps.</p>
-          <div class="space-y-8">
-            <div class="flex gap-5">
-              <div class="w-12 h-12 rounded-2xl bg-[#1cb0f6] text-white font-bold text-[18px] flex items-center justify-center shrink-0 shadow-lg shadow-[#1cb0f6]/20">1</div>
-              <div>
-                <h3 class="text-[17px] font-bold mb-1.5">Request</h3>
-                <p class="text-[#1a1a1a]/50 text-[14px] leading-relaxed">Enter your pickup and destination. See the fare upfront before you book.</p>
-              </div>
-            </div>
-            <div class="flex gap-5">
-              <div class="w-12 h-12 rounded-2xl bg-[#1cb0f6] text-white font-bold text-[18px] flex items-center justify-center shrink-0 shadow-lg shadow-[#1cb0f6]/20">2</div>
-              <div>
-                <h3 class="text-[17px] font-bold mb-1.5">Ride</h3>
-                <p class="text-[#1a1a1a]/50 text-[14px] leading-relaxed">A nearby driver accepts your request. Track their arrival in real-time and hop in.</p>
-              </div>
-            </div>
-            <div class="flex gap-5">
-              <div class="w-12 h-12 rounded-2xl bg-[#1cb0f6] text-white font-bold text-[18px] flex items-center justify-center shrink-0 shadow-lg shadow-[#1cb0f6]/20">3</div>
-              <div>
-                <h3 class="text-[17px] font-bold mb-1.5">Arrive</h3>
-                <p class="text-[#1a1a1a]/50 text-[14px] leading-relaxed">Get dropped off at your destination. Pay automatically by card. Rate your driver.</p>
-              </div>
-            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ==================== NASSAU VISUAL BANNER ==================== -->
-    <section class="relative overflow-hidden h-[320px] md:h-[400px]" style="background: linear-gradient(135deg, #0c3b2e 0%, #1a1a1a 30%, #1a3a2f 50%, #0f524a 75%, #1b6b5a 100%);">
-      <!-- Ocean shimmer layers -->
-      <div class="absolute inset-0 pointer-events-none opacity-[0.12]" style="background: repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(88,204,2,0.15) 40px, rgba(88,204,2,0.15) 41px);"></div>
-      <div class="absolute inset-0 pointer-events-none opacity-[0.08]" style="background: repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,0.06) 60px, rgba(255,255,255,0.06) 61px);"></div>
-      <!-- Warm light glow (sun) -->
-      <div class="absolute top-6 right-[20%] w-32 h-32 rounded-full opacity-20" style="background: radial-gradient(circle, rgba(255,220,130,0.6), transparent 70%);"></div>
-      <!-- Palm silhouettes -->
-      <svg class="absolute bottom-0 left-[5%] opacity-[0.12] hidden md:block" width="180" height="280" viewBox="0 0 180 280" fill="none">
-        <path d="M90 280 L88 180 Q60 140 20 120 Q50 135 70 160 Q82 172 86 178 L84 120 Q40 90 10 60 Q45 85 75 110 Q82 118 84 120 L82 80 Q50 50 30 20 Q55 45 78 72 Q80 76 82 80 L80 40 Q60 10 45 0 Q65 15 80 38 L80 280Z" fill="white"/>
-        <path d="M92 180 Q120 140 160 125 Q130 138 105 158 Q94 168 92 175Z" fill="white"/>
-        <path d="M94 120 Q130 85 165 75 Q135 88 108 112 Q98 118 94 120Z" fill="white"/>
-      </svg>
-      <svg class="absolute bottom-0 right-[8%] opacity-[0.08]" width="140" height="220" viewBox="0 0 140 220" fill="none">
-        <path d="M70 220 L68 140 Q40 110 10 90 Q38 105 58 125 Q65 132 67 138 L66 90 Q30 60 5 30 Q35 55 60 82 Q64 86 66 90 L65 50 Q40 20 25 0 Q45 18 64 46 L64 220Z" fill="white"/>
-        <path d="M72 140 Q100 110 130 100 Q105 112 82 130 Q74 136 72 138Z" fill="white"/>
-      </svg>
-      <!-- Horizon line -->
-      <div class="absolute bottom-[35%] left-0 right-0 h-px bg-white/[0.06]"></div>
-      <!-- Water reflection -->
-      <div class="absolute bottom-0 left-0 right-0 h-[35%] opacity-[0.08]" style="background: linear-gradient(180deg, rgba(88,204,2,0.2), rgba(88,204,2,0.05));"></div>
-      <!-- Content overlay -->
-      <div class="relative h-full flex items-center justify-center text-center px-6">
-        <div>
-          <p class="text-white/50 text-[13px] font-semibold tracking-wide uppercase mb-3">Nassau &middot; New Providence &middot; Paradise Island</p>
-          <h2 class="font-serif text-white text-[28px] sm:text-[36px] md:text-[42px] font-medium leading-tight mb-3">Your island. Your ride.</h2>
-          <p class="text-white/45 text-[15px] max-w-md mx-auto">Built by locals, for locals. Covering every corner of New Providence — from Cable Beach to the Fish Fry.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ==================== POPULAR ROUTES ==================== -->
-    <section class="relative overflow-hidden">
-      <!-- Decorative circle ring -->
-      <div class="absolute -bottom-16 -right-16 w-72 h-72 rounded-full border-2 border-[#58cc02]/6 hidden lg:block"></div>
-      <div class="max-w-6xl mx-auto px-6 py-20 md:py-24">
-        <h2 class="font-serif text-[28px] sm:text-[36px] font-medium mb-3">Popular routes in Nassau</h2>
-        <p class="text-[#1a1a1a]/50 text-[15px] mb-10">Flat fares on the most-traveled routes across New Providence.</p>
-        <div class="grid sm:grid-cols-2 gap-3">
-          <div
-            v-for="route in routes"
-            :key="route.from + route.to"
-            class="group flex items-center justify-between rounded-2xl border border-[#1a1a1a]/8 px-5 py-5 hover:bg-[#58cc02]/[0.04] hover:border-[#58cc02]/15 transition-all cursor-pointer"
-            @click="goToBooking"
-          >
-            <div class="flex items-center gap-4">
-              <div class="flex flex-col items-center gap-0.5">
-                <div class="w-3 h-3 rounded-full bg-[#58cc02] shadow-sm shadow-[#58cc02]/30"></div>
-                <div class="w-px h-5 bg-[#1a1a1a]/15"></div>
-                <div class="w-3 h-3 rounded bg-[#1a1a1a]/25"></div>
-              </div>
-              <div>
-                <div class="text-[15px] font-semibold">{{ route.from }}</div>
-                <div class="text-[13px] text-[#1a1a1a]/45">{{ route.to }} · {{ route.time }}</div>
-              </div>
-            </div>
-            <span class="text-[20px] font-bold font-serif group-hover:text-[#4ab300] transition-colors">{{ route.price }}</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ==================== GUARANTEE ==================== -->
+    <!-- ==================== CTA / SIGNUP SECTION ==================== -->
     <section class="relative overflow-hidden bg-[#1a1a1a]">
-      <!-- Wave divider top -->
-      <div class="absolute top-0 left-0 right-0 -translate-y-[1px]">
-        <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full" preserveAspectRatio="none">
-          <path d="M0 60V30C360 0 720 60 1080 30C1260 15 1380 40 1440 60H0Z" fill="#1a1a1a"/>
-        </svg>
-      </div>
-      <!-- Decorative elements inside dark section -->
+      <!-- Decorative elements -->
       <div class="absolute inset-0 pointer-events-none">
         <div class="absolute top-1/2 left-1/4 w-64 h-64 rounded-full opacity-10" style="background: radial-gradient(circle, rgba(88,204,2,0.5), transparent 70%);"></div>
         <div class="absolute top-1/4 right-1/3 w-40 h-40 rounded-full opacity-8" style="background: radial-gradient(circle, rgba(88,204,2,0.4), transparent 70%);"></div>
       </div>
-      <div class="absolute inset-0 pointer-events-none opacity-[0.05]" style="background-image: radial-gradient(circle, rgba(255,255,255,0.5) 0.6px, transparent 0.6px); background-size: 20px 20px;"></div>
+      <div class="absolute inset-0 pointer-events-none opacity-[0.04]" style="background-image: radial-gradient(circle, rgba(255,255,255,0.5) 0.6px, transparent 0.6px); background-size: 24px 24px;"></div>
 
-      <div class="relative max-w-6xl mx-auto px-6 py-20 md:py-28">
-        <div class="max-w-2xl mx-auto text-center">
-          <div class="inline-flex items-center gap-2 bg-[#1cb0f6]/15 text-[#1cb0f6] text-[13px] font-semibold px-4 py-1.5 rounded-full mb-6">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-            The RideUp guarantee
-          </div>
-          <h2 class="font-serif text-white text-[30px] sm:text-[40px] leading-tight font-medium mb-5">Your scheduled ride, on time. Or it's free.</h2>
-          <p class="text-white/55 text-[16px] leading-relaxed mb-10">If your scheduled ride is late by even 1 minute, your ride is 100% free. No questions asked.</p>
-          <button @click="goToBooking" class="px-8 py-4 bg-[#58cc02] hover:bg-[#4ab300] text-white font-bold rounded-xl text-[15px] transition-colors active:scale-[0.98] shadow-lg shadow-[#58cc02]/25">
-            Book a ride
-          </button>
-        </div>
-      </div>
+      <div class="relative max-w-6xl mx-auto px-6 py-20 md:py-28 text-center">
+        <h2 class="font-serif text-white text-[30px] sm:text-[40px] lg:text-[48px] font-semibold leading-tight mb-5">Ready to ride?</h2>
+        <p class="text-white/50 text-[16px] leading-relaxed mb-10 max-w-md mx-auto">Sign up and get $20 credit toward your first rides across Nassau.</p>
 
-      <!-- Wave divider bottom -->
-      <div class="absolute bottom-0 left-0 right-0">
-        <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full" preserveAspectRatio="none">
-          <path d="M0 30C240 60 480 0 720 30C960 60 1200 0 1440 30V60H0V30Z" fill="white"/>
-        </svg>
-      </div>
-    </section>
-
-    <!-- ==================== SIGN UP CTA ==================== -->
-    <section class="relative overflow-hidden">
-      <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse 60% 80% at 50% 80%, rgba(88,204,2,0.06), transparent 60%);"></div>
-      <!-- Floating circles -->
-      <div class="absolute top-8 left-[8%] w-24 h-24 rounded-full border border-[#58cc02]/10 hidden lg:block"></div>
-      <div class="absolute bottom-12 right-[12%] w-16 h-16 rounded-full bg-[#58cc02]/[0.04] hidden lg:block"></div>
-
-      <div class="relative max-w-6xl mx-auto px-6 py-20 md:py-24 text-center">
-        <h2 class="font-serif text-[28px] sm:text-[36px] font-medium mb-3">New to RideUp?</h2>
-        <p class="text-[#1a1a1a]/50 text-[15px] mb-8 max-w-md mx-auto">Sign up and get $20 credit toward your first rides.</p>
-        <form @submit.prevent="handleSubmit" class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+        <form @submit.prevent="handleSubmit" class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto mb-4">
           <input
             v-model="phone"
             type="tel"
             placeholder="Enter your phone number"
-            class="flex-1 px-4 py-3.5 rounded-xl bg-[#1a1a1a]/[0.04] border border-[#1a1a1a]/8 text-[14px] outline-none focus:border-[#58cc02] transition-colors placeholder:text-[#1a1a1a]/50"
+            class="flex-1 px-5 py-4 rounded-2xl bg-white/10 border border-white/15 text-white text-[14px] outline-none focus:border-[#58cc02] transition-colors placeholder:text-white/40"
           />
           <button
             type="submit"
             :disabled="loading"
-            class="px-6 py-3.5 rounded-xl bg-[#58cc02] text-white font-bold text-[14px] hover:bg-[#4ab300] transition-colors whitespace-nowrap disabled:opacity-50 active:scale-[0.98]"
+            class="px-8 py-4 rounded-2xl bg-[#58cc02] text-white font-bold text-[15px] hover:bg-[#4ab300] transition-colors whitespace-nowrap disabled:opacity-50 active:scale-[0.98] shadow-lg shadow-[#58cc02]/25"
           >
-            {{ loading ? 'Sending...' : 'Get $20 credit' }}
+            {{ loading ? 'Sending...' : 'Get $20 Credit' }}
           </button>
         </form>
-        <p v-if="error" class="text-red-500 text-sm mt-2">{{ error }}</p>
-        <p v-if="success" class="text-[#58cc02] text-sm mt-2">You're in! Your $20 credit is ready.</p>
+        <p v-if="error" class="text-red-400 text-sm">{{ error }}</p>
+        <p v-if="success" class="text-[#58cc02] text-sm">You're in! Your $20 credit is ready.</p>
+        <p v-if="!error && !success" class="text-white/30 text-[13px]">No surge pricing. The price you see is the price you pay.</p>
       </div>
     </section>
 
     <!-- ==================== FOOTER ==================== -->
-    <footer class="bg-[#1a1a1a] text-white">
+    <footer class="bg-[#1a1a1a] border-t border-white/5 text-white">
       <div class="max-w-6xl mx-auto px-6 py-14 grid sm:grid-cols-4 gap-8">
         <div>
           <div class="font-serif text-lg font-semibold mb-3">Ride<span class="text-[#58cc02]">Up</span></div>
@@ -469,3 +491,30 @@ const routes = [
 
   </div>
 </template>
+
+<style scoped>
+/* Trust badge floating animation */
+@keyframes trustFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+.trust-float {
+  animation: trustFloat 4s ease-in-out infinite;
+}
+
+/* Pill floating animations */
+@keyframes pillFloat1 {
+  0%, 100% { transform: translateY(0px) translateX(0px); }
+  50% { transform: translateY(-6px) translateX(3px); }
+}
+@keyframes pillFloat2 {
+  0%, 100% { transform: translateY(0px) translateX(0px); }
+  50% { transform: translateY(-5px) translateX(-3px); }
+}
+.pill-float-1 {
+  animation: pillFloat1 5s ease-in-out infinite;
+}
+.pill-float-2 {
+  animation: pillFloat2 6s ease-in-out infinite 1s;
+}
+</style>
