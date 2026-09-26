@@ -13,9 +13,6 @@ const displayName = computed(() => user.value?.user_metadata?.name || 'Rider')
 
 async function handleSubmit() {
   await submit()
-  if (success.value) {
-    router.push('/login')
-  }
 }
 
 function goToBooking() {

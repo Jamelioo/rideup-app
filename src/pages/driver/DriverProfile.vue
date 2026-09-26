@@ -80,7 +80,7 @@ function goBack() {
             <span class="text-[14px] font-semibold capitalize">{{ driver?.vehicle_type || 'standard' }}</span>
           </div>
         </div>
-        <button @click="showToast('Coming soon')" class="text-[13px] text-[#58cc02] font-semibold mt-2 px-1">Edit Vehicle</button>
+        <button @click="showToast('Contact support at (242) 452-9911')" class="text-[13px] text-[#58cc02] font-semibold mt-2 px-1">Edit Vehicle</button>
       </div>
 
       <!-- Stats -->
@@ -89,11 +89,11 @@ function goBack() {
         <div class="bg-[#f5f5f5] rounded-2xl p-4 space-y-2">
           <div class="flex justify-between">
             <span class="text-[13px] text-[#1a1a1a]/50">Acceptance rate</span>
-            <span class="text-[14px] font-semibold">94%</span>
+            <span class="text-[14px] font-semibold">{{ driver?.acceptance_rate != null ? driver.acceptance_rate + '%' : '—' }}</span>
           </div>
           <div class="flex justify-between">
             <span class="text-[13px] text-[#1a1a1a]/50">Cancellation rate</span>
-            <span class="text-[14px] font-semibold">2%</span>
+            <span class="text-[14px] font-semibold">{{ driver?.cancellation_rate != null ? driver.cancellation_rate + '%' : '—' }}</span>
           </div>
           <div class="flex justify-between">
             <span class="text-[13px] text-[#1a1a1a]/50">Member since</span>
@@ -115,7 +115,7 @@ function goBack() {
             <span class="text-[12px] text-[#58cc02] font-semibold">✓ On file</span>
           </div>
         </div>
-        <button @click="showToast('Coming soon')" class="text-[13px] text-[#58cc02] font-semibold mt-2 px-1">Upload / Update</button>
+        <button @click="showToast('Contact support at (242) 452-9911')" class="text-[13px] text-[#58cc02] font-semibold mt-2 px-1">Upload / Update</button>
       </div>
 
       <!-- Account -->
@@ -127,7 +127,7 @@ function goBack() {
               <div class="text-[13px] text-[#1a1a1a]/50">Phone</div>
               <div class="text-[14px] font-semibold">{{ driver?.phone || '—' }}</div>
             </div>
-            <button @click="showToast('Coming soon')" class="text-[12px] text-[#58cc02] font-semibold">Edit</button>
+            <button @click="showToast('Contact support at (242) 452-9911')" class="text-[12px] text-[#58cc02] font-semibold">Edit</button>
           </div>
           <div class="border-t border-[#1a1a1a]/8"></div>
           <div class="flex items-center justify-between">
@@ -135,10 +135,10 @@ function goBack() {
               <div class="text-[13px] text-[#1a1a1a]/50">Email</div>
               <div class="text-[14px] font-semibold">{{ driver?.email || '—' }}</div>
             </div>
-            <button @click="showToast('Coming soon')" class="text-[12px] text-[#58cc02] font-semibold">Edit</button>
+            <button @click="showToast('Contact support at (242) 452-9911')" class="text-[12px] text-[#58cc02] font-semibold">Edit</button>
           </div>
         </div>
-        <button @click="showToast('Coming soon')" class="text-[13px] text-[#1a1a1a]/50 font-semibold mt-2 px-1 underline underline-offset-2">Change Password</button>
+        <button @click="showToast('Contact support at (242) 452-9911')" class="text-[13px] text-[#1a1a1a]/50 font-semibold mt-2 px-1 underline underline-offset-2">Change Password</button>
       </div>
 
       <!-- Switch + Logout -->

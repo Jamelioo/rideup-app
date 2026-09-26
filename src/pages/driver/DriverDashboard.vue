@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDriver } from '../../lib/useDriver'
 import { useAuth } from '../../lib/useAuth'
@@ -13,22 +13,33 @@ import DriverRideRequest from './DriverRideRequest.vue'
 
 const router = useRouter()
 const { user } = useAuth()
-const { driver, isOnline, incomingRequest, currentRide, fetchDriver, goOnline, goOffline } = useDriver()
+const { driver, isOnline, incomingRequest, currentRide, loading: driverLoading, fetchDriver, goOnline, goOffline } = useDriver()
 
 const menuOpen = ref(false)
 const todayEarnings = ref(0)
 const todayTrips = ref(0)
 const lastRide = ref(null)
 
-onMounted(async () => {
-  if (!DEMO_MODE && user.value) {
-    await fetchDriver(user.value.id)
-  }
+function refreshStats() {
   if (DEMO_MODE) {
     const { today } = generateFakeEarnings()
     todayEarnings.value = today.reduce((sum, t) => sum + t.fare_cents, 0)
     todayTrips.value = today.length
     lastRide.value = today[0]
+  }
+}
+
+onMounted(async () => {
+  if (!DEMO_MODE && user.value) {
+    await fetchDriver(user.value.id)
+  }
+  refreshStats()
+})
+
+watch(currentRide, (newVal, oldVal) => {
+  if (!newVal && oldVal) {
+    // Ride was completed, refresh stats
+    refreshStats()
   }
 })
 
@@ -84,6 +95,8 @@ const initials = computed(() => {
         <div class="w-9 h-[5px] rounded-full bg-[#1a1a1a]/10"></div>
       </div>
       <div class="px-5 pb-6">
+        <div v-if="driverLoading" class="py-8 text-center text-[13px] text-[#1a1a1a]/40">Loading...</div>
+        <template v-else>
         <!-- Online status -->
         <div v-if="isOnline" class="flex items-center gap-2 mb-4">
           <span class="w-2.5 h-2.5 rounded-full bg-[#58cc02] animate-pulse"></span>
@@ -127,6 +140,7 @@ const initials = computed(() => {
         <div v-else class="mt-4 text-center text-[13px] text-[#1a1a1a]/40 py-4">
           No rides yet — go online to start earning
         </div>
+        </template>
       </div>
     </div>
 
@@ -145,6 +159,8 @@ const initials = computed(() => {
       </div>
 
       <div class="flex-1 overflow-y-auto px-6 pb-8">
+        <div v-if="driverLoading" class="py-8 text-center text-[13px] text-[#1a1a1a]/40">Loading...</div>
+        <template v-else>
         <div v-if="isOnline" class="flex items-center gap-2 mb-5">
           <span class="w-2.5 h-2.5 rounded-full bg-[#58cc02] animate-pulse"></span>
           <span class="text-[13px] font-semibold text-[#58cc02]">You're online — waiting for rides</span>
@@ -184,6 +200,7 @@ const initials = computed(() => {
         <div v-else class="mt-4 text-center text-[13px] text-[#1a1a1a]/40 py-6">
           No rides yet — go online to start earning
         </div>
+        </template>
       </div>
     </div>
   </div>

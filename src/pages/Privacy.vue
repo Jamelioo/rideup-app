@@ -21,7 +21,7 @@ function goBack() {
     </div>
 
     <div class="max-w-2xl mx-auto px-5 py-8 space-y-6 text-[15px] leading-relaxed text-[#1a1a1a]/80">
-      <p class="text-[13px] text-[#1a1a1a]/50">Last updated: {{ new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) }}</p>
+      <p class="text-[13px] text-[#1a1a1a]/50">Last updated: September 1, 2025</p>
 
       <section>
         <h2 class="text-[18px] font-bold text-[#1a1a1a] mb-2">Information We Collect</h2>

@@ -21,6 +21,8 @@ import DriverActiveRide from '../pages/driver/DriverActiveRide.vue'
 import DriverEarnings from '../pages/driver/DriverEarnings.vue'
 import DriverProfile from '../pages/driver/DriverProfile.vue'
 import { useAuth } from '../lib/useAuth'
+import { useDriver } from '../lib/useDriver'
+import { DEMO_MODE } from '../lib/demoMode'
 
 const routes = [
   { path: '/', name: 'home', component: RiderFlow, meta: { title: 'RideUp Nassau' } },
@@ -38,10 +40,10 @@ const routes = [
   { path: '/terms', name: 'terms', component: Terms, meta: { title: 'Terms of Service — RideUp' } },
   { path: '/driver/apply', name: 'driver-apply', component: DriverApply, meta: { title: 'Drive with RideUp' } },
   { path: '/driver/pending', name: 'driver-pending', component: DriverPending, meta: { requiresAuth: true, title: 'Application Status — RideUp' } },
-  { path: '/driver/dashboard', name: 'driver-dashboard', component: DriverDashboard, meta: { title: 'Driver Dashboard — RideUp' } },
-  { path: '/driver/active-ride', name: 'driver-active-ride', component: DriverActiveRide, meta: { title: 'Active Ride — RideUp' } },
-  { path: '/driver/earnings', name: 'driver-earnings', component: DriverEarnings, meta: { title: 'Earnings — RideUp' } },
-  { path: '/driver/profile', name: 'driver-profile', component: DriverProfile, meta: { title: 'Driver Profile — RideUp' } },
+  { path: '/driver/dashboard', name: 'driver-dashboard', component: DriverDashboard, meta: { requiresAuth: true, title: 'Driver Dashboard — RideUp' } },
+  { path: '/driver/active-ride', name: 'driver-active-ride', component: DriverActiveRide, meta: { requiresAuth: true, title: 'Active Ride — RideUp' } },
+  { path: '/driver/earnings', name: 'driver-earnings', component: DriverEarnings, meta: { requiresAuth: true, title: 'Earnings — RideUp' } },
+  { path: '/driver/profile', name: 'driver-profile', component: DriverProfile, meta: { requiresAuth: true, title: 'Driver Profile — RideUp' } },
   { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFound, meta: { title: 'Page Not Found — RideUp' } },
 ]
 
@@ -63,12 +65,35 @@ router.beforeEach(async (to) => {
     })
   }
 
-  if (to.meta.requiresAuth && !user.value) {
+  if (to.meta.requiresAuth && !user.value && !DEMO_MODE) {
     return { path: '/login', query: { redirect: to.fullPath } }
   }
 
   if (to.meta.guestOnly && user.value) {
     return { path: '/' }
+  }
+
+  // Driver-specific route guards
+  if (to.path.startsWith('/driver/') && to.path !== '/driver/apply' && to.path !== '/driver/pending') {
+    if (!DEMO_MODE) {
+      const { driver, currentRide, fetchDriver } = useDriver()
+
+      if (!driver.value && user.value) {
+        await fetchDriver(user.value.id)
+      }
+
+      if (!driver.value) {
+        return { path: '/driver/apply' }
+      }
+
+      if (!driver.value.approved) {
+        return { path: '/driver/pending' }
+      }
+
+      if (to.path === '/driver/active-ride' && !currentRide.value) {
+        return { path: '/driver/dashboard' }
+      }
+    }
   }
 })
 

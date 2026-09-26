@@ -36,6 +36,11 @@ async function handleSubmit() {
     return
   }
 
+  if (!user.value && password.value.length < 6) {
+    error.value = 'Please create a password (at least 6 characters).'
+    return
+  }
+
   if (DEMO_MODE) {
     submitting.value = true
     await new Promise(r => setTimeout(r, 800))

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { formatFare } from '../../lib/pricing'
 import { generateFakeEarnings } from '../../lib/demoDriverMode'
@@ -8,12 +8,18 @@ import { DEMO_MODE } from '../../lib/demoMode'
 const router = useRouter()
 const activeTab = ref('today')
 
-const earnings = DEMO_MODE ? generateFakeEarnings() : { today: [], weeklyTotals: [], weeklyTrips: [] }
+const earnings = ref(DEMO_MODE ? generateFakeEarnings() : { today: [], weeklyTotals: [0,0,0,0,0,0,0], weeklyTrips: [0,0,0,0,0,0,0] })
 
-const todayTotal = computed(() => earnings.today.reduce((s, t) => s + t.fare_cents, 0))
-const weeklyTotal = computed(() => earnings.weeklyTotals.reduce((s, v) => s + v, 0))
-const weeklyTripsTotal = computed(() => earnings.weeklyTrips.reduce((s, v) => s + v, 0))
-const maxDailyEarning = computed(() => Math.max(...earnings.weeklyTotals, 1))
+const todayTotal = computed(() => earnings.value.today.reduce((s, t) => s + t.fare_cents, 0))
+const weeklyTotal = computed(() => earnings.value.weeklyTotals.reduce((s, v) => s + v, 0))
+const weeklyTripsTotal = computed(() => earnings.value.weeklyTrips.reduce((s, v) => s + v, 0))
+const maxDailyEarning = computed(() => Math.max(...earnings.value.weeklyTotals, 1))
+
+onMounted(async () => {
+  if (DEMO_MODE) return
+  // Real earnings will come from Supabase rides table
+  // For now, show empty state until backend queries are built
+})
 const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 function timeAgo(isoString) {

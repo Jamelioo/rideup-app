@@ -44,10 +44,10 @@ function sendMessage() {
     <div class="relative flex-1 flex flex-col justify-end px-6 pb-8">
       <div class="mb-5">
         <div class="font-serif text-2xl font-medium mb-1">You're matched</div>
-        <div v-if="DEMO_MODE" class="text-[#1a1a1a]/45 text-[13px]">{{ matchInfo.driver_name }} is {{ matchInfo.eta_minutes }} minutes away</div>
+        <div class="text-[#1a1a1a]/45 text-[13px]">{{ matchInfo.driver_name }} is {{ matchInfo.eta_minutes }} minutes away</div>
       </div>
 
-      <div v-if="DEMO_MODE" class="bg-white border border-[#1a1a1a]/8 rounded-3xl p-5 shadow-[0_20px_40px_rgba(0,0,0,0.08)]">
+      <div class="bg-white border border-[#1a1a1a]/8 rounded-3xl p-5 shadow-[0_20px_40px_rgba(0,0,0,0.08)]">
         <div class="flex items-center gap-3.5 mb-4">
           <div class="w-12 h-12 rounded-full bg-gradient-to-br from-[#58cc02] to-[#1a1a1a] flex-shrink-0"></div>
           <div class="flex-1">
@@ -61,7 +61,7 @@ function sendMessage() {
           <button @click="showChat = true" class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#58cc02]/10 text-[#4ab300] font-bold rounded-xl text-[13px]">
             💬 Message
           </button>
-          <a href="tel:+12424529911" class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#58cc02] text-white font-bold rounded-xl text-[13px]">
+          <a :href="'tel:' + (matchInfo.phone || '+12424529911')" class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#58cc02] text-white font-bold rounded-xl text-[13px]">
             📞 Call
           </a>
         </div>
@@ -72,7 +72,6 @@ function sendMessage() {
         </div>
       </div>
 
-      <div v-else class="text-[#1a1a1a]/50 text-sm text-center py-8">Live tracking screen — next to build.</div>
 
       <button @click="startOver" class="text-[#1a1a1a]/50 text-[13px] underline underline-offset-2 mt-5 text-center py-2">
         {{ DEMO_MODE ? 'Start another demo request' : 'Back' }}

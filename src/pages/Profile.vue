@@ -23,6 +23,10 @@ const initials = computed(() =>
     .slice(0, 2)
 )
 
+function goBack() {
+  window.history.length > 1 ? router.back() : router.push('/')
+}
+
 async function handleLogout() {
   await signOut()
   router.push('/welcome')
@@ -33,16 +37,14 @@ async function handleLogout() {
   <div class="min-h-screen bg-white font-[var(--font-sans)] text-[#1a1a1a] flex flex-col">
     <!-- Top Bar -->
     <div class="flex items-center justify-between px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
-      <button @click="window.history.length > 1 ? router.back() : router.push('/')" class="w-10 h-10 flex items-center justify-center">
+      <button @click="goBack" class="w-10 h-10 flex items-center justify-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
-      <button @click="showToast('Coming soon')" class="w-10 h-10 flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-          <circle cx="12" cy="5" r="2" />
-          <circle cx="12" cy="12" r="2" />
-          <circle cx="12" cy="19" r="2" />
+      <button @click="router.push('/edit-profile')" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#1a1a1a]/5">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
         </svg>
       </button>
     </div>

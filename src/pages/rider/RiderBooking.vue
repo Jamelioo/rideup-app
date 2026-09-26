@@ -347,7 +347,7 @@ async function requestRide() {
           <div class="flex-1 space-y-2">
             <div class="flex items-center bg-[#f5f5f5] rounded-xl px-4 py-3.5 border-2 transition-all duration-200"
                  :class="activeInput === 'pickup' ? 'border-[#58cc02] bg-white shadow-[0_0_0_3px_rgba(88,204,2,0.12)]' : 'border-transparent'">
-              <input v-if="!DEMO_MODE" type="text" placeholder="Pickup location"
+              <input v-if="!DEMO_MODE" ref="pickupInput" type="text" placeholder="Pickup location"
                      @focus="activeInput = 'pickup'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[#1a1a1a]/40 placeholder:font-normal" />
               <input v-else v-model="pickupText" list="demo-locations-desktop" type="text" placeholder="Pickup — try Cable Beach"
@@ -356,7 +356,7 @@ async function requestRide() {
             </div>
             <div class="flex items-center bg-[#f5f5f5] rounded-xl px-4 py-3.5 border-2 transition-all duration-200"
                  :class="activeInput === 'dropoff' ? 'border-[#58cc02] bg-white shadow-[0_0_0_3px_rgba(88,204,2,0.12)]' : 'border-transparent'">
-              <input v-if="!DEMO_MODE" type="text" placeholder="Where to?"
+              <input v-if="!DEMO_MODE" ref="dropoffInput" type="text" placeholder="Where to?"
                      @focus="activeInput = 'dropoff'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[#1a1a1a]/40 placeholder:font-normal" />
               <input v-else v-model="dropoffText" list="demo-locations-desktop" type="text" placeholder="Destination — try Airport"

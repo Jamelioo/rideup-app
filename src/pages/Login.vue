@@ -12,6 +12,14 @@ const password = ref('')
 const error = ref('')
 const submitting = ref(false)
 
+function goBack() {
+  window.history.length > 1 ? router.back() : router.push('/welcome')
+}
+
+function forgotPassword() {
+  error.value = 'Password reset is coming soon. Contact support at (242) 452-9911.'
+}
+
 async function handleLogin() {
   error.value = ''
   if (!email.value.trim() || !password.value) {
@@ -34,7 +42,7 @@ async function handleLogin() {
   <div class="min-h-screen bg-white text-[#1a1a1a] flex flex-col">
     <!-- Top bar -->
     <div class="flex items-center px-4 pt-12 pb-4">
-      <button @click="router.push('/welcome')" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#1a1a1a]/5">
+      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#1a1a1a]/5">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -69,6 +77,10 @@ async function handleLogin() {
         </label>
       </div>
 
+      <div class="text-right">
+        <button type="button" @click="forgotPassword" class="text-[13px] text-[#58cc02] font-medium">Forgot password?</button>
+      </div>
+
       <p v-if="error" class="text-red-500 text-[13px] mb-4">{{ error }}</p>
 
       <button
@@ -83,6 +95,10 @@ async function handleLogin() {
         Don't have an account?
         <router-link to="/signup" class="text-[#58cc02] font-semibold">Sign up</router-link>
       </div>
+
+      <button @click="router.push('/')" class="w-full py-3 mt-4 text-[14px] font-semibold text-[#1a1a1a]/40 active:text-[#1a1a1a]/60 transition-colors">
+        Continue as guest
+      </button>
     </div>
 
     <div class="px-6 py-6">

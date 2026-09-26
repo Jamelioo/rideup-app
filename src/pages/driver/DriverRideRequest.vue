@@ -11,9 +11,11 @@ const emit = defineEmits(['accepted'])
 const { acceptRide, declineRide } = useDriver()
 
 const timeLeft = ref(15)
+const progress = ref(100)
 let timer = null
 
 onMounted(() => {
+  // Countdown timer
   timer = setInterval(() => {
     timeLeft.value--
     if (timeLeft.value <= 0) {
@@ -21,6 +23,16 @@ onMounted(() => {
       handleDecline()
     }
   }, 1000)
+
+  // Progress animation
+  const start = Date.now()
+  const total = 15000
+  function update() {
+    const elapsed = Date.now() - start
+    progress.value = Math.max(0, 100 - (elapsed / total) * 100)
+    if (elapsed < total) requestAnimationFrame(update)
+  }
+  requestAnimationFrame(update)
 })
 
 onUnmounted(() => {
@@ -37,18 +49,6 @@ function handleDecline() {
   if (timer) clearInterval(timer)
   declineRide(props.request)
 }
-
-const progress = ref(100)
-onMounted(() => {
-  const start = Date.now()
-  const total = 15000
-  function update() {
-    const elapsed = Date.now() - start
-    progress.value = Math.max(0, 100 - (elapsed / total) * 100)
-    if (elapsed < total) requestAnimationFrame(update)
-  }
-  requestAnimationFrame(update)
-})
 </script>
 
 <template>

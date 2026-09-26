@@ -1,53 +1,84 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../lib/useAuth'
+import { DEMO_MODE } from '../lib/demoMode'
+import { formatFare } from '../lib/pricing'
 
 const router = useRouter()
+const { user } = useAuth()
 
-const toast = ref('')
-function showToast(msg) {
-  toast.value = msg
-  setTimeout(() => { toast.value = '' }, 2500)
+const rides = ref([])
+const loading = ref(true)
+
+const demoRides = [
+  { id: 1, pickup_address: 'Bahamar Resort', fare_cents: 1298, status: 'completed', created_at: '2024-10-20T14:00:00Z' },
+  { id: 2, pickup_address: 'Atlantis Paradise Island', fare_cents: 2781, status: 'completed', created_at: '2024-10-14T11:30:00Z' },
+  { id: 3, pickup_address: 'Downtown Nassau', fare_cents: 991, status: 'completed', created_at: '2024-09-28T09:15:00Z' },
+  { id: 4, pickup_address: 'Cable Beach', fare_cents: 1356, status: 'completed', created_at: '2024-09-12T16:45:00Z' },
+  { id: 5, pickup_address: 'LPIA Airport', fare_cents: 1937, status: 'completed', created_at: '2024-08-25T07:00:00Z' },
+  { id: 6, pickup_address: 'Fish Fry Arawak Cay', fare_cents: 1774, status: 'completed', created_at: '2024-08-08T19:20:00Z' },
+  { id: 7, pickup_address: "Potter's Cay Dock", fare_cents: 1156, status: 'completed', created_at: '2024-07-18T13:10:00Z' },
+  { id: 8, pickup_address: 'Fort Charlotte', fare_cents: 2242, status: 'completed', created_at: '2024-07-03T10:45:00Z' },
+]
+
+function formatDate(isoString) {
+  const d = new Date(isoString)
+  const day = d.getDate()
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
+  const month = months[d.getMonth()]
+  const hours = d.getHours()
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  return `${day} ${month}, ${hours}:${minutes}`
 }
 
-const ridesByMonth = [
-  {
-    label: 'Oct 2024',
-    rides: [
-      { location: 'Bahamar Resort', date: '20 Oct, 2:00', fare: '$12.98' },
-      { location: 'Atlantis Paradise Island', date: '14 Oct, 11:30', fare: '$27.81' },
-    ],
-  },
-  {
-    label: 'Sept 2024',
-    rides: [
-      { location: 'Downtown Nassau', date: '28 Sept, 9:15', fare: '$9.91' },
-      { location: 'Cable Beach', date: '12 Sept, 16:45', fare: '$13.56' },
-    ],
-  },
-  {
-    label: 'Aug 2024',
-    rides: [
-      { location: 'LPIA Airport', date: '25 Aug, 7:00', fare: '$19.37' },
-      { location: 'Fish Fry Arawak Cay', date: '8 Aug, 19:20', fare: '$17.74' },
-    ],
-  },
-  {
-    label: 'July 2024',
-    rides: [
-      { location: "Potter's Cay Dock", date: '18 July, 13:10', fare: '$11.56' },
-      { location: 'Fort Charlotte', date: '3 July, 10:45', fare: '$22.42' },
-    ],
-  },
-]
+function monthYearLabel(isoString) {
+  const d = new Date(isoString)
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
+  return `${months[d.getMonth()]} ${d.getFullYear()}`
+}
 
-const helpCategories = [
-  'About RideUp',
-  'App and Features',
-  'Account and data',
-  'Payments and pricing',
-  'Using RideUp',
-]
+const ridesByMonth = computed(() => {
+  const groups = []
+  const map = new Map()
+
+  for (const ride of rides.value) {
+    const label = monthYearLabel(ride.created_at)
+    if (!map.has(label)) {
+      const group = { label, rides: [] }
+      map.set(label, group)
+      groups.push(group)
+    }
+    map.get(label).rides.push(ride)
+  }
+
+  return groups
+})
+
+onMounted(async () => {
+  if (DEMO_MODE) {
+    rides.value = demoRides
+    loading.value = false
+    return
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('rides')
+      .select('*')
+      .eq('rider_id', user.value?.id)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    rides.value = data || []
+  } catch (err) {
+    console.error('Failed to fetch rides:', err)
+    rides.value = []
+  } finally {
+    loading.value = false
+  }
+})
 </script>
 
 <template>
@@ -66,67 +97,48 @@ const helpCategories = [
       <div class="w-10"></div>
     </div>
 
+    <!-- Loading Spinner -->
+    <div v-if="loading" class="flex items-center justify-center py-20">
+      <svg class="h-8 w-8 animate-spin text-[#58cc02]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+      </svg>
+    </div>
+
+    <!-- Empty State -->
+    <div v-else-if="rides.length === 0" class="flex flex-col items-center justify-center px-4 py-20">
+      <svg xmlns="http://www.w3.org/2000/svg" class="mb-4 h-16 w-16 text-[#1a1a1a]/15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h.01M12 7h.01M16 7h.01M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+      </svg>
+      <p class="text-center text-lg font-semibold text-[#1a1a1a]/60">No rides yet.</p>
+      <p class="mt-1 text-center text-sm text-[#1a1a1a]/40">Book your first ride!</p>
+    </div>
+
     <!-- Ride Groups -->
-    <div class="px-4 pb-4">
+    <div v-else class="px-4 pb-4">
       <div v-for="group in ridesByMonth" :key="group.label" class="mb-6">
         <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-[#1a1a1a]/40">
           {{ group.label }}
         </h2>
 
         <div
-          v-for="(ride, idx) in group.rides"
-          :key="idx"
+          v-for="ride in group.rides"
+          :key="ride.id"
           class="flex items-center justify-between border-b border-[#1a1a1a]/8 py-4 last:border-b-0"
         >
           <!-- Left: dot + info -->
           <div class="flex items-start gap-3">
             <div class="mt-1.5 h-3 w-3 shrink-0 rounded-full bg-[#58cc02]"></div>
             <div>
-              <p class="text-base font-semibold text-[#1a1a1a]">{{ ride.location }}</p>
-              <p class="mt-0.5 text-sm text-[#1a1a1a]/40">{{ ride.date }}</p>
+              <p class="text-base font-semibold text-[#1a1a1a]">{{ ride.pickup_address }}</p>
+              <p class="mt-0.5 text-sm text-[#1a1a1a]/40">{{ formatDate(ride.created_at) }}</p>
             </div>
           </div>
 
           <!-- Right: fare -->
-          <span class="text-base font-semibold text-[#1a1a1a]">{{ ride.fare }}</span>
+          <span class="text-base font-semibold text-[#1a1a1a]">{{ formatFare(ride.fare_cents) }}</span>
         </div>
       </div>
-
-      <!-- Older ride link -->
-      <button @click="showToast('Coming soon')" class="mt-2 w-full text-center text-sm font-semibold text-[#58cc02] active:text-[#4ab300]">
-        Select an older ride
-      </button>
     </div>
-
-    <!-- Divider -->
-    <div class="h-2 bg-[#1a1a1a]/[0.03]"></div>
-
-    <!-- Help Section -->
-    <div class="px-4 py-6">
-      <h2 class="mb-4 text-lg font-bold text-[#1a1a1a] font-serif">
-        Get help with a recent ride
-      </h2>
-
-      <div>
-        <button
-          v-for="category in helpCategories"
-          :key="category"
-          class="flex w-full items-center justify-between border-b border-[#1a1a1a]/8 py-4 text-left last:border-b-0 active:bg-[#1a1a1a]/[0.03]"
-          @click="showToast('Coming soon')"
-        >
-          <span class="text-base text-[#1a1a1a]">{{ category }}</span>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#1a1a1a]/25" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Toast -->
-    <Transition name="fade">
-      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1a1a1a] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
-        {{ toast }}
-      </div>
-    </Transition>
   </div>
 </template>
