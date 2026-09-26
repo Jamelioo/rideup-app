@@ -1,10 +1,12 @@
 <script setup>
 import { computed, watch, ref, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
 
 const router = useRouter()
 const { user, signOut } = useAuth()
+const route = useRoute()
+const isDriverRoute = computed(() => route.path.startsWith('/driver'))
 const drawerRef = ref(null)
 
 const props = defineProps({
@@ -29,6 +31,16 @@ const initials = computed(() =>
 )
 
 const menuItems = computed(() => {
+  if (isDriverRoute.value) {
+    return [
+      { label: 'Dashboard', route: '/driver/dashboard', icon: 'home', requiresAuth: false },
+      { label: 'Earnings', route: '/driver/earnings', icon: 'card', requiresAuth: false },
+      { label: 'Profile', route: '/driver/profile', icon: 'info', requiresAuth: false },
+      { label: 'Support', route: '/support', icon: 'chat', requiresAuth: false },
+      { label: 'About', route: '/about', icon: 'info', requiresAuth: false },
+    ]
+  }
+
   const items = [
     { label: 'Support', route: '/support', icon: 'chat', requiresAuth: false },
     { label: 'About', route: '/about', icon: 'info', requiresAuth: false },
@@ -208,15 +220,14 @@ watch(() => props.isOpen, async (open) => {
           >
             Log out
           </button>
-          <a
+          <button
             v-else
-            href="https://wa.me/12424529911?text=Hi!%20I'd%20like%20to%20apply%20to%20drive%20for%20RideUp%20Nassau."
-            target="_blank"
+            @click="handleNavigate('/driver/apply')"
             class="block w-full rounded-2xl bg-[#58cc02] px-5 py-4 text-left transition-colors active:bg-[#4ab300]"
           >
             <p class="text-white text-[15px] font-semibold">Become a driver</p>
             <p class="text-white/80 text-xs mt-0.5">Earn money on your schedule</p>
-          </a>
+          </button>
         </div>
 
         <!-- Home Indicator -->

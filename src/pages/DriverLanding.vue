@@ -4,6 +4,10 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const whatsappLink = 'https://wa.me/12424529911?text=' + encodeURIComponent("Hi! I'd like to apply to drive for RideUp Nassau.")
 
+function goToApply() {
+  router.push('/driver/apply')
+}
+
 const requirements = [
   'Valid Bahamian driver license',
   'Vehicle 2015 or newer',
@@ -98,17 +102,15 @@ const testimonials = [
             </p>
 
             <!-- CTA -->
-            <a
-              :href="whatsappLink"
-              target="_blank"
-              rel="noopener"
+            <button
+              @click="goToApply"
               class="inline-flex items-center gap-2 px-8 py-4 bg-[#58cc02] hover:bg-[#4ab300] text-white font-bold rounded-xl text-[16px] transition-colors active:scale-[0.98] shadow-lg shadow-[#58cc02]/25 mb-4"
             >
               Start Driving
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
-            </a>
+            </button>
             <div class="flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-white/40">
               <span>5-minute application</span>
               <span class="text-white/15">|</span>
@@ -511,17 +513,15 @@ const testimonials = [
       <div class="relative max-w-6xl mx-auto px-6 py-20 md:py-24 text-center">
         <h2 class="font-serif text-[28px] sm:text-[36px] font-medium mb-3">Ready to start earning?</h2>
         <p class="text-[#1a1a1a]/50 text-[15px] mb-8 max-w-lg mx-auto">Join 200+ drivers already earning with RideUp across New Providence. No lease, no upfront fees.</p>
-        <a
-          :href="whatsappLink"
-          target="_blank"
-          rel="noopener"
+        <button
+          @click="goToApply"
           class="inline-flex items-center gap-2 px-8 py-4 bg-[#58cc02] hover:bg-[#4ab300] text-white font-bold rounded-xl text-[16px] transition-colors active:scale-[0.98] shadow-lg shadow-[#58cc02]/20 mb-4"
         >
           Start Driving
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
-        </a>
+        </button>
         <div class="flex flex-wrap justify-center gap-x-5 gap-y-1 text-[13px] text-[#1a1a1a]/35">
           <span>5-minute application</span>
           <span class="text-[#1a1a1a]/15">|</span>

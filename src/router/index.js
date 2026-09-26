@@ -14,6 +14,12 @@ import DriverLanding from '../pages/DriverLanding.vue'
 import NotFound from '../pages/NotFound.vue'
 import Privacy from '../pages/Privacy.vue'
 import Terms from '../pages/Terms.vue'
+import DriverApply from '../pages/driver/DriverApply.vue'
+import DriverPending from '../pages/driver/DriverPending.vue'
+import DriverDashboard from '../pages/driver/DriverDashboard.vue'
+import DriverActiveRide from '../pages/driver/DriverActiveRide.vue'
+import DriverEarnings from '../pages/driver/DriverEarnings.vue'
+import DriverProfile from '../pages/driver/DriverProfile.vue'
 import { useAuth } from '../lib/useAuth'
 
 const routes = [
@@ -30,6 +36,12 @@ const routes = [
   { path: '/drive', name: 'driver-landing', component: DriverLanding, meta: { title: 'Drive with RideUp Nassau' } },
   { path: '/privacy', name: 'privacy', component: Privacy, meta: { title: 'Privacy Policy — RideUp' } },
   { path: '/terms', name: 'terms', component: Terms, meta: { title: 'Terms of Service — RideUp' } },
+  { path: '/driver/apply', name: 'driver-apply', component: DriverApply, meta: { title: 'Drive with RideUp' } },
+  { path: '/driver/pending', name: 'driver-pending', component: DriverPending, meta: { requiresAuth: true, title: 'Application Status — RideUp' } },
+  { path: '/driver/dashboard', name: 'driver-dashboard', component: DriverDashboard, meta: { title: 'Driver Dashboard — RideUp' } },
+  { path: '/driver/active-ride', name: 'driver-active-ride', component: DriverActiveRide, meta: { title: 'Active Ride — RideUp' } },
+  { path: '/driver/earnings', name: 'driver-earnings', component: DriverEarnings, meta: { title: 'Earnings — RideUp' } },
+  { path: '/driver/profile', name: 'driver-profile', component: DriverProfile, meta: { title: 'Driver Profile — RideUp' } },
   { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFound, meta: { title: 'Page Not Found — RideUp' } },
 ]
 
