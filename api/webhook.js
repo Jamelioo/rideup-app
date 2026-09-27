@@ -1,9 +1,13 @@
-const { Stripe } = require('stripe')
-const { buffer } = require('micro')
+import Stripe from 'stripe'
+import { buffer } from 'micro'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-module.exports = async (req, res) => {
+export const config = {
+  api: { bodyParser: false },
+}
+
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
@@ -38,8 +42,4 @@ module.exports = async (req, res) => {
   }
 
   res.status(200).json({ received: true })
-}
-
-module.exports.config = {
-  api: { bodyParser: false },
 }
