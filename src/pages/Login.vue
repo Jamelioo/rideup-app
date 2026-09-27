@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
+import { supabase } from '../lib/supabase'
 
 const router = useRouter()
 const route = useRoute()
@@ -16,8 +17,22 @@ function goBack() {
   window.history.length > 1 ? router.back() : router.push('/welcome')
 }
 
-function forgotPassword() {
-  error.value = 'Password reset is coming soon. Contact support at (242) 452-9911.'
+const resetSent = ref(false)
+
+async function forgotPassword() {
+  if (!email.value.trim()) {
+    error.value = 'Enter your email address above, then tap "Forgot password?"'
+    return
+  }
+  error.value = ''
+  submitting.value = true
+  const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.value.trim())
+  submitting.value = false
+  if (resetError) {
+    error.value = resetError.message
+    return
+  }
+  resetSent.value = true
 }
 
 async function handleLogin() {
@@ -81,6 +96,7 @@ async function handleLogin() {
         <button type="button" @click="forgotPassword" class="text-[13px] text-[#58cc02] font-medium">Forgot password?</button>
       </div>
 
+      <p v-if="resetSent" class="text-[#58cc02] text-[13px] font-medium mb-4">Password reset link sent! Check your email.</p>
       <p v-if="error" class="text-red-500 text-[13px] mb-4">{{ error }}</p>
 
       <button

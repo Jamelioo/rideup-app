@@ -1,14 +1,7 @@
 <script setup>
-import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-
-const toast = ref('')
-function showToast(msg) {
-  toast.value = msg
-  setTimeout(() => { toast.value = '' }, 2500)
-}
 
 function goBack() {
   window.history.length > 1 ? router.back() : router.push('/')
@@ -19,16 +12,19 @@ const menuItems = [
     label: 'Rate the app',
     icon: 'star',
     hasChevron: true,
+    href: 'https://apps.apple.com',
   },
   {
     label: 'Follow us on social media',
     icon: 'share',
     hasChevron: true,
+    href: 'https://instagram.com/rideupnassau',
   },
   {
     label: 'Careers at RideUp',
     icon: 'people',
     hasChevron: true,
+    href: 'mailto:careers@rideupnassau.com?subject=Career%20Inquiry',
   },
   {
     label: 'Legal',
@@ -37,6 +33,14 @@ const menuItems = [
     route: '/terms',
   },
 ]
+
+function handleMenuClick(item) {
+  if (item.route) {
+    router.push(item.route)
+  } else if (item.href) {
+    window.open(item.href, '_blank')
+  }
+}
 </script>
 
 <template>
@@ -77,7 +81,7 @@ const menuItems = [
         v-for="(item, index) in menuItems"
         :key="index"
         class="w-full flex items-center justify-between py-4 border-b border-[#1a1a1a]/10 transition-colors duration-150 hover:bg-[#1a1a1a]/[0.03] active:bg-[#1a1a1a]/[0.06] rounded-sm"
-        @click="item.route ? router.push(item.route) : showToast('Coming soon')"
+        @click="handleMenuClick(item)"
       >
         <div class="flex items-center gap-4">
           <!-- Star Icon -->
@@ -115,11 +119,5 @@ const menuItems = [
       <p class="text-sm text-[#1a1a1a]/40">RideUp Nassau</p>
     </div>
 
-    <!-- Toast -->
-    <Transition name="fade">
-      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1a1a1a] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
-        {{ toast }}
-      </div>
-    </Transition>
   </div>
 </template>

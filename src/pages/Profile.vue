@@ -27,6 +27,16 @@ function goBack() {
   window.history.length > 1 ? router.back() : router.push('/')
 }
 
+function goToBooking() {
+  router.push('/')
+}
+
+const showDeleteConfirm = ref(false)
+
+function handleDeleteAccount() {
+  showDeleteConfirm.value = true
+}
+
 async function handleLogout() {
   await signOut()
   router.push('/welcome')
@@ -73,7 +83,7 @@ async function handleLogout() {
           </svg>
           <span class="text-base">Home</span>
         </div>
-        <button @click="showToast('Coming soon')" class="text-[#58cc02] text-sm font-bold uppercase tracking-wide">Add</button>
+        <button @click="goToBooking" class="text-[#58cc02] text-sm font-bold uppercase tracking-wide">Add</button>
       </div>
 
       <div class="flex items-center justify-between py-4 border-b border-[#1a1a1a]/8">
@@ -83,13 +93,13 @@ async function handleLogout() {
           </svg>
           <span class="text-base">Work</span>
         </div>
-        <button @click="showToast('Coming soon')" class="text-[#58cc02] text-sm font-bold uppercase tracking-wide">Add</button>
+        <button @click="goToBooking" class="text-[#58cc02] text-sm font-bold uppercase tracking-wide">Add</button>
       </div>
     </div>
 
     <!-- Communication Preferences -->
     <div class="px-5 mt-2">
-      <button @click="showToast('Coming soon')" class="w-full flex items-center justify-between py-4">
+      <button @click="router.push('/support')" class="w-full flex items-center justify-between py-4">
         <span class="text-base">Communication Preferences</span>
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#1a1a1a]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
@@ -107,8 +117,25 @@ async function handleLogout() {
 
     <!-- Delete Account -->
     <div class="px-5 mt-3 mb-8">
-      <button @click="showToast('Coming soon')" class="text-[#1a1a1a]/40 text-sm">Delete account</button>
+      <button @click="handleDeleteAccount" class="text-[#1a1a1a]/40 text-sm">Delete account</button>
     </div>
+
+    <!-- Delete Account Confirmation -->
+    <Transition name="fade">
+      <div v-if="showDeleteConfirm" class="fixed inset-0 z-50 flex items-end justify-center bg-black/40" @click.self="showDeleteConfirm = false">
+        <div class="w-full max-w-md bg-white rounded-t-3xl px-6 pt-8 pb-10 shadow-xl">
+          <h3 class="text-lg font-bold font-serif mb-2">Delete your account?</h3>
+          <p class="text-[14px] text-[#1a1a1a]/50 mb-6">To delete your account, please contact our support team. They'll process your request and remove all your data.</p>
+          <a href="tel:+12424529911" class="block w-full py-3.5 bg-red-500 text-white font-bold rounded-xl text-[14px] text-center mb-3">
+            Call Support (242) 452-9911
+          </a>
+          <a href="https://wa.me/12424529911?text=I%20would%20like%20to%20delete%20my%20RideUp%20account" target="_blank" class="block w-full py-3.5 bg-[#1a1a1a]/[0.04] text-[#1a1a1a] font-bold rounded-xl text-[14px] text-center mb-3">
+            WhatsApp Support
+          </a>
+          <button @click="showDeleteConfirm = false" class="w-full py-3 text-[14px] text-[#1a1a1a]/50 font-medium">Cancel</button>
+        </div>
+      </div>
+    </Transition>
 
     <!-- Toast -->
     <Transition name="fade">
