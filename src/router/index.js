@@ -12,6 +12,7 @@ import About from '../pages/About.vue'
 import RiderLanding from '../pages/RiderLanding.vue'
 import DriverLanding from '../pages/DriverLanding.vue'
 import NotFound from '../pages/NotFound.vue'
+import TrustedContacts from '../pages/TrustedContacts.vue'
 import Privacy from '../pages/Privacy.vue'
 import Terms from '../pages/Terms.vue'
 import PaymentSuccess from '../pages/rider/PaymentSuccess.vue'
@@ -40,6 +41,7 @@ const routes = [
   { path: '/payment-success', name: 'payment-success', component: PaymentSuccess, meta: { title: 'Payment Successful — RideUp' } },
   { path: '/receipt/:rideId', name: 'ride-receipt', component: RideReceipt, meta: { title: 'Receipt — RideUp' } },
   { path: '/support', name: 'support', component: Support, meta: { title: 'Support — RideUp' } },
+  { path: '/trusted-contacts', name: 'trusted-contacts', component: TrustedContacts, meta: { requiresAuth: true, title: 'Trusted Contacts — RideUp' } },
   { path: '/about', name: 'about', component: About, meta: { title: 'About — RideUp' } },
   { path: '/welcome', redirect: '/' },
   { path: '/drive', name: 'driver-landing', component: DriverLanding, meta: { title: 'Drive with RideUp Nassau' } },
