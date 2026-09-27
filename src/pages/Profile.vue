@@ -62,9 +62,18 @@ async function handleLogout() {
     <!-- Avatar & Name -->
     <div class="flex flex-col items-center mt-4 mb-6 max-w-lg mx-auto w-full">
       <div class="w-20 h-20 rounded-full bg-[#2b8659] flex items-center justify-center mb-4">
-        <span class="text-white text-2xl font-bold font-serif">{{ initials }}</span>
+        <span class="text-white text-2xl font-bold">{{ initials }}</span>
       </div>
-      <h1 class="text-2xl font-bold font-serif">{{ displayName }}</h1>
+      <h1 class="text-2xl font-bold">{{ displayName }}</h1>
+
+      <!-- Rating display -->
+      <div class="flex items-center gap-1.5 mt-2">
+        <svg class="w-4 h-4 text-[#2b8659]" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
+        <span class="text-[15px] font-bold">4.9</span>
+        <span class="text-[13px] text-[#191f1c]/40">(28 rides)</span>
+      </div>
     </div>
 
     <!-- Email -->

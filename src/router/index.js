@@ -20,6 +20,8 @@ import DriverDashboard from '../pages/driver/DriverDashboard.vue'
 import DriverActiveRide from '../pages/driver/DriverActiveRide.vue'
 import DriverEarnings from '../pages/driver/DriverEarnings.vue'
 import DriverProfile from '../pages/driver/DriverProfile.vue'
+import RateRide from '../pages/rider/RateRide.vue'
+import RateRider from '../pages/driver/RateRider.vue'
 import { useAuth } from '../lib/useAuth'
 import { useDriver } from '../lib/useDriver'
 import { DEMO_MODE } from '../lib/demoMode'
@@ -45,6 +47,8 @@ const routes = [
   { path: '/driver/active-ride', name: 'driver-active-ride', component: DriverActiveRide, meta: { requiresAuth: true, title: 'Active Ride — RideUp' } },
   { path: '/driver/earnings', name: 'driver-earnings', component: DriverEarnings, meta: { requiresAuth: true, title: 'Earnings — RideUp' } },
   { path: '/driver/profile', name: 'driver-profile', component: DriverProfile, meta: { requiresAuth: true, title: 'Driver Profile — RideUp' } },
+  { path: '/rate/:rideId', name: 'rate-ride', component: RateRide, meta: { requiresAuth: true, title: 'Rate Your Ride — RideUp' } },
+  { path: '/driver/rate/:rideId', name: 'rate-rider', component: RateRider, meta: { requiresAuth: true, title: 'Rate Rider — RideUp' } },
   { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFound, meta: { title: 'Page Not Found — RideUp' } },
 ]
 
