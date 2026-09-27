@@ -67,7 +67,7 @@ router.beforeEach(async (to) => {
   }
 
   // Logged-in users visiting the landing page get redirected to the booking screen
-  if (to.path === '/' && (user.value || DEMO_MODE)) {
+  if (to.path === '/' && user.value) {
     return { path: '/book' }
   }
 
