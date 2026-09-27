@@ -235,6 +235,8 @@ async function requestRide() {
   isSubmitting.value = true
   error.value = null
   const fare = fareEstimates.value[selectedVehicle.value]
+  const vehicleName = VEHICLE_TYPES.find(v => v.id === selectedVehicle.value)?.name || 'RideUp Ride'
+  const description = `${vehicleName}: ${pickupText.value} → ${dropoffText.value}`
 
   if (DEMO_MODE) {
     await new Promise((r) => setTimeout(r, 600))
@@ -247,6 +249,27 @@ async function requestRide() {
       status: 'requested',
       demo: true,
     })
+    isSubmitting.value = false
+    return
+  }
+
+  // Redirect to Stripe Checkout for payment
+  try {
+    const res = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: fare, description }),
+    })
+    const data = await res.json()
+    if (data.url) {
+      window.location.href = data.url
+      return
+    }
+    error.value = data.error || 'Payment failed. Please try again.'
+    isSubmitting.value = false
+    return
+  } catch (err) {
+    error.value = 'Could not connect to payment. Please try again.'
     isSubmitting.value = false
     return
   }
