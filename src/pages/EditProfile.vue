@@ -19,6 +19,22 @@ const saving = ref(false)
 const saveMessage = ref('')
 const saveError = ref(false)
 
+const avatarUrl = ref(user.value?.user_metadata?.avatar_url || '')
+const avatarFile = ref(null)
+const avatarPreview = ref(avatarUrl.value)
+const fileInput = ref(null)
+
+function triggerFileInput() {
+  fileInput.value?.click()
+}
+
+function onFileSelected(e) {
+  const file = e.target.files?.[0]
+  if (!file) return
+  avatarFile.value = file
+  avatarPreview.value = URL.createObjectURL(file)
+}
+
 function cancel() {
   router.back()
 }
@@ -28,10 +44,31 @@ async function handleSave() {
   saveMessage.value = ''
   saveError.value = false
 
+  let uploadedAvatarUrl = avatarUrl.value
+
+  if (avatarFile.value) {
+    const ext = avatarFile.value.name.split('.').pop()
+    const path = `avatars/${user.value.id}.${ext}`
+    const { error: uploadErr } = await supabase.storage
+      .from('avatars')
+      .upload(path, avatarFile.value, { upsert: true })
+
+    if (uploadErr) {
+      saving.value = false
+      saveMessage.value = 'Photo upload failed: ' + uploadErr.message
+      saveError.value = true
+      return
+    }
+
+    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path)
+    uploadedAvatarUrl = urlData.publicUrl + '?t=' + Date.now()
+  }
+
   const { error } = await supabase.auth.updateUser({
     data: {
       name: (firstName.value + ' ' + lastName.value).trim(),
       phone: phoneNumber.value,
+      avatar_url: uploadedAvatarUrl,
     },
   })
 
@@ -57,14 +94,22 @@ async function handleSave() {
       <button @click="handleSave" :disabled="saving" class="text-[#2b8659] text-base font-semibold disabled:opacity-50">{{ saving ? 'Saving...' : 'Save' }}</button>
     </div>
 
-    <!-- Avatar Placeholder -->
+    <!-- Avatar Upload -->
     <div class="flex justify-center mt-6 mb-8">
-      <div class="w-24 h-24 rounded-full bg-[#191f1c]/[0.06] flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-[#191f1c]/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+      <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onFileSelected" />
+      <button @click="triggerFileInput" class="relative w-24 h-24 rounded-full bg-[#191f1c]/[0.06] flex items-center justify-center overflow-hidden group">
+        <img v-if="avatarPreview" :src="avatarPreview" class="w-full h-full object-cover" />
+        <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-[#191f1c]/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
-      </div>
+        <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
+      </button>
     </div>
 
     <!-- Form Fields -->
