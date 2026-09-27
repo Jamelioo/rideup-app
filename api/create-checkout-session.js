@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       ui_mode: 'hosted_page',
-      success_url: `${domain}/book?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${domain}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${domain}/book?payment=cancelled`,
       line_items: [
         {

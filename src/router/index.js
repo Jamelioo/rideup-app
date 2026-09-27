@@ -14,6 +14,8 @@ import DriverLanding from '../pages/DriverLanding.vue'
 import NotFound from '../pages/NotFound.vue'
 import Privacy from '../pages/Privacy.vue'
 import Terms from '../pages/Terms.vue'
+import PaymentSuccess from '../pages/rider/PaymentSuccess.vue'
+import RideReceipt from '../pages/rider/RideReceipt.vue'
 import DriverApply from '../pages/driver/DriverApply.vue'
 import DriverPending from '../pages/driver/DriverPending.vue'
 import DriverDashboard from '../pages/driver/DriverDashboard.vue'
@@ -35,6 +37,8 @@ const routes = [
   { path: '/edit-profile', name: 'edit-profile', component: EditProfile, meta: { requiresAuth: true, title: 'Edit Profile — RideUp' } },
   { path: '/my-rides', name: 'my-rides', component: MyRides, meta: { requiresAuth: true, title: 'My Rides — RideUp' } },
   { path: '/payments', name: 'payments', component: Payments, meta: { requiresAuth: true, title: 'Payments — RideUp' } },
+  { path: '/payment-success', name: 'payment-success', component: PaymentSuccess, meta: { title: 'Payment Successful — RideUp' } },
+  { path: '/receipt/:rideId', name: 'ride-receipt', component: RideReceipt, meta: { title: 'Receipt — RideUp' } },
   { path: '/support', name: 'support', component: Support, meta: { title: 'Support — RideUp' } },
   { path: '/about', name: 'about', component: About, meta: { title: 'About — RideUp' } },
   { path: '/welcome', redirect: '/' },
