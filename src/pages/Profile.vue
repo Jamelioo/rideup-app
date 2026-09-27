@@ -24,11 +24,11 @@ const initials = computed(() =>
 )
 
 function goBack() {
-  window.history.length > 1 ? router.back() : router.push('/')
+  router.back()
 }
 
 function goToBooking() {
-  router.push('/')
+  router.push('/book')
 }
 
 const showDeleteConfirm = ref(false)
@@ -44,7 +44,7 @@ async function handleLogout() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white font-[var(--font-sans)] text-[#1a1a1a] flex flex-col">
+  <div class="min-h-screen bg-white font-[var(--font-sans)] text-[#191f1c] flex flex-col">
     <!-- Top Bar -->
     <div class="flex items-center justify-between px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
       <button @click="goBack" class="w-10 h-10 flex items-center justify-center">
@@ -52,7 +52,7 @@ async function handleLogout() {
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
-      <button @click="router.push('/edit-profile')" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#1a1a1a]/5">
+      <button @click="router.push('/edit-profile')" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
         </svg>
@@ -61,7 +61,7 @@ async function handleLogout() {
 
     <!-- Avatar & Name -->
     <div class="flex flex-col items-center mt-4 mb-6 max-w-lg mx-auto w-full">
-      <div class="w-20 h-20 rounded-full bg-[#58cc02] flex items-center justify-center mb-4">
+      <div class="w-20 h-20 rounded-full bg-[#2b8659] flex items-center justify-center mb-4">
         <span class="text-white text-2xl font-bold font-serif">{{ initials }}</span>
       </div>
       <h1 class="text-2xl font-bold font-serif">{{ displayName }}</h1>
@@ -69,31 +69,31 @@ async function handleLogout() {
 
     <!-- Email -->
     <div class="flex items-center justify-center gap-2 mb-8">
-      <span class="text-[#1a1a1a]/50 text-sm">{{ displayEmail }}</span>
+      <span class="text-[#191f1c]/50 text-sm">{{ displayEmail }}</span>
     </div>
 
     <!-- Favorite Locations -->
     <div class="px-5 max-w-lg mx-auto w-full">
-      <h2 class="text-xs font-semibold text-[#1a1a1a]/40 uppercase tracking-wider mb-3">Favorite locations</h2>
+      <h2 class="text-xs font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-3">Favorite locations</h2>
 
-      <div class="flex items-center justify-between py-4 border-b border-[#1a1a1a]/8">
+      <div class="flex items-center justify-between py-4 border-b border-[#191f1c]/8">
         <div class="flex items-center gap-3">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#1a1a1a]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#191f1c]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" />
           </svg>
           <span class="text-base">Home</span>
         </div>
-        <button @click="goToBooking" class="text-[#58cc02] text-sm font-bold uppercase tracking-wide">Add</button>
+        <button @click="goToBooking" class="text-[#2b8659] text-sm font-bold uppercase tracking-wide">Add</button>
       </div>
 
-      <div class="flex items-center justify-between py-4 border-b border-[#1a1a1a]/8">
+      <div class="flex items-center justify-between py-4 border-b border-[#191f1c]/8">
         <div class="flex items-center gap-3">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#1a1a1a]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#191f1c]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m8 0H8m8 0a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2" />
           </svg>
           <span class="text-base">Work</span>
         </div>
-        <button @click="goToBooking" class="text-[#58cc02] text-sm font-bold uppercase tracking-wide">Add</button>
+        <button @click="goToBooking" class="text-[#2b8659] text-sm font-bold uppercase tracking-wide">Add</button>
       </div>
     </div>
 
@@ -101,14 +101,14 @@ async function handleLogout() {
     <div class="px-5 mt-2">
       <button @click="router.push('/support')" class="w-full flex items-center justify-between py-4">
         <span class="text-base">Communication Preferences</span>
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#1a1a1a]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#191f1c]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
         </svg>
       </button>
     </div>
 
     <!-- Divider -->
-    <div class="border-t border-[#1a1a1a]/10 mx-5 mt-2"></div>
+    <div class="border-t border-[#191f1c]/10 mx-5 mt-2"></div>
 
     <!-- Log Out -->
     <div class="px-5 mt-4">
@@ -117,29 +117,29 @@ async function handleLogout() {
 
     <!-- Delete Account -->
     <div class="px-5 mt-3 mb-8">
-      <button @click="handleDeleteAccount" class="text-[#1a1a1a]/40 text-sm">Delete account</button>
+      <button @click="handleDeleteAccount" class="text-[#191f1c]/40 text-sm">Delete account</button>
     </div>
 
     <!-- Delete Account Confirmation -->
     <Transition name="fade">
       <div v-if="showDeleteConfirm" class="fixed inset-0 z-50 flex items-end justify-center bg-black/40" @click.self="showDeleteConfirm = false">
         <div class="w-full max-w-md bg-white rounded-t-3xl px-6 pt-8 pb-10 shadow-xl">
-          <h3 class="text-lg font-bold font-serif mb-2">Delete your account?</h3>
-          <p class="text-[14px] text-[#1a1a1a]/50 mb-6">To delete your account, please contact our support team. They'll process your request and remove all your data.</p>
+          <h3 class="text-lg font-bold mb-2">Delete your account?</h3>
+          <p class="text-[14px] text-[#191f1c]/50 mb-6">To delete your account, please contact our support team. They'll process your request and remove all your data.</p>
           <a href="tel:+12424529911" class="block w-full py-3.5 bg-red-500 text-white font-bold rounded-xl text-[14px] text-center mb-3">
             Call Support (242) 452-9911
           </a>
-          <a href="https://wa.me/12424529911?text=I%20would%20like%20to%20delete%20my%20RideUp%20account" target="_blank" class="block w-full py-3.5 bg-[#1a1a1a]/[0.04] text-[#1a1a1a] font-bold rounded-xl text-[14px] text-center mb-3">
+          <a href="https://wa.me/12424529911?text=I%20would%20like%20to%20delete%20my%20RideUp%20account" target="_blank" class="block w-full py-3.5 bg-[#191f1c]/[0.04] text-[#191f1c] font-bold rounded-xl text-[14px] text-center mb-3">
             WhatsApp Support
           </a>
-          <button @click="showDeleteConfirm = false" class="w-full py-3 text-[14px] text-[#1a1a1a]/50 font-medium">Cancel</button>
+          <button @click="showDeleteConfirm = false" class="w-full py-3 text-[14px] text-[#191f1c]/50 font-medium">Cancel</button>
         </div>
       </div>
     </Transition>
 
     <!-- Toast -->
     <Transition name="fade">
-      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1a1a1a] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
+      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#191f1c] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
         {{ toast }}
       </div>
     </Transition>

@@ -82,24 +82,24 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white text-[#1a1a1a]">
+  <div class="min-h-screen bg-white text-[#191f1c]">
     <!-- Top Bar -->
     <div class="sticky top-0 z-10 flex items-center bg-white px-4 py-4">
       <button
-        class="flex h-10 w-10 items-center justify-center rounded-full transition-colors active:bg-[#1a1a1a]/5"
-        @click="window.history.length > 1 ? router.back() : router.push('/')"
+        class="flex h-10 w-10 items-center justify-center rounded-full transition-colors active:bg-[#191f1c]/5"
+        @click="router.back()"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#1a1a1a]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#191f1c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
-      <h1 class="flex-1 text-center text-xl font-bold text-[#1a1a1a] font-serif">My rides</h1>
+      <h1 class="flex-1 text-center text-xl font-bold text-[#191f1c] font-serif">My rides</h1>
       <div class="w-10"></div>
     </div>
 
     <!-- Loading Spinner -->
     <div v-if="loading" class="flex items-center justify-center py-20">
-      <svg class="h-8 w-8 animate-spin text-[#58cc02]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <svg class="h-8 w-8 animate-spin text-[#2b8659]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
       </svg>
@@ -107,36 +107,36 @@ onMounted(async () => {
 
     <!-- Empty State -->
     <div v-else-if="rides.length === 0" class="flex flex-col items-center justify-center px-4 py-20">
-      <svg xmlns="http://www.w3.org/2000/svg" class="mb-4 h-16 w-16 text-[#1a1a1a]/15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+      <svg xmlns="http://www.w3.org/2000/svg" class="mb-4 h-16 w-16 text-[#191f1c]/15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h.01M12 7h.01M16 7h.01M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
       </svg>
-      <p class="text-center text-lg font-semibold text-[#1a1a1a]/60">No rides yet.</p>
-      <p class="mt-1 text-center text-sm text-[#1a1a1a]/40">Book your first ride!</p>
+      <p class="text-center text-lg font-semibold text-[#191f1c]/60">No rides yet.</p>
+      <p class="mt-1 text-center text-sm text-[#191f1c]/40">Book your first ride!</p>
     </div>
 
     <!-- Ride Groups -->
     <div v-else class="px-4 pb-4">
       <div v-for="group in ridesByMonth" :key="group.label" class="mb-6">
-        <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-[#1a1a1a]/40">
+        <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-[#191f1c]/40">
           {{ group.label }}
         </h2>
 
         <div
           v-for="ride in group.rides"
           :key="ride.id"
-          class="flex items-center justify-between border-b border-[#1a1a1a]/8 py-4 last:border-b-0"
+          class="flex items-center justify-between border-b border-[#191f1c]/8 py-4 last:border-b-0"
         >
           <!-- Left: dot + info -->
           <div class="flex items-start gap-3">
-            <div class="mt-1.5 h-3 w-3 shrink-0 rounded-full bg-[#58cc02]"></div>
+            <div class="mt-1.5 h-3 w-3 shrink-0 rounded-full bg-[#2b8659]"></div>
             <div>
-              <p class="text-base font-semibold text-[#1a1a1a]">{{ ride.pickup_address }}</p>
-              <p class="mt-0.5 text-sm text-[#1a1a1a]/40">{{ formatDate(ride.created_at) }}</p>
+              <p class="text-base font-semibold text-[#191f1c]">{{ ride.pickup_address }}</p>
+              <p class="mt-0.5 text-sm text-[#191f1c]/40">{{ formatDate(ride.created_at) }}</p>
             </div>
           </div>
 
           <!-- Right: fare -->
-          <span class="text-base font-semibold text-[#1a1a1a]">{{ formatFare(ride.fare_cents) }}</span>
+          <span class="text-base font-semibold text-[#191f1c]">{{ formatFare(ride.fare_cents) }}</span>
         </div>
       </div>
     </div>

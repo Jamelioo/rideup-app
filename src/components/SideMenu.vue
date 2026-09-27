@@ -38,7 +38,7 @@ const menuItems = computed(() => {
       { label: 'Profile', route: '/driver/profile', icon: 'info', requiresAuth: false },
       { label: 'Support', route: '/support', icon: 'chat', requiresAuth: false },
       { label: 'About', route: '/about', icon: 'info', requiresAuth: false },
-      { label: 'Switch to Rider', route: '/', icon: 'swap', requiresAuth: false },
+      { label: 'Switch to Rider', route: '/book', icon: 'swap', requiresAuth: false },
     ]
   }
 
@@ -67,7 +67,7 @@ function handleNavigate(route) {
 async function handleLogout() {
   emit('close')
   await signOut()
-  router.push('/welcome')
+  router.push('/')
 }
 
 function handleClose() {
@@ -128,15 +128,15 @@ watch(() => props.isOpen, async (open) => {
         <!-- User Profile Section -->
         <div class="px-5 pt-14 pb-5">
           <div v-if="isLoggedIn" class="flex items-center gap-3.5">
-            <div class="w-14 h-14 rounded-full bg-[#58cc02] flex items-center justify-center text-white text-lg font-semibold shrink-0">
+            <div class="w-14 h-14 rounded-full bg-[#2b8659] flex items-center justify-center text-white text-lg font-semibold shrink-0">
               {{ initials }}
             </div>
             <div class="min-w-0">
-              <p class="text-lg font-semibold text-[#1a1a1a] truncate">
+              <p class="text-lg font-semibold text-[#191f1c] truncate">
                 {{ displayName }}
               </p>
               <button
-                class="text-sm font-medium text-[#58cc02] mt-0.5 hover:text-[#4ab300] transition-colors"
+                class="text-sm font-medium text-[#2b8659] mt-0.5 hover:text-[#236e49] transition-colors"
                 @click="handleNavigate('/profile')"
               >
                 Edit profile
@@ -144,17 +144,17 @@ watch(() => props.isOpen, async (open) => {
             </div>
           </div>
           <div v-else class="flex flex-col gap-3">
-            <p class="text-lg font-semibold text-[#1a1a1a]">Welcome to RideUp</p>
+            <p class="text-lg font-semibold text-[#191f1c]">Welcome to RideUp</p>
             <div class="flex gap-3">
               <button
                 @click="handleNavigate('/login')"
-                class="flex-1 py-2.5 rounded-xl border border-[#1a1a1a]/10 text-[14px] font-semibold text-[#1a1a1a] active:bg-[#1a1a1a]/5 transition-colors"
+                class="flex-1 py-2.5 rounded-xl border border-[#191f1c]/10 text-[14px] font-semibold text-[#191f1c] active:bg-[#191f1c]/5 transition-colors"
               >
                 Log in
               </button>
               <button
                 @click="handleNavigate('/signup')"
-                class="flex-1 py-2.5 rounded-xl bg-[#58cc02] text-[14px] font-semibold text-white active:bg-[#4ab300] transition-colors"
+                class="flex-1 py-2.5 rounded-xl bg-[#2b8659] text-[14px] font-semibold text-white active:bg-[#236e49] transition-colors"
               >
                 Sign up
               </button>
@@ -163,18 +163,18 @@ watch(() => props.isOpen, async (open) => {
         </div>
 
         <!-- Divider -->
-        <div class="h-px bg-[#1a1a1a]/8 mx-5" />
+        <div class="h-px bg-[#191f1c]/8 mx-5" />
 
         <!-- Menu Items -->
         <nav class="flex-1 overflow-y-auto py-2" aria-label="Main navigation">
           <button
             v-for="item in menuItems"
             :key="item.label"
-            class="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-[#1a1a1a]/[0.03] active:bg-[#1a1a1a]/[0.06] transition-colors text-left"
+            class="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-[#191f1c]/[0.03] active:bg-[#191f1c]/[0.06] transition-colors text-left"
             @click="handleNavigate(item.route)"
           >
             <!-- Icon -->
-            <div class="w-6 h-6 flex items-center justify-center shrink-0 text-[#1a1a1a]">
+            <div class="w-6 h-6 flex items-center justify-center shrink-0 text-[#191f1c]">
               <svg v-if="item.icon === 'card'" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
                 <line x1="1" y1="10" x2="23" y2="10" />
@@ -214,19 +214,19 @@ watch(() => props.isOpen, async (open) => {
 
             <!-- Label + Subtitle -->
             <div class="flex-1 min-w-0">
-              <p class="text-[15px] font-medium text-[#1a1a1a]">{{ item.label }}</p>
-              <p v-if="item.subtitle" class="text-xs text-[#1a1a1a]/40 mt-0.5">{{ item.subtitle }}</p>
+              <p class="text-[15px] font-medium text-[#191f1c]">{{ item.label }}</p>
+              <p v-if="item.subtitle" class="text-xs text-[#191f1c]/40 mt-0.5">{{ item.subtitle }}</p>
             </div>
 
             <!-- Chevron -->
-            <svg class="w-5 h-5 text-[#1a1a1a]/25 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="w-5 h-5 text-[#191f1c]/25 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6" />
             </svg>
           </button>
         </nav>
 
         <!-- Divider -->
-        <div class="h-px bg-[#1a1a1a]/8 mx-5" />
+        <div class="h-px bg-[#191f1c]/8 mx-5" />
 
         <!-- Logout (when logged in) or Become a Driver CTA -->
         <div class="px-5 py-4">
@@ -240,7 +240,7 @@ watch(() => props.isOpen, async (open) => {
           <button
             v-else
             @click="handleNavigate('/driver/apply')"
-            class="block w-full rounded-2xl bg-[#58cc02] px-5 py-4 text-left transition-colors active:bg-[#4ab300]"
+            class="block w-full rounded-2xl bg-[#2b8659] px-5 py-4 text-left transition-colors active:bg-[#236e49]"
           >
             <p class="text-white text-[15px] font-semibold">Become a driver</p>
             <p class="text-white/80 text-xs mt-0.5">Earn money on your schedule</p>
@@ -249,7 +249,7 @@ watch(() => props.isOpen, async (open) => {
 
         <!-- Home Indicator -->
         <div class="flex justify-center pb-2 pt-1">
-          <div class="w-32 h-1 rounded-full bg-[#1a1a1a]/20" />
+          <div class="w-32 h-1 rounded-full bg-[#191f1c]/20" />
         </div>
       </div>
     </Transition>

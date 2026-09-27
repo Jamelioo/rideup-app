@@ -25,7 +25,8 @@ import { useDriver } from '../lib/useDriver'
 import { DEMO_MODE } from '../lib/demoMode'
 
 const routes = [
-  { path: '/', name: 'home', component: RiderFlow, meta: { title: 'RideUp Nassau' } },
+  { path: '/', name: 'home', component: RiderLanding, meta: { title: 'RideUp — Ride in Nassau' } },
+  { path: '/book', name: 'book', component: RiderFlow, meta: { title: 'RideUp Nassau' } },
   { path: '/login', name: 'login', component: Login, meta: { guestOnly: true, title: 'Log In — RideUp' } },
   { path: '/signup', name: 'signup', component: Signup, meta: { guestOnly: true, title: 'Sign Up — RideUp' } },
   { path: '/profile', name: 'profile', component: Profile, meta: { requiresAuth: true, title: 'Profile — RideUp' } },
@@ -34,7 +35,7 @@ const routes = [
   { path: '/payments', name: 'payments', component: Payments, meta: { requiresAuth: true, title: 'Payments — RideUp' } },
   { path: '/support', name: 'support', component: Support, meta: { title: 'Support — RideUp' } },
   { path: '/about', name: 'about', component: About, meta: { title: 'About — RideUp' } },
-  { path: '/welcome', name: 'rider-landing', component: RiderLanding, meta: { title: 'RideUp — Ride in Nassau' } },
+  { path: '/welcome', redirect: '/' },
   { path: '/drive', name: 'driver-landing', component: DriverLanding, meta: { title: 'Drive with RideUp Nassau' } },
   { path: '/privacy', name: 'privacy', component: Privacy, meta: { title: 'Privacy Policy — RideUp' } },
   { path: '/terms', name: 'terms', component: Terms, meta: { title: 'Terms of Service — RideUp' } },
@@ -65,12 +66,17 @@ router.beforeEach(async (to) => {
     })
   }
 
+  // Logged-in users visiting the landing page get redirected to the booking screen
+  if (to.path === '/' && (user.value || DEMO_MODE)) {
+    return { path: '/book' }
+  }
+
   if (to.meta.requiresAuth && !user.value && !DEMO_MODE) {
     return { path: '/login', query: { redirect: to.fullPath } }
   }
 
   if (to.meta.guestOnly && user.value) {
-    return { path: '/' }
+    return { path: '/book' }
   }
 
   // Driver-specific route guards

@@ -28,9 +28,9 @@ const mapStyles = [
 function createAdvancedMarkerContent(type) {
   const div = document.createElement('div')
   if (type === 'pickup') {
-    div.style.cssText = 'width:20px;height:20px;border-radius:50%;background:#58cc02;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);'
+    div.style.cssText = 'width:20px;height:20px;border-radius:50%;background:#2b8659;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);'
   } else {
-    div.style.cssText = 'width:20px;height:20px;border-radius:2px;background:#1a1a1a;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);'
+    div.style.cssText = 'width:20px;height:20px;border-radius:2px;background:#191f1c;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);'
   }
   return div
 }
@@ -64,7 +64,7 @@ function createMarker(type, position) {
         ? {
             path: maps.SymbolPath.CIRCLE,
             scale: 8,
-            fillColor: '#58cc02',
+            fillColor: '#2b8659',
             fillOpacity: 1,
             strokeColor: '#fff',
             strokeWeight: 3,
@@ -72,7 +72,7 @@ function createMarker(type, position) {
         : {
             path: 'M -8,-8 L 8,-8 L 8,8 L -8,8 Z',
             scale: 1,
-            fillColor: '#1a1a1a',
+            fillColor: '#191f1c',
             fillOpacity: 1,
             strokeColor: '#fff',
             strokeWeight: 3,
@@ -149,7 +149,7 @@ function drawRoute() {
       map,
       suppressMarkers: true,
       polylineOptions: {
-        strokeColor: '#58cc02',
+        strokeColor: '#2b8659',
         strokeWeight: 5,
         strokeOpacity: 0.8,
       },

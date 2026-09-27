@@ -86,15 +86,15 @@ async function handleSubmit() {
 }
 
 function goBack() {
-  window.history.length > 1 ? router.back() : router.push('/drive')
+  router.back()
 }
 </script>
 
 <template>
-  <div class="min-h-screen bg-white text-[#1a1a1a] flex flex-col">
+  <div class="min-h-screen bg-white text-[#191f1c] flex flex-col">
     <!-- Top bar -->
     <div class="flex items-center px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#1a1a1a]/5">
+      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -104,85 +104,85 @@ function goBack() {
     <div class="flex-1 px-6 w-full max-w-md mx-auto">
       <!-- Success -->
       <div v-if="success" class="pt-20 text-center">
-        <div class="w-16 h-16 rounded-full bg-[#58cc02] flex items-center justify-center mx-auto mb-4">
+        <div class="w-16 h-16 rounded-full bg-[#2b8659] flex items-center justify-center mx-auto mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 class="font-serif text-2xl font-bold mb-2">Application Submitted</h2>
-        <p class="text-[#1a1a1a]/50 text-[14px]">{{ DEMO_MODE ? 'Redirecting to dashboard...' : 'We\'ll review your application and get back to you.' }}</p>
+        <h2 class="text-2xl font-bold mb-2">Application Submitted</h2>
+        <p class="text-[#191f1c]/50 text-[14px]">{{ DEMO_MODE ? 'Redirecting to dashboard...' : 'We\'ll review your application and get back to you.' }}</p>
       </div>
 
       <!-- Form -->
       <template v-else>
-        <h1 class="font-serif text-[28px] font-bold leading-tight mb-2">Drive with RideUp</h1>
-        <p class="text-[#1a1a1a]/50 text-[14px] mb-6">Fill out your details to apply</p>
+        <h1 class="text-[28px] font-bold leading-tight mb-2">Drive with RideUp</h1>
+        <p class="text-[#191f1c]/50 text-[14px] mb-6">Fill out your details to apply</p>
 
         <div class="space-y-5">
           <!-- Personal Info -->
           <div>
-            <p class="text-[11px] font-semibold text-[#1a1a1a]/40 uppercase tracking-wider mb-2">Personal Info</p>
+            <p class="text-[11px] font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-2">Personal Info</p>
             <div class="space-y-2">
               <label class="block">
                 <span class="sr-only">Full name</span>
                 <input v-model="form.name" type="text" placeholder="Full name" autocomplete="name"
-                       class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#58cc02] focus:bg-white transition-all placeholder:text-[#1a1a1a]/40" />
+                       class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-white transition-all placeholder:text-[#191f1c]/40" />
               </label>
               <label class="block">
                 <span class="sr-only">Email</span>
                 <input v-model="form.email" type="email" placeholder="Email address" autocomplete="email"
-                       class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#58cc02] focus:bg-white transition-all placeholder:text-[#1a1a1a]/40" />
+                       class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-white transition-all placeholder:text-[#191f1c]/40" />
               </label>
               <label class="block">
                 <span class="sr-only">Phone</span>
                 <input v-model="form.phone" type="tel" placeholder="Phone number" autocomplete="tel"
-                       class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#58cc02] focus:bg-white transition-all placeholder:text-[#1a1a1a]/40" />
+                       class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-white transition-all placeholder:text-[#191f1c]/40" />
               </label>
               <label v-if="!user" class="block">
                 <span class="sr-only">Password</span>
                 <input v-model="password" type="password" placeholder="Create a password (min 6 chars)" autocomplete="new-password"
-                       class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#58cc02] focus:bg-white transition-all placeholder:text-[#1a1a1a]/40" />
+                       class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-white transition-all placeholder:text-[#191f1c]/40" />
               </label>
             </div>
           </div>
 
           <!-- Vehicle Info -->
           <div>
-            <p class="text-[11px] font-semibold text-[#1a1a1a]/40 uppercase tracking-wider mb-2">Vehicle Info</p>
+            <p class="text-[11px] font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-2">Vehicle Info</p>
             <div class="space-y-2">
               <div class="grid grid-cols-2 gap-2">
                 <label class="block">
                   <span class="sr-only">Vehicle make</span>
                   <input v-model="form.vehicleMake" type="text" placeholder="Make (e.g. Toyota)"
-                         class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#58cc02] focus:bg-white transition-all placeholder:text-[#1a1a1a]/40" />
+                         class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-white transition-all placeholder:text-[#191f1c]/40" />
                 </label>
                 <label class="block">
                   <span class="sr-only">Vehicle model</span>
                   <input v-model="form.vehicleModel" type="text" placeholder="Model (e.g. Camry)"
-                         class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#58cc02] focus:bg-white transition-all placeholder:text-[#1a1a1a]/40" />
+                         class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-white transition-all placeholder:text-[#191f1c]/40" />
                 </label>
               </div>
               <div class="grid grid-cols-2 gap-2">
                 <label class="block">
                   <span class="sr-only">Vehicle year</span>
                   <input v-model="form.vehicleYear" type="number" placeholder="Year"
-                         class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#58cc02] focus:bg-white transition-all placeholder:text-[#1a1a1a]/40" />
+                         class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-white transition-all placeholder:text-[#191f1c]/40" />
                 </label>
                 <label class="block">
                   <span class="sr-only">Vehicle color</span>
                   <input v-model="form.vehicleColor" type="text" placeholder="Color"
-                         class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#58cc02] focus:bg-white transition-all placeholder:text-[#1a1a1a]/40" />
+                         class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-white transition-all placeholder:text-[#191f1c]/40" />
                 </label>
               </div>
               <label class="block">
                 <span class="sr-only">License plate</span>
                 <input v-model="form.vehiclePlate" type="text" placeholder="License plate number"
-                       class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#58cc02] focus:bg-white transition-all placeholder:text-[#1a1a1a]/40 uppercase" />
+                       class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-white transition-all placeholder:text-[#191f1c]/40 uppercase" />
               </label>
               <label class="block">
                 <span class="sr-only">Vehicle type</span>
                 <select v-model="form.vehicleType"
-                        class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#58cc02] focus:bg-white transition-all text-[#1a1a1a]">
+                        class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-white transition-all text-[#191f1c]">
                   <option value="standard">Standard (4 seats)</option>
                   <option value="xl">XL (6 seats)</option>
                 </select>
@@ -192,11 +192,11 @@ function goBack() {
 
           <!-- License -->
           <div>
-            <p class="text-[11px] font-semibold text-[#1a1a1a]/40 uppercase tracking-wider mb-2">License</p>
+            <p class="text-[11px] font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-2">License</p>
             <label class="block">
               <span class="sr-only">Driver's license number</span>
               <input v-model="form.licenseNumber" type="text" placeholder="Driver's license number"
-                     class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#58cc02] focus:bg-white transition-all placeholder:text-[#1a1a1a]/40" />
+                     class="w-full px-4 py-3.5 bg-[#f5f5f5] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-white transition-all placeholder:text-[#191f1c]/40" />
             </label>
           </div>
         </div>
@@ -204,11 +204,11 @@ function goBack() {
         <p v-if="error" class="text-red-500 text-[13px] mt-4">{{ error }}</p>
 
         <button @click="handleSubmit" :disabled="submitting"
-                class="w-full py-4 bg-[#58cc02] text-white font-bold rounded-2xl text-[15px] mt-6 mb-4 transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(88,204,2,0.3)] disabled:opacity-50 disabled:shadow-none">
+                class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mt-6 mb-4 transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(88,204,2,0.3)] disabled:opacity-50 disabled:shadow-none">
           {{ submitting ? 'Submitting...' : 'Submit Application' }}
         </button>
 
-        <p class="text-[12px] text-[#1a1a1a]/35 text-center pb-8 leading-relaxed">
+        <p class="text-[12px] text-[#191f1c]/35 text-center pb-8 leading-relaxed">
           By applying, you agree to our <router-link to="/terms" class="underline">Terms of Service</router-link> and <router-link to="/privacy" class="underline">Privacy Policy</router-link>.
         </p>
       </template>

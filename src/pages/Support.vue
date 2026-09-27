@@ -17,7 +17,7 @@ const faqs = ref([
   },
   {
     question: 'How do I pay?',
-    answer: 'RideUp currently accepts cash payment. Simply pay your driver the displayed fare at the end of your ride. Digital payment options are coming soon.',
+    answer: 'RideUp accepts debit and credit card payments. Your card on file is charged automatically at the end of your ride. You\'ll always see the fare upfront before confirming.',
     open: false,
   },
   {
@@ -42,19 +42,19 @@ function toggleFaq(index) {
 }
 
 function close() {
-  window.history.length > 1 ? router.back() : router.push('/')
+  router.back()
 }
 </script>
 
 <template>
-  <div class="min-h-screen bg-white text-[#1a1a1a]">
+  <div class="min-h-screen bg-white text-[#191f1c]">
 
     <!-- Top bar -->
-    <div class="sticky top-0 z-40 bg-white border-b border-[#1a1a1a]/8">
+    <div class="sticky top-0 z-40 bg-white border-b border-[#191f1c]/8">
       <div class="flex items-center justify-between px-5 py-4">
         <button
           @click="close"
-          class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[#1a1a1a]/5 transition-colors"
+          class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[#191f1c]/5 transition-colors"
           aria-label="Close"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -71,13 +71,13 @@ function close() {
     <div class="max-w-lg mx-auto px-5 pt-8 pb-16">
 
       <!-- Main heading -->
-      <h1 class="font-serif text-[28px] font-bold leading-tight mb-8">
+      <h1 class="text-[28px] font-bold leading-tight mb-8">
         How can we help?
       </h1>
 
       <!-- Emergency contact -->
       <div class="mb-8">
-        <h2 class="text-[13px] font-semibold text-[#1a1a1a]/50 uppercase tracking-wider mb-3">
+        <h2 class="text-[13px] font-semibold text-[#191f1c]/50 uppercase tracking-wider mb-3">
           Emergency
         </h2>
         <a
@@ -98,23 +98,23 @@ function close() {
 
       <!-- FAQ section -->
       <div class="mb-8">
-        <h2 class="text-[13px] font-semibold text-[#1a1a1a]/50 uppercase tracking-wider mb-3">
+        <h2 class="text-[13px] font-semibold text-[#191f1c]/50 uppercase tracking-wider mb-3">
           Frequently asked questions
         </h2>
         <div class="flex flex-col gap-2">
           <div
             v-for="(faq, index) in faqs"
             :key="index"
-            class="rounded-xl bg-[#1a1a1a]/[0.03] overflow-hidden transition-colors"
+            class="rounded-xl bg-[#191f1c]/[0.03] overflow-hidden transition-colors"
           >
             <button
               @click="toggleFaq(index)"
-              class="w-full flex items-center justify-between px-4 py-4 hover:bg-[#1a1a1a]/[0.05] transition-colors"
+              class="w-full flex items-center justify-between px-4 py-4 hover:bg-[#191f1c]/[0.05] transition-colors"
             >
               <span class="text-[15px] font-semibold text-left pr-3">{{ faq.question }}</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5 text-[#1a1a1a]/30 shrink-0 transition-transform duration-300"
+                class="w-5 h-5 text-[#191f1c]/30 shrink-0 transition-transform duration-300"
                 :class="{ 'rotate-90': faq.open }"
                 viewBox="0 0 24 24"
                 fill="none"
@@ -128,7 +128,7 @@ function close() {
             </button>
             <Transition name="expand">
               <div v-if="faq.open" class="px-4 pb-4">
-                <p class="text-[14px] text-[#1a1a1a]/70 leading-relaxed">
+                <p class="text-[14px] text-[#191f1c]/70 leading-relaxed">
                   {{ faq.answer }}
                 </p>
               </div>
@@ -139,7 +139,7 @@ function close() {
 
       <!-- Contact methods -->
       <div>
-        <h2 class="text-[13px] font-semibold text-[#1a1a1a]/50 uppercase tracking-wider mb-3">
+        <h2 class="text-[13px] font-semibold text-[#191f1c]/50 uppercase tracking-wider mb-3">
           Contact us
         </h2>
         <div class="flex flex-col gap-2">
@@ -147,16 +147,16 @@ function close() {
           <!-- Call -->
           <a
             href="tel:+12424529911"
-            class="w-full flex items-center gap-4 px-4 py-4 bg-[#1a1a1a]/[0.03] rounded-xl hover:bg-[#1a1a1a]/[0.05] transition-colors"
+            class="w-full flex items-center gap-4 px-4 py-4 bg-[#191f1c]/[0.03] rounded-xl hover:bg-[#191f1c]/[0.05] transition-colors"
           >
-            <div class="w-10 h-10 rounded-full bg-[#58cc02]/10 flex items-center justify-center shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#58cc02]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="w-10 h-10 rounded-full bg-[#2b8659]/10 flex items-center justify-center shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#2b8659]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
               </svg>
             </div>
             <div>
               <div class="text-[15px] font-semibold">Call us</div>
-              <div class="text-[13px] text-[#1a1a1a]/50 mt-0.5">(242) 452-9911</div>
+              <div class="text-[13px] text-[#191f1c]/50 mt-0.5">(242) 452-9911</div>
             </div>
           </a>
 
@@ -165,7 +165,7 @@ function close() {
             href="https://wa.me/12424529911"
             target="_blank"
             rel="noopener noreferrer"
-            class="w-full flex items-center gap-4 px-4 py-4 bg-[#1a1a1a]/[0.03] rounded-xl hover:bg-[#1a1a1a]/[0.05] transition-colors"
+            class="w-full flex items-center gap-4 px-4 py-4 bg-[#191f1c]/[0.03] rounded-xl hover:bg-[#191f1c]/[0.05] transition-colors"
           >
             <div class="w-10 h-10 rounded-full bg-[#25D366]/10 flex items-center justify-center shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#25D366]" viewBox="0 0 24 24" fill="currentColor">
@@ -174,24 +174,24 @@ function close() {
             </div>
             <div>
               <div class="text-[15px] font-semibold">WhatsApp</div>
-              <div class="text-[13px] text-[#1a1a1a]/50 mt-0.5">Message us anytime</div>
+              <div class="text-[13px] text-[#191f1c]/50 mt-0.5">Message us anytime</div>
             </div>
           </a>
 
           <!-- Email -->
           <a
             href="mailto:support@rideupnassau.com"
-            class="w-full flex items-center gap-4 px-4 py-4 bg-[#1a1a1a]/[0.03] rounded-xl hover:bg-[#1a1a1a]/[0.05] transition-colors"
+            class="w-full flex items-center gap-4 px-4 py-4 bg-[#191f1c]/[0.03] rounded-xl hover:bg-[#191f1c]/[0.05] transition-colors"
           >
-            <div class="w-10 h-10 rounded-full bg-[#58cc02]/10 flex items-center justify-center shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#58cc02]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="w-10 h-10 rounded-full bg-[#2b8659]/10 flex items-center justify-center shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#2b8659]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2" y="4" width="20" height="16" rx="2" />
                 <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
               </svg>
             </div>
             <div>
               <div class="text-[15px] font-semibold">Email</div>
-              <div class="text-[13px] text-[#1a1a1a]/50 mt-0.5">support@rideupnassau.com</div>
+              <div class="text-[13px] text-[#191f1c]/50 mt-0.5">support@rideupnassau.com</div>
             </div>
           </a>
 

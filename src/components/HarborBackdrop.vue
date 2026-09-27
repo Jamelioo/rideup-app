@@ -10,11 +10,11 @@ defineProps({ showRoute: { type: Boolean, default: false } })
     </div>
     <svg v-if="showRoute" class="absolute inset-0 w-full h-full opacity-60" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice">
       <path d="M 60 180 C 140 220 180 260 220 340 S 320 480 300 600"
-            stroke="#58cc02" stroke-width="2.5" stroke-dasharray="4 8" fill="none" opacity="0.5" />
-      <circle cx="60" cy="180" r="5" fill="#58cc02" />
-      <circle cx="60" cy="180" r="12" fill="none" stroke="#58cc02" stroke-width="1" opacity="0.3" />
-      <circle cx="300" cy="600" r="5" fill="#1a1a1a" opacity="0.6" />
-      <circle cx="300" cy="600" r="12" fill="none" stroke="#1a1a1a" stroke-width="1" opacity="0.15" />
+            stroke="#2b8659" stroke-width="2.5" stroke-dasharray="4 8" fill="none" opacity="0.5" />
+      <circle cx="60" cy="180" r="5" fill="#2b8659" />
+      <circle cx="60" cy="180" r="12" fill="none" stroke="#2b8659" stroke-width="1" opacity="0.3" />
+      <circle cx="300" cy="600" r="5" fill="#191f1c" opacity="0.6" />
+      <circle cx="300" cy="600" r="12" fill="none" stroke="#191f1c" stroke-width="1" opacity="0.15" />
     </svg>
   </div>
 </template>

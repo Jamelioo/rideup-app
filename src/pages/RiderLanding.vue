@@ -20,109 +20,109 @@ function goToDriverApply() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white text-[#1a1a1a] font-sans">
+  <div class="min-h-screen bg-white text-[#191f1c] font-sans">
 
     <!-- NAV -->
-    <nav class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#1a1a1a]/8">
+    <nav class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#191f1c]/8">
       <div class="max-w-6xl mx-auto px-5 py-3.5 flex items-center justify-between">
-        <router-link to="/" class="text-[20px] font-bold">Ride<span class="text-[#58cc02]">Up</span></router-link>
-        <div class="hidden md:flex items-center gap-8 text-[16px] font-medium text-[#1a1a1a]/60">
-          <router-link to="/" class="text-[#1a1a1a] font-bold">Ride</router-link>
-          <router-link to="/driver/apply" class="hover:text-[#1a1a1a] transition-colors">Drive</router-link>
+        <router-link to="/" class="text-[20px] font-bold">Ride<span class="text-[#2b8659]">Up</span></router-link>
+        <div class="hidden md:flex items-center gap-8 text-[16px] font-medium text-[#191f1c]/60">
+          <router-link to="/" class="text-[#191f1c] font-bold">Ride</router-link>
+          <router-link to="/driver/apply" class="hover:text-[#191f1c] transition-colors">Drive</router-link>
         </div>
         <div class="flex items-center gap-3">
           <template v-if="isLoggedIn">
-            <router-link to="/profile" class="text-[16px] font-medium text-[#1a1a1a]/70 hover:text-[#1a1a1a] transition-colors">{{ displayName }}</router-link>
+            <router-link to="/profile" class="text-[16px] font-medium text-[#191f1c]/70 hover:text-[#191f1c] transition-colors">{{ displayName }}</router-link>
           </template>
           <template v-else>
-            <router-link to="/login" class="text-[16px] font-medium text-[#1a1a1a]/70 hover:text-[#1a1a1a] transition-colors hidden sm:block">Log in</router-link>
-            <router-link to="/signup" class="text-[16px] font-bold bg-[#1a1a1a] text-white px-5 py-2.5 rounded-full hover:bg-[#1a1a1a]/90 transition-colors">Sign up</router-link>
+            <router-link to="/login" class="text-[16px] font-medium text-[#191f1c]/70 hover:text-[#191f1c] transition-colors hidden sm:block">Log in</router-link>
+            <router-link to="/signup" class="text-[16px] font-bold bg-[#191f1c] text-white px-5 py-2.5 rounded-full hover:bg-[#191f1c]/90 transition-colors">Sign up</router-link>
           </template>
         </div>
       </div>
     </nav>
 
     <!-- HERO -->
-    <section class="bg-[#f0fae4]">
+    <section class="bg-[#f0fdf4]">
       <div class="max-w-6xl mx-auto px-5 pt-10 pb-0 md:pt-14 md:grid md:grid-cols-2 md:gap-8 md:items-end">
         <div class="pb-10 md:pb-16">
           <h1 class="text-[35px] sm:text-[48px] lg:text-[60px] leading-[1.0] font-bold tracking-tight mb-5">
             Get anywhere in Nassau in 5 minutes.
           </h1>
-          <p class="text-[#1a1a1a]/50 text-[16px] leading-[1.5] max-w-md mb-8">
+          <p class="text-[#191f1c]/50 text-[16px] leading-[1.5] max-w-md mb-8">
             Book a ride in 10 seconds. See the exact fare upfront — no surge, no surprises.
           </p>
 
           <!-- Booking widget -->
-          <div class="bg-white rounded-2xl p-4 shadow-lg shadow-[#58cc02]/8 max-w-sm">
+          <div class="bg-white rounded-2xl p-4 shadow-lg shadow-[#2b8659]/8 max-w-sm">
             <div class="space-y-2 mb-3">
               <button @click="goToBooking" aria-label="Enter pickup location" class="w-full flex items-center gap-3 bg-[#f5f5f5] rounded-xl px-4 py-3 text-left hover:bg-[#eee] transition-colors">
-                <div class="w-2.5 h-2.5 rounded-full bg-[#58cc02] shrink-0"></div>
-                <span class="text-[14px] text-[#1a1a1a]/40">Pickup location</span>
+                <div class="w-2.5 h-2.5 rounded-full bg-[#2b8659] shrink-0"></div>
+                <span class="text-[14px] text-[#191f1c]/40">Pickup location</span>
               </button>
               <button @click="goToBooking" aria-label="Enter destination" class="w-full flex items-center gap-3 bg-[#f5f5f5] rounded-xl px-4 py-3 text-left hover:bg-[#eee] transition-colors">
-                <div class="w-2.5 h-2.5 rounded-sm bg-[#1a1a1a]/25 shrink-0"></div>
-                <span class="text-[14px] text-[#1a1a1a]/40">Where to?</span>
+                <div class="w-2.5 h-2.5 rounded-sm bg-[#191f1c]/25 shrink-0"></div>
+                <span class="text-[14px] text-[#191f1c]/40">Where to?</span>
               </button>
             </div>
-            <button @click="goToBooking" class="w-full py-3 bg-[#58cc02] text-white font-bold rounded-xl text-[16px] hover:bg-[#4ab300] transition-colors active:scale-[0.99]">
+            <button @click="goToBooking" class="w-full py-3 bg-[#2b8659] text-white font-bold rounded-xl text-[16px] hover:bg-[#236e49] transition-colors active:scale-[0.99]">
               See prices
             </button>
           </div>
         </div>
 
-        <!-- Phone mockup -->
-        <div class="flex justify-center md:justify-end">
+        <!-- Phone mockup — desktop only -->
+        <div class="hidden md:flex justify-end">
           <div class="w-[240px] sm:w-[270px] translate-y-4">
-            <div class="bg-[#1a1a1a] rounded-t-[34px] pt-2.5 px-2.5 shadow-2xl shadow-black/20">
+            <div class="bg-[#191f1c] rounded-t-[34px] pt-2.5 px-2.5 shadow-2xl shadow-black/20">
               <div class="bg-white rounded-t-[24px] overflow-hidden">
-                <div class="bg-[#1a1a1a] text-white px-4 pt-2.5 pb-3">
+                <div class="bg-[#191f1c] text-white px-4 pt-2.5 pb-3">
                   <div class="flex justify-between text-[9px] mb-2 opacity-60">
                     <span>9:41</span>
                     <div class="flex gap-1">
                       <div class="w-3.5 h-1.5 border border-white/60 rounded-sm"><div class="w-2.5 h-0.5 bg-white/60 rounded-sm m-px"></div></div>
                     </div>
                   </div>
-                  <div class="text-[13px] font-bold">Ride<span class="text-[#58cc02]">Up</span></div>
+                  <div class="text-[13px] font-bold">Ride<span class="text-[#2b8659]">Up</span></div>
                 </div>
                 <div class="p-3.5 bg-white">
-                  <div class="text-[11px] font-bold text-[#1a1a1a] mb-2.5">Where are you going?</div>
+                  <div class="text-[11px] font-bold text-[#191f1c] mb-2.5">Where are you going?</div>
                   <div class="space-y-1.5 mb-3">
                     <div class="flex items-center gap-2 bg-[#f5f5f5] rounded-lg px-3 py-2">
-                      <div class="w-1.5 h-1.5 rounded-full bg-[#58cc02]"></div>
-                      <span class="text-[10px] text-[#1a1a1a]/40">Cable Beach</span>
+                      <div class="w-1.5 h-1.5 rounded-full bg-[#2b8659]"></div>
+                      <span class="text-[10px] text-[#191f1c]/40">Cable Beach</span>
                     </div>
                     <div class="flex items-center gap-2 bg-[#f5f5f5] rounded-lg px-3 py-2">
-                      <div class="w-1.5 h-1.5 rounded-sm bg-[#1a1a1a]/25"></div>
-                      <span class="text-[10px] text-[#1a1a1a]/40">Downtown Nassau</span>
+                      <div class="w-1.5 h-1.5 rounded-sm bg-[#191f1c]/25"></div>
+                      <span class="text-[10px] text-[#191f1c]/40">Downtown Nassau</span>
                     </div>
                   </div>
-                  <div class="rounded-xl bg-[#e8f5d6] h-20 flex items-center justify-center mb-2.5 relative">
+                  <div class="rounded-xl bg-[#dcfce7] h-20 flex items-center justify-center mb-2.5 relative">
                     <svg width="70" height="40" viewBox="0 0 70 40" fill="none" aria-hidden="true">
-                      <path d="M10 32 Q10 16 35 16 Q60 16 60 6" stroke="#58cc02" stroke-width="2" stroke-dasharray="4 3"/>
-                      <circle cx="10" cy="32" r="3.5" fill="#58cc02"/>
-                      <rect x="56" y="2" width="7" height="7" rx="1.5" fill="#1a1a1a"/>
+                      <path d="M10 32 Q10 16 35 16 Q60 16 60 6" stroke="#2b8659" stroke-width="2" stroke-dasharray="4 3"/>
+                      <circle cx="10" cy="32" r="3.5" fill="#2b8659"/>
+                      <rect x="56" y="2" width="7" height="7" rx="1.5" fill="#191f1c"/>
                     </svg>
                   </div>
                   <div class="space-y-1">
-                    <div class="flex items-center justify-between bg-[#58cc02]/10 rounded-lg px-2.5 py-1.5 border border-[#58cc02]/20">
+                    <div class="flex items-center justify-between bg-[#2b8659]/10 rounded-lg px-2.5 py-1.5 border border-[#2b8659]/20">
                       <div class="flex items-center gap-1.5">
-                        <svg class="w-4 h-3 text-[#1a1a1a]" viewBox="0 0 24 16" fill="currentColor"><path d="M3 11l1.5-5h13l1.5 5H3zm2.5 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm13 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg>
+                        <svg class="w-4 h-3 text-[#191f1c]" viewBox="0 0 24 16" fill="currentColor"><path d="M3 11l1.5-5h13l1.5 5H3zm2.5 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm13 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg>
                         <span class="text-[9px] font-semibold">Standard</span>
                       </div>
                       <span class="text-[10px] font-bold">$8.00</span>
                     </div>
                     <div class="flex items-center justify-between bg-[#f5f5f5] rounded-lg px-2.5 py-1.5">
                       <div class="flex items-center gap-1.5">
-                        <svg class="w-4 h-3 text-[#1a1a1a]/40" viewBox="0 0 24 16" fill="currentColor"><path d="M3 11l1.5-5h13l1.5 5H3zm2.5 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm13 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg>
-                        <span class="text-[9px] font-medium text-[#1a1a1a]/50">Comfort</span>
+                        <svg class="w-4 h-3 text-[#191f1c]/40" viewBox="0 0 24 16" fill="currentColor"><path d="M3 11l1.5-5h13l1.5 5H3zm2.5 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm13 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg>
+                        <span class="text-[9px] font-medium text-[#191f1c]/50">Comfort</span>
                       </div>
-                      <span class="text-[10px] font-bold text-[#1a1a1a]/50">$12.00</span>
+                      <span class="text-[10px] font-bold text-[#191f1c]/50">$12.00</span>
                     </div>
                   </div>
                 </div>
                 <div class="px-3.5 pb-3.5">
-                  <div class="bg-[#58cc02] text-white text-[11px] font-bold text-center py-2 rounded-xl">Confirm ride</div>
+                  <div class="bg-[#2b8659] text-white text-[11px] font-bold text-center py-2 rounded-xl">Confirm ride</div>
                 </div>
               </div>
             </div>
@@ -137,14 +137,14 @@ function goToDriverApply() {
 
         <!-- Prop 1: Upfront pricing -->
         <div class="flex items-start gap-4 mb-10 pb-10 border-b border-[#f0f0f0]">
-          <div class="w-12 h-12 rounded-xl bg-[#f0fae4] flex items-center justify-center shrink-0 mt-0.5">
-            <svg class="w-5 h-5 text-[#58cc02]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <div class="w-12 h-12 rounded-xl bg-[#f0fdf4] flex items-center justify-center shrink-0 mt-0.5">
+            <svg class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div>
             <h3 class="text-[20px] font-bold mb-1.5 leading-[1.3]">Know your fare before you ride</h3>
-            <p class="text-[#1a1a1a]/50 text-[16px] leading-[1.5]">The price you see is the price you pay. Flat rates across all of Nassau — no surge pricing, no hidden fees, ever.</p>
+            <p class="text-[#191f1c]/50 text-[16px] leading-[1.5]">The price you see is the price you pay. Flat rates across all of Nassau — no surge pricing, no hidden fees, ever.</p>
           </div>
         </div>
 
@@ -157,7 +157,7 @@ function goToDriverApply() {
           </div>
           <div>
             <h3 class="text-[20px] font-bold mb-1.5 leading-[1.3]">Every driver verified</h3>
-            <p class="text-[#1a1a1a]/50 text-[16px] leading-[1.5]">Background-checked drivers, inspected vehicles. Track your ride live and share your trip with family — all built in.</p>
+            <p class="text-[#191f1c]/50 text-[16px] leading-[1.5]">Background-checked drivers, inspected vehicles. Track your ride live and share your trip with family — all built in.</p>
           </div>
         </div>
 
@@ -171,7 +171,7 @@ function goToDriverApply() {
           </div>
           <div>
             <h3 class="text-[20px] font-bold mb-1.5 leading-[1.3]">Anywhere across Nassau</h3>
-            <p class="text-[#1a1a1a]/50 text-[16px] leading-[1.5]">LPIA Airport, Cable Beach, Paradise Island, Downtown — drivers across the whole island, available 24/7.</p>
+            <p class="text-[#191f1c]/50 text-[16px] leading-[1.5]">LPIA Airport, Cable Beach, Paradise Island, Downtown — drivers across the whole island, available 24/7.</p>
           </div>
         </div>
 
@@ -179,30 +179,30 @@ function goToDriverApply() {
     </section>
 
     <!-- DRIVER RECRUITMENT -->
-    <section class="bg-[#1a1a1a]">
+    <section class="bg-[#191f1c]">
       <div class="max-w-6xl mx-auto px-5 py-12 md:py-14 md:grid md:grid-cols-2 md:gap-10 md:items-center">
         <div class="mb-6 md:mb-0">
           <img src="/images/driver-photo.jpg" alt="Driver behind the wheel" class="w-full h-[220px] md:h-[300px] object-cover rounded-2xl" loading="lazy" />
         </div>
         <div>
-          <div class="inline-block bg-[#58cc02]/20 text-[#58cc02] text-[12px] font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wide">Drive with us</div>
+          <div class="inline-block bg-[#2b8659]/20 text-[#2b8659] text-[12px] font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wide">Drive with us</div>
           <h2 class="text-[28px] sm:text-[35px] font-bold leading-[1.14] text-white mb-3">Keep 80% of every fare</h2>
           <p class="text-white/50 text-[16px] leading-[1.5] mb-5">Drive with RideUp on your own schedule. No shifts, no minimums. Sign up today and start earning this week.</p>
           <div class="flex flex-wrap gap-x-5 gap-y-2 mb-6 text-[14px] text-white/60">
             <span class="flex items-center gap-1.5">
-              <svg class="w-4 h-4 text-[#58cc02]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              <svg class="w-4 h-4 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
               Flexible hours
             </span>
             <span class="flex items-center gap-1.5">
-              <svg class="w-4 h-4 text-[#58cc02]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              <svg class="w-4 h-4 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
               Weekly payouts
             </span>
             <span class="flex items-center gap-1.5">
-              <svg class="w-4 h-4 text-[#58cc02]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              <svg class="w-4 h-4 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
               No minimums
             </span>
           </div>
-          <button @click="goToDriverApply" class="px-8 py-3.5 bg-[#58cc02] text-white font-bold rounded-xl text-[16px] hover:bg-[#4ab300] transition-colors active:scale-[0.99]">
+          <button @click="goToDriverApply" class="px-8 py-3.5 bg-[#2b8659] text-white font-bold rounded-xl text-[16px] hover:bg-[#236e49] transition-colors active:scale-[0.99]">
             Apply to drive
           </button>
         </div>
@@ -210,18 +210,18 @@ function goToDriverApply() {
     </section>
 
     <!-- FINAL CTA -->
-    <section class="bg-[#f0fae4] py-12 md:py-14 text-center px-5">
+    <section class="bg-[#f0fdf4] py-12 md:py-14 text-center px-5">
       <h2 class="text-[28px] sm:text-[35px] font-bold leading-[1.14] mb-3">Ready to ride?</h2>
-      <p class="text-[#1a1a1a]/50 text-[16px] leading-[1.5] mb-6">Book in seconds. No app download needed.</p>
-      <button @click="goToBooking" class="px-10 py-3.5 bg-[#58cc02] text-white font-bold rounded-xl text-[16px] hover:bg-[#4ab300] transition-colors active:scale-[0.98] shadow-lg shadow-[#58cc02]/20">
+      <p class="text-[#191f1c]/50 text-[16px] leading-[1.5] mb-6">Book in seconds. No app download needed.</p>
+      <button @click="goToBooking" class="px-10 py-3.5 bg-[#2b8659] text-white font-bold rounded-xl text-[16px] hover:bg-[#236e49] transition-colors active:scale-[0.98] shadow-lg shadow-[#2b8659]/20">
         Book a ride now
       </button>
     </section>
 
     <!-- FOOTER -->
-    <footer class="bg-[#1a1a1a] text-white">
+    <footer class="bg-[#191f1c] text-white">
       <div class="max-w-4xl mx-auto px-5 py-10">
-        <div class="text-[20px] font-bold mb-5">Ride<span class="text-[#58cc02]">Up</span></div>
+        <div class="text-[20px] font-bold mb-5">Ride<span class="text-[#2b8659]">Up</span></div>
 
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-2 mb-7">
           <router-link to="/" class="text-[14px] text-white/50 hover:text-white transition-colors">Ride</router-link>

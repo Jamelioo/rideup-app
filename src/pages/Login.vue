@@ -14,7 +14,7 @@ const error = ref('')
 const submitting = ref(false)
 
 function goBack() {
-  window.history.length > 1 ? router.back() : router.push('/welcome')
+  router.push('/welcome')
 }
 
 const resetSent = ref(false)
@@ -54,10 +54,10 @@ async function handleLogin() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white text-[#1a1a1a] flex flex-col">
+  <div class="min-h-screen bg-white text-[#191f1c] flex flex-col">
     <!-- Top bar -->
     <div class="flex items-center px-4 pt-12 pb-4">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#1a1a1a]/5">
+      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -65,8 +65,8 @@ async function handleLogin() {
     </div>
 
     <div class="flex-1 px-6 pt-4 w-full max-w-md mx-auto">
-      <h1 class="font-serif text-[28px] font-bold leading-tight mb-2">Welcome back</h1>
-      <p class="text-[#1a1a1a]/50 text-[14px] mb-8">Log in with your email and password</p>
+      <h1 class="text-[28px] font-bold leading-tight mb-2">Welcome back</h1>
+      <p class="text-[#191f1c]/50 text-[14px] mb-8">Log in with your email and password</p>
 
       <div class="space-y-3 mb-4">
         <label class="block">
@@ -76,7 +76,7 @@ async function handleLogin() {
             type="email"
             placeholder="Email address"
             autocomplete="email"
-            class="w-full px-4 py-3.5 bg-[#1a1a1a]/[0.04] rounded-xl border border-[#1a1a1a]/8 text-[14px] outline-none focus:border-[#58cc02] transition-colors placeholder:text-[#1a1a1a]/50"
+            class="w-full px-4 py-3.5 bg-[#191f1c]/[0.04] rounded-xl border border-[#191f1c]/8 text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[#191f1c]/50"
           />
         </label>
         <label class="block">
@@ -87,38 +87,38 @@ async function handleLogin() {
             placeholder="Password"
             autocomplete="current-password"
             @keyup.enter="handleLogin"
-            class="w-full px-4 py-3.5 bg-[#1a1a1a]/[0.04] rounded-xl border border-[#1a1a1a]/8 text-[14px] outline-none focus:border-[#58cc02] transition-colors placeholder:text-[#1a1a1a]/50"
+            class="w-full px-4 py-3.5 bg-[#191f1c]/[0.04] rounded-xl border border-[#191f1c]/8 text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[#191f1c]/50"
           />
         </label>
       </div>
 
       <div class="text-right">
-        <button type="button" @click="forgotPassword" class="text-[13px] text-[#58cc02] font-medium">Forgot password?</button>
+        <button type="button" @click="forgotPassword" class="text-[13px] text-[#2b8659] font-medium">Forgot password?</button>
       </div>
 
-      <p v-if="resetSent" class="text-[#58cc02] text-[13px] font-medium mb-4">Password reset link sent! Check your email.</p>
+      <p v-if="resetSent" class="text-[#2b8659] text-[13px] font-medium mb-4">Password reset link sent! Check your email.</p>
       <p v-if="error" class="text-red-500 text-[13px] mb-4">{{ error }}</p>
 
       <button
         @click="handleLogin"
         :disabled="submitting"
-        class="w-full py-3.5 bg-[#58cc02] text-white font-bold rounded-xl text-[14px] active:bg-[#4ab300] transition-colors disabled:opacity-50"
+        class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-xl text-[14px] active:bg-[#236e49] transition-colors disabled:opacity-50"
       >
         {{ submitting ? 'Logging in...' : 'Log in' }}
       </button>
 
-      <div class="text-center mt-6 text-[14px] text-[#1a1a1a]/50">
+      <div class="text-center mt-6 text-[14px] text-[#191f1c]/50">
         Don't have an account?
-        <router-link to="/signup" class="text-[#58cc02] font-semibold">Sign up</router-link>
+        <router-link to="/signup" class="text-[#2b8659] font-semibold">Sign up</router-link>
       </div>
 
-      <button @click="router.push('/')" class="w-full py-3 mt-4 text-[14px] font-semibold text-[#1a1a1a]/40 active:text-[#1a1a1a]/60 transition-colors">
+      <button @click="router.push('/')" class="w-full py-3 mt-4 text-[14px] font-semibold text-[#191f1c]/40 active:text-[#191f1c]/60 transition-colors">
         Continue as guest
       </button>
     </div>
 
     <div class="px-6 py-6">
-      <p class="text-[12px] text-[#1a1a1a]/35 text-center leading-relaxed">
+      <p class="text-[12px] text-[#191f1c]/35 text-center leading-relaxed">
         By continuing, you agree to our <router-link to="/terms" class="underline">Terms of Service</router-link> and <router-link to="/privacy" class="underline">Privacy Policy</router-link>.
       </p>
     </div>
