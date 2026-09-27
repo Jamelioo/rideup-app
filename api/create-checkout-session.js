@@ -44,9 +44,6 @@ export default async function handler(req, res) {
       allow_promotion_codes: true,
       submit_type: 'auto',
       integration_identifier: 'hosted_web_0001',
-      saved_payment_method_options: {
-        payment_method_save: 'enabled',
-      },
       origin_context: 'web',
       customer_email: customerEmail || undefined,
     })
