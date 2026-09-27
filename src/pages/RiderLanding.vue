@@ -95,7 +95,7 @@ const routes = [
             Request a ride,<br>hop in, and go.
           </h1>
           <p class="text-[#1a1a1a]/50 text-[16px] leading-relaxed max-w-md mb-8">
-            Flat upfront pricing across New Providence. Verified drivers. Available 24/7.
+            Flat upfront pricing across New Providence. Verified drivers. 24/7.
           </p>
 
           <!-- Booking widget -->
@@ -137,7 +137,7 @@ const routes = [
         <!-- Stat 2: Rating -->
         <div class="flex-1 text-center">
           <div class="font-serif text-[28px] sm:text-[32px] font-semibold text-white">4.9<span class="text-[#58cc02]">&#9733;</span></div>
-          <div class="text-white/40 text-[12px] mt-1">Rider rating</div>
+          <div class="text-white/40 text-[12px] mt-1">Average rating</div>
         </div>
         <!-- Divider -->
         <div class="w-px h-12 bg-white/10"></div>
@@ -178,24 +178,18 @@ const routes = [
       <div class="max-w-6xl mx-auto px-6"><div class="border-t border-[#f0f0f0]"></div></div>
 
       <!-- Block 3: Anywhere across Nassau -->
-      <div class="bg-[#f8f8f8]">
-        <div class="max-w-6xl mx-auto px-6 py-16 md:py-20">
-          <div class="flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-10">
-            <!-- Route graphic -->
-            <div class="shrink-0">
-              <svg width="120" height="80" viewBox="0 0 120 80" fill="none">
-                <circle cx="20" cy="40" r="10" fill="#58cc02" />
-                <circle cx="20" cy="40" r="4" fill="white" />
-                <line x1="34" y1="40" x2="82" y2="40" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="5 4" />
-                <rect x="90" y="30" width="20" height="20" rx="3" fill="#1a1a1a" />
-              </svg>
-            </div>
-            <div>
-              <h2 class="font-serif text-[28px] sm:text-[36px] font-medium mb-3">Anywhere across Nassau</h2>
-              <p class="text-[#1a1a1a]/50 text-[16px] leading-relaxed max-w-lg">From Cable Beach to Paradise Island, LPIA to the Fish Fry. Drivers across New Providence, available around the clock.</p>
-            </div>
-          </div>
-        </div>
+      <div class="bg-[#f8f8f8] py-12 flex justify-center">
+        <svg width="320" height="100" viewBox="0 0 320 100" fill="none" class="max-w-full">
+          <circle cx="40" cy="50" r="12" fill="#58cc02" />
+          <circle cx="40" cy="50" r="5" fill="white" />
+          <path d="M56 50 Q120 20 180 50 Q240 80 280 50" stroke="#58cc02" stroke-width="2.5" stroke-dasharray="6 4" fill="none" />
+          <rect x="272" y="38" width="16" height="16" rx="3" fill="#1a1a1a" />
+          <rect x="276" y="42" width="8" height="8" rx="1.5" fill="white" />
+        </svg>
+      </div>
+      <div class="max-w-3xl mx-auto px-6 py-12">
+        <h2 class="font-serif text-[28px] sm:text-[36px] font-medium mb-3">Anywhere across Nassau</h2>
+        <p class="text-[#1a1a1a]/50 text-[16px] leading-relaxed max-w-lg">From Cable Beach to Paradise Island, LPIA to the Fish Fry. Drivers across New Providence, available around the clock.</p>
       </div>
     </section>
 
