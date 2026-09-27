@@ -101,11 +101,11 @@ const routes = [
           <!-- Booking widget -->
           <div class="bg-white rounded-2xl p-5 shadow-xl shadow-black/10 max-w-md">
             <div class="space-y-2.5 mb-4">
-              <button @click="goToBooking" class="w-full flex items-center gap-3 bg-[#1a1a1a]/[0.04] rounded-xl px-4 py-3.5 text-left">
+              <button @click="goToBooking" aria-label="Enter pickup location" class="w-full flex items-center gap-3 bg-[#1a1a1a]/[0.04] rounded-xl px-4 py-3.5 text-left">
                 <div class="w-2.5 h-2.5 rounded-full bg-[#58cc02] shrink-0"></div>
                 <span class="text-[14px] text-[#1a1a1a]/50">Pickup location</span>
               </button>
-              <button @click="goToBooking" class="w-full flex items-center gap-3 bg-[#1a1a1a]/[0.04] rounded-xl px-4 py-3.5 text-left">
+              <button @click="goToBooking" aria-label="Enter destination" class="w-full flex items-center gap-3 bg-[#1a1a1a]/[0.04] rounded-xl px-4 py-3.5 text-left">
                 <div class="w-2.5 h-2.5 rounded-sm bg-[#1a1a1a]/30 shrink-0"></div>
                 <span class="text-[14px] text-[#1a1a1a]/50">Where to?</span>
               </button>
@@ -179,7 +179,7 @@ const routes = [
 
       <!-- Block 3: Anywhere across Nassau -->
       <div class="bg-[#f8f8f8] py-12 flex justify-center">
-        <svg width="320" height="100" viewBox="0 0 320 100" fill="none" class="max-w-full">
+        <svg width="320" height="100" viewBox="0 0 320 100" fill="none" class="max-w-full" aria-hidden="true">
           <circle cx="40" cy="50" r="12" fill="#58cc02" />
           <circle cx="40" cy="50" r="5" fill="white" />
           <path d="M56 50 Q120 20 180 50 Q240 80 280 50" stroke="#58cc02" stroke-width="2.5" stroke-dasharray="6 4" fill="none" />
@@ -200,10 +200,10 @@ const routes = [
         <p class="text-[#1a1a1a]/50 text-[15px] mb-10">Flat fares. No surge pricing.</p>
 
         <div class="bg-white rounded-2xl overflow-hidden shadow-sm">
-          <div
+          <button
             v-for="(route, index) in routes"
             :key="route.from + route.to"
-            class="flex items-center justify-between px-6 py-5 cursor-pointer hover:bg-[#f8f8f8]/50 transition-colors"
+            class="w-full flex items-center justify-between px-6 py-5 cursor-pointer hover:bg-[#f8f8f8]/50 transition-colors text-left"
             :class="{ 'border-t border-[#f0f0f0]': index > 0 }"
             @click="goToBooking"
           >
@@ -215,7 +215,7 @@ const routes = [
               </div>
             </div>
             <span class="text-[18px] font-bold font-serif">{{ route.price }}</span>
-          </div>
+          </button>
         </div>
 
         <div class="mt-6 text-center">
