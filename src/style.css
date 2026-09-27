@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-serif: "Fraunces", serif;
-  --font-sans: "Manrope", sans-serif;
+  --font-serif: "Inter", sans-serif;
+  --font-sans: "Inter", sans-serif;
 }
 
 body {
