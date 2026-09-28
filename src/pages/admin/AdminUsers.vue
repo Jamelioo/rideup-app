@@ -81,6 +81,11 @@
         </table>
       </div>
     </div>
+
+    <div v-if="users.length === 0" class="px-4 py-12 text-center text-gray-400">
+      <p class="text-lg font-medium mb-1">No users yet</p>
+      <p class="text-sm">Users will appear here when riders sign up.</p>
+    </div>
   </div>
 </template>
 
@@ -92,18 +97,7 @@ const filterTabs = ['All', 'Active', 'Suspended']
 const activeFilter = ref('All')
 const search = ref('')
 
-const users = ref([
-  { id: 1, name: 'Marcus Thompson', email: 'marcus.t@gmail.com', phone: '(242) 555-0101', rides: 47, rating: 4.8, joined: '2026-03-15', status: 'Active' },
-  { id: 2, name: 'Shania Williams', email: 'shania.w@outlook.com', phone: '(242) 555-0102', rides: 23, rating: 4.9, joined: '2026-04-22', status: 'Active' },
-  { id: 3, name: 'Devon Clarke', email: 'devon.c@gmail.com', phone: '(242) 555-0103', rides: 65, rating: 4.7, joined: '2026-02-08', status: 'Active' },
-  { id: 4, name: 'Tanya Rolle', email: 'tanya.r@yahoo.com', phone: '(242) 555-0104', rides: 12, rating: 4.5, joined: '2026-06-30', status: 'Active' },
-  { id: 5, name: 'James Mitchell', email: 'james.m@gmail.com', phone: '(242) 555-0105', rides: 8, rating: 3.2, joined: '2026-07-18', status: 'Suspended' },
-  { id: 6, name: 'Crystal Johnson', email: 'crystal.j@hotmail.com', phone: '(242) 555-0106', rides: 31, rating: 4.6, joined: '2026-05-11', status: 'Active' },
-  { id: 7, name: 'Andre Davis', email: 'andre.d@gmail.com', phone: '(242) 555-0107', rides: 55, rating: 4.9, joined: '2026-01-20', status: 'Active' },
-  { id: 8, name: 'Lisa Ferguson', email: 'lisa.f@outlook.com', phone: '(242) 555-0108', rides: 19, rating: 4.4, joined: '2026-08-05', status: 'Active' },
-  { id: 9, name: 'Robert Sands', email: 'robert.s@gmail.com', phone: '(242) 555-0109', rides: 3, rating: 2.8, joined: '2026-09-01', status: 'Suspended' },
-  { id: 10, name: 'Keisha Brown', email: 'keisha.b@gmail.com', phone: '(242) 555-0110', rides: 41, rating: 4.7, joined: '2026-04-02', status: 'Active' },
-])
+const users = ref([])
 
 const filteredUsers = computed(() => {
   let list = users.value
@@ -128,19 +122,23 @@ function toggleUserStatus(user) {
 onMounted(async () => {
   if (!supabaseConfigured) return
   try {
-    const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false })
-    if (!error && data && data.length > 0) {
-      users.value = data.map((u, i) => ({
-        id: u.id || i,
-        name: u.name || u.full_name || 'Unknown',
-        email: u.email || 'N/A',
-        phone: u.phone || 'N/A',
-        rides: u.total_rides || 0,
-        rating: u.rating || 5.0,
-        joined: u.created_at ? u.created_at.split('T')[0] : 'N/A',
-        status: u.suspended ? 'Suspended' : 'Active',
+    const { data, error } = await supabase
+      .from('riders')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (!error && data) {
+      users.value = data.map(r => ({
+        id: r.id,
+        name: r.name || 'Unknown',
+        email: r.email || '',
+        phone: r.phone || '-',
+        rides: r.total_rides || 0,
+        rating: r.rating || 0,
+        joined: r.created_at ? r.created_at.split('T')[0] : '-',
+        status: 'Active',
       }))
     }
-  } catch (e) { /* keep placeholder data */ }
+  } catch (e) { /* keep empty */ }
 })
 </script>
