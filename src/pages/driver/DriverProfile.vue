@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useDriver } from '../../lib/useDriver'
 import { useAuth } from '../../lib/useAuth'
 import { DEMO_MODE } from '../../lib/demoMode'
+import { supabase, supabaseConfigured } from '../../lib/supabase'
 
 const router = useRouter()
 const { driver } = useDriver()
@@ -33,6 +34,50 @@ async function handleLogout() {
 
 function goBack() {
   router.back()
+}
+
+const editingPhone = ref(false)
+const editingEmail = ref(false)
+const editPhone = ref('')
+const editEmail = ref('')
+const saving = ref(false)
+
+function startEditPhone() {
+  editPhone.value = driver.value?.phone || ''
+  editingPhone.value = true
+}
+
+function startEditEmail() {
+  editEmail.value = driver.value?.email || ''
+  editingEmail.value = true
+}
+
+async function savePhone() {
+  if (!supabaseConfigured || !driver.value) return
+  saving.value = true
+  const { error } = await supabase
+    .from('drivers')
+    .update({ phone: editPhone.value.trim() })
+    .eq('id', driver.value.id)
+  saving.value = false
+  if (error) { showToast('Failed to save'); return }
+  driver.value.phone = editPhone.value.trim()
+  editingPhone.value = false
+  showToast('Phone updated')
+}
+
+async function saveEmail() {
+  if (!supabaseConfigured || !driver.value) return
+  saving.value = true
+  const { error } = await supabase
+    .from('drivers')
+    .update({ email: editEmail.value.trim() })
+    .eq('id', driver.value.id)
+  saving.value = false
+  if (error) { showToast('Failed to save'); return }
+  driver.value.email = editEmail.value.trim()
+  editingEmail.value = false
+  showToast('Email updated')
 }
 </script>
 
@@ -125,17 +170,27 @@ function goBack() {
           <div class="flex items-center justify-between">
             <div>
               <div class="text-[13px] text-[var(--color-text-muted)]">Phone</div>
-              <div class="text-[14px] font-semibold">{{ driver?.phone || '—' }}</div>
+              <div v-if="editingPhone" class="flex items-center gap-2 mt-1">
+                <input v-model="editPhone" type="tel" class="text-[14px] font-semibold bg-[var(--color-surface)] border border-[var(--color-border)] px-3 py-1.5 rounded-lg w-40 outline-none focus:ring-2 focus:ring-[#2b8659]/30" />
+                <button @click="savePhone" :disabled="saving" class="text-[12px] text-[#2b8659] font-semibold">Save</button>
+                <button @click="editingPhone = false" class="text-[12px] text-[var(--color-text-muted)]">Cancel</button>
+              </div>
+              <div v-else class="text-[14px] font-semibold">{{ driver?.phone || '—' }}</div>
             </div>
-            <button @click="showToast('Contact support at (242) 452-9911')" class="text-[12px] text-[#2b8659] font-semibold">Edit</button>
+            <button v-if="!editingPhone" @click="startEditPhone" class="text-[12px] text-[#2b8659] font-semibold">Edit</button>
           </div>
           <div class="border-t border-[var(--color-border)]"></div>
           <div class="flex items-center justify-between">
             <div>
               <div class="text-[13px] text-[var(--color-text-muted)]">Email</div>
-              <div class="text-[14px] font-semibold">{{ driver?.email || '—' }}</div>
+              <div v-if="editingEmail" class="flex items-center gap-2 mt-1">
+                <input v-model="editEmail" type="email" class="text-[14px] font-semibold bg-[var(--color-surface)] border border-[var(--color-border)] px-3 py-1.5 rounded-lg w-40 outline-none focus:ring-2 focus:ring-[#2b8659]/30" />
+                <button @click="saveEmail" :disabled="saving" class="text-[12px] text-[#2b8659] font-semibold">Save</button>
+                <button @click="editingEmail = false" class="text-[12px] text-[var(--color-text-muted)]">Cancel</button>
+              </div>
+              <div v-else class="text-[14px] font-semibold">{{ driver?.email || '—' }}</div>
             </div>
-            <button @click="showToast('Contact support at (242) 452-9911')" class="text-[12px] text-[#2b8659] font-semibold">Edit</button>
+            <button v-if="!editingEmail" @click="startEditEmail" class="text-[12px] text-[#2b8659] font-semibold">Edit</button>
           </div>
         </div>
         <button @click="showToast('Contact support at (242) 452-9911')" class="text-[13px] text-[var(--color-text-muted)] font-semibold mt-2 px-1 underline underline-offset-2">Change Password</button>
