@@ -2,6 +2,7 @@
 import { onMounted } from 'vue'
 import { DEMO_MODE } from './lib/demoMode'
 import { useAuth } from './lib/useAuth'
+import BottomNav from './components/BottomNav.vue'
 
 const { init } = useAuth()
 onMounted(() => init())
@@ -16,4 +17,5 @@ onMounted(() => init())
       <component :is="Component" />
     </KeepAlive>
   </router-view>
+  <BottomNav />
 </template>
