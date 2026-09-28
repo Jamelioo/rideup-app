@@ -1,41 +1,71 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../lib/useAuth'
+import { formatFare } from '../../lib/pricing'
+import { DEMO_MODE } from '../../lib/demoMode'
 
-const router = useRouter()
 const route = useRoute()
+const router = useRouter()
+const { user } = useAuth()
 
-const sessionId = ref(route.query.session_id || null)
-const fareAmount = ref('$18.50')
-const pickup = ref('Bahamar Resort')
-const dropoff = ref('Downtown Nassau')
+const sessionId = ref(route.query.session_id || '')
+const fareAmount = ref('')
+const pickup = ref('')
+const dropoff = ref('')
+const rideId = ref(null)
 const showCheck = ref(false)
-const countdown = ref(10)
-let timer = null
+const loading = ref(true)
 
-onMounted(() => {
-  // Trigger checkmark animation after mount
-  requestAnimationFrame(() => {
-    showCheck.value = true
-  })
+onMounted(async () => {
+  setTimeout(() => { showCheck.value = true }, 300)
 
-  // Auto-redirect countdown
-  timer = setInterval(() => {
-    countdown.value--
-    if (countdown.value <= 0) {
-      clearInterval(timer)
-      router.push('/book')
+  if (DEMO_MODE) {
+    fareAmount.value = '$12.50'
+    pickup.value = 'Bahamar Resort'
+    dropoff.value = 'Downtown Nassau'
+    loading.value = false
+    return
+  }
+
+  if (!user.value) { loading.value = false; return }
+
+  try {
+    const { data: rider } = await supabase
+      .from('riders')
+      .select('id')
+      .eq('auth_user_id', user.value.id)
+      .single()
+
+    if (rider) {
+      const { data: ride } = await supabase
+        .from('rides')
+        .select('*')
+        .eq('rider_id', rider.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (ride) {
+        rideId.value = ride.id
+        fareAmount.value = formatFare(ride.fare_cents)
+        pickup.value = ride.pickup_address || 'Pickup'
+        dropoff.value = ride.dropoff_address || 'Dropoff'
+      }
     }
-  }, 1000)
-})
-
-onUnmounted(() => {
-  if (timer) clearInterval(timer)
+  } catch (e) {
+    // Keep defaults
+  }
+  loading.value = false
 })
 
 function viewReceipt() {
-  // Use session_id as a temporary ride identifier; in production this maps to a ride record
-  router.push(`/receipt/${sessionId.value || 'latest'}`)
+  if (rideId.value) {
+    router.push(`/receipt/${rideId.value}`)
+  } else {
+    router.push('/my-rides')
+  }
 }
 
 function goHome() {
@@ -125,8 +155,8 @@ function goHome() {
     </div>
 
     <!-- Auto-redirect notice -->
-    <p class="mt-6 text-xs text-[#191f1c]/30">
-      Redirecting to home in {{ countdown }}s
+    <p class="mt-6 text-xs text-[var(--color-text-muted)]">
+      Thank you for riding with RideUp
     </p>
   </div>
 </template>
