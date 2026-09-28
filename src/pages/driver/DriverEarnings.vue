@@ -172,6 +172,41 @@ function goBack() {
           </div>
         </div>
       </div>
+
+      <!-- Payout Actions -->
+      <div class="mt-8">
+        <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3 px-1">Payouts</p>
+        <div class="space-y-2">
+          <button class="w-full flex items-center justify-between bg-[var(--color-surface-secondary)] rounded-2xl px-4 py-4 opacity-60" disabled>
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-[#2b8659]/10 flex items-center justify-center">
+                <svg class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div class="text-left">
+                <p class="text-[14px] font-semibold text-[var(--color-text-primary)]">Instant Cashout</p>
+                <p class="text-[11px] text-[var(--color-text-muted)]">Transfer earnings to your bank instantly</p>
+              </div>
+            </div>
+            <span class="text-[10px] font-bold text-white bg-[#2b8659] px-2 py-1 rounded-full">COMING SOON</span>
+          </button>
+          <button class="w-full flex items-center justify-between bg-[var(--color-surface-secondary)] rounded-2xl px-4 py-4 opacity-60" disabled>
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-[#2b8659]/10 flex items-center justify-center">
+                <svg class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+              </div>
+              <div class="text-left">
+                <p class="text-[14px] font-semibold text-[var(--color-text-primary)]">Bank Withdrawal</p>
+                <p class="text-[11px] text-[var(--color-text-muted)]">Weekly automatic deposits to your account</p>
+              </div>
+            </div>
+            <span class="text-[10px] font-bold text-white bg-[#2b8659] px-2 py-1 rounded-full">COMING SOON</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
