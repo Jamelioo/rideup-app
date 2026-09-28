@@ -74,9 +74,9 @@ function goToDriverApply() {
         <!-- Phone mockup — desktop only -->
         <div class="hidden md:flex justify-end">
           <div class="w-[240px] sm:w-[270px] translate-y-4">
-            <div class="bg-[#191f1c] rounded-t-[34px] pt-2.5 px-2.5 shadow-2xl shadow-black/20">
+            <div class="bg-[#2a2f2c] rounded-t-[34px] pt-2.5 px-2.5 shadow-2xl shadow-[#2b8659]/15 ring-1 ring-white/10">
               <div class="bg-[var(--color-surface)] rounded-t-[24px] overflow-hidden">
-                <div class="bg-[#191f1c] text-white px-4 pt-2.5 pb-3">
+                <div class="bg-[#2a2f2c] text-white px-4 pt-2.5 pb-3">
                   <div class="flex justify-between text-[9px] mb-2 opacity-60">
                     <span>9:41</span>
                     <div class="flex gap-1">
@@ -97,7 +97,7 @@ function goToDriverApply() {
                       <span class="text-[10px] text-[var(--color-text-muted)]">Downtown Nassau</span>
                     </div>
                   </div>
-                  <div class="rounded-xl bg-[#dcfce7] h-20 flex items-center justify-center mb-2.5 relative">
+                  <div class="rounded-xl bg-[#2b8659]/15 h-20 flex items-center justify-center mb-2.5 relative">
                     <svg width="70" height="40" viewBox="0 0 70 40" fill="none" aria-hidden="true">
                       <path d="M10 32 Q10 16 35 16 Q60 16 60 6" stroke="#2b8659" stroke-width="2" stroke-dasharray="4 3"/>
                       <circle cx="10" cy="32" r="3.5" fill="#2b8659"/>
