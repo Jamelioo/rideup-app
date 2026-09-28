@@ -26,17 +26,17 @@ function goToDriverApply() {
     <nav class="sticky top-0 z-40 bg-[var(--color-surface)]/95 backdrop-blur-md border-b border-[var(--color-border)]">
       <div class="max-w-6xl mx-auto px-5 py-3.5 flex items-center justify-between">
         <router-link to="/" class="text-[20px] font-bold">Ride<span class="text-[#2b8659]">Up</span></router-link>
-        <div class="hidden md:flex items-center gap-8 text-[16px] font-medium text-[#191f1c]/60">
+        <div class="hidden md:flex items-center gap-8 text-[16px] font-medium text-[var(--color-text-muted)]">
           <router-link to="/" class="text-[var(--color-text-primary)] font-bold">Ride</router-link>
           <router-link to="/driver/apply" class="hover:text-[var(--color-text-primary)] transition-colors">Drive</router-link>
         </div>
         <div class="flex items-center gap-3">
           <template v-if="isLoggedIn">
-            <router-link to="/profile" class="text-[16px] font-medium text-[#191f1c]/70 hover:text-[var(--color-text-primary)] transition-colors">{{ displayName }}</router-link>
+            <router-link to="/profile" class="text-[16px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors">{{ displayName }}</router-link>
           </template>
           <template v-else>
-            <router-link to="/login" class="text-[16px] font-medium text-[#191f1c]/70 hover:text-[var(--color-text-primary)] transition-colors hidden sm:block">Log in</router-link>
-            <router-link to="/signup" class="text-[16px] font-bold bg-[#191f1c] text-white px-5 py-2.5 rounded-full hover:bg-[#191f1c]/90 transition-colors">Sign up</router-link>
+            <router-link to="/login" class="text-[16px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors hidden sm:block">Log in</router-link>
+            <router-link to="/signup" class="text-[16px] font-bold bg-[var(--color-text-primary)] text-[var(--color-surface)] px-5 py-2.5 rounded-full hover:opacity-90 transition-colors">Sign up</router-link>
           </template>
         </div>
       </div>
@@ -56,12 +56,12 @@ function goToDriverApply() {
           <!-- Booking widget -->
           <div class="bg-[var(--color-surface)] rounded-2xl p-4 shadow-lg shadow-[#2b8659]/8 max-w-sm">
             <div class="space-y-2 mb-3">
-              <button @click="goToBooking" aria-label="Enter pickup location" class="w-full flex items-center gap-3 bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 text-left hover:bg-[#eee] transition-colors">
+              <button @click="goToBooking" aria-label="Enter pickup location" class="w-full flex items-center gap-3 bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 text-left hover:opacity-80 transition-colors">
                 <div class="w-2.5 h-2.5 rounded-full bg-[#2b8659] shrink-0"></div>
                 <span class="text-[14px] text-[var(--color-text-muted)]">Pickup location</span>
               </button>
-              <button @click="goToBooking" aria-label="Enter destination" class="w-full flex items-center gap-3 bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 text-left hover:bg-[#eee] transition-colors">
-                <div class="w-2.5 h-2.5 rounded-sm bg-[#191f1c]/25 shrink-0"></div>
+              <button @click="goToBooking" aria-label="Enter destination" class="w-full flex items-center gap-3 bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 text-left hover:opacity-80 transition-colors">
+                <div class="w-2.5 h-2.5 rounded-sm bg-[var(--color-text-muted)] shrink-0"></div>
                 <span class="text-[14px] text-[var(--color-text-muted)]">Where to?</span>
               </button>
             </div>
@@ -93,7 +93,7 @@ function goToDriverApply() {
                       <span class="text-[10px] text-[var(--color-text-muted)]">Cable Beach</span>
                     </div>
                     <div class="flex items-center gap-2 bg-[var(--color-surface-secondary)] rounded-lg px-3 py-2">
-                      <div class="w-1.5 h-1.5 rounded-sm bg-[#191f1c]/25"></div>
+                      <div class="w-1.5 h-1.5 rounded-sm bg-[var(--color-text-muted)]"></div>
                       <span class="text-[10px] text-[var(--color-text-muted)]">Downtown Nassau</span>
                     </div>
                   </div>
@@ -101,7 +101,7 @@ function goToDriverApply() {
                     <svg width="70" height="40" viewBox="0 0 70 40" fill="none" aria-hidden="true">
                       <path d="M10 32 Q10 16 35 16 Q60 16 60 6" stroke="#2b8659" stroke-width="2" stroke-dasharray="4 3"/>
                       <circle cx="10" cy="32" r="3.5" fill="#2b8659"/>
-                      <rect x="56" y="2" width="7" height="7" rx="1.5" fill="#191f1c"/>
+                      <rect x="56" y="2" width="7" height="7" rx="1.5" fill="currentColor" class="text-[var(--color-text-primary)]"/>
                     </svg>
                   </div>
                   <div class="space-y-1">
@@ -136,7 +136,7 @@ function goToDriverApply() {
       <div class="max-w-3xl mx-auto px-5 py-12 md:py-14">
 
         <!-- Prop 1: Upfront pricing -->
-        <div class="flex items-start gap-4 mb-10 pb-10 border-b border-[#f0f0f0]">
+        <div class="flex items-start gap-4 mb-10 pb-10 border-b border-[var(--color-border)]">
           <div class="w-12 h-12 rounded-xl bg-[var(--color-surface-secondary)] flex items-center justify-center shrink-0 mt-0.5">
             <svg class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -149,8 +149,8 @@ function goToDriverApply() {
         </div>
 
         <!-- Prop 2: Verified drivers -->
-        <div class="flex items-start gap-4 mb-10 pb-10 border-b border-[#f0f0f0]">
-          <div class="w-12 h-12 rounded-xl bg-[#eef6ff] flex items-center justify-center shrink-0 mt-0.5">
+        <div class="flex items-start gap-4 mb-10 pb-10 border-b border-[var(--color-border)]">
+          <div class="w-12 h-12 rounded-xl bg-[#2196f3]/10 flex items-center justify-center shrink-0 mt-0.5">
             <svg class="w-5 h-5 text-[#2196f3]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
@@ -163,7 +163,7 @@ function goToDriverApply() {
 
         <!-- Prop 3: Island coverage -->
         <div class="flex items-start gap-4">
-          <div class="w-12 h-12 rounded-xl bg-[#fff8e6] flex items-center justify-center shrink-0 mt-0.5">
+          <div class="w-12 h-12 rounded-xl bg-[#ff9800]/10 flex items-center justify-center shrink-0 mt-0.5">
             <svg class="w-5 h-5 text-[#ff9800]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
