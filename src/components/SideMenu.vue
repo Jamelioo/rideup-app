@@ -55,6 +55,10 @@ const menuItems = computed(() => {
       { label: 'Scheduled Rides', route: '/scheduled-rides', icon: 'calendar', requiresAuth: true },
       { label: 'Drive with RideUp', route: '/driver/apply', icon: 'car', requiresAuth: false },
     )
+
+    if (user.value?.user_metadata?.role === 'admin') {
+      items.push({ label: 'Admin Panel', route: '/admin', icon: 'admin', requiresAuth: true })
+    }
   }
 
   return items
@@ -216,6 +220,9 @@ watch(() => props.isOpen, async (open) => {
                 <path d="M5 17h14M5 17a2 2 0 01-2-2V9l2-5h14l2 5v6a2 2 0 01-2 2M5 17a2 2 0 002 2h10a2 2 0 002-2" />
                 <circle cx="7.5" cy="14.5" r="1.5" />
                 <circle cx="16.5" cy="14.5" r="1.5" />
+              </svg>
+              <svg v-else-if="item.icon === 'admin'" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
             </div>
 
