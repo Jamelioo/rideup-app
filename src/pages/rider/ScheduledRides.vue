@@ -69,10 +69,10 @@ async function fetchScheduledRides() {
       .from('riders')
       .select('id')
       .eq('auth_user_id', user.id)
-      .single()
+      .maybeSingle()
 
     if (!rider) {
-      error.value = 'Could not find your rider profile.'
+      rides.value = []
       loading.value = false
       return
     }
@@ -120,8 +120,8 @@ onMounted(fetchScheduledRides)
     <!-- Header -->
     <div class="bg-[var(--color-surface)] border-b border-[var(--color-border)]">
       <div class="max-w-lg mx-auto px-5 pt-[max(1.5rem,env(safe-area-inset-top))] pb-4 flex items-center gap-3">
-        <button @click="router.back()" class="w-10 h-10 rounded-full hover:bg-[#191f1c]/5 flex items-center justify-center transition-colors -ml-2">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#191f1c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button @click="router.back()" class="w-10 h-10 rounded-full hover:bg-[var(--color-text-primary)]/5 flex items-center justify-center transition-colors -ml-2">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
@@ -176,16 +176,16 @@ onMounted(fetchScheduledRides)
               <div class="flex gap-2.5 ml-0.5">
                 <div class="flex flex-col items-center pt-1 gap-0">
                   <div class="w-[8px] h-[8px] rounded-full border-2 border-[#2b8659] bg-[var(--color-surface)] flex-shrink-0"></div>
-                  <div class="w-[1.5px] flex-1 my-0.5 bg-[#191f1c]/10 rounded-full min-h-[16px]"></div>
-                  <div class="w-[8px] h-[8px] rounded-[2px] bg-[#191f1c] flex-shrink-0"></div>
+                  <div class="w-[1.5px] flex-1 my-0.5 bg-[var(--color-border)] rounded-full min-h-[16px]"></div>
+                  <div class="w-[8px] h-[8px] rounded-[2px] bg-[var(--color-text-primary)] flex-shrink-0"></div>
                 </div>
                 <div class="flex-1 space-y-2">
-                  <p class="text-[13px] text-[#191f1c]/70 leading-tight">{{ ride.pickup_address }}</p>
-                  <p class="text-[13px] text-[#191f1c]/70 leading-tight">{{ ride.dropoff_address }}</p>
+                  <p class="text-[13px] text-[var(--color-text-muted)] leading-tight">{{ ride.pickup_address }}</p>
+                  <p class="text-[13px] text-[var(--color-text-muted)] leading-tight">{{ ride.dropoff_address }}</p>
                 </div>
               </div>
 
-              <div class="mt-3 pt-3 border-t border-[#191f1c]/6">
+              <div class="mt-3 pt-3 border-t border-[var(--color-border)]">
                 <button
                   v-if="showCancelConfirm !== ride.id"
                   @click="showCancelConfirm = ride.id"
@@ -194,7 +194,7 @@ onMounted(fetchScheduledRides)
                   Cancel ride
                 </button>
                 <div v-else class="flex items-center gap-3">
-                  <span class="text-[13px] text-[#191f1c]/60">Cancel this ride?</span>
+                  <span class="text-[13px] text-[var(--color-text-muted)]">Cancel this ride?</span>
                   <button
                     @click="cancelRide(ride.id)"
                     :disabled="cancellingId === ride.id"
@@ -218,7 +218,7 @@ onMounted(fetchScheduledRides)
             <div v-for="ride in pastRides" :key="ride.id" class="bg-[var(--color-surface)] rounded-2xl p-4 shadow-[0_1px_4px_rgba(0,0,0,0.06)] opacity-50">
               <div class="flex items-start justify-between mb-3">
                 <div class="flex items-center gap-2.5">
-                  <div class="w-10 h-10 rounded-xl bg-[#191f1c]/5 flex items-center justify-center text-base grayscale">
+                  <div class="w-10 h-10 rounded-xl bg-[var(--color-text-primary)]/5 flex items-center justify-center text-base grayscale">
                     {{ getVehicleIcon(ride.vehicle_type) }}
                   </div>
                   <div>
@@ -227,16 +227,16 @@ onMounted(fetchScheduledRides)
                   </div>
                 </div>
                 <div class="text-right">
-                  <span class="text-[16px] font-bold text-[#191f1c]/60">{{ formatFare(ride.fare_cents) }}</span>
+                  <span class="text-[16px] font-bold text-[var(--color-text-muted)]">{{ formatFare(ride.fare_cents) }}</span>
                   <p v-if="ride.status === 'cancelled'" class="text-[11px] text-red-400 font-semibold">Cancelled</p>
                 </div>
               </div>
 
               <div class="flex gap-2.5 ml-0.5">
                 <div class="flex flex-col items-center pt-1 gap-0">
-                  <div class="w-[8px] h-[8px] rounded-full border-2 border-[#191f1c]/20 bg-[var(--color-surface)] flex-shrink-0"></div>
-                  <div class="w-[1.5px] flex-1 my-0.5 bg-[#191f1c]/10 rounded-full min-h-[16px]"></div>
-                  <div class="w-[8px] h-[8px] rounded-[2px] bg-[#191f1c]/20 flex-shrink-0"></div>
+                  <div class="w-[8px] h-[8px] rounded-full border-2 border-[var(--color-text-muted)] bg-[var(--color-surface)] flex-shrink-0"></div>
+                  <div class="w-[1.5px] flex-1 my-0.5 bg-[var(--color-border)] rounded-full min-h-[16px]"></div>
+                  <div class="w-[8px] h-[8px] rounded-[2px] bg-[var(--color-text-primary)]/20 flex-shrink-0"></div>
                 </div>
                 <div class="flex-1 space-y-2">
                   <p class="text-[13px] text-[var(--color-text-muted)] leading-tight">{{ ride.pickup_address }}</p>

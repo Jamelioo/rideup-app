@@ -50,7 +50,7 @@ onMounted(() => {
           @click="router.back()"
           class="w-9 h-9 flex items-center justify-center rounded-full active:bg-[#191f1c]/5 transition-colors"
         >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#191f1c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M19 12H5" />
             <path d="M12 19l-7-7 7-7" />
           </svg>
@@ -91,7 +91,7 @@ onMounted(() => {
             </div>
             <div class="flex-1">
               <span class="text-[15px] font-medium text-[var(--color-text-primary)]">Debit/Credit Card</span>
-              <p class="text-[13px] text-[#191f1c]/45 mt-0.5">Pay securely when you confirm your ride</p>
+              <p class="text-[13px] text-[var(--color-text-muted)] mt-0.5">Pay securely when you confirm your ride</p>
             </div>
             <div class="w-6 h-6 rounded-full bg-[#2b8659] flex items-center justify-center shrink-0">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -105,8 +105,8 @@ onMounted(() => {
 
           <!-- Add a card -->
           <button @click="addCard" :disabled="loading" class="w-full flex items-center gap-4 px-5 py-4 active:bg-[#191f1c]/3 transition-colors disabled:opacity-50">
-            <div class="w-10 h-10 rounded-full bg-[#191f1c]/5 flex items-center justify-center shrink-0">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#191f1c" stroke-opacity="0.4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="w-10 h-10 rounded-full bg-[var(--color-text-primary)]/5 flex items-center justify-center shrink-0">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="text-[var(--color-text-muted)]" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
@@ -114,7 +114,7 @@ onMounted(() => {
             <span class="flex-1 text-left text-[15px] font-medium text-[var(--color-text-muted)]">
               {{ loading ? 'Opening...' : 'Add a card' }}
             </span>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#191f1c" stroke-opacity="0.3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="text-[var(--color-text-muted)] shrink-0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6" />
             </svg>
           </button>
@@ -124,15 +124,15 @@ onMounted(() => {
 
           <!-- Cash option -->
           <div class="flex items-center gap-4 px-5 py-4 opacity-40">
-            <div class="w-10 h-10 rounded-full bg-[#191f1c]/5 flex items-center justify-center shrink-0">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#191f1c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="w-10 h-10 rounded-full bg-[var(--color-text-primary)]/5 flex items-center justify-center shrink-0">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="text-[var(--color-text-muted)]" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="1" x2="12" y2="23" />
                 <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
               </svg>
             </div>
             <div class="flex-1">
               <span class="text-[15px] font-medium text-[var(--color-text-primary)]">Cash</span>
-              <p class="text-[13px] text-[#191f1c]/45 mt-0.5">Coming soon</p>
+              <p class="text-[13px] text-[var(--color-text-muted)] mt-0.5">Coming soon</p>
             </div>
           </div>
 
@@ -144,7 +144,7 @@ onMounted(() => {
         <div class="bg-[var(--color-surface-secondary)] rounded-2xl px-5 py-5">
           <div class="flex gap-3.5">
             <div class="shrink-0 mt-0.5">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#191f1c" stroke-opacity="0.35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="text-[var(--color-text-muted)]" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="16" x2="12" y2="12" />
                 <line x1="12" y1="8" x2="12.01" y2="8" />
@@ -152,7 +152,7 @@ onMounted(() => {
             </div>
             <div>
               <p class="text-[14px] font-semibold text-[var(--color-text-primary)] leading-snug">How payment works</p>
-              <p class="text-[13px] text-[#191f1c]/55 mt-1.5 leading-relaxed">
+              <p class="text-[13px] text-[var(--color-text-muted)] mt-1.5 leading-relaxed">
                 When you confirm a ride, you'll be taken to a secure Stripe checkout page to enter your card details. You see the exact fare before paying. All payments are processed in BSD (Bahamian Dollar).
               </p>
             </div>
@@ -161,7 +161,7 @@ onMounted(() => {
       </section>
 
       <!-- Powered by Stripe -->
-      <div class="mt-6 flex items-center justify-center gap-2 text-[13px] text-[#191f1c]/35">
+      <div class="mt-6 flex items-center justify-center gap-2 text-[13px] text-[var(--color-text-muted)]">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
           <path d="M7 11V7a5 5 0 0110 0v4" />

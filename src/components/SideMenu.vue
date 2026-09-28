@@ -1,13 +1,25 @@
 <script setup>
-import { computed, watch, ref, nextTick } from 'vue'
+import { computed, watch, ref, nextTick, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
+import { supabase, supabaseConfigured } from '../lib/supabase'
 
 const router = useRouter()
 const { user, signOut } = useAuth()
 const route = useRoute()
 const isDriverRoute = computed(() => route.path.startsWith('/driver'))
 const drawerRef = ref(null)
+const isDriver = ref(false)
+
+onMounted(async () => {
+  if (!user.value || !supabaseConfigured) return
+  const { data } = await supabase
+    .from('drivers')
+    .select('id')
+    .eq('auth_user_id', user.value.id)
+    .maybeSingle()
+  isDriver.value = !!data
+})
 
 const props = defineProps({
   isOpen: {
@@ -53,8 +65,11 @@ const menuItems = computed(() => {
       { label: 'Promotions', route: '/promotions', icon: 'tag', requiresAuth: true },
       { label: 'My Rides', route: '/my-rides', icon: 'history', requiresAuth: true },
       { label: 'Scheduled Rides', route: '/scheduled-rides', icon: 'calendar', requiresAuth: true },
-      { label: 'Drive with RideUp', route: '/driver/apply', icon: 'car', requiresAuth: false },
     )
+
+    if (!isDriver.value) {
+      items.push({ label: 'Drive with RideUp', route: '/driver/apply', icon: 'car', requiresAuth: false })
+    }
 
     if (user.value?.user_metadata?.role === 'admin') {
       items.push({ label: 'Admin Panel', route: '/admin', icon: 'admin', requiresAuth: true })
