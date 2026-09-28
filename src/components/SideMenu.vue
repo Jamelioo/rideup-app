@@ -50,7 +50,7 @@ const menuItems = computed(() => {
   if (isLoggedIn.value) {
     items.unshift(
       { label: 'Payments', route: '/payments', icon: 'card', requiresAuth: true },
-      { label: 'Promotions', subtitle: 'Contact support for promo codes', route: '/support', icon: 'tag', requiresAuth: true },
+      { label: 'Promotions', route: '/promotions', icon: 'tag', requiresAuth: true },
       { label: 'My Rides', route: '/my-rides', icon: 'history', requiresAuth: true },
       { label: 'Scheduled Rides', route: '/scheduled-rides', icon: 'calendar', requiresAuth: true },
       { label: 'Drive with RideUp', route: '/driver/apply', icon: 'car', requiresAuth: false },
