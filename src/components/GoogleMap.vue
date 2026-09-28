@@ -5,6 +5,7 @@ import { loadGoogleMaps } from '../lib/useGoogleMaps'
 const props = defineProps({
   pickup: { type: Object, default: null },
   dropoff: { type: Object, default: null },
+  driverLocation: { type: Object, default: null },
 })
 
 const emit = defineEmits(['map-tap', 'marker-drag'])
@@ -14,6 +15,7 @@ let map = null
 let maps = null
 let pickupMarker = null
 let dropoffMarker = null
+let driverMarker = null
 let directionsService = null
 let directionsRenderer = null
 let useAdvanced = false
@@ -130,6 +132,41 @@ function updateMarkers() {
   }
 }
 
+// --- Driver marker ---
+function createDriverMarkerContent() {
+  const div = document.createElement('div')
+  div.style.cssText = 'width:36px;height:36px;display:flex;align-items:center;justify-content:center;'
+  div.innerHTML = '<svg width="28" height="28" viewBox="0 0 24 24" fill="#2b8659" xmlns="http://www.w3.org/2000/svg"><path d="M5 17h14M5 17a2 2 0 01-2-2V9l2-5h14l2 5v6a2 2 0 01-2 2M5 17a2 2 0 002 2h10a2 2 0 002-2" stroke="#fff" stroke-width="1.5"/><circle cx="7.5" cy="14.5" r="1.5" fill="#fff"/><circle cx="16.5" cy="14.5" r="1.5" fill="#fff"/></svg>'
+  return div
+}
+
+function updateDriverMarker() {
+  if (!map || !maps) return
+  if (props.driverLocation) {
+    const pos = { lat: props.driverLocation.lat, lng: props.driverLocation.lng }
+    if (driverMarker) {
+      if (useAdvanced) {
+        driverMarker.position = pos
+      } else {
+        driverMarker.setPosition(pos)
+      }
+    } else {
+      if (useAdvanced) {
+        const AdvancedMarkerElement = maps.marker.AdvancedMarkerElement
+        driverMarker = new AdvancedMarkerElement({ map, position: pos, content: createDriverMarkerContent() })
+      } else {
+        driverMarker = new maps.Marker({
+          map, position: pos,
+          icon: { path: maps.SymbolPath.FORWARD_CLOSED_ARROW, scale: 6, fillColor: '#2b8659', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2, rotation: 0 },
+        })
+      }
+    }
+  } else if (driverMarker) {
+    clearMarker(driverMarker)
+    driverMarker = null
+  }
+}
+
 // --- Route drawing ---
 function drawRoute() {
   if (!map || !maps) return
@@ -212,6 +249,7 @@ onMounted(async () => {
   })
 
   updateMarkers()
+  updateDriverMarker()
   drawRoute()
   if (props.pickup && props.dropoff) {
     fitBounds()
@@ -239,12 +277,20 @@ watch(
   { deep: true }
 )
 
+watch(
+  () => props.driverLocation,
+  () => { updateDriverMarker() },
+  { deep: true }
+)
+
 // --- Cleanup ---
 onUnmounted(() => {
   clearMarker(pickupMarker)
   pickupMarker = null
   clearMarker(dropoffMarker)
   dropoffMarker = null
+  clearMarker(driverMarker)
+  driverMarker = null
   if (directionsRenderer) {
     directionsRenderer.setMap(null)
     directionsRenderer = null

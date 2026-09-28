@@ -30,8 +30,8 @@ const messages = ref([
 ])
 const draft = ref('')
 
-// Simulated driver marker (moves toward pickup)
-let driverMarkerInterval = null
+// Driver location tracking
+let locationChannel = null
 let statusTimers = []
 
 const statusBarText = computed(() => {
@@ -59,11 +59,35 @@ onMounted(async () => {
     return
   }
 
-  // Real mode: subscribe to ride updates
+  // Real mode: load ride data and subscribe to updates
   const { data } = await supabase.from('rides').select('*').eq('id', rideId).single()
   if (data) {
     rideStatus.value = data.status
+    if (data.driver_lat && data.driver_lng) {
+      driverLocation.value = { lat: data.driver_lat, lng: data.driver_lng }
+    }
   }
+
+  // Subscribe to real-time driver location broadcasts
+  locationChannel = supabase.channel(`ride-location-${rideId}`)
+  locationChannel.on('broadcast', { event: 'driver-location' }, ({ payload }) => {
+    if (payload?.lat && payload?.lng) {
+      driverLocation.value = { lat: payload.lat, lng: payload.lng }
+    }
+  }).subscribe()
+
+  // Subscribe to ride status changes
+  supabase.channel(`ride-status-${rideId}`)
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rides', filter: `id=eq.${rideId}` }, (payload) => {
+      if (payload.new?.status) {
+        rideStatus.value = payload.new.status
+        if (payload.new.status === 'completed') {
+          setTimeout(() => {
+            router.push({ name: 'rate-ride', params: { rideId } })
+          }, 2000)
+        }
+      }
+    }).subscribe()
 })
 
 function startDemoSimulation() {
@@ -111,7 +135,7 @@ function sendMessage() {
 
 onUnmounted(() => {
   statusTimers.forEach(clearTimeout)
-  if (driverMarkerInterval) clearInterval(driverMarkerInterval)
+  if (locationChannel) supabase.removeChannel(locationChannel)
 })
 </script>
 
@@ -168,7 +192,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Full-screen map -->
-    <GoogleMap :pickup="pickup" :dropoff="dropoff" />
+    <GoogleMap :pickup="pickup" :dropoff="dropoff" :driver-location="driverLocation" />
 
     <!-- Ride tracker overlay -->
     <RideTracker

@@ -1,9 +1,10 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDriver } from '../../lib/useDriver'
 import { DEMO_MODE } from '../../lib/demoMode'
 import { formatFare } from '../../lib/pricing'
+import { supabase, supabaseConfigured } from '../../lib/supabase'
 import GoogleMap from '../../components/GoogleMap.vue'
 import HarborBackdrop from '../../components/HarborBackdrop.vue'
 
@@ -95,6 +96,46 @@ function finish() {
   completeRide()
   router.push('/driver/dashboard')
 }
+
+// --- Real-time GPS broadcasting ---
+let gpsWatchId = null
+let locationChannel = null
+
+onMounted(() => {
+  if (DEMO_MODE || !supabaseConfigured || !currentRide.value) return
+
+  // Subscribe to a Supabase Realtime channel for this ride
+  locationChannel = supabase.channel(`ride-location-${currentRide.value.id}`)
+  locationChannel.subscribe()
+
+  // Watch driver's GPS and broadcast every update
+  if (navigator.geolocation) {
+    gpsWatchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords
+        if (locationChannel) {
+          locationChannel.send({
+            type: 'broadcast',
+            event: 'driver-location',
+            payload: { lat: latitude, lng: longitude },
+          })
+        }
+        // Also update the ride record periodically
+        supabase.from('rides').update({
+          driver_lat: latitude,
+          driver_lng: longitude,
+        }).eq('id', currentRide.value.id).then(() => {})
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+    )
+  }
+})
+
+onUnmounted(() => {
+  if (gpsWatchId !== null) navigator.geolocation.clearWatch(gpsWatchId)
+  if (locationChannel) supabase.removeChannel(locationChannel)
+})
 
 function cancelRide() {
   completeRide()
