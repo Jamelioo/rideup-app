@@ -39,9 +39,17 @@
         </router-link>
       </nav>
 
-      <!-- Footer -->
-      <div class="px-4 py-4 border-t border-white/10 text-xs text-gray-500">
-        RideUp Admin v1.0
+      <!-- Back to App -->
+      <div class="px-3 py-3 border-t border-white/10">
+        <router-link
+          to="/book"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+        >
+          <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          Back to App
+        </router-link>
       </div>
     </aside>
 
