@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import { formatFare } from '../../lib/pricing'
 import { generateFakeEarnings } from '../../lib/demoDriverMode'
 import { DEMO_MODE } from '../../lib/demoMode'
+import { supabase, supabaseConfigured } from '../../lib/supabase'
+import { useAuth } from '../../lib/useAuth'
 
 const router = useRouter()
 const activeTab = ref('today')
@@ -16,9 +18,54 @@ const weeklyTripsTotal = computed(() => earnings.value.weeklyTrips.reduce((s, v)
 const maxDailyEarning = computed(() => Math.max(...earnings.value.weeklyTotals, 1))
 
 onMounted(async () => {
-  if (DEMO_MODE) return
-  // Real earnings will come from Supabase rides table
-  // For now, show empty state until backend queries are built
+  if (DEMO_MODE || !supabaseConfigured) return
+
+  const { user } = useAuth()
+  if (!user.value) return
+
+  try {
+    const { data: driver } = await supabase
+      .from('drivers')
+      .select('id')
+      .eq('auth_user_id', user.value.id)
+      .single()
+
+    if (!driver) return
+
+    const { data: rides } = await supabase
+      .from('rides')
+      .select('fare_cents, completed_at, created_at')
+      .eq('driver_id', driver.id)
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: false })
+
+    if (!rides || rides.length === 0) return
+
+    const now = new Date()
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+    // Today's rides
+    const todayRides = rides.filter(r => new Date(r.completed_at || r.created_at) >= todayStart)
+    earnings.value.today = todayRides.map(r => ({ fare_cents: r.fare_cents || 0 }))
+
+    // Weekly totals (Mon-Sun)
+    const weekTotals = [0, 0, 0, 0, 0, 0, 0]
+    const weekTrips = [0, 0, 0, 0, 0, 0, 0]
+    const weekStart = new Date(todayStart)
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1) // Monday
+
+    rides.forEach(r => {
+      const d = new Date(r.completed_at || r.created_at)
+      if (d >= weekStart) {
+        const dayIdx = (d.getDay() + 6) % 7 // Mon=0, Sun=6
+        weekTotals[dayIdx] += r.fare_cents || 0
+        weekTrips[dayIdx]++
+      }
+    })
+
+    earnings.value.weeklyTotals = weekTotals
+    earnings.value.weeklyTrips = weekTrips
+  } catch (e) { /* keep defaults */ }
 })
 const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
