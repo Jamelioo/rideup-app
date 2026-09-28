@@ -7,6 +7,7 @@ import Profile from '../pages/Profile.vue'
 import EditProfile from '../pages/EditProfile.vue'
 import MyRides from '../pages/MyRides.vue'
 import Payments from '../pages/Payments.vue'
+import SavedPlaces from '../pages/SavedPlaces.vue'
 import Support from '../pages/Support.vue'
 import About from '../pages/About.vue'
 import RiderLanding from '../pages/RiderLanding.vue'
@@ -25,6 +26,15 @@ import DriverEarnings from '../pages/driver/DriverEarnings.vue'
 import DriverProfile from '../pages/driver/DriverProfile.vue'
 import RateRide from '../pages/rider/RateRide.vue'
 import RateRider from '../pages/driver/RateRider.vue'
+import ActiveRide from '../pages/rider/ActiveRide.vue'
+import RideMessages from '../pages/rider/RideMessages.vue'
+import AdminLayout from '../pages/admin/AdminLayout.vue'
+import AdminDashboard from '../pages/admin/AdminDashboard.vue'
+import AdminRides from '../pages/admin/AdminRides.vue'
+import AdminUsers from '../pages/admin/AdminUsers.vue'
+import AdminDrivers from '../pages/admin/AdminDrivers.vue'
+import AdminRevenue from '../pages/admin/AdminRevenue.vue'
+import AdminSupport from '../pages/admin/AdminSupport.vue'
 import { useAuth } from '../lib/useAuth'
 import { useDriver } from '../lib/useDriver'
 import { DEMO_MODE } from '../lib/demoMode'
@@ -38,6 +48,7 @@ const routes = [
   { path: '/edit-profile', name: 'edit-profile', component: EditProfile, meta: { requiresAuth: true, title: 'Edit Profile — RideUp' } },
   { path: '/my-rides', name: 'my-rides', component: MyRides, meta: { requiresAuth: true, title: 'My Rides — RideUp' } },
   { path: '/payments', name: 'payments', component: Payments, meta: { requiresAuth: true, title: 'Payments — RideUp' } },
+  { path: '/saved-places', name: 'saved-places', component: SavedPlaces, meta: { requiresAuth: true, title: 'Saved Places — RideUp' } },
   { path: '/payment-success', name: 'payment-success', component: PaymentSuccess, meta: { title: 'Payment Successful — RideUp' } },
   { path: '/receipt/:rideId', name: 'ride-receipt', component: RideReceipt, meta: { title: 'Receipt — RideUp' } },
   { path: '/support', name: 'support', component: Support, meta: { title: 'Support — RideUp' } },
@@ -54,7 +65,22 @@ const routes = [
   { path: '/driver/earnings', name: 'driver-earnings', component: DriverEarnings, meta: { requiresAuth: true, title: 'Earnings — RideUp' } },
   { path: '/driver/profile', name: 'driver-profile', component: DriverProfile, meta: { requiresAuth: true, title: 'Driver Profile — RideUp' } },
   { path: '/rate/:rideId', name: 'rate-ride', component: RateRide, meta: { requiresAuth: true, title: 'Rate Your Ride — RideUp' } },
+  { path: '/ride/:rideId', name: 'active-ride', component: ActiveRide, meta: { requiresAuth: true, title: 'Your Ride — RideUp' } },
+  { path: '/ride/:rideId/messages', name: 'ride-messages', component: RideMessages, meta: { requiresAuth: true, title: 'Messages — RideUp' } },
   { path: '/driver/rate/:rideId', name: 'rate-rider', component: RateRider, meta: { requiresAuth: true, title: 'Rate Rider — RideUp' } },
+  {
+    path: '/admin',
+    component: AdminLayout,
+    meta: { requiresAuth: true, requiresAdmin: true },
+    children: [
+      { path: '', name: 'admin-dashboard', component: AdminDashboard, meta: { title: 'Admin Dashboard — RideUp' } },
+      { path: 'rides', name: 'admin-rides', component: AdminRides, meta: { title: 'Manage Rides — RideUp' } },
+      { path: 'users', name: 'admin-users', component: AdminUsers, meta: { title: 'Manage Users — RideUp' } },
+      { path: 'drivers', name: 'admin-drivers', component: AdminDrivers, meta: { title: 'Manage Drivers — RideUp' } },
+      { path: 'revenue', name: 'admin-revenue', component: AdminRevenue, meta: { title: 'Revenue — RideUp' } },
+      { path: 'support', name: 'admin-support', component: AdminSupport, meta: { title: 'Support Tickets — RideUp' } },
+    ],
+  },
   { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFound, meta: { title: 'Page Not Found — RideUp' } },
 ]
 
@@ -86,6 +112,10 @@ router.beforeEach(async (to) => {
   }
 
   if (to.meta.guestOnly && user.value) {
+    return { path: '/book' }
+  }
+
+  if (to.meta.requiresAdmin && user.value?.user_metadata?.role !== 'admin') {
     return { path: '/book' }
   }
 
