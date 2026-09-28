@@ -13,6 +13,32 @@ const loading = ref(true)
 let initialized = false
 let rideSubscription = null
 let fakeRequestTimer = null
+let notificationPermission = 'default'
+
+// Request notification permission on init
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().then(p => { notificationPermission = p })
+  } else if ('Notification' in window) {
+    notificationPermission = Notification.permission
+  }
+}
+
+function showRideNotification(ride) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return
+  try {
+    const n = new Notification('New ride request!', {
+      body: `${ride.pickup_address || 'Pickup'} → ${ride.dropoff_address || 'Dropoff'}`,
+      icon: '/favicon.ico',
+      tag: 'ride-request',
+      requireInteraction: true,
+      vibrate: [200, 100, 200],
+    })
+    n.onclick = () => { window.focus(); n.close() }
+    // Auto-close after 15 seconds (matches the request timer)
+    setTimeout(() => n.close(), 15000)
+  } catch (e) { /* Notification API not fully supported */ }
+}
 
 function init() {
   if (initialized) return
@@ -53,6 +79,7 @@ async function fetchDriver(authUserId) {
 
 async function goOnline() {
   isOnline.value = true
+  requestNotificationPermission()
   if (DEMO_MODE) {
     driver.value.status = 'online'
     startFakeRequests()
@@ -88,6 +115,7 @@ function subscribeToRides() {
       const ride = payload.new
       if (ride.declined_by && ride.declined_by.includes(driver.value.id)) return
       incomingRequest.value = ride
+      showRideNotification(ride)
     })
     .subscribe()
 }
@@ -105,7 +133,9 @@ function startFakeRequests() {
     const delay = 15000 + Math.random() * 15000
     fakeRequestTimer = setTimeout(() => {
       if (isOnline.value && !incomingRequest.value && !currentRide.value) {
-        incomingRequest.value = generateFakeRideRequest()
+        const fakeRide = generateFakeRideRequest()
+        incomingRequest.value = fakeRide
+        showRideNotification(fakeRide)
       }
       if (isOnline.value) scheduleNext()
     }, delay)
