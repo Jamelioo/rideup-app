@@ -74,7 +74,7 @@ async function handleSubmit() {
     vehicle_make: f.vehicleMake.trim(),
     vehicle_model: f.vehicleModel.trim(),
     vehicle_color: f.vehicleColor.trim(),
-    vehicle_plate: f.vehiclePlate.trim(),
+    license_plate: f.vehiclePlate.trim(),
     vehicle_type: f.vehicleType,
     approved: false,
   })

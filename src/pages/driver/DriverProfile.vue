@@ -73,7 +73,7 @@ function goBack() {
           </div>
           <div class="flex justify-between">
             <span class="text-[13px] text-[#191f1c]/50">Plate</span>
-            <span class="text-[14px] font-semibold uppercase">{{ driver?.vehicle_plate || '—' }}</span>
+            <span class="text-[14px] font-semibold uppercase">{{ driver?.license_plate || '—' }}</span>
           </div>
           <div class="flex justify-between">
             <span class="text-[13px] text-[#191f1c]/50">Type</span>

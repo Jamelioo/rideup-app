@@ -17,7 +17,7 @@ export const DEMO_DRIVER_PROFILE = {
   vehicle_make: 'Toyota',
   vehicle_model: 'Camry',
   vehicle_color: 'Silver',
-  vehicle_plate: 'ABC-1234',
+  license_plate: 'ABC-1234',
   vehicle_type: 'standard',
   status: 'offline',
   rating: 4.9,
