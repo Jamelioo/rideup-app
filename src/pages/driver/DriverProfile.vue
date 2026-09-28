@@ -115,7 +115,7 @@ function goBack() {
             <span class="text-[12px] text-[#2b8659] font-semibold">✓ On file</span>
           </div>
         </div>
-        <button @click="showToast('Contact support at (242) 452-9911')" class="text-[13px] text-[#2b8659] font-semibold mt-2 px-1">Upload / Update</button>
+        <button @click="router.push('/driver/documents')" class="text-[13px] text-[#2b8659] font-semibold mt-2 px-1">Upload / Update</button>
       </div>
 
       <!-- Account -->

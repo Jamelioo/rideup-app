@@ -13,8 +13,14 @@ const { acceptRide, declineRide } = useDriver()
 const timeLeft = ref(15)
 const progress = ref(100)
 let timer = null
+let animFrame = null
 
 onMounted(() => {
+  // Vibrate on new request
+  if (navigator.vibrate) {
+    navigator.vibrate([200, 100, 200])
+  }
+
   // Countdown timer
   timer = setInterval(() => {
     timeLeft.value--
@@ -24,19 +30,20 @@ onMounted(() => {
     }
   }, 1000)
 
-  // Progress animation
+  // Smooth progress animation
   const start = Date.now()
   const total = 15000
   function update() {
     const elapsed = Date.now() - start
     progress.value = Math.max(0, 100 - (elapsed / total) * 100)
-    if (elapsed < total) requestAnimationFrame(update)
+    if (elapsed < total) animFrame = requestAnimationFrame(update)
   }
-  requestAnimationFrame(update)
+  animFrame = requestAnimationFrame(update)
 })
 
 onUnmounted(() => {
   if (timer) clearInterval(timer)
+  if (animFrame) cancelAnimationFrame(animFrame)
 })
 
 async function handleAccept() {
@@ -64,7 +71,7 @@ function handleDecline() {
                   :stroke-dashoffset="276.46 * (1 - progress / 100)" />
         </svg>
         <div class="absolute inset-0 flex items-center justify-center">
-          <span class="text-[28px] font-bold font-serif">{{ timeLeft }}</span>
+          <span class="text-[28px] font-bold">{{ timeLeft }}</span>
         </div>
       </div>
       <p class="text-[13px] text-[#191f1c]/50 mt-2">New ride request</p>
@@ -77,10 +84,14 @@ function handleDecline() {
         <div class="bg-[#f5f5f5] rounded-2xl p-5 mb-4">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
-              <div class="w-12 h-12 rounded-full bg-[#2b8659]/15 flex items-center justify-center text-xl">👤</div>
+              <div class="w-12 h-12 rounded-full bg-[#2b8659]/15 flex items-center justify-center">
+                <svg class="w-6 h-6 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                </svg>
+              </div>
               <div>
                 <div class="text-[16px] font-bold">{{ request.rider_name }}</div>
-                <div class="text-[13px] text-[#191f1c]/50">★ {{ request.rider_rating }}</div>
+                <div class="text-[13px] text-[#191f1c]/50">&#9733; {{ request.rider_rating }}</div>
               </div>
             </div>
             <div class="text-right">
@@ -128,7 +139,7 @@ function handleDecline() {
             Accept Ride
           </button>
           <button @click="handleDecline"
-                  class="w-full py-3 mt-2 text-[#191f1c]/40 font-semibold text-[14px] active:text-[#191f1c]/60">
+                  class="w-full py-3 mt-2 border-2 border-red-200 text-red-500 font-semibold text-[14px] rounded-2xl active:bg-red-50 transition-colors">
             Decline
           </button>
         </div>

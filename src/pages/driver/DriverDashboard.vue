@@ -18,14 +18,43 @@ const { driver, isOnline, incomingRequest, currentRide, loading: driverLoading, 
 const menuOpen = ref(false)
 const todayEarnings = ref(0)
 const todayTrips = ref(0)
+const hoursOnline = ref(0)
 const lastRide = ref(null)
+const onlineStartTime = ref(null)
+let hoursTimer = null
 
 function refreshStats() {
   if (DEMO_MODE) {
     const { today } = generateFakeEarnings()
     todayEarnings.value = today.reduce((sum, t) => sum + t.fare_cents, 0)
     todayTrips.value = today.length
+    hoursOnline.value = 5.8
     lastRide.value = today[0]
+  }
+}
+
+function startHoursTracking() {
+  if (!onlineStartTime.value) {
+    onlineStartTime.value = Date.now()
+  }
+  hoursTimer = setInterval(() => {
+    if (onlineStartTime.value) {
+      const elapsed = (Date.now() - onlineStartTime.value) / 3600000
+      hoursOnline.value = parseFloat((hoursOnline.value + elapsed).toFixed(1))
+      onlineStartTime.value = Date.now()
+    }
+  }, 60000)
+}
+
+function stopHoursTracking() {
+  if (hoursTimer) {
+    clearInterval(hoursTimer)
+    hoursTimer = null
+  }
+  if (onlineStartTime.value) {
+    const elapsed = (Date.now() - onlineStartTime.value) / 3600000
+    hoursOnline.value = parseFloat((hoursOnline.value + elapsed).toFixed(1))
+    onlineStartTime.value = null
   }
 }
 
@@ -34,11 +63,17 @@ onMounted(async () => {
     await fetchDriver(user.value.id)
   }
   refreshStats()
+  if (isOnline.value) {
+    startHoursTracking()
+  }
+})
+
+onUnmounted(() => {
+  stopHoursTracking()
 })
 
 watch(currentRide, (newVal, oldVal) => {
   if (!newVal && oldVal) {
-    // Ride was completed, refresh stats
     refreshStats()
   }
 })
@@ -46,8 +81,10 @@ watch(currentRide, (newVal, oldVal) => {
 async function toggleOnline() {
   if (isOnline.value) {
     await goOffline()
+    stopHoursTracking()
   } else {
     await goOnline()
+    startHoursTracking()
   }
 }
 
@@ -97,37 +134,62 @@ const initials = computed(() => {
       <div class="px-5 pb-6">
         <div v-if="driverLoading" class="py-8 text-center text-[13px] text-[#191f1c]/40">Loading...</div>
         <template v-else>
-        <!-- Online status -->
-        <div v-if="isOnline" class="flex items-center gap-2 mb-4">
-          <span class="w-2.5 h-2.5 rounded-full bg-[#2b8659] animate-pulse"></span>
-          <span class="text-[13px] font-semibold text-[#2b8659]">You're online</span>
+
+        <!-- Online/Offline Toggle -->
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <span v-if="isOnline" class="w-2.5 h-2.5 rounded-full bg-[#2b8659] animate-pulse"></span>
+            <span v-else class="w-2.5 h-2.5 rounded-full bg-[#191f1c]/20"></span>
+            <span class="text-[15px] font-bold" :class="isOnline ? 'text-[#2b8659]' : 'text-[#191f1c]/50'">
+              {{ isOnline ? "You're Online" : "You're Offline" }}
+            </span>
+          </div>
+          <button @click="toggleOnline"
+                  class="relative w-[52px] h-[30px] rounded-full transition-colors duration-200 flex-shrink-0"
+                  :class="isOnline ? 'bg-[#2b8659]' : 'bg-[#191f1c]/20'">
+            <span class="absolute top-[3px] w-6 h-6 rounded-full bg-white shadow-sm transition-transform duration-200"
+                  :class="isOnline ? 'left-[25px]' : 'left-[3px]'"></span>
+          </button>
         </div>
 
-        <!-- Go Online / Offline button -->
-        <button @click="toggleOnline"
-                class="w-full py-4 font-bold rounded-2xl text-[15px] transition-all active:scale-[0.98]"
-                :class="isOnline
-                  ? 'bg-[#191f1c] text-white'
-                  : 'bg-[#2b8659] text-white shadow-[0_4px_16px_rgba(88,204,2,0.3)]'">
-          {{ isOnline ? 'Go Offline' : 'Go Online' }}
-        </button>
+        <!-- Offline message -->
+        <div v-if="!isOnline && !lastRide" class="bg-[#f5f5f5] rounded-2xl p-5 mb-4 text-center">
+          <p class="text-[14px] text-[#191f1c]/50">Go online to start receiving ride requests</p>
+        </div>
 
-        <!-- Stats -->
-        <div class="grid grid-cols-2 gap-3 mt-4">
-          <button @click="router.push('/driver/earnings')" class="bg-[#f5f5f5] rounded-2xl p-4 text-left active:bg-[#f0f0f0] transition-colors">
-            <div class="text-[11px] text-[#191f1c]/40 font-medium">Today</div>
-            <div class="text-[22px] font-bold mt-0.5">{{ formatFare(todayEarnings) }}</div>
-            <div class="text-[11px] text-[#191f1c]/40 mt-0.5">{{ todayTrips }} trips</div>
-          </button>
-          <div class="bg-[#f5f5f5] rounded-2xl p-4 text-left">
-            <div class="text-[11px] text-[#191f1c]/40 font-medium">Rating</div>
-            <div class="text-[22px] font-bold mt-0.5">{{ driver?.rating || '5.0' }} <span class="text-[16px]">★</span></div>
-            <div class="text-[11px] text-[#191f1c]/40 mt-0.5">{{ driver?.total_trips || 0 }} total trips</div>
+        <!-- Online waiting message -->
+        <div v-if="isOnline && !currentRide && !incomingRequest" class="bg-[#f0fdf4] rounded-2xl p-4 mb-4 flex items-center gap-3">
+          <span class="w-3 h-3 rounded-full bg-[#2b8659] animate-pulse flex-shrink-0"></span>
+          <p class="text-[14px] text-[#2b8659] font-medium">Waiting for rides...</p>
+        </div>
+
+        <!-- Today's summary -->
+        <div class="grid grid-cols-3 gap-2 mb-4">
+          <div class="bg-[#f5f5f5] rounded-2xl p-3 text-center">
+            <div class="text-[11px] text-[#191f1c]/40 font-medium">Rides</div>
+            <div class="text-[20px] font-bold mt-0.5">{{ todayTrips }}</div>
+          </div>
+          <div class="bg-[#f5f5f5] rounded-2xl p-3 text-center">
+            <div class="text-[11px] text-[#191f1c]/40 font-medium">Earnings</div>
+            <div class="text-[20px] font-bold mt-0.5">{{ formatFare(todayEarnings) }}</div>
+          </div>
+          <div class="bg-[#f5f5f5] rounded-2xl p-3 text-center">
+            <div class="text-[11px] text-[#191f1c]/40 font-medium">Online</div>
+            <div class="text-[20px] font-bold mt-0.5">{{ hoursOnline }}h</div>
           </div>
         </div>
 
+        <!-- Rating -->
+        <button @click="router.push('/driver/earnings')" class="w-full bg-[#f5f5f5] rounded-2xl p-4 text-left active:bg-[#f0f0f0] transition-colors mb-4 flex items-center justify-between">
+          <div>
+            <div class="text-[11px] text-[#191f1c]/40 font-medium">Rating</div>
+            <div class="text-[18px] font-bold mt-0.5">{{ driver?.rating || '5.0' }} <span class="text-[14px]">&#9733;</span></div>
+          </div>
+          <div class="text-[11px] text-[#191f1c]/40">{{ driver?.total_trips || 0 }} total trips</div>
+        </button>
+
         <!-- Last ride -->
-        <div v-if="lastRide" class="mt-4 bg-[#f5f5f5] rounded-2xl p-4">
+        <div v-if="lastRide" class="bg-[#f5f5f5] rounded-2xl p-4">
           <div class="text-[11px] text-[#191f1c]/40 font-medium mb-2">Last ride</div>
           <div class="flex justify-between items-center">
             <div>
@@ -136,9 +198,6 @@ const initials = computed(() => {
             </div>
             <div class="text-[15px] font-bold text-[#2b8659]">+{{ formatFare(lastRide.fare_cents) }}</div>
           </div>
-        </div>
-        <div v-else class="mt-4 text-center text-[13px] text-[#191f1c]/40 py-4">
-          No rides yet — go online to start earning
         </div>
         </template>
       </div>
@@ -161,33 +220,62 @@ const initials = computed(() => {
       <div class="flex-1 overflow-y-auto px-6 pb-8">
         <div v-if="driverLoading" class="py-8 text-center text-[13px] text-[#191f1c]/40">Loading...</div>
         <template v-else>
-        <div v-if="isOnline" class="flex items-center gap-2 mb-5">
-          <span class="w-2.5 h-2.5 rounded-full bg-[#2b8659] animate-pulse"></span>
-          <span class="text-[13px] font-semibold text-[#2b8659]">You're online — waiting for rides</span>
+
+        <!-- Online/Offline Toggle -->
+        <div class="flex items-center justify-between mb-5 bg-[#f5f5f5] rounded-2xl p-4">
+          <div class="flex items-center gap-3">
+            <span v-if="isOnline" class="w-3 h-3 rounded-full bg-[#2b8659] animate-pulse"></span>
+            <span v-else class="w-3 h-3 rounded-full bg-[#191f1c]/20"></span>
+            <span class="text-[16px] font-bold" :class="isOnline ? 'text-[#2b8659]' : 'text-[#191f1c]/50'">
+              {{ isOnline ? "You're Online" : "You're Offline" }}
+            </span>
+          </div>
+          <button @click="toggleOnline"
+                  class="relative w-[56px] h-[32px] rounded-full transition-colors duration-200 flex-shrink-0"
+                  :class="isOnline ? 'bg-[#2b8659]' : 'bg-[#191f1c]/20'">
+            <span class="absolute top-[3px] w-[26px] h-[26px] rounded-full bg-white shadow-sm transition-transform duration-200"
+                  :class="isOnline ? 'left-[27px]' : 'left-[3px]'"></span>
+          </button>
         </div>
 
-        <button @click="toggleOnline"
-                class="w-full py-4 font-bold rounded-2xl text-[15px] transition-all"
-                :class="isOnline
-                  ? 'bg-[#191f1c] text-white hover:bg-[#333]'
-                  : 'bg-[#2b8659] text-white hover:bg-[#236e49] shadow-[0_4px_16px_rgba(88,204,2,0.3)]'">
-          {{ isOnline ? 'Go Offline' : 'Go Online' }}
-        </button>
+        <!-- Offline message -->
+        <div v-if="!isOnline && !lastRide" class="bg-[#f5f5f5] rounded-2xl p-6 mb-5 text-center">
+          <p class="text-[14px] text-[#191f1c]/50">Go online to start receiving ride requests</p>
+        </div>
 
-        <div class="grid grid-cols-2 gap-3 mt-5">
-          <button @click="router.push('/driver/earnings')" class="bg-[#f5f5f5] rounded-2xl p-4 text-left hover:bg-[#f0f0f0] transition-colors">
-            <div class="text-[11px] text-[#191f1c]/40 font-medium">Today</div>
-            <div class="text-[24px] font-bold mt-0.5">{{ formatFare(todayEarnings) }}</div>
-            <div class="text-[11px] text-[#191f1c]/40 mt-0.5">{{ todayTrips }} trips</div>
-          </button>
-          <div class="bg-[#f5f5f5] rounded-2xl p-4 text-left">
-            <div class="text-[11px] text-[#191f1c]/40 font-medium">Rating</div>
-            <div class="text-[24px] font-bold mt-0.5">{{ driver?.rating || '5.0' }} <span class="text-[16px]">★</span></div>
-            <div class="text-[11px] text-[#191f1c]/40 mt-0.5">{{ driver?.total_trips || 0 }} total trips</div>
+        <!-- Online waiting message -->
+        <div v-if="isOnline && !currentRide && !incomingRequest" class="bg-[#f0fdf4] rounded-2xl p-4 mb-5 flex items-center gap-3">
+          <span class="w-3 h-3 rounded-full bg-[#2b8659] animate-pulse flex-shrink-0"></span>
+          <p class="text-[14px] text-[#2b8659] font-medium">Waiting for rides...</p>
+        </div>
+
+        <!-- Today's summary -->
+        <div class="grid grid-cols-3 gap-3 mb-5">
+          <div class="bg-[#f5f5f5] rounded-2xl p-4 text-center">
+            <div class="text-[11px] text-[#191f1c]/40 font-medium">Rides</div>
+            <div class="text-[22px] font-bold mt-0.5">{{ todayTrips }}</div>
+          </div>
+          <div class="bg-[#f5f5f5] rounded-2xl p-4 text-center">
+            <div class="text-[11px] text-[#191f1c]/40 font-medium">Earnings</div>
+            <div class="text-[22px] font-bold mt-0.5">{{ formatFare(todayEarnings) }}</div>
+          </div>
+          <div class="bg-[#f5f5f5] rounded-2xl p-4 text-center">
+            <div class="text-[11px] text-[#191f1c]/40 font-medium">Online</div>
+            <div class="text-[22px] font-bold mt-0.5">{{ hoursOnline }}h</div>
           </div>
         </div>
 
-        <div v-if="lastRide" class="mt-4 bg-[#f5f5f5] rounded-2xl p-4">
+        <!-- Rating -->
+        <button @click="router.push('/driver/earnings')" class="w-full bg-[#f5f5f5] rounded-2xl p-4 text-left hover:bg-[#f0f0f0] transition-colors mb-5 flex items-center justify-between">
+          <div>
+            <div class="text-[11px] text-[#191f1c]/40 font-medium">Rating</div>
+            <div class="text-[22px] font-bold mt-0.5">{{ driver?.rating || '5.0' }} <span class="text-[16px]">&#9733;</span></div>
+          </div>
+          <div class="text-[11px] text-[#191f1c]/40">{{ driver?.total_trips || 0 }} total trips</div>
+        </button>
+
+        <!-- Last ride -->
+        <div v-if="lastRide" class="bg-[#f5f5f5] rounded-2xl p-4">
           <div class="text-[11px] text-[#191f1c]/40 font-medium mb-2">Last ride</div>
           <div class="flex justify-between items-center">
             <div>
@@ -197,8 +285,8 @@ const initials = computed(() => {
             <div class="text-[15px] font-bold text-[#2b8659]">+{{ formatFare(lastRide.fare_cents) }}</div>
           </div>
         </div>
-        <div v-else class="mt-4 text-center text-[13px] text-[#191f1c]/40 py-6">
-          No rides yet — go online to start earning
+        <div v-else-if="isOnline" class="text-center text-[13px] text-[#191f1c]/40 py-4">
+          No rides yet today
         </div>
         </template>
       </div>
