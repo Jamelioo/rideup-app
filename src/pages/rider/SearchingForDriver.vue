@@ -1,22 +1,49 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { DEMO_MODE } from '../../lib/demoMode'
 import HarborBackdrop from '../../components/HarborBackdrop.vue'
 
 const props = defineProps({ rideId: { type: String, required: true } })
 const emit = defineEmits(['matched', 'cancelled'])
+const router = useRouter()
 const ride = ref(null)
+const driverFound = ref(false)
 let channel = null
 let demoTimer = null
+
+function navigateToActiveRide(matchData) {
+  driverFound.value = true
+  // Parse vehicle string like "Silver Toyota Corolla · TX 4471"
+  const parts = (matchData.vehicle || '').split(' \u00b7 ')
+  const vehicleName = parts[0] || 'Silver Toyota Corolla'
+  const plateNum = parts[1] || 'TX 4471'
+
+  setTimeout(() => {
+    router.push({
+      name: 'active-ride',
+      params: { rideId: matchData.id || props.rideId },
+      query: {
+        driverName: matchData.driver_name || 'Marcus Rolle',
+        rating: matchData.rating || 4.9,
+        vehicle: vehicleName,
+        plate: plateNum,
+        eta: matchData.eta_minutes || 4,
+      },
+    })
+  }, 1500) // Brief pause to show "Driver found" before navigating
+}
 
 onMounted(async () => {
   if (DEMO_MODE) {
     demoTimer = setTimeout(() => {
-      emit('matched', {
+      const matchData = {
         id: props.rideId, status: 'accepted', driver_name: 'Marcus Rolle',
-        vehicle: 'Silver Toyota Corolla · TX 4471', rating: 4.9, eta_minutes: 4, demo: true,
-      })
+        vehicle: 'Silver Toyota Corolla \u00b7 TX 4471', rating: 4.9, eta_minutes: 4, demo: true,
+      }
+      emit('matched', matchData)
+      navigateToActiveRide(matchData)
     }, 3500)
     return
   }
@@ -25,7 +52,10 @@ onMounted(async () => {
   channel = supabase.channel(`ride-${props.rideId}`)
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rides', filter: `id=eq.${props.rideId}` }, (payload) => {
       ride.value = payload.new
-      if (payload.new.status === 'accepted') emit('matched', payload.new)
+      if (payload.new.status === 'accepted') {
+        emit('matched', payload.new)
+        navigateToActiveRide(payload.new)
+      }
     }).subscribe()
 })
 
@@ -56,8 +86,8 @@ async function cancelRequest() {
         </div>
       </div>
       <div class="text-center">
-        <div class="text-xl font-medium mb-1.5">Looking for a driver</div>
-        <div class="text-[#191f1c]/45 text-[13px]">{{ DEMO_MODE ? 'Connecting you with a nearby driver...' : 'Connecting you with a nearby driver' }}</div>
+        <div class="text-xl font-medium mb-1.5">{{ driverFound ? 'Driver found' : 'Looking for a driver' }}</div>
+        <div class="text-[#191f1c]/45 text-[13px]">{{ driverFound ? 'Connecting you now...' : (DEMO_MODE ? 'Connecting you with a nearby driver...' : 'Connecting you with a nearby driver') }}</div>
       </div>
       <button @click="cancelRequest" class="text-[#191f1c]/55 text-[13px] underline underline-offset-2 mt-2 py-2 px-4">Cancel request</button>
     </div>

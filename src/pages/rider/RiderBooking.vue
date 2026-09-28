@@ -262,27 +262,7 @@ async function requestRide() {
     return
   }
 
-  // Redirect to Stripe Checkout for payment
-  try {
-    const res = await fetch('/api/create-checkout-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: fare, description }),
-    })
-    const data = await res.json()
-    if (data.url) {
-      window.location.href = data.url
-      return
-    }
-    error.value = data.error || 'Payment failed. Please try again.'
-    isSubmitting.value = false
-    return
-  } catch (err) {
-    error.value = 'Could not connect to payment. Please try again.'
-    isSubmitting.value = false
-    return
-  }
-
+  // 1. Save ride to Supabase first
   try {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { error.value = 'Please log in to request a ride.'; isSubmitting.value = false; return }
@@ -295,7 +275,20 @@ async function requestRide() {
       vehicle_type: selectedVehicle.value, distance_miles: distanceMiles.value, fare_cents: fare,
     }).select().single()
     if (rideErr) { error.value = 'Something went wrong requesting your ride. Please try again.'; isSubmitting.value = false; return }
-    emit('requested', ride)
+
+    // 2. Redirect to Stripe Checkout for payment
+    const res = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: fare, description, rideId: ride.id }),
+    })
+    const data = await res.json()
+    if (data.url) {
+      window.location.href = data.url
+      return
+    }
+    error.value = data.error || 'Payment failed. Please try again.'
+    isSubmitting.value = false
   } catch (err) {
     error.value = 'Connection error. Please try again.'
   } finally {

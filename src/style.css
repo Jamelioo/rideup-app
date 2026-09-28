@@ -3,8 +3,35 @@
 @theme {
   --font-serif: "Inter", sans-serif;
   --font-sans: "Inter", sans-serif;
+
+  /* Light mode colors */
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f5f5f5;
+  --color-surface-elevated: #ffffff;
+  --color-text-primary: #191f1c;
+  --color-text-secondary: rgba(25, 31, 28, 0.55);
+  --color-text-muted: rgba(25, 31, 28, 0.35);
+  --color-border: rgba(25, 31, 28, 0.08);
+  --color-brand: #2b8659;
+  --color-brand-light: #f0fdf4;
 }
 
 body {
   font-family: var(--font-sans);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Dark mode */
+html.dark {
+  --color-surface: #111318;
+  --color-surface-secondary: #1a1d24;
+  --color-surface-elevated: #22252d;
+  --color-text-primary: #e8e9eb;
+  --color-text-secondary: rgba(232, 233, 235, 0.6);
+  --color-text-muted: rgba(232, 233, 235, 0.35);
+  --color-border: rgba(232, 233, 235, 0.1);
+  --color-brand: #34a065;
+  --color-brand-light: rgba(43, 134, 89, 0.15);
 }

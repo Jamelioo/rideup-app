@@ -100,7 +100,7 @@ async function handleLogout() {
           </svg>
           <span class="text-base">Home</span>
         </div>
-        <button @click="goToBooking" class="text-[#2b8659] text-sm font-bold uppercase tracking-wide">Add</button>
+        <button @click="goToSavedPlaces" class="text-[#2b8659] text-sm font-bold uppercase tracking-wide">Add</button>
       </div>
 
       <div class="flex items-center justify-between py-4 border-b border-[#191f1c]/8">
@@ -110,7 +110,7 @@ async function handleLogout() {
           </svg>
           <span class="text-base">Work</span>
         </div>
-        <button @click="goToBooking" class="text-[#2b8659] text-sm font-bold uppercase tracking-wide">Add</button>
+        <button @click="goToSavedPlaces" class="text-[#2b8659] text-sm font-bold uppercase tracking-wide">Add</button>
       </div>
     </div>
 
