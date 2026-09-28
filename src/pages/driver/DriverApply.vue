@@ -75,6 +75,8 @@ async function handleSubmit() {
     vehicle_model: f.vehicleModel.trim(),
     vehicle_color: f.vehicleColor.trim(),
     license_plate: f.vehiclePlate.trim(),
+    vehicle_year: parseInt(f.vehicleYear) || null,
+    license_number: f.licenseNumber?.trim() || null,
     vehicle_type: f.vehicleType,
     approved: false,
   })
