@@ -63,6 +63,12 @@ onMounted(async () => {
   const { data } = await supabase.from('rides').select('*').eq('id', rideId).single()
   if (data) {
     rideStatus.value = data.status
+    if (data.pickup_lat && data.pickup_lng) {
+      pickup.value = { lat: data.pickup_lat, lng: data.pickup_lng }
+    }
+    if (data.dropoff_lat && data.dropoff_lng) {
+      dropoff.value = { lat: data.dropoff_lat, lng: data.dropoff_lng }
+    }
     if (data.driver_lat && data.driver_lng) {
       driverLocation.value = { lat: data.driver_lat, lng: data.driver_lng }
     }
@@ -114,7 +120,6 @@ function startDemoSimulation() {
 
 function cancelRide() {
   statusTimers.forEach(clearTimeout)
-  if (driverMarkerInterval) clearInterval(driverMarkerInterval)
   router.push({ name: 'book' })
 }
 

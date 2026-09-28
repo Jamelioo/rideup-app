@@ -1,7 +1,13 @@
 import Stripe from 'stripe'
 import { buffer } from 'micro'
+import { createClient } from '@supabase/supabase-js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
+)
 
 export const config = {
   api: { bodyParser: false },
@@ -28,17 +34,22 @@ export default async function handler(req, res) {
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object
-      console.log('Checkout completed:', session.id)
-      console.log('Amount:', session.amount_total, 'Currency:', session.currency)
-      console.log('Customer email:', session.customer_details?.email)
+      const rideId = session.metadata?.rideId
 
-      if (session.consent?.promotions === 'opt_in') {
-        console.log('Customer opted in for promotional emails:', session.customer_details?.email)
+      if (rideId) {
+        await supabase
+          .from('rides')
+          .update({
+            status: 'paid',
+            payment_session_id: session.id,
+            paid_at: new Date().toISOString(),
+          })
+          .eq('id', rideId)
       }
       break
     }
     default:
-      console.log('Unhandled event type:', event.type)
+      break
   }
 
   res.status(200).json({ received: true })

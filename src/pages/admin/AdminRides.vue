@@ -174,8 +174,8 @@ onMounted(async () => {
     if (!error && data) {
       allRides.value = data.map(r => ({
         id: r.id,
-        rider: r.pickup_address || 'Unknown',
-        driver: r.dropoff_address || 'Unassigned',
+        rider: r.rider_name || 'Rider',
+        driver: r.driver_name || 'Unassigned',
         pickup: r.pickup_address || 'N/A',
         dropoff: r.dropoff_address || 'N/A',
         fare: r.fare_cents ? `$${(r.fare_cents / 100).toFixed(2)}` : '$0.00',

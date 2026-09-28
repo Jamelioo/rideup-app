@@ -142,7 +142,7 @@ onMounted(async () => {
     if (todayRidesRes.data && todayRidesRes.data.length > 0) {
       recentRides.value = todayRidesRes.data.map(r => ({
         id: r.id,
-        rider: r.pickup_address || 'Unknown',
+        rider: r.rider_name || 'Rider',
         pickup: r.pickup_address || 'N/A',
         dropoff: r.dropoff_address || 'N/A',
         fare: r.fare_cents ? (r.fare_cents / 100).toFixed(2) : '0.00',

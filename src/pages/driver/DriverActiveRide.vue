@@ -93,8 +93,9 @@ function onSlideEnd() {
 }
 
 function finish() {
+  const rideId = currentRide.value?.id || 'demo'
   completeRide()
-  router.push('/driver/dashboard')
+  router.push({ name: 'rate-rider', params: { rideId } })
 }
 
 // --- Real-time GPS broadcasting ---
@@ -137,7 +138,11 @@ onUnmounted(() => {
   if (locationChannel) supabase.removeChannel(locationChannel)
 })
 
-function cancelRide() {
+async function cancelRide() {
+  if (!DEMO_MODE && currentRide.value) {
+    await supabase.from('rides').update({ status: 'cancelled' }).eq('id', currentRide.value.id)
+    await supabase.from('drivers').update({ status: 'online' }).eq('id', driver.value.id)
+  }
   completeRide()
   router.push('/driver/dashboard')
 }
