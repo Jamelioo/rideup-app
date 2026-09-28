@@ -36,6 +36,7 @@ const showPromo = ref(false)
 const promoApplied = ref(false)
 const activeInput = ref('pickup')
 const mapRef = ref(null)
+const isLocating = ref(false)
 
 // Bottom sheet drag state
 const sheetRef = ref(null)
@@ -178,6 +179,31 @@ async function handleMarkerDrag(type, latlng) {
     dropoffInput.value.value = address
   }
   maybeCalculateRoute()
+}
+
+async function useCurrentLocation() {
+  if (!navigator.geolocation) {
+    showToast('Location not supported on this device')
+    return
+  }
+  isLocating.value = true
+  try {
+    const pos = await new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+      })
+    })
+    const { latitude, longitude } = pos.coords
+    const address = await reverseGeocode(latitude, longitude)
+    pickup.value = { lat: latitude, lng: longitude, address }
+    pickupText.value = address
+    if (pickupInput.value) pickupInput.value.value = address
+    isLocating.value = false
+  } catch (err) {
+    isLocating.value = false
+    showToast(err.code === 1 ? 'Location access denied' : 'Could not get location')
+  }
 }
 
 function maybeCalculateRoute() {
@@ -400,6 +426,21 @@ async function scheduleRide({ date, time, summary }) {
                      @focus="activeInput = 'pickup'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
+            <button
+              @click="useCurrentLocation"
+              :disabled="isLocating"
+              class="flex items-center gap-2 px-3 py-2 text-[13px] font-medium text-[var(--color-brand)] active:bg-[var(--color-surface-secondary)] rounded-lg transition-colors"
+            >
+              <svg v-if="!isLocating" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M12 2v4m0 12v4m10-10h-4M6 12H2" />
+              </svg>
+              <svg v-else class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              {{ isLocating ? 'Locating...' : 'Use current location' }}
+            </button>
             <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 border-2 transition-all duration-200"
                  :class="activeInput === 'dropoff' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(88,204,2,0.12)]' : 'border-transparent'">
               <input v-if="!DEMO_MODE" ref="dropoffInput" type="text" placeholder="Where to?"
@@ -518,6 +559,21 @@ async function scheduleRide({ date, time, summary }) {
                      @focus="activeInput = 'pickup'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
+            <button
+              @click="useCurrentLocation"
+              :disabled="isLocating"
+              class="flex items-center gap-2 px-3 py-2 text-[13px] font-medium text-[var(--color-brand)] hover:bg-[var(--color-surface-secondary)] rounded-lg transition-colors"
+            >
+              <svg v-if="!isLocating" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M12 2v4m0 12v4m10-10h-4M6 12H2" />
+              </svg>
+              <svg v-else class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              {{ isLocating ? 'Locating...' : 'Use current location' }}
+            </button>
             <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3.5 border-2 transition-all duration-200"
                  :class="activeInput === 'dropoff' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(88,204,2,0.12)]' : 'border-transparent'">
               <input v-if="!DEMO_MODE" ref="dropoffInput" type="text" placeholder="Where to?"
