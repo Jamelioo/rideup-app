@@ -132,11 +132,20 @@ ALTER TABLE public.support_tickets ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can read own driver profile" ON public.drivers FOR SELECT USING (auth.uid() = auth_user_id);
 CREATE POLICY "Users can insert own driver profile" ON public.drivers FOR INSERT WITH CHECK (auth.uid() = auth_user_id);
 CREATE POLICY "Users can update own driver profile" ON public.drivers FOR UPDATE USING (auth.uid() = auth_user_id);
+CREATE POLICY "Admins can read all drivers" ON public.drivers FOR SELECT USING (
+  (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
+);
+CREATE POLICY "Admins can update all drivers" ON public.drivers FOR UPDATE USING (
+  (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
+);
 
 -- RLS Policies: Riders
 CREATE POLICY "Users can read own rider profile" ON public.riders FOR SELECT USING (auth.uid() = auth_user_id);
 CREATE POLICY "Users can insert own rider profile" ON public.riders FOR INSERT WITH CHECK (auth.uid() = auth_user_id);
 CREATE POLICY "Users can update own rider profile" ON public.riders FOR UPDATE USING (auth.uid() = auth_user_id);
+CREATE POLICY "Admins can read all riders" ON public.riders FOR SELECT USING (
+  (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
+);
 
 -- RLS Policies: Rides (riders and drivers can see their own rides)
 CREATE POLICY "Riders can read own rides" ON public.rides FOR SELECT USING (
@@ -164,6 +173,23 @@ CREATE POLICY "Users can read own reports" ON public.safety_reports FOR SELECT U
 
 -- RLS Policies: Support tickets
 CREATE POLICY "Users can manage own tickets" ON public.support_tickets FOR ALL USING (auth.uid() = user_id);
+
+-- Admin policies for full dashboard access
+CREATE POLICY "Admins can read all rides" ON public.rides FOR SELECT USING (
+  (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
+);
+CREATE POLICY "Admins can update all rides" ON public.rides FOR UPDATE USING (
+  (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
+);
+CREATE POLICY "Admins can read all support tickets" ON public.support_tickets FOR SELECT USING (
+  (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
+);
+CREATE POLICY "Admins can update all support tickets" ON public.support_tickets FOR UPDATE USING (
+  (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
+);
+CREATE POLICY "Admins can read all safety reports" ON public.safety_reports FOR SELECT USING (
+  (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
+);
 
 -- Create storage bucket for avatars and documents
 -- (Run these separately if needed, or create via Supabase Dashboard → Storage)

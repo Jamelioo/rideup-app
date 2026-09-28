@@ -79,14 +79,14 @@
                 </div>
                 <button
                   v-else-if="driver.status === 'Approved'"
-                  @click="driver.status = 'Suspended'"
+                  @click="suspendDriver(driver)"
                   class="text-xs font-medium px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
                 >
                   Suspend
                 </button>
                 <button
                   v-else-if="driver.status === 'Suspended'"
-                  @click="driver.status = 'Approved'"
+                  @click="reinstateDriver(driver)"
                   class="text-xs font-medium px-3 py-1.5 rounded-lg bg-green-50 text-[#2b8659] hover:bg-green-100 transition-colors"
                 >
                   Reinstate
@@ -142,12 +142,36 @@ const filteredDrivers = computed(() => {
   return list
 })
 
-function approveDriver(driver) {
+async function approveDriver(driver) {
+  if (supabaseConfigured) {
+    const { error } = await supabase.from('drivers').update({ approved: true, status: 'approved' }).eq('id', driver.id)
+    if (error) { console.error('Approve error:', error.message); return }
+  }
   driver.status = 'Approved'
 }
 
-function rejectDriver(driver) {
+async function rejectDriver(driver) {
+  if (supabaseConfigured) {
+    const { error } = await supabase.from('drivers').update({ approved: false, status: 'rejected' }).eq('id', driver.id)
+    if (error) { console.error('Reject error:', error.message); return }
+  }
   driver.status = 'Rejected'
+}
+
+async function suspendDriver(driver) {
+  if (supabaseConfigured) {
+    const { error } = await supabase.from('drivers').update({ approved: false, status: 'suspended' }).eq('id', driver.id)
+    if (error) { console.error('Suspend error:', error.message); return }
+  }
+  driver.status = 'Suspended'
+}
+
+async function reinstateDriver(driver) {
+  if (supabaseConfigured) {
+    const { error } = await supabase.from('drivers').update({ approved: true, status: 'approved' }).eq('id', driver.id)
+    if (error) { console.error('Reinstate error:', error.message); return }
+  }
+  driver.status = 'Approved'
 }
 
 function driverStatusBadge(status) {
