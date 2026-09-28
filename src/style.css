@@ -14,6 +14,9 @@
   --color-border: rgba(25, 31, 28, 0.08);
   --color-brand: #2b8659;
   --color-brand-light: #f0fdf4;
+  --color-overlay: rgba(0, 0, 0, 0.4);
+  --color-danger: #ef4444;
+  --color-success: #22c55e;
 }
 
 body {
@@ -34,4 +37,7 @@ html.dark {
   --color-border: rgba(232, 233, 235, 0.1);
   --color-brand: #34a065;
   --color-brand-light: rgba(43, 134, 89, 0.15);
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --color-danger: #f87171;
+  --color-success: #4ade80;
 }
