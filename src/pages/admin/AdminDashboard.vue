@@ -55,7 +55,7 @@
               >
                 <td class="py-2.5 text-[var(--color-text-primary)] font-medium">{{ ride.rider }}</td>
                 <td class="py-2.5 text-gray-500 truncate max-w-[160px]">{{ ride.pickup }} → {{ ride.dropoff }}</td>
-                <td class="py-2.5 text-[var(--color-text-primary)]">${{ ride.fare.toFixed(2) }}</td>
+                <td class="py-2.5 text-[var(--color-text-primary)]">${{ typeof ride.fare === 'number' ? ride.fare.toFixed(2) : ride.fare }}</td>
                 <td class="py-2.5">
                   <span :class="statusBadge(ride.status)">{{ ride.status }}</span>
                 </td>
@@ -118,19 +118,37 @@ function statusBadge(status) {
 onMounted(async () => {
   if (!supabaseConfigured) return
   try {
-    const { data, error } = await supabase.from('rides').select('*').order('created_at', { ascending: false }).limit(10)
-    if (!error && data && data.length > 0) {
-      recentRides.value = data.map(r => ({
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const todayISO = today.toISOString()
+
+    const [ridesRes, driversRes, ridersRes, revenueRes, todayRidesRes] = await Promise.all([
+      supabase.from('rides').select('id', { count: 'exact', head: true }),
+      supabase.from('drivers').select('id', { count: 'exact', head: true }).eq('approved', true),
+      supabase.from('riders').select('id', { count: 'exact', head: true }),
+      supabase.from('rides').select('fare_cents').eq('status', 'completed'),
+      supabase.from('rides').select('*').gte('created_at', todayISO).order('created_at', { ascending: false }).limit(10),
+    ])
+
+    const totalRevenue = (revenueRes.data || []).reduce((sum, r) => sum + (r.fare_cents || 0), 0)
+
+    metricCards.value = [
+      { label: 'Total Rides', value: String(ridesRes.count || 0), change: '', changePositive: true },
+      { label: 'Active Drivers', value: String(driversRes.count || 0), change: '', changePositive: true },
+      { label: 'Total Revenue', value: `$${(totalRevenue / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, change: '', changePositive: true },
+      { label: 'Total Users', value: String(ridersRes.count || 0), change: '', changePositive: true },
+    ]
+
+    if (todayRidesRes.data && todayRidesRes.data.length > 0) {
+      recentRides.value = todayRidesRes.data.map(r => ({
         id: r.id,
-        rider: r.rider_name || 'Unknown',
+        rider: r.pickup_address || 'Unknown',
         pickup: r.pickup_address || 'N/A',
         dropoff: r.dropoff_address || 'N/A',
-        fare: r.fare || 0,
+        fare: r.fare_cents ? (r.fare_cents / 100).toFixed(2) : '0.00',
         status: r.status || 'Unknown',
       }))
     }
-  } catch (e) {
-    // Table doesn't exist yet — keep placeholder data
-  }
+  } catch (e) { /* keep placeholder data on error */ }
 })
 </script>
