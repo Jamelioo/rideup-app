@@ -71,6 +71,7 @@ const routes = [
   { path: '/driver/active-ride', name: 'driver-active-ride', component: DriverActiveRide, meta: { requiresAuth: true, title: 'Active Ride — RideUp' } },
   { path: '/driver/earnings', name: 'driver-earnings', component: DriverEarnings, meta: { requiresAuth: true, title: 'Earnings — RideUp' } },
   { path: '/driver/profile', name: 'driver-profile', component: DriverProfile, meta: { requiresAuth: true, title: 'Driver Profile — RideUp' } },
+  { path: '/driver/documents', name: 'driver-documents', component: DriverDocuments, meta: { requiresAuth: true, title: 'Documents — RideUp' } },
   { path: '/rate/:rideId', name: 'rate-ride', component: RateRide, meta: { requiresAuth: true, title: 'Rate Your Ride — RideUp' } },
   { path: '/ride/:rideId', name: 'active-ride', component: ActiveRide, meta: { requiresAuth: true, title: 'Your Ride — RideUp' } },
   { path: '/ride/:rideId/messages', name: 'ride-messages', component: RideMessages, meta: { requiresAuth: true, title: 'Messages — RideUp' } },

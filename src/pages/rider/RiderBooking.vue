@@ -12,6 +12,7 @@ import { DEMO_MODE, DEMO_LOCATIONS, fakeRoute } from '../../lib/demoMode'
 import GoogleMap from '../../components/GoogleMap.vue'
 import HarborBackdrop from '../../components/HarborBackdrop.vue'
 import SideMenu from '../../components/SideMenu.vue'
+import ScheduleRidePicker from '../../components/ScheduleRidePicker.vue'
 
 const router = useRouter()
 const menuOpen = ref(false)
@@ -221,6 +222,14 @@ const fareEstimates = computed(() => {
   return estimates
 })
 
+const showSchedulePicker = ref(false)
+const isScheduling = ref(false)
+const toast = ref('')
+function showToast(msg) {
+  toast.value = msg
+  setTimeout(() => { toast.value = '' }, 3000)
+}
+
 const canRequest = computed(() => pickup.value && dropoff.value && fareEstimates.value[selectedVehicle.value] && !isSubmitting.value)
 const hasRoute = computed(() => distanceMiles.value && !isCalculating.value)
 
@@ -291,6 +300,48 @@ async function requestRide() {
     error.value = 'Connection error. Please try again.'
   } finally {
     isSubmitting.value = false
+  }
+}
+
+async function scheduleRide({ date, time, summary }) {
+  if (!canRequest.value) return
+  isScheduling.value = true
+  showSchedulePicker.value = false
+  const fare = fareEstimates.value[selectedVehicle.value]
+  const scheduledAt = new Date(`${date}T${time}:00`).toISOString()
+
+  if (DEMO_MODE) {
+    await new Promise((r) => setTimeout(r, 400))
+    showToast(`Ride scheduled for ${summary}`)
+    isScheduling.value = false
+    return
+  }
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { error.value = 'Please log in to schedule a ride.'; isScheduling.value = false; return }
+    const { data: rider, error: riderErr } = await supabase.from('riders').select('id').eq('auth_user_id', user.id).single()
+    if (riderErr || !rider) { error.value = 'Could not find your rider profile.'; isScheduling.value = false; return }
+    const { error: insertErr } = await supabase.from('scheduled_rides').insert({
+      rider_id: rider.id,
+      pickup_address: pickup.value.address,
+      pickup_lat: pickup.value.lat,
+      pickup_lng: pickup.value.lng,
+      dropoff_address: dropoff.value.address,
+      dropoff_lat: dropoff.value.lat,
+      dropoff_lng: dropoff.value.lng,
+      vehicle_type: selectedVehicle.value,
+      distance_miles: distanceMiles.value,
+      fare_cents: fare,
+      scheduled_at: scheduledAt,
+      status: 'scheduled',
+    })
+    if (insertErr) throw insertErr
+    showToast(`Ride scheduled for ${summary}`)
+  } catch (err) {
+    error.value = 'Could not schedule ride. Please try again.'
+  } finally {
+    isScheduling.value = false
   }
 }
 </script>
@@ -401,7 +452,7 @@ async function requestRide() {
                 </div>
               </div>
               <div class="text-right">
-                <div class="text-[16px] font-bold font-serif" :class="selectedVehicle === vehicle.id ? 'text-[#2b8659]' : ''">{{ formatFare(fareEstimates[vehicle.id]) }}</div>
+                <div class="text-[16px] font-bold" :class="selectedVehicle === vehicle.id ? 'text-[#2b8659]' : ''">{{ formatFare(fareEstimates[vehicle.id]) }}</div>
                 <div v-if="promoApplied" class="text-[10px] text-[#2b8659] font-semibold">10% off</div>
               </div>
             </button>
@@ -423,10 +474,19 @@ async function requestRide() {
               Promo applied — 10% off
             </div>
           </div>
-          <button @click="requestRide" :disabled="!canRequest"
-                  class="w-full py-4 bg-[#2b8659] disabled:bg-[#191f1c]/8 disabled:text-[#191f1c]/25 text-white font-bold rounded-2xl text-[15px] mt-4 transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(88,204,2,0.3)] disabled:shadow-none">
-            {{ isSubmitting ? 'Requesting...' : 'Request Ride' }}
-          </button>
+          <div class="flex gap-2.5 mt-4">
+            <button @click="requestRide" :disabled="!canRequest"
+                    class="flex-1 py-4 bg-[#2b8659] disabled:bg-[#191f1c]/8 disabled:text-[#191f1c]/25 text-white font-bold rounded-2xl text-[15px] transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:shadow-none">
+              {{ isSubmitting ? 'Requesting...' : 'Request Ride' }}
+            </button>
+            <button @click="showSchedulePicker = true" :disabled="!canRequest"
+                    class="w-[52px] flex-shrink-0 flex items-center justify-center bg-[#191f1c] disabled:bg-[#191f1c]/8 text-white disabled:text-[#191f1c]/25 rounded-2xl transition-all active:scale-[0.97]"
+                    title="Schedule for later">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
       </div>
@@ -510,7 +570,7 @@ async function requestRide() {
                 </div>
               </div>
               <div class="text-right">
-                <div class="text-[17px] font-bold font-serif" :class="selectedVehicle === vehicle.id ? 'text-[#2b8659]' : ''">{{ formatFare(fareEstimates[vehicle.id]) }}</div>
+                <div class="text-[17px] font-bold" :class="selectedVehicle === vehicle.id ? 'text-[#2b8659]' : ''">{{ formatFare(fareEstimates[vehicle.id]) }}</div>
                 <div v-if="promoApplied" class="text-[10px] text-[#2b8659] font-semibold">10% off</div>
               </div>
             </button>
@@ -532,12 +592,42 @@ async function requestRide() {
               Promo applied — 10% off
             </div>
           </div>
-          <button @click="requestRide" :disabled="!canRequest"
-                  class="w-full py-4 bg-[#2b8659] disabled:bg-[#191f1c]/8 disabled:text-[#191f1c]/25 text-white font-bold rounded-2xl text-[15px] mt-5 transition-all hover:bg-[#236e49] shadow-[0_4px_16px_rgba(88,204,2,0.3)] disabled:shadow-none">
-            {{ isSubmitting ? 'Requesting...' : 'Request Ride' }}
-          </button>
+          <div class="flex gap-2.5 mt-5">
+            <button @click="requestRide" :disabled="!canRequest"
+                    class="flex-1 py-4 bg-[#2b8659] disabled:bg-[#191f1c]/8 disabled:text-[#191f1c]/25 text-white font-bold rounded-2xl text-[15px] transition-all hover:bg-[#236e49] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:shadow-none">
+              {{ isSubmitting ? 'Requesting...' : 'Request Ride' }}
+            </button>
+            <button @click="showSchedulePicker = true" :disabled="!canRequest"
+                    class="w-[52px] flex-shrink-0 flex items-center justify-center bg-[#191f1c] disabled:bg-[#191f1c]/8 text-white disabled:text-[#191f1c]/25 rounded-2xl transition-all hover:bg-[#333] active:scale-[0.97]"
+                    title="Schedule for later">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Schedule Ride Picker -->
+    <ScheduleRidePicker :show="showSchedulePicker" @close="showSchedulePicker = false" @confirm="scheduleRide" />
+
+    <!-- Toast -->
+    <Transition name="fade">
+      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[10000] bg-[#191f1c] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
+        {{ toast }}
+      </div>
+    </Transition>
   </div>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

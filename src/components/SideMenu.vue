@@ -52,6 +52,7 @@ const menuItems = computed(() => {
       { label: 'Payments', route: '/payments', icon: 'card', requiresAuth: true },
       { label: 'Promotions', subtitle: 'Contact support for promo codes', route: '/support', icon: 'tag', requiresAuth: true },
       { label: 'My Rides', route: '/my-rides', icon: 'history', requiresAuth: true },
+      { label: 'Scheduled Rides', route: '/scheduled-rides', icon: 'calendar', requiresAuth: true },
       { label: 'Drive with RideUp', route: '/driver/apply', icon: 'car', requiresAuth: false },
     )
   }
@@ -204,6 +205,12 @@ watch(() => props.isOpen, async (open) => {
                 <path d="M3 11V9a4 4 0 0 1 4-4h14" />
                 <polyline points="7 23 3 19 7 15" />
                 <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+              </svg>
+              <svg v-else-if="item.icon === 'calendar'" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
               <svg v-else-if="item.icon === 'car'" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M5 17h14M5 17a2 2 0 01-2-2V9l2-5h14l2 5v6a2 2 0 01-2 2M5 17a2 2 0 002 2h10a2 2 0 002-2" />
