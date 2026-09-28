@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
+import ThemeToggle from '../components/ThemeToggle.vue'
 
 const router = useRouter()
 const { user, signOut } = useAuth()
@@ -27,9 +28,16 @@ function goBack() {
   router.back()
 }
 
-function goToBooking() {
-  router.push('/book')
+function goToSavedPlaces() {
+  router.push('/saved-places')
 }
+
+const savedPlaces = computed(() => {
+  const meta = user.value?.user_metadata
+  return Array.isArray(meta?.saved_places) ? meta.saved_places : []
+})
+const homeAddress = computed(() => savedPlaces.value.find((p) => p.label === 'Home')?.address || '')
+const workAddress = computed(() => savedPlaces.value.find((p) => p.label === 'Work')?.address || '')
 
 const showDeleteConfirm = ref(false)
 
@@ -121,8 +129,44 @@ async function handleLogout() {
       </button>
     </div>
 
-    <!-- Communication Preferences -->
+    <!-- Promotions -->
     <div class="px-5">
+      <button @click="router.push('/promotions')" class="w-full flex items-center justify-between py-4 border-b border-[#191f1c]/8">
+        <div class="flex items-center gap-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+          </svg>
+          <span class="text-base">Promotions</span>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#191f1c]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Invite Friends -->
+    <div class="px-5">
+      <button @click="router.push('/referrals')" class="w-full flex items-center justify-between py-4 border-b border-[#191f1c]/8">
+        <div class="flex items-center gap-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+          </svg>
+          <span class="text-base">Invite Friends</span>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#191f1c]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Appearance -->
+    <div class="px-5 mt-4 mb-2">
+      <p class="text-[13px] font-semibold text-[#191f1c]/50 uppercase tracking-wide mb-3">Appearance</p>
+      <ThemeToggle />
+    </div>
+
+    <!-- Communication Preferences -->
+    <div class="px-5 mt-4">
       <button @click="router.push('/support')" class="w-full flex items-center justify-between py-4">
         <span class="text-base">Communication Preferences</span>
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#191f1c]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

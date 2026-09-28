@@ -14,6 +14,8 @@ import RiderLanding from '../pages/RiderLanding.vue'
 import DriverLanding from '../pages/DriverLanding.vue'
 import NotFound from '../pages/NotFound.vue'
 import TrustedContacts from '../pages/TrustedContacts.vue'
+import Promotions from '../pages/Promotions.vue'
+import Referrals from '../pages/Referrals.vue'
 import Privacy from '../pages/Privacy.vue'
 import Terms from '../pages/Terms.vue'
 import PaymentSuccess from '../pages/rider/PaymentSuccess.vue'
@@ -24,10 +26,12 @@ import DriverDashboard from '../pages/driver/DriverDashboard.vue'
 import DriverActiveRide from '../pages/driver/DriverActiveRide.vue'
 import DriverEarnings from '../pages/driver/DriverEarnings.vue'
 import DriverProfile from '../pages/driver/DriverProfile.vue'
+import DriverDocuments from '../pages/driver/DriverDocuments.vue'
 import RateRide from '../pages/rider/RateRide.vue'
 import RateRider from '../pages/driver/RateRider.vue'
 import ActiveRide from '../pages/rider/ActiveRide.vue'
 import RideMessages from '../pages/rider/RideMessages.vue'
+import ScheduledRides from '../pages/rider/ScheduledRides.vue'
 import AdminLayout from '../pages/admin/AdminLayout.vue'
 import AdminDashboard from '../pages/admin/AdminDashboard.vue'
 import AdminRides from '../pages/admin/AdminRides.vue'
@@ -47,12 +51,15 @@ const routes = [
   { path: '/profile', name: 'profile', component: Profile, meta: { requiresAuth: true, title: 'Profile — RideUp' } },
   { path: '/edit-profile', name: 'edit-profile', component: EditProfile, meta: { requiresAuth: true, title: 'Edit Profile — RideUp' } },
   { path: '/my-rides', name: 'my-rides', component: MyRides, meta: { requiresAuth: true, title: 'My Rides — RideUp' } },
+  { path: '/scheduled-rides', name: 'scheduled-rides', component: ScheduledRides, meta: { requiresAuth: true, title: 'Scheduled Rides — RideUp' } },
   { path: '/payments', name: 'payments', component: Payments, meta: { requiresAuth: true, title: 'Payments — RideUp' } },
   { path: '/saved-places', name: 'saved-places', component: SavedPlaces, meta: { requiresAuth: true, title: 'Saved Places — RideUp' } },
   { path: '/payment-success', name: 'payment-success', component: PaymentSuccess, meta: { title: 'Payment Successful — RideUp' } },
   { path: '/receipt/:rideId', name: 'ride-receipt', component: RideReceipt, meta: { title: 'Receipt — RideUp' } },
   { path: '/support', name: 'support', component: Support, meta: { title: 'Support — RideUp' } },
   { path: '/trusted-contacts', name: 'trusted-contacts', component: TrustedContacts, meta: { requiresAuth: true, title: 'Trusted Contacts — RideUp' } },
+  { path: '/promotions', name: 'promotions', component: Promotions, meta: { requiresAuth: true, title: 'Promotions — RideUp' } },
+  { path: '/referrals', name: 'referrals', component: Referrals, meta: { requiresAuth: true, title: 'Invite Friends — RideUp' } },
   { path: '/about', name: 'about', component: About, meta: { title: 'About — RideUp' } },
   { path: '/welcome', redirect: '/' },
   { path: '/drive', name: 'driver-landing', component: DriverLanding, meta: { title: 'Drive with RideUp Nassau' } },
