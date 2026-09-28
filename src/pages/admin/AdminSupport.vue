@@ -54,22 +54,22 @@
           <p class="text-sm text-gray-600 leading-relaxed mb-4">{{ ticket.message }}</p>
           <div class="flex gap-2">
             <button
-              v-if="ticket.status !== 'Resolved'"
-              @click="ticket.status = 'In Progress'"
+              v-if="ticket.status !== 'Resolved' && ticket.status !== 'resolved'"
+              @click="updateTicketStatus(ticket, 'In Progress')"
               class="text-xs font-medium px-3 py-1.5 rounded-lg bg-yellow-50 text-yellow-700 hover:bg-yellow-100 transition-colors"
             >
               Mark In Progress
             </button>
             <button
-              v-if="ticket.status !== 'Resolved'"
-              @click="ticket.status = 'Resolved'"
+              v-if="ticket.status !== 'Resolved' && ticket.status !== 'resolved'"
+              @click="updateTicketStatus(ticket, 'resolved')"
               class="text-xs font-medium px-3 py-1.5 rounded-lg bg-[#2b8659] text-white hover:bg-[#236e49] transition-colors"
             >
               Resolve
             </button>
             <button
-              v-if="ticket.status === 'Resolved'"
-              @click="ticket.status = 'Open'"
+              v-if="ticket.status === 'Resolved' || ticket.status === 'resolved'"
+              @click="updateTicketStatus(ticket, 'open')"
               class="text-xs font-medium px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
             >
               Reopen
@@ -91,16 +91,7 @@ const filterTabs = ['All', 'Open', 'In Progress', 'Resolved']
 const activeFilter = ref('All')
 const expanded = ref(null)
 
-const tickets = ref([
-  { id: 301, subject: 'Driver did not arrive at pickup', user: 'Marcus Thompson', date: '2026-09-27', status: 'Open', message: 'I booked a ride from Atlantis Resort to Downtown Nassau. The driver accepted but never showed up. I waited 15 minutes before cancelling. I was charged a cancellation fee which I believe is unfair since the driver was at fault.' },
-  { id: 300, subject: 'Overcharged for ride', user: 'Crystal Johnson', date: '2026-09-27', status: 'Open', message: 'My ride from Montagu Beach to Fish Fry was quoted at $10 but I was charged $12.50. The driver took a slightly different route but it was shorter. Please review the fare calculation.' },
-  { id: 299, subject: 'Left item in vehicle', user: 'Devon Clarke', date: '2026-09-26', status: 'In Progress', message: 'I left my laptop bag in the backseat of my ride from Bay Street to Paradise Island. The driver was Andre Bain in a black Nissan Altima. I have tried contacting through the app but no response.' },
-  { id: 298, subject: 'App crash during ride booking', user: 'Tanya Rolle', date: '2026-09-26', status: 'Resolved', message: 'The app kept crashing when I tried to set my destination to Cable Beach. I restarted my phone and it worked fine after that. Just wanted to report the issue.' },
-  { id: 297, subject: 'Driver was rude and unprofessional', user: 'Lisa Ferguson', date: '2026-09-25', status: 'Open', message: 'The driver was on a personal phone call the entire ride and was driving aggressively. When I asked him to slow down he got annoyed. Very uncomfortable experience. Ride was from Junkanoo Beach to Cable Beach.' },
-  { id: 296, subject: 'Payment not processed correctly', user: 'Andre Davis', date: '2026-09-25', status: 'In Progress', message: 'I was double-charged for a ride on September 24th. I see two charges of $24.00 on my bank statement for the same trip from Baha Mar to Downtown Nassau. Please refund the duplicate charge.' },
-  { id: 295, subject: 'Cannot update phone number', user: 'Keisha Brown', date: '2026-09-24', status: 'Resolved', message: 'I changed my phone number and cannot update it in my profile. The edit profile page shows an error when I try to save. I need this updated so drivers can contact me.' },
-  { id: 294, subject: 'Driver took wrong route', user: 'Robert Sands', date: '2026-09-23', status: 'Resolved', message: 'The driver took a much longer route from Fort Charlotte to PI Airport which increased my fare significantly. I believe the fare should be recalculated based on the optimal route.' },
-])
+const tickets = ref([])
 
 function toggle(id) {
   expanded.value = expanded.value === id ? null : id
@@ -113,28 +104,40 @@ const filteredTickets = computed(() => {
 
 function ticketStatusBadge(status) {
   const base = 'text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap'
-  switch (status) {
-    case 'Open': return `${base} bg-red-50 text-red-700`
-    case 'In Progress': return `${base} bg-yellow-50 text-yellow-700`
-    case 'Resolved': return `${base} bg-green-50 text-green-700`
-    default: return `${base} bg-gray-50 text-gray-700`
+  const s = (status || '').toLowerCase()
+  if (s === 'open') return `${base} bg-red-50 text-red-700`
+  if (s === 'in progress') return `${base} bg-yellow-50 text-yellow-700`
+  if (s === 'resolved') return `${base} bg-green-50 text-green-700`
+  return `${base} bg-gray-50 text-gray-700`
+}
+
+async function updateTicketStatus(ticket, newStatus) {
+  if (supabaseConfigured) {
+    await supabase.from('support_tickets').update({ status: newStatus }).eq('id', ticket.id)
   }
+  ticket.status = newStatus
 }
 
 onMounted(async () => {
   if (!supabaseConfigured) return
   try {
-    const { data, error } = await supabase.from('support_tickets').select('*').order('created_at', { ascending: false })
-    if (!error && data && data.length > 0) {
+    const { data, error } = await supabase
+      .from('support_tickets')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (!error && data) {
       tickets.value = data.map(t => ({
         id: t.id,
         subject: t.subject || 'No subject',
-        user: t.user_name || 'Unknown',
-        date: t.created_at ? t.created_at.split('T')[0] : 'N/A',
-        status: t.status || 'Open',
-        message: t.message || '',
+        description: t.description || '',
+        status: t.status || 'open',
+        created: t.created_at ? new Date(t.created_at).toLocaleDateString() : '-',
+        user: t.user_id || 'Unknown',
+        message: t.description || '',
+        date: t.created_at ? new Date(t.created_at).toLocaleDateString() : '-',
       }))
     }
-  } catch (e) { /* keep placeholder data */ }
+  } catch (e) { /* keep empty */ }
 })
 </script>

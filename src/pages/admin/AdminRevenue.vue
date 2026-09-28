@@ -55,39 +55,77 @@ import { ref, computed, onMounted } from 'vue'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
 
 const revenueCards = ref([
-  { label: 'All-Time Revenue', value: '$287,430.00' },
-  { label: 'This Month', value: '$42,680.50' },
-  { label: 'This Week', value: '$11,245.75' },
-  { label: 'Today', value: '$4,280.50' },
+  { label: 'Today', value: '$0.00' },
+  { label: 'This Week', value: '$0.00' },
+  { label: 'This Month', value: '$0.00' },
+  { label: 'All Time', value: '$0.00' },
 ])
 
-// Generate 30 days of mock revenue data
+// Generate default 30 days of empty data
 function generateDailyRevenue() {
   const days = []
   for (let i = 29; i >= 0; i--) {
     const d = new Date()
     d.setDate(d.getDate() - i)
     const label = `${d.getMonth() + 1}/${d.getDate()}`
-    // Realistic-ish revenue with weekday/weekend variance
-    const isWeekend = d.getDay() === 0 || d.getDay() === 6
-    const base = isWeekend ? 5200 : 3800
-    const amount = Math.round(base + Math.random() * 2000)
-    days.push({ label, amount })
+    days.push({ label, amount: 0 })
   }
   return days
 }
 
 const dailyRevenue = ref(generateDailyRevenue())
-const maxRevenue = computed(() => Math.max(...dailyRevenue.value.map(d => d.amount)))
+const maxRevenue = computed(() => Math.max(1, ...dailyRevenue.value.map(d => d.amount)))
 
 onMounted(async () => {
   if (!supabaseConfigured) return
   try {
-    const { data, error } = await supabase.from('rides').select('fare, created_at').eq('status', 'Completed')
-    if (!error && data && data.length > 0) {
-      const allTime = data.reduce((sum, r) => sum + (r.fare || 0), 0)
-      revenueCards.value[0].value = `$${allTime.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+    const { data, error } = await supabase
+      .from('rides')
+      .select('fare_cents, created_at')
+      .eq('status', 'completed')
+      .order('created_at', { ascending: false })
+
+    if (!error && data) {
+      const now = new Date()
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const weekStart = new Date(todayStart)
+      weekStart.setDate(weekStart.getDate() - 7)
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+
+      let todayRev = 0, weekRev = 0, monthRev = 0, allTimeRev = 0
+      const dailyMap = {}
+
+      data.forEach(r => {
+        const cents = r.fare_cents || 0
+        const date = new Date(r.created_at)
+        allTimeRev += cents
+        if (date >= todayStart) todayRev += cents
+        if (date >= weekStart) weekRev += cents
+        if (date >= monthStart) monthRev += cents
+
+        const dayKey = date.toISOString().split('T')[0]
+        dailyMap[dayKey] = (dailyMap[dayKey] || 0) + cents
+      })
+
+      const fmt = (c) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+      revenueCards.value = [
+        { label: 'Today', value: fmt(todayRev) },
+        { label: 'This Week', value: fmt(weekRev) },
+        { label: 'This Month', value: fmt(monthRev) },
+        { label: 'All Time', value: fmt(allTimeRev) },
+      ]
+
+      // Last 30 days chart
+      const chartData = []
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(todayStart)
+        d.setDate(d.getDate() - i)
+        const key = d.toISOString().split('T')[0]
+        const label = `${d.getMonth() + 1}/${d.getDate()}`
+        chartData.push({ label, amount: (dailyMap[key] || 0) / 100 })
+      }
+      dailyRevenue.value = chartData
     }
-  } catch (e) { /* keep placeholder data */ }
+  } catch (e) { /* keep defaults */ }
 })
 </script>

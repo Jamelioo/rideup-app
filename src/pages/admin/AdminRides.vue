@@ -60,7 +60,7 @@
               <td class="px-4 py-3 text-gray-600">{{ ride.driver }}</td>
               <td class="px-4 py-3 text-gray-500 truncate max-w-[140px]">{{ ride.pickup }}</td>
               <td class="px-4 py-3 text-gray-500 truncate max-w-[140px]">{{ ride.dropoff }}</td>
-              <td class="px-4 py-3 text-[var(--color-text-primary)] font-medium">${{ ride.fare.toFixed(2) }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ ride.fare }}</td>
               <td class="px-4 py-3">
                 <span :class="statusBadge(ride.status)">{{ ride.status }}</span>
               </td>
@@ -110,30 +110,7 @@ const perPage = 10
 const sortKey = ref('id')
 const sortDir = ref('desc')
 
-const allRides = ref([
-  { id: 1042, rider: 'Marcus Thompson', driver: 'Deon Rolle', pickup: 'Atlantis Resort', dropoff: 'Downtown Nassau', fare: 28.50, status: 'Completed', date: '2026-09-27' },
-  { id: 1041, rider: 'Shania Williams', driver: 'Kevin Stuart', pickup: 'Cable Beach', dropoff: 'PI Airport', fare: 35.00, status: 'Active', date: '2026-09-27' },
-  { id: 1040, rider: 'Devon Clarke', driver: 'Andre Bain', pickup: 'Bay Street', dropoff: 'Paradise Island', fare: 22.00, status: 'Completed', date: '2026-09-27' },
-  { id: 1039, rider: 'Tanya Rolle', driver: 'Michael Johnson', pickup: 'Nassau Harbour', dropoff: 'Cable Beach', fare: 18.75, status: 'Completed', date: '2026-09-27' },
-  { id: 1038, rider: 'James Mitchell', driver: 'Deon Rolle', pickup: 'PI Airport', dropoff: 'Atlantis Resort', fare: 15.00, status: 'Cancelled', date: '2026-09-27' },
-  { id: 1037, rider: 'Crystal Johnson', driver: 'Kevin Stuart', pickup: 'Montagu Beach', dropoff: 'Fish Fry', fare: 12.50, status: 'Completed', date: '2026-09-26' },
-  { id: 1036, rider: 'Andre Davis', driver: 'Unassigned', pickup: 'Baha Mar', dropoff: 'Downtown Nassau', fare: 24.00, status: 'Requested', date: '2026-09-26' },
-  { id: 1035, rider: 'Lisa Ferguson', driver: 'Andre Bain', pickup: 'Junkanoo Beach', dropoff: 'Cable Beach', fare: 19.00, status: 'Completed', date: '2026-09-26' },
-  { id: 1034, rider: 'Robert Sands', driver: 'Michael Johnson', pickup: 'Fort Charlotte', dropoff: 'PI Airport', fare: 32.00, status: 'Active', date: '2026-09-26' },
-  { id: 1033, rider: 'Keisha Brown', driver: 'Deon Rolle', pickup: 'Potter\'s Cay', dropoff: 'Atlantis Resort', fare: 16.50, status: 'Completed', date: '2026-09-26' },
-  { id: 1032, rider: 'Troy Cartwright', driver: 'Kevin Stuart', pickup: 'Rawson Square', dropoff: 'Cable Beach', fare: 21.00, status: 'Completed', date: '2026-09-25' },
-  { id: 1031, rider: 'Vanessa Moss', driver: 'Andre Bain', pickup: 'Baha Mar', dropoff: 'Bay Street', fare: 14.50, status: 'Completed', date: '2026-09-25' },
-  { id: 1030, rider: 'Calvin Knowles', driver: 'Unassigned', pickup: 'PI Airport', dropoff: 'Baha Mar', fare: 38.00, status: 'Requested', date: '2026-09-25' },
-  { id: 1029, rider: 'Brittany Forbes', driver: 'Michael Johnson', pickup: 'Cable Beach', dropoff: 'Downtown Nassau', fare: 17.25, status: 'Cancelled', date: '2026-09-25' },
-  { id: 1028, rider: 'Rashad Taylor', driver: 'Deon Rolle', pickup: 'Atlantis Resort', dropoff: 'PI Airport', fare: 29.00, status: 'Completed', date: '2026-09-24' },
-  { id: 1027, rider: 'Simone Grant', driver: 'Kevin Stuart', pickup: 'Fish Fry', dropoff: 'Paradise Island', fare: 26.00, status: 'Completed', date: '2026-09-24' },
-  { id: 1026, rider: 'Darren Lightfoot', driver: 'Andre Bain', pickup: 'Nassau Harbour', dropoff: 'Montagu Beach', fare: 11.50, status: 'Completed', date: '2026-09-24' },
-  { id: 1025, rider: 'Nicole Symonette', driver: 'Michael Johnson', pickup: 'Rawson Square', dropoff: 'Baha Mar', fare: 23.75, status: 'Completed', date: '2026-09-23' },
-  { id: 1024, rider: 'Jerome Hall', driver: 'Deon Rolle', pickup: 'Cable Beach', dropoff: 'Fort Charlotte', fare: 13.00, status: 'Cancelled', date: '2026-09-23' },
-  { id: 1023, rider: 'Latoya Archer', driver: 'Kevin Stuart', pickup: 'Downtown Nassau', dropoff: 'Atlantis Resort', fare: 27.50, status: 'Completed', date: '2026-09-23' },
-  { id: 1022, rider: 'Patrick Russell', driver: 'Andre Bain', pickup: 'PI Airport', dropoff: 'Cable Beach', fare: 31.00, status: 'Completed', date: '2026-09-22' },
-  { id: 1021, rider: 'Tamara Pratt', driver: 'Unassigned', pickup: 'Baha Mar', dropoff: 'Fish Fry', fare: 20.00, status: 'Requested', date: '2026-09-22' },
-])
+const allRides = ref([])
 
 function toggleSort(key) {
   if (sortKey.value === key) {
@@ -188,19 +165,24 @@ function statusBadge(status) {
 onMounted(async () => {
   if (!supabaseConfigured) return
   try {
-    const { data, error } = await supabase.from('rides').select('*').order('created_at', { ascending: false }).limit(50)
-    if (!error && data && data.length > 0) {
-      allRides.value = data.map((r, i) => ({
-        id: r.id || 1000 + i,
-        rider: r.rider_name || 'Unknown',
-        driver: r.driver_name || 'Unassigned',
+    const { data, error } = await supabase
+      .from('rides')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100)
+
+    if (!error && data) {
+      allRides.value = data.map(r => ({
+        id: r.id,
+        rider: r.pickup_address || 'Unknown',
+        driver: r.dropoff_address || 'Unassigned',
         pickup: r.pickup_address || 'N/A',
         dropoff: r.dropoff_address || 'N/A',
-        fare: r.fare || 0,
-        status: r.status || 'Unknown',
-        date: r.created_at ? r.created_at.split('T')[0] : 'N/A',
+        fare: r.fare_cents ? `$${(r.fare_cents / 100).toFixed(2)}` : '$0.00',
+        status: r.status || 'unknown',
+        date: r.created_at ? new Date(r.created_at).toLocaleDateString() : '-',
       }))
     }
-  } catch (e) { /* keep placeholder data */ }
+  } catch (e) { /* keep empty */ }
 })
 </script>
