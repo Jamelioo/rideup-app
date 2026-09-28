@@ -1,9 +1,9 @@
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-[#191f1c] mb-6">Support Tickets</h1>
+    <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6">Support Tickets</h1>
 
     <!-- Filter tabs -->
-    <div class="flex gap-1 bg-white rounded-lg border border-gray-200 p-1 mb-4 w-fit">
+    <div class="flex gap-1 bg-[var(--color-surface)] rounded-lg border border-gray-200 p-1 mb-4 w-fit">
       <button
         v-for="tab in filterTabs"
         :key="tab"
@@ -24,7 +24,7 @@
       <div
         v-for="ticket in filteredTickets"
         :key="ticket.id"
-        class="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-sm transition-shadow"
+        class="bg-[var(--color-surface)] rounded-xl border border-gray-200 overflow-hidden hover:shadow-sm transition-shadow"
       >
         <!-- Header row (clickable) -->
         <button
@@ -34,7 +34,7 @@
           <div class="flex items-center gap-4 min-w-0">
             <span class="text-xs text-gray-400 font-mono">#{{ ticket.id }}</span>
             <div class="min-w-0">
-              <p class="text-sm font-medium text-[#191f1c] truncate">{{ ticket.subject }}</p>
+              <p class="text-sm font-medium text-[var(--color-text-primary)] truncate">{{ ticket.subject }}</p>
               <p class="text-xs text-gray-400">{{ ticket.user }} -- {{ ticket.date }}</p>
             </div>
           </div>

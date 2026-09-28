@@ -1,10 +1,10 @@
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-[#191f1c] mb-6">User Management</h1>
+    <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6">User Management</h1>
 
     <!-- Search + filter -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-      <div class="flex gap-1 bg-white rounded-lg border border-gray-200 p-1">
+      <div class="flex gap-1 bg-[var(--color-surface)] rounded-lg border border-gray-200 p-1">
         <button
           v-for="tab in filterTabs"
           :key="tab"
@@ -23,12 +23,12 @@
         v-model="search"
         type="text"
         placeholder="Search users..."
-        class="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30 focus:border-[#2b8659] w-full sm:w-64"
+        class="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30 focus:border-[#2b8659] w-full sm:w-64"
       />
     </div>
 
     <!-- Table -->
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="bg-[var(--color-surface)] rounded-xl border border-gray-200 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
@@ -49,11 +49,11 @@
               :key="user.id"
               class="border-t border-gray-100 hover:bg-gray-50/50 transition-colors"
             >
-              <td class="px-4 py-3 text-[#191f1c] font-medium">{{ user.name }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ user.name }}</td>
               <td class="px-4 py-3 text-gray-500">{{ user.email }}</td>
               <td class="px-4 py-3 text-gray-500">{{ user.phone }}</td>
-              <td class="px-4 py-3 text-[#191f1c]">{{ user.rides }}</td>
-              <td class="px-4 py-3 text-[#191f1c]">{{ user.rating.toFixed(1) }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-primary)]">{{ user.rides }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-primary)]">{{ user.rating.toFixed(1) }}</td>
               <td class="px-4 py-3 text-gray-400 text-xs">{{ user.joined }}</td>
               <td class="px-4 py-3">
                 <span :class="user.status === 'Active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'" class="text-xs font-medium px-2 py-0.5 rounded-full">

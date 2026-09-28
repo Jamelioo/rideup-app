@@ -44,44 +44,44 @@ function handleDelete() {
 
 <template>
   <Transition name="sheet">
-    <div v-if="visible" class="fixed inset-0 z-50 flex items-end justify-center bg-black/40" @click.self="emit('close')">
-      <div class="w-full max-w-md bg-white rounded-t-3xl px-6 pt-6 pb-10 shadow-xl">
+    <div v-if="visible" class="fixed inset-0 z-50 flex items-end justify-center bg-[var(--color-overlay)]" @click.self="emit('close')">
+      <div class="w-full max-w-md bg-[var(--color-surface)] rounded-t-3xl px-6 pt-6 pb-10 shadow-xl">
         <!-- Handle -->
         <div class="flex justify-center mb-5">
           <div class="w-10 h-1 bg-[#191f1c]/10 rounded-full"></div>
         </div>
 
-        <h3 class="text-lg font-bold text-[#191f1c] mb-5">
+        <h3 class="text-lg font-bold text-[var(--color-text-primary)] mb-5">
           {{ place ? 'Edit place' : 'Add a place' }}
         </h3>
 
         <!-- Label input -->
         <div class="mb-4" v-if="!presetLabel && !(place && ['Home', 'Work'].includes(place.label))">
-          <label class="block text-xs text-[#191f1c]/40 mb-1">Label</label>
+          <label class="block text-xs text-[var(--color-text-muted)] mb-1">Label</label>
           <input
             v-model="label"
             type="text"
             placeholder="e.g. Gym, Airport"
-            class="w-full bg-transparent text-base text-[#191f1c] pb-2 border-b border-[#191f1c]/10 outline-none focus:border-[#2b8659] transition-colors"
+            class="w-full bg-transparent text-base text-[var(--color-text-primary)] pb-2 border-b border-[var(--color-border)] outline-none focus:border-[#2b8659] transition-colors"
           />
         </div>
 
         <!-- Preset label display -->
         <div v-else class="mb-4">
-          <label class="block text-xs text-[#191f1c]/40 mb-1">Label</label>
-          <p class="text-base text-[#191f1c] pb-2 border-b border-[#191f1c]/10">
+          <label class="block text-xs text-[var(--color-text-muted)] mb-1">Label</label>
+          <p class="text-base text-[var(--color-text-primary)] pb-2 border-b border-[var(--color-border)]">
             {{ presetLabel || place?.label }}
           </p>
         </div>
 
         <!-- Address input -->
         <div class="mb-6">
-          <label class="block text-xs text-[#191f1c]/40 mb-1">Address</label>
+          <label class="block text-xs text-[var(--color-text-muted)] mb-1">Address</label>
           <input
             v-model="address"
             type="text"
             placeholder="Enter address"
-            class="w-full bg-transparent text-base text-[#191f1c] pb-2 border-b border-[#191f1c]/10 outline-none focus:border-[#2b8659] transition-colors"
+            class="w-full bg-transparent text-base text-[var(--color-text-primary)] pb-2 border-b border-[var(--color-border)] outline-none focus:border-[#2b8659] transition-colors"
           />
         </div>
 
@@ -104,7 +104,7 @@ function handleDelete() {
         </button>
 
         <!-- Cancel -->
-        <button @click="emit('close')" class="w-full py-3 text-[14px] text-[#191f1c]/50 font-medium">
+        <button @click="emit('close')" class="w-full py-3 text-[14px] text-[var(--color-text-muted)] font-medium">
           Cancel
         </button>
       </div>

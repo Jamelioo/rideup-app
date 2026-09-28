@@ -96,7 +96,7 @@ function formatExpiry(dateStr) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white font-[var(--font-sans)] text-[#191f1c] flex flex-col">
+  <div class="min-h-screen bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top Bar -->
     <div class="flex items-center gap-3 px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
       <button @click="router.back()" class="w-10 h-10 flex items-center justify-center">
@@ -110,7 +110,7 @@ function formatExpiry(dateStr) {
     <!-- Success Banner -->
     <Transition name="fade">
       <div v-if="successBanner" class="mx-5 mb-4 max-w-lg mx-auto w-full">
-        <div class="bg-[#f0fdf4] border border-[#2b8659]/20 rounded-xl px-4 py-3 flex items-center gap-3">
+        <div class="bg-[var(--color-surface-secondary)] border border-[#2b8659]/20 rounded-xl px-4 py-3 flex items-center gap-3">
           <svg class="w-5 h-5 text-[#2b8659] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
           </svg>
@@ -122,13 +122,13 @@ function formatExpiry(dateStr) {
     <div class="px-5 max-w-lg mx-auto w-full flex-1">
       <!-- Promo Input -->
       <div class="mb-8">
-        <h2 class="text-xs font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-3">Enter promo code</h2>
+        <h2 class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Enter promo code</h2>
         <PromoInput :on-apply="handleApplyCode" />
       </div>
 
       <!-- Applied Promos -->
       <div>
-        <h2 class="text-xs font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-3">Your promotions</h2>
+        <h2 class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Your promotions</h2>
 
         <div v-if="loading" class="py-12 text-center">
           <svg class="w-6 h-6 animate-spin text-[#2b8659] mx-auto" viewBox="0 0 24 24" fill="none">
@@ -140,7 +140,7 @@ function formatExpiry(dateStr) {
           <svg class="w-10 h-10 text-[#191f1c]/15 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
           </svg>
-          <p class="text-[14px] text-[#191f1c]/40">No promo codes applied yet</p>
+          <p class="text-[14px] text-[var(--color-text-muted)]">No promo codes applied yet</p>
           <p class="text-[13px] text-[#191f1c]/30 mt-1">Enter a code above to get started</p>
         </div>
 
@@ -148,14 +148,14 @@ function formatExpiry(dateStr) {
           <div
             v-for="promo in promos"
             :key="promo.code"
-            class="border border-[#191f1c]/8 rounded-xl p-4 flex items-center justify-between"
+            class="border border-[var(--color-border)] rounded-xl p-4 flex items-center justify-between"
           >
             <div>
               <div class="flex items-center gap-2 mb-1">
                 <span class="text-[15px] font-bold tracking-wider">{{ promo.code }}</span>
-                <span class="bg-[#f0fdf4] text-[#2b8659] text-[12px] font-bold px-2 py-0.5 rounded-md">{{ promo.discount }}</span>
+                <span class="bg-[var(--color-surface-secondary)] text-[#2b8659] text-[12px] font-bold px-2 py-0.5 rounded-md">{{ promo.discount }}</span>
               </div>
-              <p class="text-[12px] text-[#191f1c]/40">Expires {{ formatExpiry(promo.expiry) }}</p>
+              <p class="text-[12px] text-[var(--color-text-muted)]">Expires {{ formatExpiry(promo.expiry) }}</p>
             </div>
             <button @click="removePromo(promo.code)" class="text-[#191f1c]/30 hover:text-red-500 transition-colors p-1">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

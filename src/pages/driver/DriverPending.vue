@@ -42,7 +42,7 @@ async function checkStatus() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white text-[#191f1c] flex flex-col items-center justify-center px-6">
+  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col items-center justify-center px-6">
     <div class="max-w-sm w-full text-center">
       <!-- Logo -->
       <div class="text-2xl font-bold mb-10">Ride<span class="text-[#2b8659]">Up</span></div>
@@ -55,11 +55,11 @@ async function checkStatus() {
       </div>
 
       <h1 class="text-[26px] font-bold mb-3">Application Under Review</h1>
-      <p class="text-[#191f1c]/50 text-[14px] leading-relaxed mb-8">
+      <p class="text-[var(--color-text-muted)] text-[14px] leading-relaxed mb-8">
         We're reviewing your application. You'll receive an email when you're approved to start driving.
       </p>
 
-      <p v-if="statusMessage" class="text-[13px] mb-4" :class="statusMessage.includes('still') ? 'text-[#191f1c]/50' : 'text-red-500'">
+      <p v-if="statusMessage" class="text-[13px] mb-4" :class="statusMessage.includes('still') ? 'text-[var(--color-text-muted)]' : 'text-red-500'">
         {{ statusMessage }}
       </p>
 
@@ -73,7 +73,7 @@ async function checkStatus() {
         Skip to Dashboard (Demo)
       </button>
 
-      <router-link to="/welcome" class="block mt-6 text-[14px] text-[#191f1c]/40 hover:text-[#191f1c]/60">
+      <router-link to="/welcome" class="block mt-6 text-[14px] text-[var(--color-text-muted)] hover:text-[#191f1c]/60">
         Back to Home
       </router-link>
     </div>

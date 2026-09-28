@@ -41,10 +41,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white text-[#191f1c]">
+  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)]">
 
     <!-- Top bar -->
-    <div class="sticky top-0 z-40 bg-white border-b border-[#191f1c]/8">
+    <div class="sticky top-0 z-40 bg-[var(--color-surface)] border-b border-[var(--color-border)]">
       <div class="flex items-center px-4 py-3.5">
         <button
           @click="router.back()"
@@ -77,9 +77,9 @@ onMounted(() => {
 
       <!-- Payment methods section -->
       <section>
-        <h2 class="text-[13px] font-semibold text-[#191f1c]/50 uppercase tracking-wide mb-3">Payment method</h2>
+        <h2 class="text-[13px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-3">Payment method</h2>
 
-        <div class="bg-white rounded-2xl border border-[#191f1c]/8 overflow-hidden">
+        <div class="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] overflow-hidden">
 
           <!-- Stripe Checkout — default -->
           <div class="flex items-center gap-4 px-5 py-4">
@@ -90,7 +90,7 @@ onMounted(() => {
               </svg>
             </div>
             <div class="flex-1">
-              <span class="text-[15px] font-medium text-[#191f1c]">Debit/Credit Card</span>
+              <span class="text-[15px] font-medium text-[var(--color-text-primary)]">Debit/Credit Card</span>
               <p class="text-[13px] text-[#191f1c]/45 mt-0.5">Pay securely when you confirm your ride</p>
             </div>
             <div class="w-6 h-6 rounded-full bg-[#2b8659] flex items-center justify-center shrink-0">
@@ -101,7 +101,7 @@ onMounted(() => {
           </div>
 
           <!-- Divider -->
-          <div class="mx-5 border-t border-[#191f1c]/8"></div>
+          <div class="mx-5 border-t border-[var(--color-border)]"></div>
 
           <!-- Add a card -->
           <button @click="addCard" :disabled="loading" class="w-full flex items-center gap-4 px-5 py-4 active:bg-[#191f1c]/3 transition-colors disabled:opacity-50">
@@ -111,7 +111,7 @@ onMounted(() => {
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
             </div>
-            <span class="flex-1 text-left text-[15px] font-medium text-[#191f1c]/50">
+            <span class="flex-1 text-left text-[15px] font-medium text-[var(--color-text-muted)]">
               {{ loading ? 'Opening...' : 'Add a card' }}
             </span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#191f1c" stroke-opacity="0.3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
@@ -120,7 +120,7 @@ onMounted(() => {
           </button>
 
           <!-- Divider -->
-          <div class="mx-5 border-t border-[#191f1c]/8"></div>
+          <div class="mx-5 border-t border-[var(--color-border)]"></div>
 
           <!-- Cash option -->
           <div class="flex items-center gap-4 px-5 py-4 opacity-40">
@@ -131,7 +131,7 @@ onMounted(() => {
               </svg>
             </div>
             <div class="flex-1">
-              <span class="text-[15px] font-medium text-[#191f1c]">Cash</span>
+              <span class="text-[15px] font-medium text-[var(--color-text-primary)]">Cash</span>
               <p class="text-[13px] text-[#191f1c]/45 mt-0.5">Coming soon</p>
             </div>
           </div>
@@ -141,7 +141,7 @@ onMounted(() => {
 
       <!-- How it works -->
       <section class="mt-8">
-        <div class="bg-[#f5f5f5] rounded-2xl px-5 py-5">
+        <div class="bg-[var(--color-surface-secondary)] rounded-2xl px-5 py-5">
           <div class="flex gap-3.5">
             <div class="shrink-0 mt-0.5">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#191f1c" stroke-opacity="0.35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -151,7 +151,7 @@ onMounted(() => {
               </svg>
             </div>
             <div>
-              <p class="text-[14px] font-semibold text-[#191f1c] leading-snug">How payment works</p>
+              <p class="text-[14px] font-semibold text-[var(--color-text-primary)] leading-snug">How payment works</p>
               <p class="text-[13px] text-[#191f1c]/55 mt-1.5 leading-relaxed">
                 When you confirm a ride, you'll be taken to a secure Stripe checkout page to enter your card details. You see the exact fare before paying. All payments are processed in BSD (Bahamian Dollar).
               </p>

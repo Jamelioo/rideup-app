@@ -1,9 +1,9 @@
 <template>
-  <div class="flex h-screen bg-[#f0fdf4] font-sans">
+  <div class="flex h-screen bg-[var(--color-surface-secondary)] font-sans">
     <!-- Mobile overlay -->
     <div
       v-if="sidebarOpen"
-      class="fixed inset-0 bg-black/40 z-40 lg:hidden"
+      class="fixed inset-0 bg-[var(--color-overlay)] z-40 lg:hidden"
       @click="sidebarOpen = false"
     />
 
@@ -31,7 +31,7 @@
             'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
             isActive(item.to)
               ? 'bg-[#2b8659] text-white'
-              : 'text-gray-400 hover:text-white hover:bg-white/5'
+              : 'text-gray-400 hover:text-white hover:bg-[var(--color-surface)]/5'
           ]"
         >
           <span v-html="item.icon" class="w-5 h-5 flex-shrink-0" />
@@ -43,7 +43,7 @@
       <div class="px-3 py-3 border-t border-white/10">
         <router-link
           to="/book"
-          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-[var(--color-surface)]/5 transition-colors"
         >
           <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M19 12H5M12 19l-7-7 7-7" />
@@ -56,7 +56,7 @@
     <!-- Main content -->
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
       <!-- Top bar -->
-      <header class="flex items-center justify-between px-4 lg:px-8 py-4 bg-white border-b border-gray-200">
+      <header class="flex items-center justify-between px-4 lg:px-8 py-4 bg-[var(--color-surface)] border-b border-gray-200">
         <button
           class="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100"
           @click="sidebarOpen = !sidebarOpen"

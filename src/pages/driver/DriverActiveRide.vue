@@ -110,7 +110,7 @@ const slideThumbStyle = computed(() => {
 </script>
 
 <template>
-  <div class="relative h-screen bg-white text-[#191f1c] overflow-hidden"
+  <div class="relative h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] overflow-hidden"
        @mousemove="onSlideMove" @mouseup="onSlideEnd"
        @touchmove.passive="onSlideMove" @touchend="onSlideEnd">
     <!-- Map -->
@@ -124,16 +124,16 @@ const slideThumbStyle = computed(() => {
     <!-- MOBILE: Navigate button floating top-right -->
     <div v-if="currentRide && phase !== 'completed'" class="md:hidden absolute top-0 right-0 z-10 pr-5 pt-[max(2rem,env(safe-area-inset-top))]">
       <a :href="getNavUrl()" target="_blank" rel="noopener"
-         class="flex items-center gap-2 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.12)] rounded-full px-4 py-2.5 active:scale-95 transition-transform">
+         class="flex items-center gap-2 bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.12)] rounded-full px-4 py-2.5 active:scale-95 transition-transform">
         <svg class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
         </svg>
-        <span class="text-[13px] font-semibold text-[#191f1c]">Navigate</span>
+        <span class="text-[13px] font-semibold text-[var(--color-text-primary)]">Navigate</span>
       </a>
     </div>
 
     <!-- MOBILE bottom sheet -->
-    <div class="md:hidden absolute bottom-0 left-0 right-0 z-10 bg-white rounded-t-[28px] shadow-[0_-4px_40px_rgba(0,0,0,0.1)]" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
+    <div class="md:hidden absolute bottom-0 left-0 right-0 z-10 bg-[var(--color-surface)] rounded-t-[28px] shadow-[0_-4px_40px_rgba(0,0,0,0.1)]" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
       <div class="flex justify-center pt-3 pb-2">
         <div class="w-9 h-[5px] rounded-full bg-[#191f1c]/10"></div>
       </div>
@@ -147,7 +147,7 @@ const slideThumbStyle = computed(() => {
           </div>
           <h2 class="text-2xl font-bold mb-1">Trip Complete</h2>
           <div class="text-[28px] font-bold text-[#2b8659] my-3">+{{ formatFare(currentRide?.fare_cents) }}</div>
-          <div class="text-[13px] text-[#191f1c]/50">{{ currentRide?.distance_miles?.toFixed(1) }} mi · {{ Math.round(currentRide?.duration_minutes || 0) }} min</div>
+          <div class="text-[13px] text-[var(--color-text-muted)]">{{ currentRide?.distance_miles?.toFixed(1) }} mi · {{ Math.round(currentRide?.duration_minutes || 0) }} min</div>
           <button @click="finish"
                   class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mt-6 transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(88,204,2,0.3)]">
             Done
@@ -169,7 +169,7 @@ const slideThumbStyle = computed(() => {
           </div>
 
           <!-- Rider info card -->
-          <div class="bg-[#f5f5f5] rounded-2xl p-4 mb-4">
+          <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-4 mb-4">
             <div class="flex items-center gap-3 mb-3">
               <div class="w-10 h-10 rounded-full bg-[#2b8659]/15 flex items-center justify-center flex-shrink-0">
                 <svg class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -185,17 +185,17 @@ const slideThumbStyle = computed(() => {
             <!-- Pickup -->
             <div class="flex gap-3">
               <div class="flex flex-col items-center pt-[6px]">
-                <div class="w-[10px] h-[10px] rounded-full border-[2.5px] border-[#2b8659] bg-white flex-shrink-0"></div>
+                <div class="w-[10px] h-[10px] rounded-full border-[2.5px] border-[#2b8659] bg-[var(--color-surface)] flex-shrink-0"></div>
                 <div class="w-[2px] flex-1 my-1 bg-[#191f1c]/10 rounded-full min-h-[12px]"></div>
                 <div class="w-[10px] h-[10px] rounded-[2px] bg-[#191f1c] flex-shrink-0"></div>
               </div>
               <div class="flex-1 space-y-2">
                 <div>
-                  <div class="text-[11px] text-[#191f1c]/40 font-medium">PICKUP</div>
+                  <div class="text-[11px] text-[var(--color-text-muted)] font-medium">PICKUP</div>
                   <div class="text-[13px] font-semibold">{{ currentRide.pickup_address }}</div>
                 </div>
                 <div>
-                  <div class="text-[11px] text-[#191f1c]/40 font-medium">DROPOFF</div>
+                  <div class="text-[11px] text-[var(--color-text-muted)] font-medium">DROPOFF</div>
                   <div class="text-[13px] font-semibold">{{ currentRide.dropoff_address }}</div>
                 </div>
               </div>
@@ -214,11 +214,11 @@ const slideThumbStyle = computed(() => {
             </div>
             <!-- Thumb -->
             <div v-if="!slideComplete"
-                 class="absolute top-[4px] left-[4px] w-[48px] h-[48px] bg-white rounded-xl flex items-center justify-center cursor-grab active:cursor-grabbing shadow-sm"
+                 class="absolute top-[4px] left-[4px] w-[48px] h-[48px] bg-[var(--color-surface)] rounded-xl flex items-center justify-center cursor-grab active:cursor-grabbing shadow-sm"
                  :style="{ transform: `translateX(${slideProgress * (slideContainer ? slideContainer.offsetWidth - 56 : 200)}px)` }"
                  @mousedown.prevent="onSlideStart"
                  @touchstart.prevent="onSlideStart">
-              <svg class="w-5 h-5 text-[#191f1c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <svg class="w-5 h-5 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
             </div>
@@ -232,7 +232,7 @@ const slideThumbStyle = computed(() => {
 
           <!-- Navigate button -->
           <a v-if="phase !== 'completed'" :href="getNavUrl()" target="_blank" rel="noopener"
-             class="w-full py-3 mt-2 border-2 border-[#191f1c]/10 font-semibold text-[14px] rounded-2xl flex items-center justify-center gap-2 active:bg-[#191f1c]/5 transition-colors">
+             class="w-full py-3 mt-2 border-2 border-[var(--color-border)] font-semibold text-[14px] rounded-2xl flex items-center justify-center gap-2 active:bg-[#191f1c]/5 transition-colors">
             <svg class="w-4 h-4 text-[#191f1c]/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
             </svg>
@@ -240,7 +240,7 @@ const slideThumbStyle = computed(() => {
           </a>
 
           <button v-if="phase === 'accepted'" @click="cancelRide"
-                  class="w-full py-3 mt-2 text-[#191f1c]/40 font-semibold text-[13px]">
+                  class="w-full py-3 mt-2 text-[var(--color-text-muted)] font-semibold text-[13px]">
             Cancel Ride
           </button>
         </template>
@@ -248,9 +248,9 @@ const slideThumbStyle = computed(() => {
     </div>
 
     <!-- DESKTOP: Side panel -->
-    <div class="hidden md:flex absolute inset-y-0 left-0 z-10 w-[400px] bg-white shadow-[4px_0_24px_rgba(0,0,0,0.08)] flex-col">
+    <div class="hidden md:flex absolute inset-y-0 left-0 z-10 w-[400px] bg-[var(--color-surface)] shadow-[4px_0_24px_rgba(0,0,0,0.08)] flex-col">
       <div class="px-6 pt-8 pb-4">
-        <div class="text-[22px] font-bold tracking-tight">Ride<span class="text-[#2b8659]">Up</span> <span class="text-[12px] font-sans font-normal text-[#191f1c]/40 ml-0.5">Driver</span></div>
+        <div class="text-[22px] font-bold tracking-tight">Ride<span class="text-[#2b8659]">Up</span> <span class="text-[12px] font-sans font-normal text-[var(--color-text-muted)] ml-0.5">Driver</span></div>
       </div>
       <div class="flex-1 overflow-y-auto px-6 pb-8">
         <div v-if="phase === 'completed'" class="text-center py-8">
@@ -261,7 +261,7 @@ const slideThumbStyle = computed(() => {
           </div>
           <h2 class="text-2xl font-bold mb-1">Trip Complete</h2>
           <div class="text-[28px] font-bold text-[#2b8659] my-3">+{{ formatFare(currentRide?.fare_cents) }}</div>
-          <div class="text-[13px] text-[#191f1c]/50 mb-6">{{ currentRide?.distance_miles?.toFixed(1) }} mi · {{ Math.round(currentRide?.duration_minutes || 0) }} min</div>
+          <div class="text-[13px] text-[var(--color-text-muted)] mb-6">{{ currentRide?.distance_miles?.toFixed(1) }} mi · {{ Math.round(currentRide?.duration_minutes || 0) }} min</div>
           <button @click="finish"
                   class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] hover:bg-[#236e49] shadow-[0_4px_16px_rgba(88,204,2,0.3)]">
             Done
@@ -285,7 +285,7 @@ const slideThumbStyle = computed(() => {
           </div>
 
           <!-- Rider info card -->
-          <div class="bg-[#f5f5f5] rounded-2xl p-5 mb-5">
+          <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-5 mb-5">
             <div class="flex items-center gap-3 mb-4">
               <div class="w-11 h-11 rounded-full bg-[#2b8659]/15 flex items-center justify-center flex-shrink-0">
                 <svg class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -301,17 +301,17 @@ const slideThumbStyle = computed(() => {
             <!-- Route -->
             <div class="flex gap-3">
               <div class="flex flex-col items-center pt-[6px]">
-                <div class="w-[10px] h-[10px] rounded-full border-[2.5px] border-[#2b8659] bg-white flex-shrink-0"></div>
+                <div class="w-[10px] h-[10px] rounded-full border-[2.5px] border-[#2b8659] bg-[var(--color-surface)] flex-shrink-0"></div>
                 <div class="w-[2px] flex-1 my-1 bg-[#191f1c]/10 rounded-full min-h-[16px]"></div>
                 <div class="w-[10px] h-[10px] rounded-[2px] bg-[#191f1c] flex-shrink-0"></div>
               </div>
               <div class="flex-1 space-y-3">
                 <div>
-                  <div class="text-[11px] text-[#191f1c]/40 font-medium">PICKUP</div>
+                  <div class="text-[11px] text-[var(--color-text-muted)] font-medium">PICKUP</div>
                   <div class="text-[15px] font-semibold">{{ currentRide.pickup_address }}</div>
                 </div>
                 <div>
-                  <div class="text-[11px] text-[#191f1c]/40 font-medium">DROPOFF</div>
+                  <div class="text-[11px] text-[var(--color-text-muted)] font-medium">DROPOFF</div>
                   <div class="text-[15px] font-semibold">{{ currentRide.dropoff_address }}</div>
                 </div>
               </div>
@@ -320,7 +320,7 @@ const slideThumbStyle = computed(() => {
 
           <!-- Navigate button -->
           <a :href="getNavUrl()" target="_blank" rel="noopener"
-             class="w-full py-3 mb-3 border-2 border-[#191f1c]/10 font-semibold text-[14px] rounded-2xl flex items-center justify-center gap-2 hover:bg-[#191f1c]/5 transition-colors">
+             class="w-full py-3 mb-3 border-2 border-[var(--color-border)] font-semibold text-[14px] rounded-2xl flex items-center justify-center gap-2 hover:bg-[#191f1c]/5 transition-colors">
             <svg class="w-4 h-4 text-[#191f1c]/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
             </svg>
@@ -336,11 +336,11 @@ const slideThumbStyle = computed(() => {
               <span v-if="slideComplete" class="text-white text-[14px] font-semibold">Completed</span>
             </div>
             <div v-if="!slideComplete"
-                 class="absolute top-[4px] left-[4px] w-[48px] h-[48px] bg-white rounded-xl flex items-center justify-center cursor-grab active:cursor-grabbing shadow-sm"
+                 class="absolute top-[4px] left-[4px] w-[48px] h-[48px] bg-[var(--color-surface)] rounded-xl flex items-center justify-center cursor-grab active:cursor-grabbing shadow-sm"
                  :style="{ transform: `translateX(${slideProgress * (340 - 56)}px)` }"
                  @mousedown.prevent="onSlideStart"
                  @touchstart.prevent="onSlideStart">
-              <svg class="w-5 h-5 text-[#191f1c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <svg class="w-5 h-5 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
             </div>
@@ -352,7 +352,7 @@ const slideThumbStyle = computed(() => {
             {{ phaseAction }}
           </button>
           <button v-if="phase === 'accepted'" @click="cancelRide"
-                  class="w-full py-3 mt-2 text-[#191f1c]/40 font-semibold text-[13px] hover:text-[#191f1c]/60">
+                  class="w-full py-3 mt-2 text-[var(--color-text-muted)] font-semibold text-[13px] hover:text-[#191f1c]/60">
             Cancel Ride
           </button>
         </template>

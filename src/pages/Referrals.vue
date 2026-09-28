@@ -71,7 +71,7 @@ const steps = [
 </script>
 
 <template>
-  <div class="min-h-screen bg-white font-[var(--font-sans)] text-[#191f1c] flex flex-col">
+  <div class="min-h-screen bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top Bar -->
     <div class="flex items-center gap-3 px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
       <button @click="router.back()" class="w-10 h-10 flex items-center justify-center">
@@ -84,20 +84,20 @@ const steps = [
 
     <div class="px-5 max-w-lg mx-auto w-full flex-1">
       <!-- Hero Section -->
-      <div class="bg-[#f0fdf4] rounded-2xl p-6 mb-6 text-center">
+      <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-6 mb-6 text-center">
         <div class="w-14 h-14 bg-[#2b8659] rounded-full flex items-center justify-center mx-auto mb-4">
           <svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
           </svg>
         </div>
         <h2 class="text-2xl font-bold mb-2">Invite friends, earn $5</h2>
-        <p class="text-[14px] text-[#191f1c]/50">Share your code and you both get $5 credit toward your next ride</p>
+        <p class="text-[14px] text-[var(--color-text-muted)]">Share your code and you both get $5 credit toward your next ride</p>
       </div>
 
       <!-- Referral Code -->
       <div class="mb-6">
-        <h2 class="text-xs font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-3">Your referral code</h2>
-        <div class="border-2 border-dashed border-[#2b8659]/30 rounded-xl p-4 flex items-center justify-between bg-[#f0fdf4]/50">
+        <h2 class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Your referral code</h2>
+        <div class="border-2 border-dashed border-[#2b8659]/30 rounded-xl p-4 flex items-center justify-between bg-[var(--color-surface-secondary)]/50">
           <span class="text-xl font-bold tracking-[0.15em] text-[#2b8659]">{{ referralCode }}</span>
           <button
             @click="copyCode"
@@ -116,7 +116,7 @@ const steps = [
 
       <!-- Share Buttons -->
       <div class="mb-8">
-        <h2 class="text-xs font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-3">Share via</h2>
+        <h2 class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Share via</h2>
         <div class="grid grid-cols-2 gap-3">
           <a
             :href="whatsappUrl"
@@ -142,7 +142,7 @@ const steps = [
 
       <!-- How It Works -->
       <div class="mb-8">
-        <h2 class="text-xs font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-4">How it works</h2>
+        <h2 class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-4">How it works</h2>
         <div class="space-y-4">
           <div v-for="step in steps" :key="step.number" class="flex items-start gap-4">
             <div class="w-8 h-8 rounded-full bg-[#2b8659] flex items-center justify-center shrink-0">
@@ -150,7 +150,7 @@ const steps = [
             </div>
             <div>
               <p class="text-[15px] font-bold">{{ step.title }}</p>
-              <p class="text-[13px] text-[#191f1c]/50">{{ step.description }}</p>
+              <p class="text-[13px] text-[var(--color-text-muted)]">{{ step.description }}</p>
             </div>
           </div>
         </div>
@@ -163,7 +163,7 @@ const steps = [
             <p class="text-white/50 text-[12px] uppercase tracking-wider font-semibold">Total credits earned</p>
             <p class="text-white text-3xl font-bold mt-1">${{ totalCredits.toFixed(2) }}</p>
           </div>
-          <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
+          <div class="w-12 h-12 bg-[var(--color-surface)]/10 rounded-full flex items-center justify-center">
             <svg class="w-6 h-6 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -173,7 +173,7 @@ const steps = [
 
       <!-- Referral History -->
       <div class="mb-8">
-        <h2 class="text-xs font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-3">Referral history</h2>
+        <h2 class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Referral history</h2>
 
         <div v-if="loading" class="py-12 text-center">
           <svg class="w-6 h-6 animate-spin text-[#2b8659] mx-auto" viewBox="0 0 24 24" fill="none">
@@ -181,11 +181,11 @@ const steps = [
           </svg>
         </div>
 
-        <div v-else-if="referrals.length === 0" class="py-10 text-center border border-[#191f1c]/8 rounded-xl">
+        <div v-else-if="referrals.length === 0" class="py-10 text-center border border-[var(--color-border)] rounded-xl">
           <svg class="w-10 h-10 text-[#191f1c]/15 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
-          <p class="text-[14px] text-[#191f1c]/40">No referrals yet</p>
+          <p class="text-[14px] text-[var(--color-text-muted)]">No referrals yet</p>
           <p class="text-[13px] text-[#191f1c]/30 mt-1">Share your code to start earning</p>
         </div>
 
@@ -193,15 +193,15 @@ const steps = [
           <div
             v-for="ref in referrals"
             :key="ref.email"
-            class="border border-[#191f1c]/8 rounded-xl p-4 flex items-center justify-between"
+            class="border border-[var(--color-border)] rounded-xl p-4 flex items-center justify-between"
           >
             <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-full bg-[#f0fdf4] flex items-center justify-center">
+              <div class="w-9 h-9 rounded-full bg-[var(--color-surface-secondary)] flex items-center justify-center">
                 <span class="text-[#2b8659] text-[13px] font-bold">{{ ref.name?.charAt(0)?.toUpperCase() || '?' }}</span>
               </div>
               <div>
                 <p class="text-[14px] font-bold">{{ ref.name || 'Friend' }}</p>
-                <p class="text-[12px] text-[#191f1c]/40">{{ formatDate(ref.date) }}</p>
+                <p class="text-[12px] text-[var(--color-text-muted)]">{{ formatDate(ref.date) }}</p>
               </div>
             </div>
             <span class="text-[#2b8659] text-[14px] font-bold">+$5.00</span>

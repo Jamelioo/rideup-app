@@ -86,7 +86,7 @@ async function handleSave() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white font-[var(--font-sans)] text-[#191f1c] flex flex-col">
+  <div class="min-h-screen bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top Bar -->
     <div class="flex items-center justify-between px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
       <button @click="cancel" class="text-[#2b8659] text-base font-medium">Cancel</button>
@@ -116,45 +116,45 @@ async function handleSave() {
     <div class="px-5 flex-1 max-w-lg mx-auto w-full">
       <!-- First Name -->
       <div class="mb-5">
-        <label class="block text-xs text-[#191f1c]/40 mb-1">First name</label>
+        <label class="block text-xs text-[var(--color-text-muted)] mb-1">First name</label>
         <input
           v-model="firstName"
           type="text"
           autocomplete="given-name"
-          class="w-full bg-transparent text-base text-[#191f1c] pb-2 border-b border-[#191f1c]/10 outline-none focus:border-[#2b8659] transition-colors"
+          class="w-full bg-transparent text-base text-[var(--color-text-primary)] pb-2 border-b border-[var(--color-border)] outline-none focus:border-[#2b8659] transition-colors"
         />
       </div>
 
       <!-- Last Name -->
       <div class="mb-5">
-        <label class="block text-xs text-[#191f1c]/40 mb-1">Last name</label>
+        <label class="block text-xs text-[var(--color-text-muted)] mb-1">Last name</label>
         <input
           v-model="lastName"
           type="text"
           autocomplete="family-name"
-          class="w-full bg-transparent text-base text-[#191f1c] pb-2 border-b border-[#191f1c]/10 outline-none focus:border-[#2b8659] transition-colors"
+          class="w-full bg-transparent text-base text-[var(--color-text-primary)] pb-2 border-b border-[var(--color-border)] outline-none focus:border-[#2b8659] transition-colors"
         />
       </div>
 
       <!-- Email (read-only) -->
       <div class="mb-5">
-        <label class="block text-xs text-[#191f1c]/40 mb-1">Email</label>
+        <label class="block text-xs text-[var(--color-text-muted)] mb-1">Email</label>
         <input
           v-model="email"
           type="email"
           readonly
-          class="w-full bg-transparent text-base text-[#191f1c]/40 pb-2 border-b border-[#191f1c]/10 outline-none cursor-not-allowed"
+          class="w-full bg-transparent text-base text-[var(--color-text-muted)] pb-2 border-b border-[var(--color-border)] outline-none cursor-not-allowed"
         />
       </div>
 
       <!-- Phone Number -->
       <div class="mb-2">
-        <label class="block text-xs text-[#191f1c]/40 mb-1">Phone number</label>
+        <label class="block text-xs text-[var(--color-text-muted)] mb-1">Phone number</label>
         <input
           v-model="phoneNumber"
           type="tel"
           autocomplete="tel"
-          class="w-full bg-transparent text-base text-[#191f1c] pb-2 border-b border-[#191f1c]/10 outline-none focus:border-[#2b8659] transition-colors"
+          class="w-full bg-transparent text-base text-[var(--color-text-primary)] pb-2 border-b border-[var(--color-border)] outline-none focus:border-[#2b8659] transition-colors"
         />
       </div>
 

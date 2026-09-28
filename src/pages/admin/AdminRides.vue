@@ -1,10 +1,10 @@
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-[#191f1c] mb-6">Ride Management</h1>
+    <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6">Ride Management</h1>
 
     <!-- Search + filter tabs -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-      <div class="flex gap-1 bg-white rounded-lg border border-gray-200 p-1">
+      <div class="flex gap-1 bg-[var(--color-surface)] rounded-lg border border-gray-200 p-1">
         <button
           v-for="tab in statusTabs"
           :key="tab"
@@ -23,12 +23,12 @@
         v-model="search"
         type="text"
         placeholder="Search rides..."
-        class="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30 focus:border-[#2b8659] w-full sm:w-64"
+        class="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30 focus:border-[#2b8659] w-full sm:w-64"
       />
     </div>
 
     <!-- Table -->
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="bg-[var(--color-surface)] rounded-xl border border-gray-200 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
@@ -56,11 +56,11 @@
               class="border-t border-gray-100 hover:bg-gray-50/50 transition-colors"
             >
               <td class="px-4 py-3 text-gray-400 font-mono text-xs">#{{ ride.id }}</td>
-              <td class="px-4 py-3 text-[#191f1c] font-medium">{{ ride.rider }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ ride.rider }}</td>
               <td class="px-4 py-3 text-gray-600">{{ ride.driver }}</td>
               <td class="px-4 py-3 text-gray-500 truncate max-w-[140px]">{{ ride.pickup }}</td>
               <td class="px-4 py-3 text-gray-500 truncate max-w-[140px]">{{ ride.dropoff }}</td>
-              <td class="px-4 py-3 text-[#191f1c] font-medium">${{ ride.fare.toFixed(2) }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-primary)] font-medium">${{ ride.fare.toFixed(2) }}</td>
               <td class="px-4 py-3">
                 <span :class="statusBadge(ride.status)">{{ ride.status }}</span>
               </td>

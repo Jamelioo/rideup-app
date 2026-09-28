@@ -51,11 +51,11 @@ function showToast(msg) {
 
 function statusColor(status) {
   return {
-    pending: 'text-[#191f1c]/40 bg-[#191f1c]/5',
+    pending: 'text-[var(--color-text-muted)] bg-[#191f1c]/5',
     uploaded: 'text-amber-600 bg-amber-50',
     approved: 'text-[#2b8659] bg-[#2b8659]/10',
     rejected: 'text-red-500 bg-red-50',
-  }[status] || 'text-[#191f1c]/40 bg-[#191f1c]/5'
+  }[status] || 'text-[var(--color-text-muted)] bg-[#191f1c]/5'
 }
 
 function statusLabel(status) {
@@ -135,7 +135,7 @@ function goBack() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white text-[#191f1c]">
+  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)]">
     <!-- Top bar -->
     <div class="flex items-center justify-between px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
       <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
@@ -148,16 +148,16 @@ function goBack() {
     </div>
 
     <div class="max-w-lg mx-auto px-5 pb-8">
-      <p class="text-[14px] text-[#191f1c]/50 mb-6">Upload your documents to get approved for driving. All documents are securely stored and reviewed within 24 hours.</p>
+      <p class="text-[14px] text-[var(--color-text-muted)] mb-6">Upload your documents to get approved for driving. All documents are securely stored and reviewed within 24 hours.</p>
 
       <!-- Document list -->
       <div class="space-y-3">
         <div v-for="doc in documents" :key="doc.key"
-             class="bg-[#f5f5f5] rounded-2xl p-4">
+             class="bg-[var(--color-surface-secondary)] rounded-2xl p-4">
           <div class="flex items-start justify-between mb-2">
             <div class="flex-1">
               <div class="text-[15px] font-semibold">{{ doc.label }}</div>
-              <div class="text-[12px] text-[#191f1c]/40 mt-0.5">{{ doc.description }}</div>
+              <div class="text-[12px] text-[var(--color-text-muted)] mt-0.5">{{ doc.description }}</div>
             </div>
             <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ml-3"
                   :class="statusColor(doc.status)">
@@ -166,7 +166,7 @@ function goBack() {
           </div>
 
           <!-- File name if uploaded -->
-          <div v-if="doc.fileName" class="text-[12px] text-[#191f1c]/40 mb-2 flex items-center gap-1.5">
+          <div v-if="doc.fileName" class="text-[12px] text-[var(--color-text-muted)] mb-2 flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
             </svg>
@@ -180,10 +180,10 @@ function goBack() {
                    :disabled="uploading === doc.key" />
             <div class="flex items-center justify-center gap-2 py-2.5 border-2 border-dashed rounded-xl transition-colors"
                  :class="uploading === doc.key
-                   ? 'border-[#191f1c]/10 text-[#191f1c]/30'
+                   ? 'border-[var(--color-border)] text-[#191f1c]/30'
                    : doc.status === 'rejected'
                      ? 'border-red-200 text-red-500 active:bg-red-50'
-                     : 'border-[#191f1c]/10 text-[#191f1c]/50 active:bg-[#191f1c]/5'">
+                     : 'border-[var(--color-border)] text-[var(--color-text-muted)] active:bg-[#191f1c]/5'">
               <!-- Loading spinner -->
               <svg v-if="uploading === doc.key" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -202,14 +202,14 @@ function goBack() {
       </div>
 
       <!-- Info note -->
-      <div class="mt-6 bg-[#f0fdf4] rounded-2xl p-4">
+      <div class="mt-6 bg-[var(--color-surface-secondary)] rounded-2xl p-4">
         <p class="text-[13px] text-[#2b8659] font-medium mb-1">Required for approval</p>
         <p class="text-[12px] text-[#2b8659]/70 leading-relaxed">All four documents must be uploaded and approved before you can start accepting rides. Documents are typically reviewed within 24 hours.</p>
       </div>
 
       <!-- Back to profile -->
       <button @click="router.push('/driver/profile')"
-              class="w-full py-3.5 mt-6 border-2 border-[#191f1c]/10 text-[14px] font-semibold rounded-2xl active:bg-[#191f1c]/5 transition-colors">
+              class="w-full py-3.5 mt-6 border-2 border-[var(--color-border)] text-[14px] font-semibold rounded-2xl active:bg-[#191f1c]/5 transition-colors">
         Back to Profile
       </button>
     </div>

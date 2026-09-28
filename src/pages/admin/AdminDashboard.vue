@@ -1,12 +1,12 @@
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-[#191f1c] mb-6">Dashboard</h1>
+    <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6">Dashboard</h1>
 
     <!-- Metric cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
-      <div v-for="card in metricCards" :key="card.label" class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+      <div v-for="card in metricCards" :key="card.label" class="bg-[var(--color-surface)] rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
         <p class="text-sm text-gray-500 mb-1">{{ card.label }}</p>
-        <p class="text-2xl font-bold text-[#191f1c]">{{ card.value }}</p>
+        <p class="text-2xl font-bold text-[var(--color-text-primary)]">{{ card.value }}</p>
         <p :class="['text-xs mt-1', card.changePositive ? 'text-[#2b8659]' : 'text-red-500']">
           {{ card.change }} vs yesterday
         </p>
@@ -16,8 +16,8 @@
     <!-- Charts + Recent rides -->
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
       <!-- Bar chart: rides per day -->
-      <div class="bg-white rounded-xl border border-gray-200 p-5">
-        <h2 class="text-sm font-semibold text-[#191f1c] mb-4">Rides — Last 7 Days</h2>
+      <div class="bg-[var(--color-surface)] rounded-xl border border-gray-200 p-5">
+        <h2 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Rides — Last 7 Days</h2>
         <div class="flex items-end gap-2 h-40">
           <div
             v-for="day in weeklyRides"
@@ -35,8 +35,8 @@
       </div>
 
       <!-- Recent rides table -->
-      <div class="bg-white rounded-xl border border-gray-200 p-5">
-        <h2 class="text-sm font-semibold text-[#191f1c] mb-4">Recent Rides</h2>
+      <div class="bg-[var(--color-surface)] rounded-xl border border-gray-200 p-5">
+        <h2 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Recent Rides</h2>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
@@ -53,9 +53,9 @@
                 :key="ride.id"
                 class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
               >
-                <td class="py-2.5 text-[#191f1c] font-medium">{{ ride.rider }}</td>
+                <td class="py-2.5 text-[var(--color-text-primary)] font-medium">{{ ride.rider }}</td>
                 <td class="py-2.5 text-gray-500 truncate max-w-[160px]">{{ ride.pickup }} → {{ ride.dropoff }}</td>
-                <td class="py-2.5 text-[#191f1c]">${{ ride.fare.toFixed(2) }}</td>
+                <td class="py-2.5 text-[var(--color-text-primary)]">${{ ride.fare.toFixed(2) }}</td>
                 <td class="py-2.5">
                   <span :class="statusBadge(ride.status)">{{ ride.status }}</span>
                 </td>

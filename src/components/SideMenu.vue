@@ -118,7 +118,7 @@ watch(() => props.isOpen, async (open) => {
     <Transition name="fade">
       <div
         v-if="isOpen"
-        class="fixed inset-0 bg-black/50 z-[9998]"
+        class="fixed inset-0 bg-[var(--color-overlay)] z-[9998]"
         @click="handleClose"
       />
     </Transition>
@@ -128,7 +128,7 @@ watch(() => props.isOpen, async (open) => {
       <div
         v-if="isOpen"
         ref="drawerRef"
-        class="fixed inset-y-0 left-0 z-[9999] w-[80%] max-w-[320px] bg-white flex flex-col shadow-2xl"
+        class="fixed inset-y-0 left-0 z-[9999] w-[80%] max-w-[320px] bg-[var(--color-surface)] flex flex-col shadow-2xl"
       >
         <!-- User Profile Section -->
         <div class="px-5 pt-14 pb-5">
@@ -137,7 +137,7 @@ watch(() => props.isOpen, async (open) => {
               {{ initials }}
             </div>
             <div class="min-w-0">
-              <p class="text-lg font-semibold text-[#191f1c] truncate">
+              <p class="text-lg font-semibold text-[var(--color-text-primary)] truncate">
                 {{ displayName }}
               </p>
               <button
@@ -149,11 +149,11 @@ watch(() => props.isOpen, async (open) => {
             </div>
           </div>
           <div v-else class="flex flex-col gap-3">
-            <p class="text-lg font-semibold text-[#191f1c]">Welcome to RideUp</p>
+            <p class="text-lg font-semibold text-[var(--color-text-primary)]">Welcome to RideUp</p>
             <div class="flex gap-3">
               <button
                 @click="handleNavigate('/login')"
-                class="flex-1 py-2.5 rounded-xl border border-[#191f1c]/10 text-[14px] font-semibold text-[#191f1c] active:bg-[#191f1c]/5 transition-colors"
+                class="flex-1 py-2.5 rounded-xl border border-[var(--color-border)] text-[14px] font-semibold text-[var(--color-text-primary)] active:bg-[#191f1c]/5 transition-colors"
               >
                 Log in
               </button>
@@ -179,7 +179,7 @@ watch(() => props.isOpen, async (open) => {
             @click="handleNavigate(item.route)"
           >
             <!-- Icon -->
-            <div class="w-6 h-6 flex items-center justify-center shrink-0 text-[#191f1c]">
+            <div class="w-6 h-6 flex items-center justify-center shrink-0 text-[var(--color-text-primary)]">
               <svg v-if="item.icon === 'card'" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
                 <line x1="1" y1="10" x2="23" y2="10" />
@@ -228,8 +228,8 @@ watch(() => props.isOpen, async (open) => {
 
             <!-- Label + Subtitle -->
             <div class="flex-1 min-w-0">
-              <p class="text-[15px] font-medium text-[#191f1c]">{{ item.label }}</p>
-              <p v-if="item.subtitle" class="text-xs text-[#191f1c]/40 mt-0.5">{{ item.subtitle }}</p>
+              <p class="text-[15px] font-medium text-[var(--color-text-primary)]">{{ item.label }}</p>
+              <p v-if="item.subtitle" class="text-xs text-[var(--color-text-muted)] mt-0.5">{{ item.subtitle }}</p>
             </div>
 
             <!-- Chevron -->

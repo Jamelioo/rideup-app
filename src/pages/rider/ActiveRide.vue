@@ -117,14 +117,14 @@ onUnmounted(() => {
 
 <template>
   <!-- In-app chat overlay -->
-  <div v-if="showChat" class="fixed inset-0 z-50 bg-white text-[#191f1c] flex flex-col">
+  <div v-if="showChat" class="fixed inset-0 z-50 bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col">
     <div class="bg-[#2b8659] px-6 pt-8 pb-5 flex items-center gap-3">
-      <button @click="closeChat" class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-base text-white" aria-label="Back">
+      <button @click="closeChat" class="w-10 h-10 rounded-full bg-[var(--color-surface)]/20 flex items-center justify-center text-base text-white" aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
-      <div class="w-9 h-9 rounded-full bg-white/25 flex items-center justify-center text-white text-xs font-bold">
+      <div class="w-9 h-9 rounded-full bg-[var(--color-surface)]/25 flex items-center justify-center text-white text-xs font-bold">
         {{ driverName.split(' ').map(w => w[0]).join('') }}
       </div>
       <div class="text-white font-bold text-[15px]">{{ driverName }}</div>
@@ -133,13 +133,13 @@ onUnmounted(() => {
     <div class="flex-1 px-5 py-5 space-y-3 overflow-y-auto">
       <div v-for="(m, i) in messages" :key="i" class="flex" :class="m.from === 'me' ? 'justify-end' : 'justify-start'">
         <div class="max-w-[75%] px-4 py-2.5 rounded-2xl text-[13px]"
-             :class="m.from === 'me' ? 'bg-[#2b8659] text-white rounded-br-sm' : 'bg-[#191f1c]/6 text-[#191f1c] rounded-bl-sm'">
+             :class="m.from === 'me' ? 'bg-[#2b8659] text-white rounded-br-sm' : 'bg-[#191f1c]/6 text-[var(--color-text-primary)] rounded-bl-sm'">
           {{ m.text }}
         </div>
       </div>
     </div>
 
-    <div class="px-4 pb-6 pt-3 border-t border-[#191f1c]/8 flex items-center gap-2">
+    <div class="px-4 pb-6 pt-3 border-t border-[var(--color-border)] flex items-center gap-2">
       <input v-model="draft" @keyup.enter="sendMessage" type="text" placeholder="Type a message..."
              class="flex-1 bg-[#191f1c]/[0.04] rounded-full px-4 py-2.5 text-[13px] outline-none placeholder:text-[#191f1c]/35" />
       <button @click="sendMessage" class="w-10 h-10 rounded-full bg-[#2b8659] text-white flex items-center justify-center">
@@ -151,12 +151,12 @@ onUnmounted(() => {
   </div>
 
   <!-- Main ride tracking view -->
-  <div v-else class="fixed inset-0 bg-white text-[#191f1c]">
+  <div v-else class="fixed inset-0 bg-[var(--color-surface)] text-[var(--color-text-primary)]">
     <!-- Top status bar -->
-    <div class="absolute top-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-sm border-b border-[#191f1c]/5">
+    <div class="absolute top-0 left-0 right-0 z-30 bg-[var(--color-surface)]/95 backdrop-blur-sm border-b border-[#191f1c]/5">
       <div class="px-6 pt-8 pb-3 flex items-center gap-3">
-        <button @click="cancelRide" class="w-10 h-10 rounded-full bg-[#191f1c]/5 border border-[#191f1c]/8 flex items-center justify-center" aria-label="Back">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#191f1c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <button @click="cancelRide" class="w-10 h-10 rounded-full bg-[#191f1c]/5 border border-[var(--color-border)] flex items-center justify-center" aria-label="Back">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
         </button>

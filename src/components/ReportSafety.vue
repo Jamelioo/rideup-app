@@ -52,13 +52,13 @@ async function handleSubmit() {
     <!-- Header -->
     <div class="flex items-center justify-between mb-5">
       <button @click="emit('back')" class="w-8 h-8 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#191f1c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
-      <h2 class="text-lg font-bold text-[#191f1c]">Report safety issue</h2>
+      <h2 class="text-lg font-bold text-[var(--color-text-primary)]">Report safety issue</h2>
       <button @click="emit('close')" class="w-8 h-8 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#191f1c]/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
@@ -71,8 +71,8 @@ async function handleSubmit() {
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
         </svg>
       </div>
-      <h3 class="text-lg font-bold text-[#191f1c] mb-2">Report submitted</h3>
-      <p class="text-[13px] text-[#191f1c]/50 text-center max-w-[260px]">Thank you for letting us know. Our safety team will review this report.</p>
+      <h3 class="text-lg font-bold text-[var(--color-text-primary)] mb-2">Report submitted</h3>
+      <p class="text-[13px] text-[var(--color-text-muted)] text-center max-w-[260px]">Thank you for letting us know. Our safety team will review this report.</p>
       <button
         @click="emit('close')"
         class="mt-6 w-full py-3.5 bg-[#2b8659] text-white font-semibold text-[14px] rounded-xl active:bg-[#236e49] transition-colors"
@@ -84,7 +84,7 @@ async function handleSubmit() {
     <!-- Form -->
     <div v-else>
       <!-- Category Chips -->
-      <p class="text-[13px] font-medium text-[#191f1c]/50 mb-3">What happened?</p>
+      <p class="text-[13px] font-medium text-[var(--color-text-muted)] mb-3">What happened?</p>
       <div class="flex flex-wrap gap-2 mb-5">
         <button
           v-for="cat in categories"
@@ -94,7 +94,7 @@ async function handleSubmit() {
             'px-4 py-2.5 rounded-full text-[13px] font-medium transition-colors',
             selectedCategory === cat
               ? 'bg-[#2b8659] text-white'
-              : 'bg-[#191f1c]/[0.04] text-[#191f1c] active:bg-[#191f1c]/[0.08]'
+              : 'bg-[#191f1c]/[0.04] text-[var(--color-text-primary)] active:bg-[#191f1c]/[0.08]'
           ]"
         >
           {{ cat }}
@@ -102,12 +102,12 @@ async function handleSubmit() {
       </div>
 
       <!-- Description -->
-      <p class="text-[13px] font-medium text-[#191f1c]/50 mb-2">Tell us more (optional)</p>
+      <p class="text-[13px] font-medium text-[var(--color-text-muted)] mb-2">Tell us more (optional)</p>
       <textarea
         v-model="description"
         placeholder="Describe what happened..."
         rows="3"
-        class="w-full px-4 py-3 bg-[#191f1c]/[0.03] rounded-xl text-[14px] text-[#191f1c] placeholder-[#191f1c]/30 resize-none focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30"
+        class="w-full px-4 py-3 bg-[#191f1c]/[0.03] rounded-xl text-[14px] text-[var(--color-text-primary)] placeholder-[#191f1c]/30 resize-none focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30"
       />
 
       <!-- Error -->

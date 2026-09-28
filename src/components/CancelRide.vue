@@ -39,22 +39,22 @@ function doCancel() {
 
 <template>
   <div class="fixed inset-0 z-50 flex items-end justify-center">
-    <div class="absolute inset-0 bg-black/40" @click="emit('close')"></div>
-    <div class="relative w-full max-w-lg bg-white rounded-t-3xl z-10">
+    <div class="absolute inset-0 bg-[var(--color-overlay)]" @click="emit('close')"></div>
+    <div class="relative w-full max-w-lg bg-[var(--color-surface)] rounded-t-3xl z-10">
       <!-- Handle -->
       <div class="w-10 h-1 rounded-full bg-[#191f1c]/15 mx-auto mt-3 mb-2"></div>
 
       <!-- Not confirming yet — select reason -->
       <div v-if="!confirming" class="px-6 pb-8">
-        <h2 class="text-[18px] font-bold text-[#191f1c] mb-1">Cancel ride</h2>
+        <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-1">Cancel ride</h2>
         <p v-if="!isFreeCancel" class="text-[14px] text-red-500 mb-4">
           A ${{ cancelFee.toFixed(2) }} cancellation fee will apply
         </p>
-        <p v-else class="text-[14px] text-[#191f1c]/50 mb-4">
+        <p v-else class="text-[14px] text-[var(--color-text-muted)] mb-4">
           Free cancellation
         </p>
 
-        <p class="text-[13px] font-semibold text-[#191f1c]/50 uppercase tracking-wide mb-3">Reason</p>
+        <p class="text-[13px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-3">Reason</p>
         <div class="space-y-2 mb-6">
           <button
             v-for="reason in reasons"
@@ -63,8 +63,8 @@ function doCancel() {
             :class="[
               'w-full text-left px-4 py-3.5 rounded-xl border text-[15px] transition-colors',
               selectedReason === reason
-                ? 'border-[#2b8659] bg-[#2b8659]/5 text-[#191f1c] font-medium'
-                : 'border-[#191f1c]/10 text-[#191f1c]/70'
+                ? 'border-[#2b8659] bg-[#2b8659]/5 text-[var(--color-text-primary)] font-medium'
+                : 'border-[var(--color-border)] text-[#191f1c]/70'
             ]"
           >
             {{ reason }}
@@ -80,7 +80,7 @@ function doCancel() {
         </button>
         <button
           @click="emit('close')"
-          class="w-full py-3 text-[#191f1c]/50 text-[15px] font-medium mt-2"
+          class="w-full py-3 text-[var(--color-text-muted)] text-[15px] font-medium mt-2"
         >
           Keep ride
         </button>
@@ -95,11 +95,11 @@ function doCancel() {
             <line x1="9" y1="9" x2="15" y2="15" />
           </svg>
         </div>
-        <h2 class="text-[18px] font-bold text-[#191f1c] mb-1">Are you sure?</h2>
-        <p v-if="!isFreeCancel" class="text-[14px] text-[#191f1c]/50 mb-6">
+        <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-1">Are you sure?</h2>
+        <p v-if="!isFreeCancel" class="text-[14px] text-[var(--color-text-muted)] mb-6">
           You'll be charged a ${{ cancelFee.toFixed(2) }} cancellation fee
         </p>
-        <p v-else class="text-[14px] text-[#191f1c]/50 mb-6">
+        <p v-else class="text-[14px] text-[var(--color-text-muted)] mb-6">
           No fee will be charged
         </p>
 

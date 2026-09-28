@@ -340,7 +340,7 @@ async function scheduleRide({ date, time, summary }) {
 </script>
 
 <template>
-  <div class="relative h-screen bg-white text-[#191f1c] overflow-hidden">
+  <div class="relative h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] overflow-hidden">
     <SideMenu :is-open="menuOpen" @close="menuOpen = false" />
 
     <!-- Map fills the whole screen on mobile, right side on desktop -->
@@ -359,15 +359,15 @@ async function scheduleRide({ date, time, summary }) {
 
     <!-- Top bar — floats over map on mobile, inside panel on desktop -->
     <div class="absolute top-0 left-0 right-0 z-20 px-5 pt-[max(2rem,env(safe-area-inset-top))] flex items-center justify-between pointer-events-none md:hidden">
-      <button @click="menuOpen = true" class="pointer-events-auto w-11 h-11 rounded-full bg-white shadow-[0_2px_12px_rgba(0,0,0,0.1)] flex items-center justify-center active:scale-95 transition-transform">
+      <button @click="menuOpen = true" class="pointer-events-auto w-11 h-11 rounded-full bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.1)] flex items-center justify-center active:scale-95 transition-transform">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect y="3" width="18" height="1.5" rx="0.75" fill="#191f1c"/><rect y="8.25" width="18" height="1.5" rx="0.75" fill="#191f1c"/><rect y="13.5" width="18" height="1.5" rx="0.75" fill="#191f1c"/></svg>
       </button>
-      <div class="pointer-events-auto bg-white shadow-[0_2px_12px_rgba(0,0,0,0.1)] rounded-full px-5 py-2 text-[17px] font-bold tracking-tight">Ride<span class="text-[#2b8659]">Up</span></div>
+      <div class="pointer-events-auto bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.1)] rounded-full px-5 py-2 text-[17px] font-bold tracking-tight">Ride<span class="text-[#2b8659]">Up</span></div>
       <div class="w-11 h-11"></div>
     </div>
 
     <!-- MOBILE: Bottom sheet -->
-    <div ref="sheetRef" class="md:hidden absolute bottom-0 left-0 right-0 z-10 bg-white rounded-t-[28px] shadow-[0_-4px_40px_rgba(0,0,0,0.1)] overflow-hidden" style="padding-bottom: env(safe-area-inset-bottom, 0px); transition: height 0.3s cubic-bezier(0.25, 1, 0.5, 1);">
+    <div ref="sheetRef" class="md:hidden absolute bottom-0 left-0 right-0 z-10 bg-[var(--color-surface)] rounded-t-[28px] shadow-[0_-4px_40px_rgba(0,0,0,0.1)] overflow-hidden" style="padding-bottom: env(safe-area-inset-bottom, 0px); transition: height 0.3s cubic-bezier(0.25, 1, 0.5, 1);">
       <!-- Drag handle -->
       <div class="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing touch-none"
            @touchstart.passive="onDragStart"
@@ -381,67 +381,67 @@ async function scheduleRide({ date, time, summary }) {
         <!-- Shared booking content -->
         <div v-if="!hasRoute" class="pt-1 pb-5">
           <h1 class="text-[28px] leading-[1.1] font-bold tracking-tight">Where to?</h1>
-          <p class="text-[#191f1c]/50 text-[13px] mt-1 leading-relaxed">Enter pickup & destination for upfront pricing</p>
+          <p class="text-[var(--color-text-muted)] text-[13px] mt-1 leading-relaxed">Enter pickup & destination for upfront pricing</p>
         </div>
 
         <div class="flex gap-3">
           <div class="flex flex-col items-center pt-[18px] gap-0">
-            <div class="w-[10px] h-[10px] rounded-full border-[2.5px] border-[#2b8659] bg-white flex-shrink-0"></div>
+            <div class="w-[10px] h-[10px] rounded-full border-[2.5px] border-[#2b8659] bg-[var(--color-surface)] flex-shrink-0"></div>
             <div class="w-[2px] flex-1 my-1 bg-[#191f1c]/10 rounded-full min-h-[24px]"></div>
             <div class="w-[10px] h-[10px] rounded-[2px] bg-[#191f1c] flex-shrink-0"></div>
           </div>
           <div class="flex-1 space-y-2">
-            <div class="flex items-center bg-[#f5f5f5] rounded-xl px-4 py-3 border-2 transition-all duration-200"
-                 :class="activeInput === 'pickup' ? 'border-[#2b8659] bg-white shadow-[0_0_0_3px_rgba(88,204,2,0.12)]' : 'border-transparent'">
+            <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 border-2 transition-all duration-200"
+                 :class="activeInput === 'pickup' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(88,204,2,0.12)]' : 'border-transparent'">
               <input v-if="!DEMO_MODE" ref="pickupInput" type="text" placeholder="Pickup location"
                      @focus="activeInput = 'pickup'"
-                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[#191f1c]/40 placeholder:font-normal" />
+                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
               <input v-else v-model="pickupText" list="demo-locations" type="text" placeholder="Pickup — try Cable Beach"
                      @focus="activeInput = 'pickup'"
-                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[#191f1c]/40 placeholder:font-normal" />
+                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
-            <div class="flex items-center bg-[#f5f5f5] rounded-xl px-4 py-3 border-2 transition-all duration-200"
-                 :class="activeInput === 'dropoff' ? 'border-[#2b8659] bg-white shadow-[0_0_0_3px_rgba(88,204,2,0.12)]' : 'border-transparent'">
+            <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 border-2 transition-all duration-200"
+                 :class="activeInput === 'dropoff' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(88,204,2,0.12)]' : 'border-transparent'">
               <input v-if="!DEMO_MODE" ref="dropoffInput" type="text" placeholder="Where to?"
                      @focus="activeInput = 'dropoff'"
-                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[#191f1c]/40 placeholder:font-normal" />
+                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
               <input v-else v-model="dropoffText" list="demo-locations" type="text" placeholder="Destination — try Airport"
                      @focus="activeInput = 'dropoff'"
-                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[#191f1c]/40 placeholder:font-normal" />
+                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
             <datalist id="demo-locations"><option v-for="loc in DEMO_LOCATIONS" :key="loc" :value="loc" /></datalist>
           </div>
         </div>
 
         <p v-if="DEMO_MODE && !hasRoute" class="text-[#2b8659] text-[12px] mt-3 ml-[22px] font-medium">Demo mode — enter any two spots to see live pricing</p>
-        <div v-if="!mapsReady && !error && !DEMO_MODE" class="text-[#191f1c]/40 text-sm text-center py-10">Loading map...</div>
+        <div v-if="!mapsReady && !error && !DEMO_MODE" class="text-[var(--color-text-muted)] text-sm text-center py-10">Loading map...</div>
         <div v-if="error" class="bg-red-50 border border-red-200 text-red-600 text-[13px] rounded-xl px-4 py-3 mt-3">{{ error }}</div>
-        <div v-if="isCalculating" class="flex items-center gap-2.5 text-[#191f1c]/50 text-[13px] mt-4 ml-[22px]">
-          <span class="w-4 h-4 border-2 border-[#191f1c]/10 border-t-[#2b8659] rounded-full animate-spin"></span>
+        <div v-if="isCalculating" class="flex items-center gap-2.5 text-[var(--color-text-muted)] text-[13px] mt-4 ml-[22px]">
+          <span class="w-4 h-4 border-2 border-[var(--color-border)] border-t-[#2b8659] rounded-full animate-spin"></span>
           Calculating route...
         </div>
 
         <div v-if="hasRoute" class="mt-5">
           <div class="flex items-center gap-2 mb-4">
             <div class="inline-flex items-center gap-1.5 bg-[#191f1c]/[0.05] rounded-full px-3 py-1.5">
-              <svg class="w-3.5 h-3.5 text-[#191f1c]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+              <svg class="w-3.5 h-3.5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
               <span class="text-[12px] font-semibold text-[#191f1c]/60">{{ distanceMiles.toFixed(1) }} mi</span>
             </div>
             <div class="inline-flex items-center gap-1.5 bg-[#191f1c]/[0.05] rounded-full px-3 py-1.5">
-              <svg class="w-3.5 h-3.5 text-[#191f1c]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <svg class="w-3.5 h-3.5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               <span class="text-[12px] font-semibold text-[#191f1c]/60">~{{ Math.round(durationMinutes) }} min</span>
             </div>
           </div>
-          <p class="text-[11px] font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-2.5 px-1">Choose your ride</p>
+          <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2.5 px-1">Choose your ride</p>
           <div class="space-y-2">
             <button v-for="vehicle in VEHICLE_TYPES" :key="vehicle.id" @click="selectedVehicle = vehicle.id"
                     class="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border-2 transition-all duration-200"
-                    :class="selectedVehicle === vehicle.id ? 'border-[#2b8659] bg-[#2b8659]/[0.06] shadow-[0_0_0_3px_rgba(88,204,2,0.08)]' : 'border-transparent bg-[#f5f5f5] hover:bg-[#f0f0f0] active:scale-[0.99]'">
+                    :class="selectedVehicle === vehicle.id ? 'border-[#2b8659] bg-[#2b8659]/[0.06] shadow-[0_0_0_3px_rgba(88,204,2,0.08)]' : 'border-transparent bg-[var(--color-surface-secondary)] hover:bg-[#f0f0f0] active:scale-[0.99]'">
               <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl" :class="selectedVehicle === vehicle.id ? 'bg-[#2b8659]/15' : 'bg-white'">{{ vehicle.icon }}</div>
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl" :class="selectedVehicle === vehicle.id ? 'bg-[#2b8659]/15' : 'bg-[var(--color-surface)]'">{{ vehicle.icon }}</div>
                 <div class="text-left">
                   <div class="text-[15px] font-bold">{{ vehicle.name }}</div>
-                  <div class="text-[12px] text-[#191f1c]/50 mt-0.5">{{ vehicle.desc }}</div>
+                  <div class="text-[12px] text-[var(--color-text-muted)] mt-0.5">{{ vehicle.desc }}</div>
                 </div>
               </div>
               <div class="text-right">
@@ -458,7 +458,7 @@ async function scheduleRide({ date, time, summary }) {
               </button>
               <div v-else class="flex gap-2 mt-1">
                 <input v-model="promoCode" type="text" placeholder="Enter code"
-                       class="flex-1 bg-[#f5f5f5] border-2 border-transparent rounded-xl px-4 py-3 text-[14px] font-medium outline-none focus:border-[#2b8659] focus:bg-white transition-all min-h-[44px] uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal placeholder:font-normal" />
+                       class="flex-1 bg-[var(--color-surface-secondary)] border-2 border-transparent rounded-xl px-4 py-3 text-[14px] font-medium outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all min-h-[44px] uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal placeholder:font-normal" />
                 <button @click="applyPromo" class="px-5 py-3 bg-[#191f1c] text-white text-[13px] font-bold rounded-xl min-h-[44px] active:scale-95 transition-transform">Apply</button>
               </div>
             </div>
@@ -486,7 +486,7 @@ async function scheduleRide({ date, time, summary }) {
     </div>
 
     <!-- DESKTOP: Side panel -->
-    <div class="hidden md:flex absolute inset-y-0 left-0 z-10 w-[400px] bg-white shadow-[4px_0_24px_rgba(0,0,0,0.08)] flex-col">
+    <div class="hidden md:flex absolute inset-y-0 left-0 z-10 w-[400px] bg-[var(--color-surface)] shadow-[4px_0_24px_rgba(0,0,0,0.08)] flex-col">
       <!-- Panel header -->
       <div class="px-6 pt-8 pb-2 flex items-center justify-between">
         <div class="text-[22px] font-bold tracking-tight">Ride<span class="text-[#2b8659]">Up</span></div>
@@ -499,67 +499,67 @@ async function scheduleRide({ date, time, summary }) {
       <div class="flex-1 overflow-y-auto px-6 pb-8">
         <div v-if="!hasRoute" class="pt-4 pb-6">
           <h1 class="text-[32px] leading-[1.1] font-bold tracking-tight">Where to?</h1>
-          <p class="text-[#191f1c]/50 text-[14px] mt-2 leading-relaxed">Enter pickup & destination for upfront pricing</p>
+          <p class="text-[var(--color-text-muted)] text-[14px] mt-2 leading-relaxed">Enter pickup & destination for upfront pricing</p>
         </div>
 
         <div class="flex gap-3">
           <div class="flex flex-col items-center pt-[18px] gap-0">
-            <div class="w-[10px] h-[10px] rounded-full border-[2.5px] border-[#2b8659] bg-white flex-shrink-0"></div>
+            <div class="w-[10px] h-[10px] rounded-full border-[2.5px] border-[#2b8659] bg-[var(--color-surface)] flex-shrink-0"></div>
             <div class="w-[2px] flex-1 my-1 bg-[#191f1c]/10 rounded-full min-h-[24px]"></div>
             <div class="w-[10px] h-[10px] rounded-[2px] bg-[#191f1c] flex-shrink-0"></div>
           </div>
           <div class="flex-1 space-y-2">
-            <div class="flex items-center bg-[#f5f5f5] rounded-xl px-4 py-3.5 border-2 transition-all duration-200"
-                 :class="activeInput === 'pickup' ? 'border-[#2b8659] bg-white shadow-[0_0_0_3px_rgba(88,204,2,0.12)]' : 'border-transparent'">
+            <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3.5 border-2 transition-all duration-200"
+                 :class="activeInput === 'pickup' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(88,204,2,0.12)]' : 'border-transparent'">
               <input v-if="!DEMO_MODE" ref="pickupInput" type="text" placeholder="Pickup location"
                      @focus="activeInput = 'pickup'"
-                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[#191f1c]/40 placeholder:font-normal" />
+                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
               <input v-else v-model="pickupText" list="demo-locations-desktop" type="text" placeholder="Pickup — try Cable Beach"
                      @focus="activeInput = 'pickup'"
-                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[#191f1c]/40 placeholder:font-normal" />
+                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
-            <div class="flex items-center bg-[#f5f5f5] rounded-xl px-4 py-3.5 border-2 transition-all duration-200"
-                 :class="activeInput === 'dropoff' ? 'border-[#2b8659] bg-white shadow-[0_0_0_3px_rgba(88,204,2,0.12)]' : 'border-transparent'">
+            <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3.5 border-2 transition-all duration-200"
+                 :class="activeInput === 'dropoff' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(88,204,2,0.12)]' : 'border-transparent'">
               <input v-if="!DEMO_MODE" ref="dropoffInput" type="text" placeholder="Where to?"
                      @focus="activeInput = 'dropoff'"
-                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[#191f1c]/40 placeholder:font-normal" />
+                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
               <input v-else v-model="dropoffText" list="demo-locations-desktop" type="text" placeholder="Destination — try Airport"
                      @focus="activeInput = 'dropoff'"
-                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[#191f1c]/40 placeholder:font-normal" />
+                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
             <datalist id="demo-locations-desktop"><option v-for="loc in DEMO_LOCATIONS" :key="loc" :value="loc" /></datalist>
           </div>
         </div>
 
         <p v-if="DEMO_MODE && !hasRoute" class="text-[#2b8659] text-[12px] mt-3 ml-[22px] font-medium">Demo mode — enter any two spots to see live pricing</p>
-        <div v-if="!mapsReady && !error && !DEMO_MODE" class="text-[#191f1c]/40 text-sm text-center py-10">Loading map...</div>
+        <div v-if="!mapsReady && !error && !DEMO_MODE" class="text-[var(--color-text-muted)] text-sm text-center py-10">Loading map...</div>
         <div v-if="error" class="bg-red-50 border border-red-200 text-red-600 text-[13px] rounded-xl px-4 py-3 mt-3">{{ error }}</div>
-        <div v-if="isCalculating" class="flex items-center gap-2.5 text-[#191f1c]/50 text-[13px] mt-4 ml-[22px]">
-          <span class="w-4 h-4 border-2 border-[#191f1c]/10 border-t-[#2b8659] rounded-full animate-spin"></span>
+        <div v-if="isCalculating" class="flex items-center gap-2.5 text-[var(--color-text-muted)] text-[13px] mt-4 ml-[22px]">
+          <span class="w-4 h-4 border-2 border-[var(--color-border)] border-t-[#2b8659] rounded-full animate-spin"></span>
           Calculating route...
         </div>
 
         <div v-if="hasRoute" class="mt-6">
           <div class="flex items-center gap-2 mb-4">
             <div class="inline-flex items-center gap-1.5 bg-[#191f1c]/[0.05] rounded-full px-3 py-1.5">
-              <svg class="w-3.5 h-3.5 text-[#191f1c]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+              <svg class="w-3.5 h-3.5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
               <span class="text-[12px] font-semibold text-[#191f1c]/60">{{ distanceMiles.toFixed(1) }} mi</span>
             </div>
             <div class="inline-flex items-center gap-1.5 bg-[#191f1c]/[0.05] rounded-full px-3 py-1.5">
-              <svg class="w-3.5 h-3.5 text-[#191f1c]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <svg class="w-3.5 h-3.5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               <span class="text-[12px] font-semibold text-[#191f1c]/60">~{{ Math.round(durationMinutes) }} min</span>
             </div>
           </div>
-          <p class="text-[11px] font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-3 px-1">Choose your ride</p>
+          <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3 px-1">Choose your ride</p>
           <div class="space-y-2">
             <button v-for="vehicle in VEHICLE_TYPES" :key="vehicle.id" @click="selectedVehicle = vehicle.id"
                     class="w-full flex items-center justify-between px-4 py-4 rounded-2xl border-2 transition-all duration-200"
-                    :class="selectedVehicle === vehicle.id ? 'border-[#2b8659] bg-[#2b8659]/[0.06] shadow-[0_0_0_3px_rgba(88,204,2,0.08)]' : 'border-transparent bg-[#f5f5f5] hover:bg-[#f0f0f0]'">
+                    :class="selectedVehicle === vehicle.id ? 'border-[#2b8659] bg-[#2b8659]/[0.06] shadow-[0_0_0_3px_rgba(88,204,2,0.08)]' : 'border-transparent bg-[var(--color-surface-secondary)] hover:bg-[#f0f0f0]'">
               <div class="flex items-center gap-3.5">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl" :class="selectedVehicle === vehicle.id ? 'bg-[#2b8659]/15' : 'bg-white'">{{ vehicle.icon }}</div>
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl" :class="selectedVehicle === vehicle.id ? 'bg-[#2b8659]/15' : 'bg-[var(--color-surface)]'">{{ vehicle.icon }}</div>
                 <div class="text-left">
                   <div class="text-[15px] font-bold">{{ vehicle.name }}</div>
-                  <div class="text-[12px] text-[#191f1c]/50 mt-0.5">{{ vehicle.desc }}</div>
+                  <div class="text-[12px] text-[var(--color-text-muted)] mt-0.5">{{ vehicle.desc }}</div>
                 </div>
               </div>
               <div class="text-right">
@@ -576,7 +576,7 @@ async function scheduleRide({ date, time, summary }) {
               </button>
               <div v-else class="flex gap-2 mt-1">
                 <input v-model="promoCode" type="text" placeholder="Enter code"
-                       class="flex-1 bg-[#f5f5f5] border-2 border-transparent rounded-xl px-4 py-3 text-[14px] font-medium outline-none focus:border-[#2b8659] focus:bg-white transition-all min-h-[44px] uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal placeholder:font-normal" />
+                       class="flex-1 bg-[var(--color-surface-secondary)] border-2 border-transparent rounded-xl px-4 py-3 text-[14px] font-medium outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all min-h-[44px] uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal placeholder:font-normal" />
                 <button @click="applyPromo" class="px-5 py-3 bg-[#191f1c] text-white text-[13px] font-bold rounded-xl min-h-[44px] hover:bg-[#333] transition-colors">Apply</button>
               </div>
             </div>

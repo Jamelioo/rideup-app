@@ -22,7 +22,7 @@ function initials(name) {
 
     <!-- Name + rating -->
     <div class="flex-1 min-w-0">
-      <div class="font-bold text-[15px] text-[#191f1c] truncate">{{ name }}</div>
+      <div class="font-bold text-[15px] text-[var(--color-text-primary)] truncate">{{ name }}</div>
       <div class="flex items-center gap-1 mt-0.5">
         <span class="text-amber-500 text-[13px] font-bold">&#9733;</span>
         <span class="text-[13px] text-[#191f1c]/70 font-medium">{{ rating.toFixed(1) }}</span>

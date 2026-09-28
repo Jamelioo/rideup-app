@@ -44,7 +44,7 @@ function goHome() {
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col items-center justify-center bg-[#f0fdf4] px-6">
+  <div class="flex min-h-screen flex-col items-center justify-center bg-[var(--color-surface-secondary)] px-6">
     <!-- Animated Checkmark -->
     <div class="relative mb-8 flex h-24 w-24 items-center justify-center">
       <svg
@@ -76,22 +76,22 @@ function goHome() {
     </div>
 
     <!-- Heading -->
-    <h1 class="mb-2 text-center text-2xl font-bold text-[#191f1c]">Payment successful</h1>
-    <p class="mb-8 text-center text-sm text-[#191f1c]/50">Your ride has been paid. Thank you.</p>
+    <h1 class="mb-2 text-center text-2xl font-bold text-[var(--color-text-primary)]">Payment successful</h1>
+    <p class="mb-8 text-center text-sm text-[var(--color-text-muted)]">Your ride has been paid. Thank you.</p>
 
     <!-- Fare Amount -->
     <div class="mb-8 text-center">
-      <span class="text-5xl font-bold text-[#191f1c]">{{ fareAmount }}</span>
+      <span class="text-5xl font-bold text-[var(--color-text-primary)]">{{ fareAmount }}</span>
     </div>
 
     <!-- Trip Summary -->
-    <div class="mb-10 w-full max-w-sm rounded-2xl bg-white p-5 shadow-sm">
-      <p class="mb-4 text-xs font-semibold uppercase tracking-wide text-[#191f1c]/40">Trip summary</p>
+    <div class="mb-10 w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-5 shadow-sm">
+      <p class="mb-4 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Trip summary</p>
 
       <div class="flex gap-3">
         <!-- Timeline dots -->
         <div class="flex flex-col items-center pt-0.5">
-          <div class="h-3 w-3 rounded-full border-2 border-[#2b8659] bg-white"></div>
+          <div class="h-3 w-3 rounded-full border-2 border-[#2b8659] bg-[var(--color-surface)]"></div>
           <div class="my-1 h-8 w-0.5 bg-[#2b8659]/30"></div>
           <div class="h-3 w-3 rounded-full bg-[#2b8659]"></div>
         </div>
@@ -99,10 +99,10 @@ function goHome() {
         <!-- Addresses -->
         <div class="flex flex-col justify-between">
           <div>
-            <p class="text-sm font-semibold text-[#191f1c]">{{ pickup }}</p>
+            <p class="text-sm font-semibold text-[var(--color-text-primary)]">{{ pickup }}</p>
           </div>
           <div class="mt-4">
-            <p class="text-sm font-semibold text-[#191f1c]">{{ dropoff }}</p>
+            <p class="text-sm font-semibold text-[var(--color-text-primary)]">{{ dropoff }}</p>
           </div>
         </div>
       </div>
@@ -118,7 +118,7 @@ function goHome() {
       </button>
       <button
         @click="goHome"
-        class="flex h-12 w-full items-center justify-center rounded-xl border border-[#191f1c]/10 bg-white text-base font-semibold text-[#191f1c] transition-colors active:bg-[#191f1c]/5"
+        class="flex h-12 w-full items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-base font-semibold text-[var(--color-text-primary)] transition-colors active:bg-[#191f1c]/5"
       >
         Back to home
       </button>

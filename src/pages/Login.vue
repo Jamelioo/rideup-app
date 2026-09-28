@@ -54,7 +54,7 @@ async function handleLogin() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white text-[#191f1c] flex flex-col">
+  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top bar -->
     <div class="flex items-center px-4 pt-12 pb-4">
       <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
@@ -66,7 +66,7 @@ async function handleLogin() {
 
     <div class="flex-1 px-6 pt-4 w-full max-w-md mx-auto">
       <h1 class="text-[28px] font-bold leading-tight mb-2">Welcome back</h1>
-      <p class="text-[#191f1c]/50 text-[14px] mb-8">Log in with your email and password</p>
+      <p class="text-[var(--color-text-muted)] text-[14px] mb-8">Log in with your email and password</p>
 
       <div class="space-y-3 mb-4">
         <label class="block">
@@ -76,7 +76,7 @@ async function handleLogin() {
             type="email"
             placeholder="Email address"
             autocomplete="email"
-            class="w-full px-4 py-3.5 bg-[#191f1c]/[0.04] rounded-xl border border-[#191f1c]/8 text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[#191f1c]/50"
+            class="w-full px-4 py-3.5 bg-[#191f1c]/[0.04] rounded-xl border border-[var(--color-border)] text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[var(--color-text-muted)]"
           />
         </label>
         <label class="block">
@@ -87,7 +87,7 @@ async function handleLogin() {
             placeholder="Password"
             autocomplete="current-password"
             @keyup.enter="handleLogin"
-            class="w-full px-4 py-3.5 bg-[#191f1c]/[0.04] rounded-xl border border-[#191f1c]/8 text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[#191f1c]/50"
+            class="w-full px-4 py-3.5 bg-[#191f1c]/[0.04] rounded-xl border border-[var(--color-border)] text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[var(--color-text-muted)]"
           />
         </label>
       </div>
@@ -107,12 +107,12 @@ async function handleLogin() {
         {{ submitting ? 'Logging in...' : 'Log in' }}
       </button>
 
-      <div class="text-center mt-6 text-[14px] text-[#191f1c]/50">
+      <div class="text-center mt-6 text-[14px] text-[var(--color-text-muted)]">
         Don't have an account?
         <router-link to="/signup" class="text-[#2b8659] font-semibold">Sign up</router-link>
       </div>
 
-      <button @click="router.push('/')" class="w-full py-3 mt-4 text-[14px] font-semibold text-[#191f1c]/40 active:text-[#191f1c]/60 transition-colors">
+      <button @click="router.push('/')" class="w-full py-3 mt-4 text-[14px] font-semibold text-[var(--color-text-muted)] active:text-[#191f1c]/60 transition-colors">
         Continue as guest
       </button>
     </div>

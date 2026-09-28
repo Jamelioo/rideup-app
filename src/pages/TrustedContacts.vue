@@ -75,7 +75,7 @@ function goBack() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white font-[var(--font-sans)] text-[#191f1c] flex flex-col">
+  <div class="min-h-screen bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top Bar -->
     <div class="flex items-center gap-3 px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
       <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
@@ -88,19 +88,19 @@ function goBack() {
 
     <div class="px-5 max-w-lg mx-auto w-full flex-1">
       <!-- Add Contact Form -->
-      <div class="bg-[#f0fdf4] rounded-2xl p-4 mb-6">
+      <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-4 mb-6">
         <p class="text-[13px] font-semibold text-[#2b8659] mb-3">Add a contact</p>
         <input
           v-model="newName"
           type="text"
           placeholder="Name"
-          class="w-full px-4 py-3 bg-white rounded-xl text-[14px] text-[#191f1c] placeholder-[#191f1c]/30 mb-2 focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30"
+          class="w-full px-4 py-3 bg-[var(--color-surface)] rounded-xl text-[14px] text-[var(--color-text-primary)] placeholder-[#191f1c]/30 mb-2 focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30"
         />
         <input
           v-model="newPhone"
           type="tel"
           placeholder="Phone number"
-          class="w-full px-4 py-3 bg-white rounded-xl text-[14px] text-[#191f1c] placeholder-[#191f1c]/30 mb-3 focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30"
+          class="w-full px-4 py-3 bg-[var(--color-surface)] rounded-xl text-[14px] text-[var(--color-text-primary)] placeholder-[#191f1c]/30 mb-3 focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30"
         />
         <button
           @click="addContact"
@@ -118,11 +118,11 @@ function goBack() {
 
       <!-- Contacts List -->
       <div v-if="contacts.length > 0">
-        <p class="text-xs font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-3">Your contacts</p>
+        <p class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Your contacts</p>
         <div
           v-for="contact in contacts"
           :key="contact.id"
-          class="flex items-center justify-between py-3.5 border-b border-[#191f1c]/8"
+          class="flex items-center justify-between py-3.5 border-b border-[var(--color-border)]"
         >
           <div class="flex items-center gap-3 min-w-0">
             <div class="w-10 h-10 rounded-full bg-[#2b8659]/10 flex items-center justify-center shrink-0">
@@ -131,8 +131,8 @@ function goBack() {
               </svg>
             </div>
             <div class="min-w-0">
-              <p class="text-[14px] font-medium text-[#191f1c] truncate">{{ contact.name }}</p>
-              <p class="text-xs text-[#191f1c]/40">{{ contact.phone }}</p>
+              <p class="text-[14px] font-medium text-[var(--color-text-primary)] truncate">{{ contact.name }}</p>
+              <p class="text-xs text-[var(--color-text-muted)]">{{ contact.phone }}</p>
             </div>
           </div>
           <button
@@ -153,7 +153,7 @@ function goBack() {
             <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
         </div>
-        <p class="text-[14px] text-[#191f1c]/40 text-center max-w-[240px]">Add trusted contacts to quickly share your trips</p>
+        <p class="text-[14px] text-[var(--color-text-muted)] text-center max-w-[240px]">Add trusted contacts to quickly share your trips</p>
       </div>
     </div>
 

@@ -53,7 +53,7 @@ async function handleSignup() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white text-[#191f1c] flex flex-col">
+  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top bar -->
     <div class="flex items-center px-4 pt-12 pb-4">
       <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
@@ -65,7 +65,7 @@ async function handleSignup() {
 
     <div class="flex-1 px-6 pt-4 w-full max-w-md mx-auto">
       <h1 class="text-[28px] font-bold leading-tight mb-2">Create your account</h1>
-      <p class="text-[#191f1c]/50 text-[14px] mb-8">Enter your details to get started</p>
+      <p class="text-[var(--color-text-muted)] text-[14px] mb-8">Enter your details to get started</p>
 
       <!-- Success state -->
       <div v-if="confirmed" class="bg-[#2b8659]/10 rounded-xl p-5 text-center">
@@ -75,7 +75,7 @@ async function handleSignup() {
           </svg>
         </div>
         <p class="text-[16px] font-bold mb-1">Check your email</p>
-        <p class="text-[14px] text-[#191f1c]/50">We sent a confirmation link to <strong>{{ email }}</strong>. Click it to activate your account.</p>
+        <p class="text-[14px] text-[var(--color-text-muted)]">We sent a confirmation link to <strong>{{ email }}</strong>. Click it to activate your account.</p>
         <p class="text-[13px] text-[#191f1c]/35 mt-3">Redirecting to login...</p>
       </div>
 
@@ -89,7 +89,7 @@ async function handleSignup() {
               type="text"
               placeholder="Full name"
               autocomplete="name"
-              class="w-full px-4 py-3.5 bg-[#191f1c]/[0.04] rounded-xl border border-[#191f1c]/8 text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[#191f1c]/50"
+              class="w-full px-4 py-3.5 bg-[#191f1c]/[0.04] rounded-xl border border-[var(--color-border)] text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[var(--color-text-muted)]"
             />
           </label>
           <label class="block">
@@ -99,7 +99,7 @@ async function handleSignup() {
               type="email"
               placeholder="Email address"
               autocomplete="email"
-              class="w-full px-4 py-3.5 bg-[#191f1c]/[0.04] rounded-xl border border-[#191f1c]/8 text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[#191f1c]/50"
+              class="w-full px-4 py-3.5 bg-[#191f1c]/[0.04] rounded-xl border border-[var(--color-border)] text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[var(--color-text-muted)]"
             />
           </label>
           <label class="block">
@@ -109,7 +109,7 @@ async function handleSignup() {
               type="password"
               placeholder="Password (min 6 characters)"
               autocomplete="new-password"
-              class="w-full px-4 py-3.5 bg-[#191f1c]/[0.04] rounded-xl border border-[#191f1c]/8 text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[#191f1c]/50"
+              class="w-full px-4 py-3.5 bg-[#191f1c]/[0.04] rounded-xl border border-[var(--color-border)] text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[var(--color-text-muted)]"
             />
           </label>
           <label class="block">
@@ -120,7 +120,7 @@ async function handleSignup() {
               placeholder="Confirm password"
               autocomplete="new-password"
               @keyup.enter="handleSignup"
-              class="w-full px-4 py-3.5 bg-[#191f1c]/[0.04] rounded-xl border border-[#191f1c]/8 text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[#191f1c]/50"
+              class="w-full px-4 py-3.5 bg-[#191f1c]/[0.04] rounded-xl border border-[var(--color-border)] text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[var(--color-text-muted)]"
             />
           </label>
         </div>
@@ -135,7 +135,7 @@ async function handleSignup() {
           {{ submitting ? 'Creating account...' : 'Sign up' }}
         </button>
 
-        <div class="text-center mt-6 text-[14px] text-[#191f1c]/50">
+        <div class="text-center mt-6 text-[14px] text-[var(--color-text-muted)]">
           Already have an account?
           <router-link to="/login" class="text-[#2b8659] font-semibold">Log in</router-link>
         </div>

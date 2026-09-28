@@ -127,7 +127,7 @@ function getIcon(label) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white font-[var(--font-sans)] text-[#191f1c] flex flex-col">
+  <div class="min-h-screen bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top Bar -->
     <div class="flex items-center gap-3 px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
       <button @click="goBack" class="w-10 h-10 flex items-center justify-center">
@@ -140,14 +140,14 @@ function getIcon(label) {
 
     <div class="px-5 flex-1 max-w-lg mx-auto w-full">
       <!-- Home -->
-      <button @click="openAddPreset('Home')" class="w-full flex items-center justify-between py-4 border-b border-[#191f1c]/8 text-left">
+      <button @click="openAddPreset('Home')" class="w-full flex items-center justify-between py-4 border-b border-[var(--color-border)] text-left">
         <div class="flex items-center gap-3 min-w-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#191f1c]/40 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-muted)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" />
           </svg>
           <div class="min-w-0">
             <p class="text-base font-medium">Home</p>
-            <p v-if="homePlace" class="text-sm text-[#191f1c]/50 truncate">{{ homePlace.address }}</p>
+            <p v-if="homePlace" class="text-sm text-[var(--color-text-muted)] truncate">{{ homePlace.address }}</p>
             <p v-else class="text-sm text-[#191f1c]/30">Add home address</p>
           </div>
         </div>
@@ -157,14 +157,14 @@ function getIcon(label) {
       </button>
 
       <!-- Work -->
-      <button @click="openAddPreset('Work')" class="w-full flex items-center justify-between py-4 border-b border-[#191f1c]/8 text-left">
+      <button @click="openAddPreset('Work')" class="w-full flex items-center justify-between py-4 border-b border-[var(--color-border)] text-left">
         <div class="flex items-center gap-3 min-w-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#191f1c]/40 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-muted)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m8 0H8m8 0a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2" />
           </svg>
           <div class="min-w-0">
             <p class="text-base font-medium">Work</p>
-            <p v-if="workPlace" class="text-sm text-[#191f1c]/50 truncate">{{ workPlace.address }}</p>
+            <p v-if="workPlace" class="text-sm text-[var(--color-text-muted)] truncate">{{ workPlace.address }}</p>
             <p v-else class="text-sm text-[#191f1c]/30">Add work address</p>
           </div>
         </div>
@@ -178,15 +178,15 @@ function getIcon(label) {
         v-for="(place, idx) in customPlaces"
         :key="place.label + idx"
         @click="openEditCustom(idx)"
-        class="w-full flex items-center justify-between py-4 border-b border-[#191f1c]/8 text-left"
+        class="w-full flex items-center justify-between py-4 border-b border-[var(--color-border)] text-left"
       >
         <div class="flex items-center gap-3 min-w-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#191f1c]/40 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-muted)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
           </svg>
           <div class="min-w-0">
             <p class="text-base font-medium">{{ place.label }}</p>
-            <p class="text-sm text-[#191f1c]/50 truncate">{{ place.address }}</p>
+            <p class="text-sm text-[var(--color-text-muted)] truncate">{{ place.address }}</p>
           </div>
         </div>
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#191f1c]/30 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

@@ -47,10 +47,10 @@ function close() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white text-[#191f1c]">
+  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)]">
 
     <!-- Top bar -->
-    <div class="sticky top-0 z-40 bg-white border-b border-[#191f1c]/8">
+    <div class="sticky top-0 z-40 bg-[var(--color-surface)] border-b border-[var(--color-border)]">
       <div class="flex items-center justify-between px-5 py-4">
         <button
           @click="close"
@@ -77,7 +77,7 @@ function close() {
 
       <!-- Emergency contact -->
       <div class="mb-8">
-        <h2 class="text-[13px] font-semibold text-[#191f1c]/50 uppercase tracking-wider mb-3">
+        <h2 class="text-[13px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
           Emergency
         </h2>
         <a
@@ -98,7 +98,7 @@ function close() {
 
       <!-- FAQ section -->
       <div class="mb-8">
-        <h2 class="text-[13px] font-semibold text-[#191f1c]/50 uppercase tracking-wider mb-3">
+        <h2 class="text-[13px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
           Frequently asked questions
         </h2>
         <div class="flex flex-col gap-2">
@@ -139,7 +139,7 @@ function close() {
 
       <!-- Contact methods -->
       <div>
-        <h2 class="text-[13px] font-semibold text-[#191f1c]/50 uppercase tracking-wider mb-3">
+        <h2 class="text-[13px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
           Contact us
         </h2>
         <div class="flex flex-col gap-2">
@@ -156,7 +156,7 @@ function close() {
             </div>
             <div>
               <div class="text-[15px] font-semibold">Call us</div>
-              <div class="text-[13px] text-[#191f1c]/50 mt-0.5">(242) 452-9911</div>
+              <div class="text-[13px] text-[var(--color-text-muted)] mt-0.5">(242) 452-9911</div>
             </div>
           </a>
 
@@ -174,7 +174,7 @@ function close() {
             </div>
             <div>
               <div class="text-[15px] font-semibold">WhatsApp</div>
-              <div class="text-[13px] text-[#191f1c]/50 mt-0.5">Message us anytime</div>
+              <div class="text-[13px] text-[var(--color-text-muted)] mt-0.5">Message us anytime</div>
             </div>
           </a>
 
@@ -191,7 +191,7 @@ function close() {
             </div>
             <div>
               <div class="text-[15px] font-semibold">Email</div>
-              <div class="text-[13px] text-[#191f1c]/50 mt-0.5">support@rideupnassau.com</div>
+              <div class="text-[13px] text-[var(--color-text-muted)] mt-0.5">support@rideupnassau.com</div>
             </div>
           </a>
 

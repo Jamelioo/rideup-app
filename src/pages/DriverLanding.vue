@@ -47,13 +47,13 @@ const testimonials = [
 </script>
 
 <template>
-  <div class="min-h-screen bg-white text-[#191f1c] font-[var(--font-sans)]">
+  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] font-[var(--font-sans)]">
 
     <!-- Nav Bar — simplified for conversion -->
-    <nav class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#191f1c]/8">
+    <nav class="sticky top-0 z-40 bg-[var(--color-surface)]/95 backdrop-blur-md border-b border-[var(--color-border)]">
       <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         <router-link to="/" class="text-xl font-semibold">Ride<span class="text-[#2b8659]">Up</span></router-link>
-        <router-link to="/login" class="text-[14px] font-medium text-[#191f1c]/55 hover:text-[#191f1c] transition-colors">Already a driver? <span class="text-[#191f1c] font-semibold">Log in</span></router-link>
+        <router-link to="/login" class="text-[14px] font-medium text-[#191f1c]/55 hover:text-[var(--color-text-primary)] transition-colors">Already a driver? <span class="text-[var(--color-text-primary)] font-semibold">Log in</span></router-link>
       </div>
     </nav>
 
@@ -86,7 +86,7 @@ const testimonials = [
         <div class="grid md:grid-cols-[1.15fr_0.85fr] gap-10 items-center">
           <!-- Left: hero copy — 80% is the headline -->
           <div>
-            <div class="inline-flex items-center gap-2 bg-white/10 text-white/80 text-[13px] font-medium px-4 py-1.5 rounded-full mb-5">
+            <div class="inline-flex items-center gap-2 bg-[var(--color-surface)]/10 text-white/80 text-[13px] font-medium px-4 py-1.5 rounded-full mb-5">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -124,13 +124,13 @@ const testimonials = [
           <div class="flex justify-center">
             <div class="relative">
               <div class="w-[250px] h-[490px] bg-[#0e1a16] rounded-[38px] p-2.5 shadow-2xl shadow-black/30">
-                <div class="w-full h-full bg-white rounded-[30px] overflow-hidden flex flex-col">
+                <div class="w-full h-full bg-[var(--color-surface)] rounded-[30px] overflow-hidden flex flex-col">
                   <!-- Status bar -->
                   <div class="bg-[#191f1c] text-white px-5 pt-3 pb-3">
                     <div class="flex justify-between text-[10px] mb-2 opacity-50">
                       <span>9:41</span>
                       <div class="flex gap-1 items-center">
-                        <div class="w-3.5 h-2 border border-white/50 rounded-sm"><div class="w-2.5 h-1 bg-white/50 rounded-sm m-px"></div></div>
+                        <div class="w-3.5 h-2 border border-white/50 rounded-sm"><div class="w-2.5 h-1 bg-[var(--color-surface)]/50 rounded-sm m-px"></div></div>
                       </div>
                     </div>
                     <div class="flex items-center justify-between">
@@ -142,17 +142,17 @@ const testimonials = [
                     </div>
                   </div>
                   <!-- App content -->
-                  <div class="flex-1 p-3.5 bg-white">
+                  <div class="flex-1 p-3.5 bg-[var(--color-surface)]">
                     <div class="text-[10px] text-[#191f1c]/35 mb-0.5">Today's earnings</div>
-                    <div class="text-[26px] font-bold text-[#191f1c] mb-3">$147<span class="text-[18px]">.50</span></div>
+                    <div class="text-[26px] font-bold text-[var(--color-text-primary)] mb-3">$147<span class="text-[18px]">.50</span></div>
                     <!-- Stats row -->
                     <div class="grid grid-cols-3 gap-1.5 mb-3">
                       <div class="bg-[#191f1c]/[0.04] rounded-lg py-2 text-center">
-                        <div class="text-[13px] font-bold text-[#191f1c]">8</div>
+                        <div class="text-[13px] font-bold text-[var(--color-text-primary)]">8</div>
                         <div class="text-[8px] text-[#191f1c]/35">Trips</div>
                       </div>
                       <div class="bg-[#191f1c]/[0.04] rounded-lg py-2 text-center">
-                        <div class="text-[13px] font-bold text-[#191f1c]">4.9</div>
+                        <div class="text-[13px] font-bold text-[var(--color-text-primary)]">4.9</div>
                         <div class="text-[8px] text-[#191f1c]/35">Rating</div>
                       </div>
                       <div class="bg-[#2b8659]/10 rounded-lg py-2 text-center">
@@ -173,11 +173,11 @@ const testimonials = [
                     <div class="bg-[#2b8659]/10 rounded-xl p-2.5 border border-[#2b8659]/15">
                       <div class="flex items-center justify-between mb-1.5">
                         <span class="text-[9px] font-semibold text-[#236e49] uppercase tracking-wide">New request</span>
-                        <span class="text-[12px] font-bold text-[#191f1c]">$14.50</span>
+                        <span class="text-[12px] font-bold text-[var(--color-text-primary)]">$14.50</span>
                       </div>
                       <div class="flex items-center gap-1.5 mb-2">
                         <div class="w-1.5 h-1.5 rounded-full bg-[#2b8659]"></div>
-                        <span class="text-[9px] text-[#191f1c]/50">Cable Beach → Downtown · 4.2 mi</span>
+                        <span class="text-[9px] text-[var(--color-text-muted)]">Cable Beach → Downtown · 4.2 mi</span>
                       </div>
                       <div class="bg-[#2b8659] text-white text-[10px] font-bold text-center py-1.5 rounded-lg">Accept ride</div>
                     </div>
@@ -223,10 +223,10 @@ const testimonials = [
     <section class="relative overflow-hidden">
       <div class="relative max-w-6xl mx-auto px-6 py-20 md:py-24">
         <h2 class="text-[28px] sm:text-[36px] font-medium text-center mb-4">Why drive with RideUp?</h2>
-        <p class="text-[#191f1c]/50 text-[15px] text-center mb-12 max-w-lg mx-auto">Everything you need to earn on your own terms — built for Nassau drivers.</p>
+        <p class="text-[var(--color-text-muted)] text-[15px] text-center mb-12 max-w-lg mx-auto">Everything you need to earn on your own terms — built for Nassau drivers.</p>
 
         <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <div class="bg-white rounded-2xl p-6 border border-[#191f1c]/8 text-center hover:border-[#2b8659]/20 transition-colors">
+          <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] text-center hover:border-[#2b8659]/20 transition-colors">
             <div class="w-14 h-14 rounded-2xl bg-[#2b8659]/10 flex items-center justify-center mx-auto mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -236,7 +236,7 @@ const testimonials = [
             <p class="text-[#191f1c]/55 text-[14px] leading-relaxed">Keep more of what you earn. We only take 20%.</p>
           </div>
 
-          <div class="bg-white rounded-2xl p-6 border border-[#191f1c]/8 text-center hover:border-[#2b8659]/20 transition-colors">
+          <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] text-center hover:border-[#2b8659]/20 transition-colors">
             <div class="w-14 h-14 rounded-2xl bg-[#2b8659]/10 flex items-center justify-center mx-auto mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -246,7 +246,7 @@ const testimonials = [
             <p class="text-[#191f1c]/55 text-[14px] leading-relaxed">Drive when you want. No shifts, no minimums.</p>
           </div>
 
-          <div class="bg-white rounded-2xl p-6 border border-[#191f1c]/8 text-center hover:border-[#2b8659]/20 transition-colors">
+          <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] text-center hover:border-[#2b8659]/20 transition-colors">
             <div class="w-14 h-14 rounded-2xl bg-[#2b8659]/10 flex items-center justify-center mx-auto mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
@@ -256,7 +256,7 @@ const testimonials = [
             <p class="text-[#191f1c]/55 text-[14px] leading-relaxed">Get paid consistently, every week by direct deposit.</p>
           </div>
 
-          <div class="bg-white rounded-2xl p-6 border border-[#191f1c]/8 text-center hover:border-[#2b8659]/20 transition-colors">
+          <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] text-center hover:border-[#2b8659]/20 transition-colors">
             <div class="w-14 h-14 rounded-2xl bg-[#2b8659]/10 flex items-center justify-center mx-auto mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -275,31 +275,31 @@ const testimonials = [
       <div class="absolute inset-0 pointer-events-none opacity-[0.03]" style="background-image: linear-gradient(#191f1c 1px, transparent 1px), linear-gradient(90deg, #191f1c 1px, transparent 1px); background-size: 60px 60px;"></div>
       <div class="relative max-w-6xl mx-auto px-6 py-20 md:py-24">
         <h2 class="text-[28px] sm:text-[36px] font-medium mb-4">Start driving in 3 steps</h2>
-        <p class="text-[#191f1c]/50 text-[15px] mb-12">From application to your first ride — most drivers are on the road within 48 hours.</p>
+        <p class="text-[var(--color-text-muted)] text-[15px] mb-12">From application to your first ride — most drivers are on the road within 48 hours.</p>
 
         <!-- Steps as connected cards -->
         <div class="grid md:grid-cols-3 gap-0 md:gap-0">
           <div class="relative bg-[#2b8659]/[0.06] rounded-2xl md:rounded-r-none p-7 border border-[#2b8659]/10">
             <div class="w-12 h-12 rounded-2xl bg-[#2b8659] text-white font-bold text-[18px] flex items-center justify-center mb-5 shadow-lg shadow-[#2b8659]/20">1</div>
             <h3 class="text-[17px] font-bold mb-2">Apply</h3>
-            <p class="text-[#191f1c]/50 text-[14px] leading-relaxed">Submit your license, vehicle info, and phone number. The whole form takes about 5 minutes.</p>
+            <p class="text-[var(--color-text-muted)] text-[14px] leading-relaxed">Submit your license, vehicle info, and phone number. The whole form takes about 5 minutes.</p>
             <!-- Connector arrow (desktop) -->
-            <div class="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 w-8 h-8 bg-white rounded-full border border-[#2b8659]/15 flex items-center justify-center">
+            <div class="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 w-8 h-8 bg-[var(--color-surface)] rounded-full border border-[#2b8659]/15 flex items-center justify-center">
               <svg class="w-4 h-4 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
             </div>
           </div>
           <div class="relative bg-[#2b8659]/[0.06] rounded-2xl md:rounded-none p-7 border border-[#2b8659]/10 md:border-l-0">
             <div class="w-12 h-12 rounded-2xl bg-[#2b8659] text-white font-bold text-[18px] flex items-center justify-center mb-5 shadow-lg shadow-[#2b8659]/20">2</div>
             <h3 class="text-[17px] font-bold mb-2">Get approved</h3>
-            <p class="text-[#191f1c]/50 text-[14px] leading-relaxed">We verify your documents and run a background check. Vehicle inspection is free and takes 20 minutes.</p>
-            <div class="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 w-8 h-8 bg-white rounded-full border border-[#2b8659]/15 flex items-center justify-center">
+            <p class="text-[var(--color-text-muted)] text-[14px] leading-relaxed">We verify your documents and run a background check. Vehicle inspection is free and takes 20 minutes.</p>
+            <div class="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 w-8 h-8 bg-[var(--color-surface)] rounded-full border border-[#2b8659]/15 flex items-center justify-center">
               <svg class="w-4 h-4 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
             </div>
           </div>
           <div class="bg-[#2b8659]/[0.06] rounded-2xl md:rounded-l-none p-7 border border-[#2b8659]/10 md:border-l-0">
             <div class="w-12 h-12 rounded-2xl bg-[#2b8659] text-white font-bold text-[18px] flex items-center justify-center mb-5 shadow-lg shadow-[#2b8659]/20">3</div>
             <h3 class="text-[17px] font-bold mb-2">Start earning</h3>
-            <p class="text-[#191f1c]/50 text-[14px] leading-relaxed">Download the RideUp Driver app, go online, and accept your first ride. You get paid weekly by direct deposit.</p>
+            <p class="text-[var(--color-text-muted)] text-[14px] leading-relaxed">Download the RideUp Driver app, go online, and accept your first ride. You get paid weekly by direct deposit.</p>
           </div>
         </div>
       </div>
@@ -322,13 +322,13 @@ const testimonials = [
 
       <div class="relative max-w-6xl mx-auto px-6 py-20 md:py-28">
         <h2 class="text-[28px] sm:text-[36px] font-medium mb-3">What you actually earn</h2>
-        <p class="text-[#191f1c]/50 text-[15px] mb-10 max-w-lg">Real route examples across Nassau. You keep 80% of every fare — here's what that looks like.</p>
+        <p class="text-[var(--color-text-muted)] text-[15px] mb-10 max-w-lg">Real route examples across Nassau. You keep 80% of every fare — here's what that looks like.</p>
 
         <!-- Earnings table -->
-        <div class="bg-white rounded-2xl border border-[#191f1c]/8 overflow-x-auto shadow-sm mb-8">
+        <div class="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] overflow-x-auto shadow-sm mb-8">
           <div class="min-w-[480px]">
             <!-- Header -->
-            <div class="grid grid-cols-[1fr_auto_auto_auto] gap-4 px-6 py-3 bg-[#191f1c]/[0.03] text-[12px] font-semibold text-[#191f1c]/50 uppercase tracking-wider">
+            <div class="grid grid-cols-[1fr_auto_auto_auto] gap-4 px-6 py-3 bg-[#191f1c]/[0.03] text-[12px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
               <span>Route</span>
               <span class="text-right">Distance</span>
               <span class="text-right">Fare</span>
@@ -358,13 +358,13 @@ const testimonials = [
 
         <!-- Weekly summary cards -->
         <div class="grid sm:grid-cols-3 gap-4">
-          <div class="bg-white rounded-2xl p-6 border border-[#191f1c]/5 shadow-sm">
-            <div class="text-[#191f1c]/40 text-[13px] font-medium mb-1">Part-time (15 trips/week)</div>
+          <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[#191f1c]/5 shadow-sm">
+            <div class="text-[var(--color-text-muted)] text-[13px] font-medium mb-1">Part-time (15 trips/week)</div>
             <div class="text-[30px] font-semibold">$200–400</div>
             <div class="text-[12px] text-[#191f1c]/35 mt-1">per week after commission</div>
           </div>
-          <div class="bg-white rounded-2xl p-6 border border-[#191f1c]/5 shadow-sm">
-            <div class="text-[#191f1c]/40 text-[13px] font-medium mb-1">Full-time (40 trips/week)</div>
+          <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[#191f1c]/5 shadow-sm">
+            <div class="text-[var(--color-text-muted)] text-[13px] font-medium mb-1">Full-time (40 trips/week)</div>
             <div class="text-[30px] font-semibold">$550–900</div>
             <div class="text-[12px] text-[#191f1c]/35 mt-1">per week after commission</div>
           </div>
@@ -385,12 +385,12 @@ const testimonials = [
 
       <div class="relative max-w-6xl mx-auto px-6 py-20 md:py-24">
         <h2 class="text-[28px] sm:text-[36px] font-medium mb-4">Hear from RideUp drivers</h2>
-        <p class="text-[#191f1c]/50 text-[15px] mb-12">Real drivers, real feedback from across New Providence.</p>
+        <p class="text-[var(--color-text-muted)] text-[15px] mb-12">Real drivers, real feedback from across New Providence.</p>
         <div class="grid md:grid-cols-3 gap-5">
           <div
             v-for="t in testimonials"
             :key="t.name"
-            class="bg-white rounded-2xl p-6 border border-[#191f1c]/8 hover:border-[#2b8659]/15 transition-colors"
+            class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] hover:border-[#2b8659]/15 transition-colors"
           >
             <!-- Avatar + name -->
             <div class="flex items-center gap-3 mb-4">
@@ -399,7 +399,7 @@ const testimonials = [
               </div>
               <div>
                 <div class="text-[15px] font-bold">{{ t.name }}</div>
-                <div class="text-[12px] text-[#191f1c]/40">{{ t.area }} · {{ t.months }} months</div>
+                <div class="text-[12px] text-[var(--color-text-muted)]">{{ t.area }} · {{ t.months }} months</div>
               </div>
             </div>
             <!-- Quote -->
@@ -443,7 +443,7 @@ const testimonials = [
             </div>
             <h2 class="text-white text-[28px] sm:text-[36px] leading-tight font-medium mb-6">What you need to get started</h2>
             <ul class="space-y-3 mb-8">
-              <li v-for="req in requirements" :key="req" class="flex items-center gap-4 bg-white/[0.06] rounded-xl px-5 py-4 border border-white/8">
+              <li v-for="req in requirements" :key="req" class="flex items-center gap-4 bg-[var(--color-surface)]/[0.06] rounded-xl px-5 py-4 border border-white/8">
                 <div class="w-8 h-8 rounded-lg bg-[#2b8659]/20 flex items-center justify-center shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
@@ -459,7 +459,7 @@ const testimonials = [
             <h3 class="text-white text-[18px] font-bold mb-5">Driver support &amp; safety</h3>
             <div class="space-y-4 mb-8">
               <div class="flex items-start gap-4">
-                <div class="w-10 h-10 rounded-xl bg-white/[0.06] flex items-center justify-center shrink-0 mt-0.5">
+                <div class="w-10 h-10 rounded-xl bg-[var(--color-surface)]/[0.06] flex items-center justify-center shrink-0 mt-0.5">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
@@ -470,7 +470,7 @@ const testimonials = [
                 </div>
               </div>
               <div class="flex items-start gap-4">
-                <div class="w-10 h-10 rounded-xl bg-white/[0.06] flex items-center justify-center shrink-0 mt-0.5">
+                <div class="w-10 h-10 rounded-xl bg-[var(--color-surface)]/[0.06] flex items-center justify-center shrink-0 mt-0.5">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
@@ -481,7 +481,7 @@ const testimonials = [
                 </div>
               </div>
               <div class="flex items-start gap-4">
-                <div class="w-10 h-10 rounded-xl bg-white/[0.06] flex items-center justify-center shrink-0 mt-0.5">
+                <div class="w-10 h-10 rounded-xl bg-[var(--color-surface)]/[0.06] flex items-center justify-center shrink-0 mt-0.5">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
@@ -512,7 +512,7 @@ const testimonials = [
 
       <div class="relative max-w-6xl mx-auto px-6 py-20 md:py-24 text-center">
         <h2 class="text-[28px] sm:text-[36px] font-medium mb-3">Ready to start earning?</h2>
-        <p class="text-[#191f1c]/50 text-[15px] mb-8 max-w-lg mx-auto">Join 200+ drivers already earning with RideUp across New Providence. No lease, no upfront fees.</p>
+        <p class="text-[var(--color-text-muted)] text-[15px] mb-8 max-w-lg mx-auto">Join 200+ drivers already earning with RideUp across New Providence. No lease, no upfront fees.</p>
         <button
           @click="goToApply"
           class="inline-flex items-center gap-2 px-8 py-4 bg-[#2b8659] hover:bg-[#236e49] text-white font-bold rounded-xl text-[16px] transition-colors active:scale-[0.98] shadow-lg shadow-[#2b8659]/20 mb-4"

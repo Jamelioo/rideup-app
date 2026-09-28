@@ -65,7 +65,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Main driver card -->
-    <div class="bg-white rounded-t-3xl shadow-[0_-8px_40px_rgba(0,0,0,0.12)] px-6 pt-6 pb-8">
+    <div class="bg-[var(--color-surface)] rounded-t-3xl shadow-[0_-8px_40px_rgba(0,0,0,0.12)] px-6 pt-6 pb-8">
       <!-- Handle bar -->
       <div class="flex justify-center mb-4">
         <div class="w-10 h-1 rounded-full bg-[#191f1c]/10"></div>
@@ -73,7 +73,7 @@ onUnmounted(() => {
 
       <!-- ETA display -->
       <div class="text-center mb-5" v-if="rideStatus !== 'on_trip'">
-        <div class="text-4xl font-bold text-[#191f1c] tracking-tight">{{ etaDisplay }}</div>
+        <div class="text-4xl font-bold text-[var(--color-text-primary)] tracking-tight">{{ etaDisplay }}</div>
         <div class="text-[13px] text-[#191f1c]/45 mt-1">Estimated arrival</div>
       </div>
 

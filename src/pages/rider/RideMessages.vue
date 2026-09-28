@@ -120,19 +120,19 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="fixed inset-0 bg-white text-[#191f1c] flex flex-col font-sans">
+  <div class="fixed inset-0 bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col font-sans">
     <!-- Header -->
     <div class="bg-[#2b8659] px-5 pt-10 pb-4 flex items-center gap-3 flex-shrink-0">
       <button
         @click="goBack"
-        class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white"
+        class="w-10 h-10 rounded-full bg-[var(--color-surface)]/20 flex items-center justify-center text-white"
         aria-label="Back to ride"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
-      <div class="w-9 h-9 rounded-full bg-white/25 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+      <div class="w-9 h-9 rounded-full bg-[var(--color-surface)]/25 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
         {{ driverName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) }}
       </div>
       <div class="flex-1 min-w-0">
@@ -161,7 +161,7 @@ onUnmounted(() => {
           class="max-w-[75%] px-4 py-2.5 rounded-2xl text-[13px] leading-snug"
           :class="msg.sender_id === currentUserId
             ? 'bg-[#2b8659] text-white rounded-br-sm'
-            : 'bg-[#191f1c]/6 text-[#191f1c] rounded-bl-sm'"
+            : 'bg-[#191f1c]/6 text-[var(--color-text-primary)] rounded-bl-sm'"
         >
           {{ msg.content }}
         </div>
@@ -169,7 +169,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Input bar -->
-    <div class="px-4 pb-8 pt-3 border-t border-[#191f1c]/6 flex items-center gap-2 bg-white flex-shrink-0">
+    <div class="px-4 pb-8 pt-3 border-t border-[#191f1c]/6 flex items-center gap-2 bg-[var(--color-surface)] flex-shrink-0">
       <input
         v-model="draft"
         @keyup.enter="sendMessage(draft)"

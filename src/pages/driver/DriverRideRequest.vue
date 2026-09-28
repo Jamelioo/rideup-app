@@ -59,7 +59,7 @@ function handleDecline() {
 </script>
 
 <template>
-  <div class="fixed inset-0 z-50 bg-white flex flex-col">
+  <div class="fixed inset-0 z-50 bg-[var(--color-surface)] flex flex-col">
     <!-- Countdown -->
     <div class="flex-shrink-0 pt-[max(3rem,env(safe-area-inset-top))] pb-4 flex flex-col items-center">
       <div class="relative w-24 h-24">
@@ -74,14 +74,14 @@ function handleDecline() {
           <span class="text-[28px] font-bold">{{ timeLeft }}</span>
         </div>
       </div>
-      <p class="text-[13px] text-[#191f1c]/50 mt-2">New ride request</p>
+      <p class="text-[13px] text-[var(--color-text-muted)] mt-2">New ride request</p>
     </div>
 
     <!-- Ride details -->
     <div class="flex-1 px-6 flex flex-col">
       <div class="max-w-md mx-auto w-full flex-1 flex flex-col">
         <!-- Rider info -->
-        <div class="bg-[#f5f5f5] rounded-2xl p-5 mb-4">
+        <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-5 mb-4">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
               <div class="w-12 h-12 rounded-full bg-[#2b8659]/15 flex items-center justify-center">
@@ -91,42 +91,42 @@ function handleDecline() {
               </div>
               <div>
                 <div class="text-[16px] font-bold">{{ request.rider_name }}</div>
-                <div class="text-[13px] text-[#191f1c]/50">&#9733; {{ request.rider_rating }}</div>
+                <div class="text-[13px] text-[var(--color-text-muted)]">&#9733; {{ request.rider_rating }}</div>
               </div>
             </div>
             <div class="text-right">
               <div class="text-[22px] font-bold text-[#2b8659]">{{ formatFare(request.fare_cents) }}</div>
-              <div class="text-[11px] text-[#191f1c]/40">est. fare</div>
+              <div class="text-[11px] text-[var(--color-text-muted)]">est. fare</div>
             </div>
           </div>
 
           <!-- Route -->
           <div class="flex gap-3">
             <div class="flex flex-col items-center pt-[6px]">
-              <div class="w-[10px] h-[10px] rounded-full border-[2.5px] border-[#2b8659] bg-white flex-shrink-0"></div>
+              <div class="w-[10px] h-[10px] rounded-full border-[2.5px] border-[#2b8659] bg-[var(--color-surface)] flex-shrink-0"></div>
               <div class="w-[2px] flex-1 my-1 bg-[#191f1c]/10 rounded-full min-h-[16px]"></div>
               <div class="w-[10px] h-[10px] rounded-[2px] bg-[#191f1c] flex-shrink-0"></div>
             </div>
             <div class="flex-1 space-y-3">
               <div>
-                <div class="text-[11px] text-[#191f1c]/40 font-medium">PICKUP</div>
+                <div class="text-[11px] text-[var(--color-text-muted)] font-medium">PICKUP</div>
                 <div class="text-[14px] font-semibold">{{ request.pickup_address }}</div>
               </div>
               <div>
-                <div class="text-[11px] text-[#191f1c]/40 font-medium">DROPOFF</div>
+                <div class="text-[11px] text-[var(--color-text-muted)] font-medium">DROPOFF</div>
                 <div class="text-[14px] font-semibold">{{ request.dropoff_address }}</div>
               </div>
             </div>
           </div>
 
           <!-- Distance / time -->
-          <div class="flex gap-4 mt-4 pt-4 border-t border-[#191f1c]/8">
+          <div class="flex gap-4 mt-4 pt-4 border-t border-[var(--color-border)]">
             <div class="flex items-center gap-1.5">
-              <svg class="w-4 h-4 text-[#191f1c]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+              <svg class="w-4 h-4 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
               <span class="text-[13px] font-semibold text-[#191f1c]/60">{{ request.distance_miles?.toFixed(1) }} mi</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <svg class="w-4 h-4 text-[#191f1c]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <svg class="w-4 h-4 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               <span class="text-[13px] font-semibold text-[#191f1c]/60">~{{ Math.round(request.duration_minutes) }} min</span>
             </div>
           </div>

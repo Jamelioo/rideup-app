@@ -1,18 +1,18 @@
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-[#191f1c] mb-6">Revenue</h1>
+    <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6">Revenue</h1>
 
     <!-- Big number cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
-      <div v-for="card in revenueCards" :key="card.label" class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+      <div v-for="card in revenueCards" :key="card.label" class="bg-[var(--color-surface)] rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
         <p class="text-sm text-gray-500 mb-1">{{ card.label }}</p>
-        <p class="text-2xl font-bold text-[#191f1c]">{{ card.value }}</p>
+        <p class="text-2xl font-bold text-[var(--color-text-primary)]">{{ card.value }}</p>
       </div>
     </div>
 
     <!-- 30-day bar chart -->
-    <div class="bg-white rounded-xl border border-gray-200 p-5 mb-8">
-      <h2 class="text-sm font-semibold text-[#191f1c] mb-4">Daily Revenue — Last 30 Days</h2>
+    <div class="bg-[var(--color-surface)] rounded-xl border border-gray-200 p-5 mb-8">
+      <h2 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Daily Revenue — Last 30 Days</h2>
       <div class="flex items-end gap-[3px] h-44 overflow-x-auto pb-2">
         <div
           v-for="(day, i) in dailyRevenue"
@@ -34,17 +34,17 @@
 
     <!-- Stats row -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <div class="bg-white rounded-xl border border-gray-200 p-5">
+      <div class="bg-[var(--color-surface)] rounded-xl border border-gray-200 p-5">
         <p class="text-sm text-gray-500 mb-1">Average Fare</p>
-        <p class="text-xl font-bold text-[#191f1c]">$22.35</p>
+        <p class="text-xl font-bold text-[var(--color-text-primary)]">$22.35</p>
       </div>
-      <div class="bg-white rounded-xl border border-gray-200 p-5">
+      <div class="bg-[var(--color-surface)] rounded-xl border border-gray-200 p-5">
         <p class="text-sm text-gray-500 mb-1">Total Rides (All Time)</p>
-        <p class="text-xl font-bold text-[#191f1c]">12,847</p>
+        <p class="text-xl font-bold text-[var(--color-text-primary)]">12,847</p>
       </div>
-      <div class="bg-white rounded-xl border border-gray-200 p-5">
+      <div class="bg-[var(--color-surface)] rounded-xl border border-gray-200 p-5">
         <p class="text-sm text-gray-500 mb-1">Active Drivers</p>
-        <p class="text-xl font-bold text-[#191f1c]">38</p>
+        <p class="text-xl font-bold text-[var(--color-text-primary)]">38</p>
       </div>
     </div>
   </div>

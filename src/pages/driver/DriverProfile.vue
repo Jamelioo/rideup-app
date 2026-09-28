@@ -37,7 +37,7 @@ function goBack() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white text-[#191f1c]">
+  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)]">
     <!-- Top bar -->
     <div class="flex items-center justify-between px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
       <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
@@ -56,27 +56,27 @@ function goBack() {
           {{ initials }}
         </div>
         <h2 class="text-xl font-bold">{{ driver?.name || 'Driver' }}</h2>
-        <p class="text-[14px] text-[#191f1c]/50 mt-1">★ {{ driver?.rating || '5.0' }} · {{ driver?.total_trips || 0 }} trips</p>
+        <p class="text-[14px] text-[var(--color-text-muted)] mt-1">★ {{ driver?.rating || '5.0' }} · {{ driver?.total_trips || 0 }} trips</p>
       </div>
 
       <!-- Vehicle -->
       <div class="mb-6">
-        <p class="text-[11px] font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-3">Vehicle</p>
-        <div class="bg-[#f5f5f5] rounded-2xl p-4 space-y-2">
+        <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Vehicle</p>
+        <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-4 space-y-2">
           <div class="flex justify-between">
-            <span class="text-[13px] text-[#191f1c]/50">Vehicle</span>
+            <span class="text-[13px] text-[var(--color-text-muted)]">Vehicle</span>
             <span class="text-[14px] font-semibold">{{ driver?.vehicle_make }} {{ driver?.vehicle_model }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-[13px] text-[#191f1c]/50">Color</span>
+            <span class="text-[13px] text-[var(--color-text-muted)]">Color</span>
             <span class="text-[14px] font-semibold">{{ driver?.vehicle_color || '—' }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-[13px] text-[#191f1c]/50">Plate</span>
+            <span class="text-[13px] text-[var(--color-text-muted)]">Plate</span>
             <span class="text-[14px] font-semibold uppercase">{{ driver?.license_plate || '—' }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-[13px] text-[#191f1c]/50">Type</span>
+            <span class="text-[13px] text-[var(--color-text-muted)]">Type</span>
             <span class="text-[14px] font-semibold capitalize">{{ driver?.vehicle_type || 'standard' }}</span>
           </div>
         </div>
@@ -85,18 +85,18 @@ function goBack() {
 
       <!-- Stats -->
       <div class="mb-6">
-        <p class="text-[11px] font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-3">Stats</p>
-        <div class="bg-[#f5f5f5] rounded-2xl p-4 space-y-2">
+        <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Stats</p>
+        <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-4 space-y-2">
           <div class="flex justify-between">
-            <span class="text-[13px] text-[#191f1c]/50">Acceptance rate</span>
+            <span class="text-[13px] text-[var(--color-text-muted)]">Acceptance rate</span>
             <span class="text-[14px] font-semibold">{{ driver?.acceptance_rate != null ? driver.acceptance_rate + '%' : '—' }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-[13px] text-[#191f1c]/50">Cancellation rate</span>
+            <span class="text-[13px] text-[var(--color-text-muted)]">Cancellation rate</span>
             <span class="text-[14px] font-semibold">{{ driver?.cancellation_rate != null ? driver.cancellation_rate + '%' : '—' }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-[13px] text-[#191f1c]/50">Member since</span>
+            <span class="text-[13px] text-[var(--color-text-muted)]">Member since</span>
             <span class="text-[14px] font-semibold">{{ memberSince }}</span>
           </div>
         </div>
@@ -104,8 +104,8 @@ function goBack() {
 
       <!-- Documents -->
       <div class="mb-6">
-        <p class="text-[11px] font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-3">Documents</p>
-        <div class="bg-[#f5f5f5] rounded-2xl p-4 space-y-3">
+        <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Documents</p>
+        <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-4 space-y-3">
           <div class="flex items-center justify-between">
             <span class="text-[14px]">Driver's License</span>
             <span class="text-[12px] text-[#2b8659] font-semibold">✓ On file</span>
@@ -120,31 +120,31 @@ function goBack() {
 
       <!-- Account -->
       <div class="mb-6">
-        <p class="text-[11px] font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-3">Account</p>
-        <div class="bg-[#f5f5f5] rounded-2xl p-4 space-y-3">
+        <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Account</p>
+        <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-4 space-y-3">
           <div class="flex items-center justify-between">
             <div>
-              <div class="text-[13px] text-[#191f1c]/50">Phone</div>
+              <div class="text-[13px] text-[var(--color-text-muted)]">Phone</div>
               <div class="text-[14px] font-semibold">{{ driver?.phone || '—' }}</div>
             </div>
             <button @click="showToast('Contact support at (242) 452-9911')" class="text-[12px] text-[#2b8659] font-semibold">Edit</button>
           </div>
-          <div class="border-t border-[#191f1c]/8"></div>
+          <div class="border-t border-[var(--color-border)]"></div>
           <div class="flex items-center justify-between">
             <div>
-              <div class="text-[13px] text-[#191f1c]/50">Email</div>
+              <div class="text-[13px] text-[var(--color-text-muted)]">Email</div>
               <div class="text-[14px] font-semibold">{{ driver?.email || '—' }}</div>
             </div>
             <button @click="showToast('Contact support at (242) 452-9911')" class="text-[12px] text-[#2b8659] font-semibold">Edit</button>
           </div>
         </div>
-        <button @click="showToast('Contact support at (242) 452-9911')" class="text-[13px] text-[#191f1c]/50 font-semibold mt-2 px-1 underline underline-offset-2">Change Password</button>
+        <button @click="showToast('Contact support at (242) 452-9911')" class="text-[13px] text-[var(--color-text-muted)] font-semibold mt-2 px-1 underline underline-offset-2">Change Password</button>
       </div>
 
       <!-- Switch + Logout -->
       <div class="space-y-2 mt-8">
         <button @click="router.push('/book')"
-                class="w-full py-3.5 border-2 border-[#191f1c]/10 text-[14px] font-semibold rounded-2xl active:bg-[#191f1c]/5 transition-colors">
+                class="w-full py-3.5 border-2 border-[var(--color-border)] text-[14px] font-semibold rounded-2xl active:bg-[#191f1c]/5 transition-colors">
           Switch to Rider
         </button>
         <button @click="handleLogout"

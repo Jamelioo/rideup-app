@@ -163,20 +163,20 @@ defineExpose({ toggle, hasUnread })
       <div class="flex-shrink-0 bg-black/30" @click="close" style="height: 15vh"></div>
 
       <!-- Chat sheet -->
-      <div class="flex-1 flex flex-col bg-white rounded-t-3xl shadow-[0_-8px_40px_rgba(0,0,0,0.15)] overflow-hidden">
+      <div class="flex-1 flex flex-col bg-[var(--color-surface)] rounded-t-3xl shadow-[0_-8px_40px_rgba(0,0,0,0.15)] overflow-hidden">
         <!-- Header -->
         <div class="flex items-center gap-3 px-5 pt-5 pb-3 border-b border-[#191f1c]/6">
           <div class="flex justify-center w-full absolute left-0 top-3 pointer-events-none">
             <div class="w-10 h-1 rounded-full bg-[#191f1c]/10"></div>
           </div>
           <button @click="close" class="w-9 h-9 rounded-full bg-[#191f1c]/5 flex items-center justify-center" aria-label="Close chat">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#191f1c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
           <div class="flex-1">
-            <div class="font-bold text-[15px] text-[#191f1c]">{{ otherUserName }}</div>
-            <div class="text-[11px] text-[#191f1c]/40">In-ride chat</div>
+            <div class="font-bold text-[15px] text-[var(--color-text-primary)]">{{ otherUserName }}</div>
+            <div class="text-[11px] text-[var(--color-text-muted)]">In-ride chat</div>
           </div>
         </div>
 
@@ -200,7 +200,7 @@ defineExpose({ toggle, hasUnread })
               class="max-w-[75%] px-4 py-2.5 rounded-2xl text-[13px] leading-snug"
               :class="msg.sender_id === currentUserId
                 ? 'bg-[#2b8659] text-white rounded-br-sm'
-                : 'bg-[#191f1c]/6 text-[#191f1c] rounded-bl-sm'"
+                : 'bg-[#191f1c]/6 text-[var(--color-text-primary)] rounded-bl-sm'"
             >
               {{ msg.content }}
             </div>
@@ -208,7 +208,7 @@ defineExpose({ toggle, hasUnread })
         </div>
 
         <!-- Input bar -->
-        <div class="px-4 pb-6 pt-3 border-t border-[#191f1c]/6 flex items-center gap-2 bg-white">
+        <div class="px-4 pb-6 pt-3 border-t border-[#191f1c]/6 flex items-center gap-2 bg-[var(--color-surface)]">
           <input
             v-model="draft"
             @keyup.enter="sendMessage(draft)"

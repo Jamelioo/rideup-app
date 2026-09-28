@@ -1,10 +1,10 @@
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-[#191f1c] mb-6">Driver Management</h1>
+    <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6">Driver Management</h1>
 
     <!-- Filter tabs -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-      <div class="flex gap-1 bg-white rounded-lg border border-gray-200 p-1 overflow-x-auto">
+      <div class="flex gap-1 bg-[var(--color-surface)] rounded-lg border border-gray-200 p-1 overflow-x-auto">
         <button
           v-for="tab in filterTabs"
           :key="tab"
@@ -26,12 +26,12 @@
         v-model="search"
         type="text"
         placeholder="Search drivers..."
-        class="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30 focus:border-[#2b8659] w-full sm:w-64"
+        class="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30 focus:border-[#2b8659] w-full sm:w-64"
       />
     </div>
 
     <!-- Table -->
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="bg-[var(--color-surface)] rounded-xl border border-gray-200 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
@@ -54,14 +54,14 @@
                 driver.status === 'Pending' ? 'bg-yellow-50/40 hover:bg-yellow-50/70' : 'hover:bg-gray-50/50'
               ]"
             >
-              <td class="px-4 py-3 text-[#191f1c] font-medium">{{ driver.name }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ driver.name }}</td>
               <td class="px-4 py-3 text-gray-500">{{ driver.vehicle }}</td>
               <td class="px-4 py-3">
                 <span :class="driverStatusBadge(driver.status)">{{ driver.status }}</span>
               </td>
-              <td class="px-4 py-3 text-[#191f1c]">{{ driver.rating > 0 ? driver.rating.toFixed(1) : '--' }}</td>
-              <td class="px-4 py-3 text-[#191f1c]">{{ driver.rides }}</td>
-              <td class="px-4 py-3 text-[#191f1c] font-medium">${{ driver.earnings.toLocaleString() }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-primary)]">{{ driver.rating > 0 ? driver.rating.toFixed(1) : '--' }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-primary)]">{{ driver.rides }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-primary)] font-medium">${{ driver.earnings.toLocaleString() }}</td>
               <td class="px-4 py-3">
                 <div class="flex gap-2" v-if="driver.status === 'Pending'">
                   <button

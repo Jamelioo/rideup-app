@@ -82,18 +82,18 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white text-[#191f1c]">
+  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)]">
     <!-- Top Bar -->
-    <div class="sticky top-0 z-10 flex items-center bg-white px-4 py-4">
+    <div class="sticky top-0 z-10 flex items-center bg-[var(--color-surface)] px-4 py-4">
       <button
         class="flex h-10 w-10 items-center justify-center rounded-full transition-colors active:bg-[#191f1c]/5"
         @click="router.back()"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#191f1c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
-      <h1 class="flex-1 text-center text-xl font-bold text-[#191f1c]">My rides</h1>
+      <h1 class="flex-1 text-center text-xl font-bold text-[var(--color-text-primary)]">My rides</h1>
       <div class="w-10"></div>
     </div>
 
@@ -111,40 +111,40 @@ onMounted(async () => {
         <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h.01M12 7h.01M16 7h.01M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
       </svg>
       <p class="text-center text-lg font-semibold text-[#191f1c]/60">No rides yet.</p>
-      <p class="mt-1 text-center text-sm text-[#191f1c]/40">Book your first ride!</p>
+      <p class="mt-1 text-center text-sm text-[var(--color-text-muted)]">Book your first ride!</p>
     </div>
 
     <!-- Ride Groups -->
     <div v-else class="px-4 pb-4">
       <div v-for="group in ridesByMonth" :key="group.label" class="mb-6">
-        <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-[#191f1c]/40">
+        <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
           {{ group.label }}
         </h2>
 
         <div
           v-for="ride in group.rides"
           :key="ride.id"
-          class="border-b border-[#191f1c]/8 py-4 last:border-b-0"
+          class="border-b border-[var(--color-border)] py-4 last:border-b-0"
         >
           <div class="flex items-center justify-between">
             <!-- Left: dot + info -->
             <div class="flex items-start gap-3">
               <div class="mt-1.5 h-3 w-3 shrink-0 rounded-full bg-[#2b8659]"></div>
               <div>
-                <p class="text-base font-semibold text-[#191f1c]">{{ ride.pickup_address }}</p>
-                <p class="mt-0.5 text-sm text-[#191f1c]/40">{{ formatDate(ride.created_at) }}</p>
+                <p class="text-base font-semibold text-[var(--color-text-primary)]">{{ ride.pickup_address }}</p>
+                <p class="mt-0.5 text-sm text-[var(--color-text-muted)]">{{ formatDate(ride.created_at) }}</p>
               </div>
             </div>
 
             <!-- Right: fare -->
-            <span class="text-base font-semibold text-[#191f1c]">{{ formatFare(ride.fare_cents) }}</span>
+            <span class="text-base font-semibold text-[var(--color-text-primary)]">{{ formatFare(ride.fare_cents) }}</span>
           </div>
 
           <!-- View receipt button for completed rides -->
           <div v-if="ride.status === 'completed'" class="mt-3 pl-6">
             <button
               @click="router.push(`/receipt/${ride.id}`)"
-              class="rounded-lg bg-[#f0fdf4] px-4 py-2 text-sm font-medium text-[#2b8659] transition-colors active:bg-[#2b8659]/10"
+              class="rounded-lg bg-[var(--color-surface-secondary)] px-4 py-2 text-sm font-medium text-[#2b8659] transition-colors active:bg-[#2b8659]/10"
             >
               View receipt
             </button>

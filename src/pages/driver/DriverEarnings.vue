@@ -36,7 +36,7 @@ function goBack() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white text-[#191f1c]">
+  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)]">
     <!-- Top bar -->
     <div class="flex items-center justify-between px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4">
       <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
@@ -50,15 +50,15 @@ function goBack() {
 
     <div class="max-w-lg mx-auto px-5 pb-8">
       <!-- Tab toggle -->
-      <div class="flex bg-[#f5f5f5] rounded-xl p-1 mb-6">
+      <div class="flex bg-[var(--color-surface-secondary)] rounded-xl p-1 mb-6">
         <button @click="activeTab = 'today'"
                 class="flex-1 py-2.5 rounded-lg text-[14px] font-semibold transition-all"
-                :class="activeTab === 'today' ? 'bg-white text-[#191f1c] shadow-sm' : 'text-[#191f1c]/40'">
+                :class="activeTab === 'today' ? 'bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-sm' : 'text-[var(--color-text-muted)]'">
           Today
         </button>
         <button @click="activeTab = 'week'"
                 class="flex-1 py-2.5 rounded-lg text-[14px] font-semibold transition-all"
-                :class="activeTab === 'week' ? 'bg-white text-[#191f1c] shadow-sm' : 'text-[#191f1c]/40'">
+                :class="activeTab === 'week' ? 'bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-sm' : 'text-[var(--color-text-muted)]'">
           This Week
         </button>
       </div>
@@ -67,22 +67,22 @@ function goBack() {
       <div v-if="activeTab === 'today'">
         <div class="text-center mb-6">
           <div class="text-[36px] font-bold font-serif">{{ formatFare(todayTotal) }}</div>
-          <div class="text-[13px] text-[#191f1c]/50 mt-1">{{ earnings.today.length }} trips</div>
+          <div class="text-[13px] text-[var(--color-text-muted)] mt-1">{{ earnings.today.length }} trips</div>
         </div>
 
-        <p class="text-[11px] font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-3 px-1">Completed trips</p>
+        <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3 px-1">Completed trips</p>
         <div class="space-y-2">
           <div v-for="trip in earnings.today" :key="trip.id"
-               class="bg-[#f5f5f5] rounded-2xl px-4 py-3.5 flex items-center justify-between">
+               class="bg-[var(--color-surface-secondary)] rounded-2xl px-4 py-3.5 flex items-center justify-between">
             <div>
               <div class="text-[14px] font-semibold">{{ trip.pickup_address.split(',')[0] }} → {{ trip.dropoff_address.split(',')[0] }}</div>
-              <div class="text-[11px] text-[#191f1c]/40 mt-0.5">{{ timeAgo(trip.completed_at) }} · {{ trip.distance_miles.toFixed(1) }} mi</div>
+              <div class="text-[11px] text-[var(--color-text-muted)] mt-0.5">{{ timeAgo(trip.completed_at) }} · {{ trip.distance_miles.toFixed(1) }} mi</div>
             </div>
             <div class="text-[15px] font-bold text-[#2b8659]">+{{ formatFare(trip.fare_cents) }}</div>
           </div>
         </div>
 
-        <div v-if="earnings.today.length === 0" class="text-center text-[13px] text-[#191f1c]/40 py-10">
+        <div v-if="earnings.today.length === 0" class="text-center text-[13px] text-[var(--color-text-muted)] py-10">
           No trips today yet
         </div>
       </div>
@@ -91,11 +91,11 @@ function goBack() {
       <div v-else>
         <div class="text-center mb-6">
           <div class="text-[36px] font-bold font-serif">{{ formatFare(weeklyTotal) }}</div>
-          <div class="text-[13px] text-[#191f1c]/50 mt-1">{{ weeklyTripsTotal }} trips this week</div>
+          <div class="text-[13px] text-[var(--color-text-muted)] mt-1">{{ weeklyTripsTotal }} trips this week</div>
         </div>
 
         <!-- Bar chart -->
-        <div class="bg-[#f5f5f5] rounded-2xl p-5 mb-6">
+        <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-5 mb-6">
           <div class="flex items-end justify-between gap-2 h-[120px]">
             <div v-for="(total, i) in earnings.weeklyTotals" :key="i" class="flex-1 flex flex-col items-center gap-1">
               <div class="w-full rounded-lg transition-all"
@@ -113,13 +113,13 @@ function goBack() {
         </div>
 
         <!-- Daily breakdown -->
-        <p class="text-[11px] font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-3 px-1">Daily breakdown</p>
+        <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3 px-1">Daily breakdown</p>
         <div class="space-y-2">
           <div v-for="(total, i) in earnings.weeklyTotals" :key="i"
-               class="flex items-center justify-between px-4 py-3 bg-[#f5f5f5] rounded-xl">
+               class="flex items-center justify-between px-4 py-3 bg-[var(--color-surface-secondary)] rounded-xl">
             <div class="flex items-center gap-3">
               <span class="text-[13px] font-semibold w-8">{{ dayLabels[i] }}</span>
-              <span class="text-[12px] text-[#191f1c]/40">{{ earnings.weeklyTrips[i] }} trips</span>
+              <span class="text-[12px] text-[var(--color-text-muted)]">{{ earnings.weeklyTrips[i] }} trips</span>
             </div>
             <span class="text-[14px] font-bold font-serif" :class="total > 0 ? '' : 'text-[#191f1c]/25'">{{ formatFare(total) }}</span>
           </div>

@@ -82,12 +82,12 @@ function confirm() {
   <Teleport to="body">
     <!-- Backdrop -->
     <Transition name="fade">
-      <div v-if="show" class="fixed inset-0 bg-black/50 z-[9998]" @click="emit('close')" />
+      <div v-if="show" class="fixed inset-0 bg-[var(--color-overlay)] z-[9998]" @click="emit('close')" />
     </Transition>
 
     <!-- Bottom sheet -->
     <Transition name="sheet">
-      <div v-if="show" class="fixed inset-x-0 bottom-0 z-[9999] bg-white rounded-t-[28px] shadow-[0_-4px_40px_rgba(0,0,0,0.15)]" style="max-height: 85vh; padding-bottom: env(safe-area-inset-bottom, 0px);">
+      <div v-if="show" class="fixed inset-x-0 bottom-0 z-[9999] bg-[var(--color-surface)] rounded-t-[28px] shadow-[0_-4px_40px_rgba(0,0,0,0.15)]" style="max-height: 85vh; padding-bottom: env(safe-area-inset-bottom, 0px);">
         <!-- Handle -->
         <div class="flex justify-center pt-3 pb-1">
           <div class="w-9 h-[5px] rounded-full bg-[#191f1c]/15"></div>
@@ -96,14 +96,14 @@ function confirm() {
         <div class="px-5 pb-6 overflow-y-auto" style="max-height: calc(85vh - 40px);">
           <!-- Header -->
           <div class="flex items-center justify-between mb-5">
-            <h2 class="text-[22px] font-bold text-[#191f1c] tracking-tight">Schedule ride</h2>
+            <h2 class="text-[22px] font-bold text-[var(--color-text-primary)] tracking-tight">Schedule ride</h2>
             <button @click="emit('close')" class="w-9 h-9 rounded-full hover:bg-[#191f1c]/5 flex items-center justify-center transition-colors">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4l8 8" stroke="#191f1c" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
           </div>
 
           <!-- Date picker -->
-          <p class="text-[11px] font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-2.5 px-1">Pick a date</p>
+          <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2.5 px-1">Pick a date</p>
           <div class="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
             <button
               v-for="date in availableDates"
@@ -112,19 +112,19 @@ function confirm() {
               class="flex-shrink-0 w-[72px] py-3 rounded-2xl border-2 text-center transition-all duration-200"
               :class="selectedDate === date.value
                 ? 'border-[#2b8659] bg-[#2b8659]/[0.06]'
-                : 'border-transparent bg-[#f5f5f5] active:scale-[0.97]'"
+                : 'border-transparent bg-[var(--color-surface-secondary)] active:scale-[0.97]'"
             >
-              <div class="text-[11px] font-semibold uppercase tracking-wider" :class="selectedDate === date.value ? 'text-[#2b8659]' : 'text-[#191f1c]/40'">
+              <div class="text-[11px] font-semibold uppercase tracking-wider" :class="selectedDate === date.value ? 'text-[#2b8659]' : 'text-[var(--color-text-muted)]'">
                 {{ date.dayName }}
               </div>
-              <div class="text-[20px] font-bold mt-0.5" :class="selectedDate === date.value ? 'text-[#2b8659]' : 'text-[#191f1c]'">
+              <div class="text-[20px] font-bold mt-0.5" :class="selectedDate === date.value ? 'text-[#2b8659]' : 'text-[var(--color-text-primary)]'">
                 {{ date.dayNum }}
               </div>
             </button>
           </div>
 
           <!-- Time picker -->
-          <p class="text-[11px] font-semibold text-[#191f1c]/40 uppercase tracking-wider mb-2.5 px-1 mt-5">Pick a time</p>
+          <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2.5 px-1 mt-5">Pick a time</p>
           <div class="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
             <button
               v-for="time in availableTimes"
@@ -133,18 +133,18 @@ function confirm() {
               class="py-3 rounded-xl border-2 text-[14px] font-semibold transition-all duration-200"
               :class="selectedTime === time.value
                 ? 'border-[#2b8659] bg-[#2b8659]/[0.06] text-[#2b8659]'
-                : 'border-transparent bg-[#f5f5f5] text-[#191f1c] active:scale-[0.97]'"
+                : 'border-transparent bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] active:scale-[0.97]'"
             >
               {{ time.label }}
             </button>
           </div>
 
           <!-- Summary -->
-          <div v-if="selectedSummary" class="mt-5 flex items-center gap-2.5 bg-[#f0fdf4] rounded-xl px-4 py-3">
+          <div v-if="selectedSummary" class="mt-5 flex items-center gap-2.5 bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3">
             <svg class="w-5 h-5 text-[#2b8659] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span class="text-[14px] font-semibold text-[#191f1c]">{{ selectedSummary }}</span>
+            <span class="text-[14px] font-semibold text-[var(--color-text-primary)]">{{ selectedSummary }}</span>
           </div>
 
           <!-- Confirm button -->

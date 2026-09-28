@@ -63,7 +63,7 @@ function skip() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white font-[var(--font-sans)] text-[#191f1c] flex flex-col">
+  <div class="min-h-screen bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Success state -->
     <Transition name="fade">
       <div v-if="submitted" class="flex-1 flex flex-col items-center justify-center px-6">
@@ -73,7 +73,7 @@ function skip() {
           </svg>
         </div>
         <h2 class="text-xl font-bold mb-1">Thanks for your feedback</h2>
-        <p class="text-[#191f1c]/50 text-sm">Your rating helps improve the experience.</p>
+        <p class="text-[var(--color-text-muted)] text-sm">Your rating helps improve the experience.</p>
       </div>
     </Transition>
 
@@ -97,7 +97,7 @@ function skip() {
         </div>
 
         <h1 class="text-xl font-bold mb-1 text-center">How was your ride?</h1>
-        <p class="text-[#191f1c]/50 text-sm text-center">Your feedback helps drivers improve</p>
+        <p class="text-[var(--color-text-muted)] text-sm text-center">Your feedback helps drivers improve</p>
       </div>
 
       <!-- Stars -->
@@ -157,7 +157,7 @@ function skip() {
         </button>
         <button
           @click="skip"
-          class="w-full py-3 mt-2 text-sm text-[#191f1c]/40 font-medium"
+          class="w-full py-3 mt-2 text-sm text-[var(--color-text-muted)] font-medium"
         >
           Skip
         </button>
