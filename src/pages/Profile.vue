@@ -1,8 +1,9 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
 import ThemeToggle from '../components/ThemeToggle.vue'
+import { supabase } from '../lib/supabase'
 
 const router = useRouter()
 const { user, signOut } = useAuth()
@@ -38,6 +39,24 @@ const savedPlaces = computed(() => {
 })
 const homeAddress = computed(() => savedPlaces.value.find((p) => p.label === 'Home')?.address || '')
 const workAddress = computed(() => savedPlaces.value.find((p) => p.label === 'Work')?.address || '')
+
+const riderRating = ref(null)
+const riderTotalRides = ref(0)
+
+onMounted(async () => {
+  if (!user.value) return
+  try {
+    const { data } = await supabase
+      .from('riders')
+      .select('rating, total_rides')
+      .eq('auth_user_id', user.value.id)
+      .single()
+    if (data) {
+      riderRating.value = data.rating
+      riderTotalRides.value = data.total_rides || 0
+    }
+  } catch (e) { /* keep defaults */ }
+})
 
 const showDeleteConfirm = ref(false)
 
@@ -79,8 +98,8 @@ async function handleLogout() {
         <svg class="w-4 h-4 text-[#2b8659]" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
         </svg>
-        <span class="text-[15px] font-bold">4.9</span>
-        <span class="text-[13px] text-[var(--color-text-muted)]">(28 rides)</span>
+        <span class="text-[15px] font-bold">{{ riderRating !== null ? Number(riderRating).toFixed(1) : '--' }}</span>
+        <span class="text-[13px] text-[var(--color-text-muted)]">({{ riderTotalRides }} rides)</span>
       </div>
     </div>
 
