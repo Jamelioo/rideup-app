@@ -84,7 +84,7 @@ onMounted(async () => {
 <template>
   <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)]">
     <!-- Top Bar -->
-    <div class="sticky top-0 z-10 flex items-center bg-[var(--color-surface)] px-4 py-4">
+    <div class="sticky top-0 z-10 flex items-center bg-[var(--color-surface)] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
       <button
         class="flex h-10 w-10 items-center justify-center rounded-full transition-colors active:bg-[#191f1c]/5"
         @click="router.back()"

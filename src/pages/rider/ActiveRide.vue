@@ -147,7 +147,7 @@ onUnmounted(() => {
 <template>
   <!-- In-app chat overlay -->
   <div v-if="showChat" class="fixed inset-0 z-50 bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col">
-    <div class="bg-[#2b8659] px-6 pt-8 pb-5 flex items-center gap-3">
+    <div class="bg-[#2b8659] px-6 pt-[max(2rem,env(safe-area-inset-top))] pb-5 flex items-center gap-3">
       <button @click="closeChat" class="w-10 h-10 rounded-full bg-[var(--color-surface)]/20 flex items-center justify-center text-base text-white" aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
@@ -183,7 +183,7 @@ onUnmounted(() => {
   <div v-else class="fixed inset-0 bg-[var(--color-surface)] text-[var(--color-text-primary)]">
     <!-- Top status bar -->
     <div class="absolute top-0 left-0 right-0 z-30 bg-[var(--color-surface)]/95 backdrop-blur-sm border-b border-[#191f1c]/5">
-      <div class="px-6 pt-8 pb-3 flex items-center gap-3">
+      <div class="px-6 pt-[max(2rem,env(safe-area-inset-top))] pb-3 flex items-center gap-3">
         <button @click="cancelRide" class="w-10 h-10 rounded-full bg-[#191f1c]/5 border border-[var(--color-border)] flex items-center justify-center" aria-label="Back">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />

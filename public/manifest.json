@@ -1,0 +1,12 @@
+{
+  "name": "RideUp — Ride in Nassau",
+  "short_name": "RideUp",
+  "description": "Book a ride anywhere in Nassau, Bahamas",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2b8659",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

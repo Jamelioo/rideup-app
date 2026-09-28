@@ -386,7 +386,7 @@ async function scheduleRide({ date, time, summary }) {
     <!-- Top bar — floats over map on mobile, inside panel on desktop -->
     <div class="absolute top-0 left-0 right-0 z-20 px-5 pt-[max(2rem,env(safe-area-inset-top))] flex items-center justify-between pointer-events-none md:hidden">
       <button @click="menuOpen = true" class="pointer-events-auto w-11 h-11 rounded-full bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.1)] flex items-center justify-center active:scale-95 transition-transform">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect y="3" width="18" height="1.5" rx="0.75" fill="#191f1c"/><rect y="8.25" width="18" height="1.5" rx="0.75" fill="#191f1c"/><rect y="13.5" width="18" height="1.5" rx="0.75" fill="#191f1c"/></svg>
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect y="3" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="8.25" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="13.5" width="18" height="1.5" rx="0.75" fill="currentColor"/></svg>
       </button>
       <div class="pointer-events-auto bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.1)] rounded-full px-5 py-2 text-[17px] font-bold tracking-tight">Ride<span class="text-[#2b8659]">Up</span></div>
       <div class="w-11 h-11"></div>
@@ -400,7 +400,7 @@ async function scheduleRide({ date, time, summary }) {
            @touchmove.passive="onDragMove"
            @touchend="onDragEnd"
            @mousedown="onDragStart">
-        <div class="w-9 h-[5px] rounded-full bg-[#191f1c]/15"></div>
+        <div class="w-9 h-[5px] rounded-full bg-[var(--color-text-muted)]"></div>
       </div>
       <div class="overflow-y-auto" :style="{ maxHeight: `calc(100% - 28px)` }">
       <div class="px-5 pb-6">
@@ -413,8 +413,8 @@ async function scheduleRide({ date, time, summary }) {
         <div class="flex gap-3">
           <div class="flex flex-col items-center pt-[18px] gap-0">
             <div class="w-[10px] h-[10px] rounded-full border-[2.5px] border-[#2b8659] bg-[var(--color-surface)] flex-shrink-0"></div>
-            <div class="w-[2px] flex-1 my-1 bg-[#191f1c]/10 rounded-full min-h-[24px]"></div>
-            <div class="w-[10px] h-[10px] rounded-[2px] bg-[#191f1c] flex-shrink-0"></div>
+            <div class="w-[2px] flex-1 my-1 bg-[var(--color-border)] rounded-full min-h-[24px]"></div>
+            <div class="w-[10px] h-[10px] rounded-[2px] bg-[var(--color-text-primary)] flex-shrink-0"></div>
           </div>
           <div class="flex-1 space-y-2">
             <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 border-2 transition-all duration-200"
@@ -464,20 +464,20 @@ async function scheduleRide({ date, time, summary }) {
 
         <div v-if="hasRoute" class="mt-5">
           <div class="flex items-center gap-2 mb-4">
-            <div class="inline-flex items-center gap-1.5 bg-[#191f1c]/[0.05] rounded-full px-3 py-1.5">
+            <div class="inline-flex items-center gap-1.5 bg-[var(--color-surface-secondary)] rounded-full px-3 py-1.5">
               <svg class="w-3.5 h-3.5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
-              <span class="text-[12px] font-semibold text-[#191f1c]/60">{{ distanceMiles.toFixed(1) }} mi</span>
+              <span class="text-[12px] font-semibold text-[var(--color-text-secondary)]">{{ distanceMiles.toFixed(1) }} mi</span>
             </div>
-            <div class="inline-flex items-center gap-1.5 bg-[#191f1c]/[0.05] rounded-full px-3 py-1.5">
+            <div class="inline-flex items-center gap-1.5 bg-[var(--color-surface-secondary)] rounded-full px-3 py-1.5">
               <svg class="w-3.5 h-3.5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              <span class="text-[12px] font-semibold text-[#191f1c]/60">~{{ Math.round(durationMinutes) }} min</span>
+              <span class="text-[12px] font-semibold text-[var(--color-text-secondary)]">~{{ Math.round(durationMinutes) }} min</span>
             </div>
           </div>
           <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2.5 px-1">Choose your ride</p>
           <div class="space-y-2">
             <button v-for="vehicle in VEHICLE_TYPES" :key="vehicle.id" @click="selectedVehicle = vehicle.id"
                     class="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border-2 transition-all duration-200"
-                    :class="selectedVehicle === vehicle.id ? 'border-[#2b8659] bg-[#2b8659]/[0.06] shadow-[0_0_0_3px_rgba(88,204,2,0.08)]' : 'border-transparent bg-[var(--color-surface-secondary)] hover:bg-[#f0f0f0] active:scale-[0.99]'">
+                    :class="selectedVehicle === vehicle.id ? 'border-[#2b8659] bg-[#2b8659]/[0.06] shadow-[0_0_0_3px_rgba(88,204,2,0.08)]' : 'border-transparent bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-secondary)] active:scale-[0.99]'">
               <div class="flex items-center gap-3">
                 <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl" :class="selectedVehicle === vehicle.id ? 'bg-[#2b8659]/15' : 'bg-[var(--color-surface)]'">{{ vehicle.icon }}</div>
                 <div class="text-left">
@@ -500,7 +500,7 @@ async function scheduleRide({ date, time, summary }) {
               <div v-else class="flex gap-2 mt-1">
                 <input v-model="promoCode" type="text" placeholder="Enter code"
                        class="flex-1 bg-[var(--color-surface-secondary)] border-2 border-transparent rounded-xl px-4 py-3 text-[14px] font-medium outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all min-h-[44px] uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal placeholder:font-normal" />
-                <button @click="applyPromo" class="px-5 py-3 bg-[#191f1c] text-white text-[13px] font-bold rounded-xl min-h-[44px] active:scale-95 transition-transform">Apply</button>
+                <button @click="applyPromo" class="px-5 py-3 bg-[var(--color-text-primary)] text-white text-[13px] font-bold rounded-xl min-h-[44px] active:scale-95 transition-transform">Apply</button>
               </div>
             </div>
             <div v-else class="flex items-center gap-2 text-[#2b8659] text-[13px] font-semibold px-1">
@@ -510,11 +510,11 @@ async function scheduleRide({ date, time, summary }) {
           </div>
           <div class="flex gap-2.5 mt-4">
             <button @click="requestRide" :disabled="!canRequest"
-                    class="flex-1 py-4 bg-[#2b8659] disabled:bg-[#191f1c]/8 disabled:text-[#191f1c]/25 text-white font-bold rounded-2xl text-[15px] transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:shadow-none">
+                    class="flex-1 py-4 bg-[#2b8659] disabled:bg-[var(--color-surface-secondary)] disabled:text-[var(--color-text-muted)] text-white font-bold rounded-2xl text-[15px] transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:shadow-none">
               {{ isSubmitting ? 'Requesting...' : 'Request Ride' }}
             </button>
             <button @click="showSchedulePicker = true" :disabled="!canRequest"
-                    class="w-[52px] flex-shrink-0 flex items-center justify-center bg-[#191f1c] disabled:bg-[#191f1c]/8 text-white disabled:text-[#191f1c]/25 rounded-2xl transition-all active:scale-[0.97]"
+                    class="w-[52px] flex-shrink-0 flex items-center justify-center bg-[var(--color-text-primary)] disabled:bg-[var(--color-surface-secondary)] text-white disabled:text-[var(--color-text-muted)] rounded-2xl transition-all active:scale-[0.97]"
                     title="Schedule for later">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />

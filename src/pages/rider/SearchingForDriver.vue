@@ -101,7 +101,7 @@ async function cancelRequest() {
 <template>
   <div class="relative min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col overflow-hidden">
     <HarborBackdrop />
-    <div class="relative px-6 pt-8 pb-4 flex items-center gap-3">
+    <div class="relative px-6 pt-[max(2rem,env(safe-area-inset-top))] pb-4 flex items-center gap-3">
       <button @click="cancelRequest" class="w-10 h-10 rounded-full bg-[#191f1c]/5 border border-[var(--color-border)] flex items-center justify-center text-base" aria-label="Cancel">←</button>
       <div class="text-lg font-semibold">Ride<span class="text-[#2b8659]">Up</span></div>
     </div>

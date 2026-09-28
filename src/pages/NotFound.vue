@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-[#191f1c] flex flex-col items-center justify-center px-6 text-center">
+  <div class="min-h-screen bg-[#191f1c] flex flex-col items-center justify-center px-6 pt-[max(1.5rem,env(safe-area-inset-top))] text-center">
     <h1 class="text-[120px] font-bold text-[#2b8659] leading-none mb-2">404</h1>
     <p class="text-white/60 text-lg mb-8">Page not found</p>
     <router-link

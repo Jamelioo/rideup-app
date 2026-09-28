@@ -122,7 +122,7 @@ onUnmounted(() => {
 <template>
   <div class="fixed inset-0 bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col font-sans">
     <!-- Header -->
-    <div class="bg-[#2b8659] px-5 pt-10 pb-4 flex items-center gap-3 flex-shrink-0">
+    <div class="bg-[#2b8659] px-5 pt-[max(2.5rem,env(safe-area-inset-top))] pb-4 flex items-center gap-3 flex-shrink-0">
       <button
         @click="goBack"
         class="w-10 h-10 rounded-full bg-[var(--color-surface)]/20 flex items-center justify-center text-white"
@@ -169,7 +169,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Input bar -->
-    <div class="px-4 pb-8 pt-3 border-t border-[#191f1c]/6 flex items-center gap-2 bg-[var(--color-surface)] flex-shrink-0">
+    <div class="px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-3 border-t border-[#191f1c]/6 flex items-center gap-2 bg-[var(--color-surface)] flex-shrink-0">
       <input
         v-model="draft"
         @keyup.enter="sendMessage(draft)"

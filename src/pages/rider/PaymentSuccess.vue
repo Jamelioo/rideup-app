@@ -74,7 +74,7 @@ function goHome() {
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col items-center justify-center bg-[var(--color-surface-secondary)] px-6">
+  <div class="flex min-h-screen flex-col items-center justify-center bg-[var(--color-surface-secondary)] px-6 pt-[max(1.5rem,env(safe-area-inset-top))]">
     <!-- Animated Checkmark -->
     <div class="relative mb-8 flex h-24 w-24 items-center justify-center">
       <svg

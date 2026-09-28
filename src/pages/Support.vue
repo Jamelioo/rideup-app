@@ -51,7 +51,7 @@ function close() {
 
     <!-- Top bar -->
     <div class="sticky top-0 z-40 bg-[var(--color-surface)] border-b border-[var(--color-border)]">
-      <div class="flex items-center justify-between px-5 py-4">
+      <div class="flex items-center justify-between px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
         <button
           @click="close"
           class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[#191f1c]/5 transition-colors"

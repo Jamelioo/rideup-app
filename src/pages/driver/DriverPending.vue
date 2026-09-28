@@ -42,7 +42,7 @@ async function checkStatus() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col items-center justify-center px-6">
+  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col items-center justify-center px-6 pt-[max(1.5rem,env(safe-area-inset-top))]">
     <div class="max-w-sm w-full text-center">
       <!-- Logo -->
       <div class="text-2xl font-bold mb-10">Ride<span class="text-[#2b8659]">Up</span></div>

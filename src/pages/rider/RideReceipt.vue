@@ -98,7 +98,7 @@ async function shareReceipt() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-surface-secondary)] px-4 py-6">
+  <div class="min-h-screen bg-[var(--color-surface-secondary)] px-4 pt-[max(1.5rem,env(safe-area-inset-top))] pb-6">
     <!-- Top Bar -->
     <div class="mb-4 flex items-center">
       <button
