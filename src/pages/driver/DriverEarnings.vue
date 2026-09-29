@@ -86,7 +86,7 @@ function goBack() {
   <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)]">
     <!-- Top bar -->
     <div class="flex items-center justify-between px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
+      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -147,13 +147,13 @@ function goBack() {
             <div v-for="(total, i) in earnings.weeklyTotals" :key="i" class="flex-1 flex flex-col items-center gap-1">
               <div class="w-full rounded-lg transition-all"
                    :style="{ height: (total / maxDailyEarning * 100) + '%', minHeight: total > 0 ? '8px' : '2px' }"
-                   :class="total > 0 ? 'bg-[#2b8659]' : 'bg-[#191f1c]/10'">
+                   :class="total > 0 ? 'bg-[#2b8659]' : 'bg-[var(--color-surface-secondary)]'">
               </div>
             </div>
           </div>
           <div class="flex justify-between mt-2">
             <div v-for="(label, i) in dayLabels" :key="label" class="flex-1 text-center text-[10px] font-medium"
-                 :class="earnings.weeklyTotals[i] > 0 ? 'text-[#191f1c]/60' : 'text-[#191f1c]/25'">
+                 :class="earnings.weeklyTotals[i] > 0 ? 'text-[var(--color-text-secondary)]' : 'text-[var(--color-text-muted)]'">
               {{ label }}
             </div>
           </div>
@@ -168,7 +168,7 @@ function goBack() {
               <span class="text-[13px] font-semibold w-8">{{ dayLabels[i] }}</span>
               <span class="text-[12px] text-[var(--color-text-muted)]">{{ earnings.weeklyTrips[i] }} trips</span>
             </div>
-            <span class="text-[14px] font-bold font-serif" :class="total > 0 ? '' : 'text-[#191f1c]/25'">{{ formatFare(total) }}</span>
+            <span class="text-[14px] font-bold font-serif" :class="total > 0 ? '' : 'text-[var(--color-text-muted)]'">{{ formatFare(total) }}</span>
           </div>
         </div>
       </div>

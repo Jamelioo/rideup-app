@@ -86,7 +86,7 @@ onMounted(async () => {
     <!-- Top Bar -->
     <div class="sticky top-0 z-10 flex items-center bg-[var(--color-surface)] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
       <button
-        class="flex h-10 w-10 items-center justify-center rounded-full transition-colors active:bg-[#191f1c]/5"
+        class="flex h-10 w-10 items-center justify-center rounded-full transition-colors active:bg-[var(--color-surface-secondary)]"
         @click="router.back()"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -107,10 +107,10 @@ onMounted(async () => {
 
     <!-- Empty State -->
     <div v-else-if="rides.length === 0" class="flex flex-col items-center justify-center px-4 py-20">
-      <svg xmlns="http://www.w3.org/2000/svg" class="mb-4 h-16 w-16 text-[#191f1c]/15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+      <svg xmlns="http://www.w3.org/2000/svg" class="mb-4 h-16 w-16 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h.01M12 7h.01M16 7h.01M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
       </svg>
-      <p class="text-center text-lg font-semibold text-[#191f1c]/60">No rides yet.</p>
+      <p class="text-center text-lg font-semibold text-[var(--color-text-secondary)]">No rides yet.</p>
       <p class="mt-1 text-center text-sm text-[var(--color-text-muted)]">Book your first ride!</p>
     </div>
 

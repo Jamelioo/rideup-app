@@ -148,7 +148,7 @@ function goHome() {
       </button>
       <button
         @click="goHome"
-        class="flex h-12 w-full items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-base font-semibold text-[var(--color-text-primary)] transition-colors active:bg-[#191f1c]/5"
+        class="flex h-12 w-full items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-base font-semibold text-[var(--color-text-primary)] transition-colors active:bg-[var(--color-surface-secondary)]"
       >
         Back to home
       </button>

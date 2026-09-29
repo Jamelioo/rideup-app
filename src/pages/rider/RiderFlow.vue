@@ -38,13 +38,13 @@ function sendMessage() {
 
     <div class="relative px-6 pt-8 pb-4 flex items-center justify-between">
       <div class="text-lg font-semibold">Ride<span class="text-[#2b8659]">Up</span></div>
-      <div class="w-8 h-8 rounded-full bg-[#191f1c]/5 border border-[var(--color-border)]"></div>
+      <div class="w-8 h-8 rounded-full bg-[var(--color-surface-secondary)] border border-[var(--color-border)]"></div>
     </div>
 
     <div class="relative flex-1 flex flex-col justify-end px-6 pb-8">
       <div class="mb-5">
         <div class="text-2xl font-medium mb-1">You're matched</div>
-        <div class="text-[#191f1c]/45 text-[13px]">{{ matchInfo.driver_name }} is {{ matchInfo.eta_minutes }} minutes away</div>
+        <div class="text-[var(--color-text-secondary)] text-[13px]">{{ matchInfo.driver_name }} is {{ matchInfo.eta_minutes }} minutes away</div>
       </div>
 
       <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-5 shadow-[0_20px_40px_rgba(0,0,0,0.08)]">
@@ -90,7 +90,7 @@ function sendMessage() {
     <div class="flex-1 px-5 py-5 space-y-3 overflow-y-auto">
       <div v-for="(m, i) in messages" :key="i" class="flex" :class="m.from === 'me' ? 'justify-end' : 'justify-start'">
         <div class="max-w-[75%] px-4 py-2.5 rounded-2xl text-[13px]"
-             :class="m.from === 'me' ? 'bg-[#2b8659] text-white rounded-br-sm' : 'bg-[#191f1c]/6 text-[var(--color-text-primary)] rounded-bl-sm'">
+             :class="m.from === 'me' ? 'bg-[#2b8659] text-white rounded-br-sm' : 'bg-[var(--color-text-primary)]/6 text-[var(--color-text-primary)] rounded-bl-sm'">
           {{ m.text }}
         </div>
       </div>
@@ -98,7 +98,7 @@ function sendMessage() {
 
     <div class="px-4 pb-6 pt-3 border-t border-[var(--color-border)] flex items-center gap-2">
       <input v-model="draft" @keyup.enter="sendMessage" type="text" placeholder="Type a message…"
-             class="flex-1 bg-[#191f1c]/[0.04] rounded-full px-4 py-2.5 text-[13px] outline-none placeholder:text-[#191f1c]/35" />
+             class="flex-1 bg-[var(--color-surface-secondary)] rounded-full px-4 py-2.5 text-[13px] outline-none placeholder:text-[var(--color-text-muted)]" />
       <button @click="sendMessage" class="w-10 h-10 rounded-full bg-[#2b8659] text-white flex items-center justify-center text-sm">➤</button>
     </div>
   </div>

@@ -90,15 +90,15 @@ function confirm() {
       <div v-if="show" class="fixed inset-x-0 bottom-0 z-[9999] bg-[var(--color-surface)] rounded-t-[28px] shadow-[0_-4px_40px_rgba(0,0,0,0.15)]" style="max-height: 85vh; padding-bottom: env(safe-area-inset-bottom, 0px);">
         <!-- Handle -->
         <div class="flex justify-center pt-3 pb-1">
-          <div class="w-9 h-[5px] rounded-full bg-[#191f1c]/15"></div>
+          <div class="w-9 h-[5px] rounded-full bg-[var(--color-surface-secondary)]"></div>
         </div>
 
         <div class="px-5 pb-6 overflow-y-auto" style="max-height: calc(85vh - 40px);">
           <!-- Header -->
           <div class="flex items-center justify-between mb-5">
             <h2 class="text-[22px] font-bold text-[var(--color-text-primary)] tracking-tight">Schedule ride</h2>
-            <button @click="emit('close')" class="w-9 h-9 rounded-full hover:bg-[#191f1c]/5 flex items-center justify-center transition-colors">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4l8 8" stroke="#191f1c" stroke-width="2" stroke-linecap="round"/></svg>
+            <button @click="emit('close')" class="w-9 h-9 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center transition-colors">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
           </div>
 
@@ -151,7 +151,7 @@ function confirm() {
           <button
             @click="confirm"
             :disabled="!canConfirm"
-            class="w-full py-4 bg-[#2b8659] disabled:bg-[#191f1c]/8 disabled:text-[#191f1c]/25 text-white font-bold rounded-2xl text-[15px] mt-5 transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:shadow-none"
+            class="w-full py-4 bg-[#2b8659] disabled:bg-[var(--color-border)] disabled:text-[var(--color-text-muted)] text-white font-bold rounded-2xl text-[15px] mt-5 transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:shadow-none"
           >
             Schedule ride
           </button>

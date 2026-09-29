@@ -104,8 +104,8 @@ function handleDecline() {
           <div class="flex gap-3">
             <div class="flex flex-col items-center pt-[6px]">
               <div class="w-[10px] h-[10px] rounded-full border-[2.5px] border-[#2b8659] bg-[var(--color-surface)] flex-shrink-0"></div>
-              <div class="w-[2px] flex-1 my-1 bg-[#191f1c]/10 rounded-full min-h-[16px]"></div>
-              <div class="w-[10px] h-[10px] rounded-[2px] bg-[#191f1c] flex-shrink-0"></div>
+              <div class="w-[2px] flex-1 my-1 bg-[var(--color-surface-secondary)] rounded-full min-h-[16px]"></div>
+              <div class="w-[10px] h-[10px] rounded-[2px] bg-[var(--color-text-primary)] flex-shrink-0"></div>
             </div>
             <div class="flex-1 space-y-3">
               <div>
@@ -123,11 +123,11 @@ function handleDecline() {
           <div class="flex gap-4 mt-4 pt-4 border-t border-[var(--color-border)]">
             <div class="flex items-center gap-1.5">
               <svg class="w-4 h-4 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
-              <span class="text-[13px] font-semibold text-[#191f1c]/60">{{ request.distance_miles?.toFixed(1) }} mi</span>
+              <span class="text-[13px] font-semibold text-[var(--color-text-secondary)]">{{ request.distance_miles?.toFixed(1) }} mi</span>
             </div>
             <div class="flex items-center gap-1.5">
               <svg class="w-4 h-4 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              <span class="text-[13px] font-semibold text-[#191f1c]/60">~{{ Math.round(request.duration_minutes) }} min</span>
+              <span class="text-[13px] font-semibold text-[var(--color-text-secondary)]">~{{ Math.round(request.duration_minutes) }} min</span>
             </div>
           </div>
         </div>

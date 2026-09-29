@@ -137,11 +137,11 @@ function formatExpiry(dateStr) {
         </div>
 
         <div v-else-if="promos.length === 0" class="py-12 text-center">
-          <svg class="w-10 h-10 text-[#191f1c]/15 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <svg class="w-10 h-10 text-[var(--color-text-muted)] mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
           </svg>
           <p class="text-[14px] text-[var(--color-text-muted)]">No promo codes applied yet</p>
-          <p class="text-[13px] text-[#191f1c]/30 mt-1">Enter a code above to get started</p>
+          <p class="text-[13px] text-[var(--color-text-muted)] mt-1">Enter a code above to get started</p>
         </div>
 
         <div v-else class="space-y-3">
@@ -157,7 +157,7 @@ function formatExpiry(dateStr) {
               </div>
               <p class="text-[12px] text-[var(--color-text-muted)]">Expires {{ formatExpiry(promo.expiry) }}</p>
             </div>
-            <button @click="removePromo(promo.code)" class="text-[#191f1c]/30 hover:text-red-500 transition-colors p-1">
+            <button @click="removePromo(promo.code)" class="text-[var(--color-text-muted)] hover:text-red-500 transition-colors p-1">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>

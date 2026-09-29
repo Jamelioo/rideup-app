@@ -78,7 +78,7 @@ function goBack() {
   <div class="min-h-screen bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top Bar -->
     <div class="flex items-center gap-3 px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
+      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -94,13 +94,13 @@ function goBack() {
           v-model="newName"
           type="text"
           placeholder="Name"
-          class="w-full px-4 py-3 bg-[var(--color-surface)] rounded-xl text-[14px] text-[var(--color-text-primary)] placeholder-[#191f1c]/30 mb-2 focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30"
+          class="w-full px-4 py-3 bg-[var(--color-surface)] rounded-xl text-[14px] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] mb-2 focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30"
         />
         <input
           v-model="newPhone"
           type="tel"
           placeholder="Phone number"
-          class="w-full px-4 py-3 bg-[var(--color-surface)] rounded-xl text-[14px] text-[var(--color-text-primary)] placeholder-[#191f1c]/30 mb-3 focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30"
+          class="w-full px-4 py-3 bg-[var(--color-surface)] rounded-xl text-[14px] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] mb-3 focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30"
         />
         <button
           @click="addContact"
@@ -109,7 +109,7 @@ function goBack() {
             'w-full py-3 font-semibold text-[14px] rounded-xl transition-colors',
             newName.trim() && newPhone.trim() && !saving
               ? 'bg-[#2b8659] text-white active:bg-[#236e49]'
-              : 'bg-[#191f1c]/10 text-[#191f1c]/30 cursor-not-allowed'
+              : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] cursor-not-allowed'
           ]"
         >
           {{ saving ? 'Saving...' : 'Add contact' }}
@@ -139,7 +139,7 @@ function goBack() {
             @click="removeContact(contact.id)"
             class="w-9 h-9 flex items-center justify-center rounded-full active:bg-red-50 shrink-0"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5 text-[#191f1c]/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
           </button>
@@ -148,8 +148,8 @@ function goBack() {
 
       <!-- Empty State -->
       <div v-else class="flex flex-col items-center py-12">
-        <div class="w-16 h-16 rounded-full bg-[#191f1c]/[0.04] flex items-center justify-center mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[#191f1c]/25" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <div class="w-16 h-16 rounded-full bg-[var(--color-surface-secondary)] flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
         </div>
@@ -159,7 +159,7 @@ function goBack() {
 
     <!-- Toast -->
     <Transition name="fade">
-      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#191f1c] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
+      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[var(--color-text-primary)] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
         {{ toast }}
       </div>
     </Transition>

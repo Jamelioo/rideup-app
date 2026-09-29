@@ -35,7 +35,7 @@ const statusText = computed(() => {
 const statusColor = computed(() => {
   switch (props.rideStatus) {
     case 'driver_arrived': return 'bg-[#2b8659]'
-    case 'on_trip': return 'bg-[#191f1c]'
+    case 'on_trip': return 'bg-[var(--color-text-primary)]'
     default: return 'bg-[#2b8659]/80'
   }
 })
@@ -68,13 +68,13 @@ onUnmounted(() => {
     <div class="bg-[var(--color-surface)] rounded-t-3xl shadow-[0_-8px_40px_rgba(0,0,0,0.12)] px-6 pt-6 pb-8">
       <!-- Handle bar -->
       <div class="flex justify-center mb-4">
-        <div class="w-10 h-1 rounded-full bg-[#191f1c]/10"></div>
+        <div class="w-10 h-1 rounded-full bg-[var(--color-surface-secondary)]"></div>
       </div>
 
       <!-- ETA display -->
       <div class="text-center mb-5" v-if="rideStatus !== 'on_trip'">
         <div class="text-4xl font-bold text-[var(--color-text-primary)] tracking-tight">{{ etaDisplay }}</div>
-        <div class="text-[13px] text-[#191f1c]/45 mt-1">Estimated arrival</div>
+        <div class="text-[13px] text-[var(--color-text-secondary)] mt-1">Estimated arrival</div>
       </div>
 
       <!-- Driver info -->
@@ -112,7 +112,7 @@ onUnmounted(() => {
       <button
         v-if="showCancel"
         @click="emit('cancel')"
-        class="w-full mt-4 py-2.5 text-[13px] text-[#191f1c]/45 underline underline-offset-2 transition-opacity active:opacity-60"
+        class="w-full mt-4 py-2.5 text-[13px] text-[var(--color-text-secondary)] underline underline-offset-2 transition-opacity active:opacity-60"
       >
         Cancel ride
       </button>

@@ -148,10 +148,10 @@ function getIcon(label) {
           <div class="min-w-0">
             <p class="text-base font-medium">Home</p>
             <p v-if="homePlace" class="text-sm text-[var(--color-text-muted)] truncate">{{ homePlace.address }}</p>
-            <p v-else class="text-sm text-[#191f1c]/30">Add home address</p>
+            <p v-else class="text-sm text-[var(--color-text-muted)]">Add home address</p>
           </div>
         </div>
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#191f1c]/30 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-muted)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
         </svg>
       </button>
@@ -165,10 +165,10 @@ function getIcon(label) {
           <div class="min-w-0">
             <p class="text-base font-medium">Work</p>
             <p v-if="workPlace" class="text-sm text-[var(--color-text-muted)] truncate">{{ workPlace.address }}</p>
-            <p v-else class="text-sm text-[#191f1c]/30">Add work address</p>
+            <p v-else class="text-sm text-[var(--color-text-muted)]">Add work address</p>
           </div>
         </div>
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#191f1c]/30 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-muted)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
         </svg>
       </button>
@@ -189,7 +189,7 @@ function getIcon(label) {
             <p class="text-sm text-[var(--color-text-muted)] truncate">{{ place.address }}</p>
           </div>
         </div>
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#191f1c]/30 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-muted)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
         </svg>
       </button>
@@ -217,7 +217,7 @@ function getIcon(label) {
 
     <!-- Toast -->
     <Transition name="fade">
-      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#191f1c] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
+      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[var(--color-text-primary)] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
         {{ toast }}
       </div>
     </Transition>

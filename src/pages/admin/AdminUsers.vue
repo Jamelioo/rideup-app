@@ -4,7 +4,7 @@
 
     <!-- Search + filter -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-      <div class="flex gap-1 bg-[var(--color-surface)] rounded-lg border border-gray-200 p-1">
+      <div class="flex gap-1 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] p-1">
         <button
           v-for="tab in filterTabs"
           :key="tab"
@@ -13,7 +13,7 @@
             'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
             activeFilter === tab
               ? 'bg-[#2b8659] text-white'
-              : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)]'
           ]"
         >
           {{ tab }}
@@ -23,16 +23,16 @@
         v-model="search"
         type="text"
         placeholder="Search users..."
-        class="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30 focus:border-[#2b8659] w-full sm:w-64"
+        class="px-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30 focus:border-[#2b8659] w-full sm:w-64"
       />
     </div>
 
     <!-- Table -->
-    <div class="bg-[var(--color-surface)] rounded-xl border border-gray-200 overflow-hidden">
+    <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
-            <tr class="text-left text-gray-400 text-xs uppercase tracking-wider bg-gray-50/50">
+            <tr class="text-left text-[var(--color-text-muted)] text-xs uppercase tracking-wider bg-[var(--color-surface-secondary)]">
               <th class="px-4 py-3 font-medium">Name</th>
               <th class="px-4 py-3 font-medium">Email</th>
               <th class="px-4 py-3 font-medium">Phone</th>
@@ -47,14 +47,14 @@
             <tr
               v-for="user in filteredUsers"
               :key="user.id"
-              class="border-t border-gray-100 hover:bg-gray-50/50 transition-colors"
+              class="border-t border-[var(--color-border)] hover:bg-[var(--color-surface-secondary)] transition-colors"
             >
               <td class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ user.name }}</td>
-              <td class="px-4 py-3 text-gray-500">{{ user.email }}</td>
-              <td class="px-4 py-3 text-gray-500">{{ user.phone }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-muted)]">{{ user.email }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-muted)]">{{ user.phone }}</td>
               <td class="px-4 py-3 text-[var(--color-text-primary)]">{{ user.rides }}</td>
               <td class="px-4 py-3 text-[var(--color-text-primary)]">{{ user.rating.toFixed(1) }}</td>
-              <td class="px-4 py-3 text-gray-400 text-xs">{{ user.joined }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-muted)] text-xs">{{ user.joined }}</td>
               <td class="px-4 py-3">
                 <span :class="user.status === 'Active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'" class="text-xs font-medium px-2 py-0.5 rounded-full">
                   {{ user.status }}
@@ -75,14 +75,14 @@
               </td>
             </tr>
             <tr v-if="filteredUsers.length === 0">
-              <td colspan="8" class="px-4 py-8 text-center text-gray-400">No users found.</td>
+              <td colspan="8" class="px-4 py-8 text-center text-[var(--color-text-muted)]">No users found.</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <div v-if="users.length === 0" class="px-4 py-12 text-center text-gray-400">
+    <div v-if="users.length === 0" class="px-4 py-12 text-center text-[var(--color-text-muted)]">
       <p class="text-lg font-medium mb-1">No users yet</p>
       <p class="text-sm">Users will appear here when riders sign up.</p>
     </div>

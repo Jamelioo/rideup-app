@@ -142,13 +142,13 @@ onUnmounted(() => {
     </div>
 
     <!-- Quick message chips -->
-    <div class="px-4 pt-3 pb-1 border-b border-[#191f1c]/6 flex-shrink-0">
+    <div class="px-4 pt-3 pb-1 border-b border-[var(--color-border)] flex-shrink-0">
       <QuickMessages @send="sendMessage" />
     </div>
 
     <!-- Messages list -->
     <div ref="messageListEl" class="flex-1 overflow-y-auto px-5 py-4 space-y-2.5">
-      <div v-if="messages.length === 0" class="text-center text-[13px] text-[#191f1c]/30 pt-16">
+      <div v-if="messages.length === 0" class="text-center text-[13px] text-[var(--color-text-muted)] pt-16">
         No messages yet. Send a quick message or type below.
       </div>
       <div
@@ -161,7 +161,7 @@ onUnmounted(() => {
           class="max-w-[75%] px-4 py-2.5 rounded-2xl text-[13px] leading-snug"
           :class="msg.sender_id === currentUserId
             ? 'bg-[#2b8659] text-white rounded-br-sm'
-            : 'bg-[#191f1c]/6 text-[var(--color-text-primary)] rounded-bl-sm'"
+            : 'bg-[var(--color-text-primary)]/6 text-[var(--color-text-primary)] rounded-bl-sm'"
         >
           {{ msg.content }}
         </div>
@@ -169,13 +169,13 @@ onUnmounted(() => {
     </div>
 
     <!-- Input bar -->
-    <div class="px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-3 border-t border-[#191f1c]/6 flex items-center gap-2 bg-[var(--color-surface)] flex-shrink-0">
+    <div class="px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-3 border-t border-[var(--color-border)] flex items-center gap-2 bg-[var(--color-surface)] flex-shrink-0">
       <input
         v-model="draft"
         @keyup.enter="sendMessage(draft)"
         type="text"
         placeholder="Type a message..."
-        class="flex-1 bg-[#191f1c]/[0.04] rounded-full px-4 py-2.5 text-[13px] outline-none placeholder:text-[#191f1c]/35 font-sans"
+        class="flex-1 bg-[var(--color-surface-secondary)] rounded-full px-4 py-2.5 text-[13px] outline-none placeholder:text-[var(--color-text-muted)] font-sans"
       />
       <button
         @click="sendMessage(draft)"

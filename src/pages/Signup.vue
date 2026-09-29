@@ -56,7 +56,7 @@ async function handleSignup() {
   <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top bar -->
     <div class="flex items-center px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
+      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -76,7 +76,7 @@ async function handleSignup() {
         </div>
         <p class="text-[16px] font-bold mb-1">Check your email</p>
         <p class="text-[14px] text-[var(--color-text-muted)]">We sent a confirmation link to <strong>{{ email }}</strong>. Click it to activate your account.</p>
-        <p class="text-[13px] text-[#191f1c]/35 mt-3">Redirecting to login...</p>
+        <p class="text-[13px] text-[var(--color-text-muted)] mt-3">Redirecting to login...</p>
       </div>
 
       <!-- Form -->
@@ -89,7 +89,7 @@ async function handleSignup() {
               type="text"
               placeholder="Full name"
               autocomplete="name"
-              class="w-full px-4 py-3.5 bg-[#191f1c]/[0.04] rounded-xl border border-[var(--color-border)] text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[var(--color-text-muted)]"
+              class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border border-[var(--color-border)] text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[var(--color-text-muted)]"
             />
           </label>
           <label class="block">
@@ -99,7 +99,7 @@ async function handleSignup() {
               type="email"
               placeholder="Email address"
               autocomplete="email"
-              class="w-full px-4 py-3.5 bg-[#191f1c]/[0.04] rounded-xl border border-[var(--color-border)] text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[var(--color-text-muted)]"
+              class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border border-[var(--color-border)] text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[var(--color-text-muted)]"
             />
           </label>
           <label class="block">
@@ -109,7 +109,7 @@ async function handleSignup() {
               type="password"
               placeholder="Password (min 6 characters)"
               autocomplete="new-password"
-              class="w-full px-4 py-3.5 bg-[#191f1c]/[0.04] rounded-xl border border-[var(--color-border)] text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[var(--color-text-muted)]"
+              class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border border-[var(--color-border)] text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[var(--color-text-muted)]"
             />
           </label>
           <label class="block">
@@ -120,7 +120,7 @@ async function handleSignup() {
               placeholder="Confirm password"
               autocomplete="new-password"
               @keyup.enter="handleSignup"
-              class="w-full px-4 py-3.5 bg-[#191f1c]/[0.04] rounded-xl border border-[var(--color-border)] text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[var(--color-text-muted)]"
+              class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border border-[var(--color-border)] text-[14px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[var(--color-text-muted)]"
             />
           </label>
         </div>
@@ -143,7 +143,7 @@ async function handleSignup() {
     </div>
 
     <div class="px-6 py-6">
-      <p class="text-[12px] text-[#191f1c]/35 text-center leading-relaxed">
+      <p class="text-[12px] text-[var(--color-text-muted)] text-center leading-relaxed">
         By continuing, you agree to our <router-link to="/terms" class="underline">Terms of Service</router-link> and <router-link to="/privacy" class="underline">Privacy Policy</router-link>.
       </p>
     </div>

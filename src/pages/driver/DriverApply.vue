@@ -96,7 +96,7 @@ function goBack() {
   <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top bar -->
     <div class="flex items-center px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
+      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -210,7 +210,7 @@ function goBack() {
           {{ submitting ? 'Submitting...' : 'Submit Application' }}
         </button>
 
-        <p class="text-[12px] text-[#191f1c]/35 text-center pb-8 leading-relaxed">
+        <p class="text-[12px] text-[var(--color-text-muted)] text-center pb-8 leading-relaxed">
           By applying, you agree to our <router-link to="/terms" class="underline">Terms of Service</router-link> and <router-link to="/privacy" class="underline">Privacy Policy</router-link>.
         </p>
       </template>

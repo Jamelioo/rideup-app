@@ -80,7 +80,7 @@ function handleMenuClick(item) {
       <button
         v-for="(item, index) in menuItems"
         :key="index"
-        class="w-full flex items-center justify-between py-4 border-b border-[var(--color-border)] transition-colors duration-150 hover:bg-[#191f1c]/[0.03] active:bg-[#191f1c]/[0.06] rounded-sm"
+        class="w-full flex items-center justify-between py-4 border-b border-[var(--color-border)] transition-colors duration-150 hover:bg-[var(--color-surface-secondary)] active:bg-[var(--color-surface-secondary)] rounded-sm"
         @click="handleMenuClick(item)"
       >
         <div class="flex items-center gap-4">
@@ -108,7 +108,7 @@ function handleMenuClick(item) {
         </div>
 
         <!-- Chevron Right -->
-        <svg v-if="item.hasChevron" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#191f1c]/25" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg v-if="item.hasChevron" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
         </svg>
       </button>

@@ -85,7 +85,7 @@ async function saveEmail() {
   <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)]">
     <!-- Top bar -->
     <div class="flex items-center justify-between px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
+      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -199,7 +199,7 @@ async function saveEmail() {
       <!-- Switch + Logout -->
       <div class="space-y-2 mt-8">
         <button @click="router.push('/book')"
-                class="w-full py-3.5 border-2 border-[var(--color-border)] text-[14px] font-semibold rounded-2xl active:bg-[#191f1c]/5 transition-colors">
+                class="w-full py-3.5 border-2 border-[var(--color-border)] text-[14px] font-semibold rounded-2xl active:bg-[var(--color-surface-secondary)] transition-colors">
           Switch to Rider
         </button>
         <button @click="handleLogout"
@@ -211,7 +211,7 @@ async function saveEmail() {
 
     <!-- Toast -->
     <Transition name="fade">
-      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#191f1c] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
+      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[var(--color-text-primary)] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
         {{ toast }}
       </div>
     </Transition>

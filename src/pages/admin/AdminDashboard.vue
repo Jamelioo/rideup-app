@@ -4,8 +4,8 @@
 
     <!-- Metric cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
-      <div v-for="card in metricCards" :key="card.label" class="bg-[var(--color-surface)] rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
-        <p class="text-sm text-gray-500 mb-1">{{ card.label }}</p>
+      <div v-for="card in metricCards" :key="card.label" class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5 hover:shadow-md transition-shadow">
+        <p class="text-sm text-[var(--color-text-muted)] mb-1">{{ card.label }}</p>
         <p class="text-2xl font-bold text-[var(--color-text-primary)]">{{ card.value }}</p>
         <p :class="['text-xs mt-1', card.changePositive ? 'text-[#2b8659]' : 'text-red-500']">
           {{ card.change }} vs yesterday
@@ -16,7 +16,7 @@
     <!-- Charts + Recent rides -->
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
       <!-- Bar chart: rides per day -->
-      <div class="bg-[var(--color-surface)] rounded-xl border border-gray-200 p-5">
+      <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5">
         <h2 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Rides — Last 7 Days</h2>
         <div class="flex items-end gap-2 h-40">
           <div
@@ -24,23 +24,23 @@
             :key="day.label"
             class="flex-1 flex flex-col items-center gap-1"
           >
-            <span class="text-xs text-gray-500 font-medium">{{ day.count }}</span>
+            <span class="text-xs text-[var(--color-text-muted)] font-medium">{{ day.count }}</span>
             <div
               class="w-full rounded-t-md bg-[#2b8659] transition-all duration-300 hover:bg-[#236e49]"
               :style="{ height: (day.count / maxRides) * 120 + 'px' }"
             />
-            <span class="text-xs text-gray-400 mt-1">{{ day.label }}</span>
+            <span class="text-xs text-[var(--color-text-muted)] mt-1">{{ day.label }}</span>
           </div>
         </div>
       </div>
 
       <!-- Recent rides table -->
-      <div class="bg-[var(--color-surface)] rounded-xl border border-gray-200 p-5">
+      <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5">
         <h2 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Recent Rides</h2>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
-              <tr class="text-left text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
+              <tr class="text-left text-[var(--color-text-muted)] text-xs uppercase tracking-wider border-b border-[var(--color-border)]">
                 <th class="pb-2 font-medium">Rider</th>
                 <th class="pb-2 font-medium">Route</th>
                 <th class="pb-2 font-medium">Fare</th>
@@ -51,10 +51,10 @@
               <tr
                 v-for="ride in recentRides"
                 :key="ride.id"
-                class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+                class="border-b border-gray-50 hover:bg-[var(--color-surface-secondary)] transition-colors"
               >
                 <td class="py-2.5 text-[var(--color-text-primary)] font-medium">{{ ride.rider }}</td>
-                <td class="py-2.5 text-gray-500 truncate max-w-[160px]">{{ ride.pickup }} → {{ ride.dropoff }}</td>
+                <td class="py-2.5 text-[var(--color-text-muted)] truncate max-w-[160px]">{{ ride.pickup }} → {{ ride.dropoff }}</td>
                 <td class="py-2.5 text-[var(--color-text-primary)]">${{ typeof ride.fare === 'number' ? ride.fare.toFixed(2) : ride.fare }}</td>
                 <td class="py-2.5">
                   <span :class="statusBadge(ride.status)">{{ ride.status }}</span>
@@ -111,7 +111,7 @@ function statusBadge(status) {
     case 'Active': return `${base} bg-yellow-50 text-yellow-700`
     case 'Cancelled': return `${base} bg-red-50 text-red-700`
     case 'Requested': return `${base} bg-blue-50 text-blue-700`
-    default: return `${base} bg-gray-50 text-gray-700`
+    default: return `${base} bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)]`
   }
 }
 

@@ -70,8 +70,8 @@ function skip() {
 
       <!-- Rider avatar -->
       <div class="flex flex-col items-center mt-6 mb-6 px-6">
-        <div class="w-20 h-20 rounded-full bg-[#191f1c]/[0.06] flex items-center justify-center mb-5">
-          <svg class="w-10 h-10 text-[#191f1c]/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <div class="w-20 h-20 rounded-full bg-[var(--color-surface-secondary)] flex items-center justify-center mb-5">
+          <svg class="w-10 h-10 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
         </div>
@@ -92,7 +92,7 @@ function skip() {
             v-model="comment"
             rows="3"
             placeholder="Add a comment (optional)"
-            class="w-full bg-[#191f1c]/[0.03] border border-[#191f1c]/[0.06] rounded-2xl px-4 py-3.5 text-sm placeholder:text-[#191f1c]/30 resize-none focus:outline-none focus:border-[#2b8659]/40 transition-colors"
+            class="w-full bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-2xl px-4 py-3.5 text-sm placeholder:text-[var(--color-text-muted)] resize-none focus:outline-none focus:border-[#2b8659]/40 transition-colors"
           />
         </div>
       </Transition>
@@ -109,7 +109,7 @@ function skip() {
             'w-full py-4 rounded-2xl font-bold text-[15px] transition-all duration-150',
             rating > 0
               ? 'bg-[#2b8659] text-white active:bg-[#237a4d]'
-              : 'bg-[#191f1c]/[0.06] text-[#191f1c]/30 cursor-not-allowed',
+              : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] cursor-not-allowed',
           ]"
         >
           {{ submitting ? 'Submitting...' : 'Submit Rating' }}

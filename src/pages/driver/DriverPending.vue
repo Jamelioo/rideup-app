@@ -73,7 +73,7 @@ async function checkStatus() {
         Skip to Dashboard (Demo)
       </button>
 
-      <router-link to="/welcome" class="block mt-6 text-[14px] text-[var(--color-text-muted)] hover:text-[#191f1c]/60">
+      <router-link to="/welcome" class="block mt-6 text-[14px] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]">
         Back to Home
       </router-link>
     </div>

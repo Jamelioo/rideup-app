@@ -4,7 +4,7 @@
 
     <!-- Search + filter tabs -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-      <div class="flex gap-1 bg-[var(--color-surface)] rounded-lg border border-gray-200 p-1">
+      <div class="flex gap-1 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] p-1">
         <button
           v-for="tab in statusTabs"
           :key="tab"
@@ -13,7 +13,7 @@
             'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
             activeTab === tab
               ? 'bg-[#2b8659] text-white'
-              : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)]'
           ]"
         >
           {{ tab }}
@@ -23,28 +23,28 @@
         v-model="search"
         type="text"
         placeholder="Search rides..."
-        class="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30 focus:border-[#2b8659] w-full sm:w-64"
+        class="px-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30 focus:border-[#2b8659] w-full sm:w-64"
       />
     </div>
 
     <!-- Table -->
-    <div class="bg-[var(--color-surface)] rounded-xl border border-gray-200 overflow-hidden">
+    <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
-            <tr class="text-left text-gray-400 text-xs uppercase tracking-wider bg-gray-50/50">
-              <th class="px-4 py-3 font-medium cursor-pointer hover:text-gray-600" @click="toggleSort('id')">
+            <tr class="text-left text-[var(--color-text-muted)] text-xs uppercase tracking-wider bg-[var(--color-surface-secondary)]">
+              <th class="px-4 py-3 font-medium cursor-pointer hover:text-[var(--color-text-secondary)]" @click="toggleSort('id')">
                 ID <span v-if="sortKey === 'id'" class="text-[#2b8659]">{{ sortDir === 'asc' ? '&#9650;' : '&#9660;' }}</span>
               </th>
               <th class="px-4 py-3 font-medium">Rider</th>
               <th class="px-4 py-3 font-medium">Driver</th>
               <th class="px-4 py-3 font-medium">Pickup</th>
               <th class="px-4 py-3 font-medium">Dropoff</th>
-              <th class="px-4 py-3 font-medium cursor-pointer hover:text-gray-600" @click="toggleSort('fare')">
+              <th class="px-4 py-3 font-medium cursor-pointer hover:text-[var(--color-text-secondary)]" @click="toggleSort('fare')">
                 Fare <span v-if="sortKey === 'fare'" class="text-[#2b8659]">{{ sortDir === 'asc' ? '&#9650;' : '&#9660;' }}</span>
               </th>
               <th class="px-4 py-3 font-medium">Status</th>
-              <th class="px-4 py-3 font-medium cursor-pointer hover:text-gray-600" @click="toggleSort('date')">
+              <th class="px-4 py-3 font-medium cursor-pointer hover:text-[var(--color-text-secondary)]" @click="toggleSort('date')">
                 Date <span v-if="sortKey === 'date'" class="text-[#2b8659]">{{ sortDir === 'asc' ? '&#9650;' : '&#9660;' }}</span>
               </th>
             </tr>
@@ -53,29 +53,29 @@
             <tr
               v-for="ride in paginatedRides"
               :key="ride.id"
-              class="border-t border-gray-100 hover:bg-gray-50/50 transition-colors"
+              class="border-t border-[var(--color-border)] hover:bg-[var(--color-surface-secondary)] transition-colors"
             >
-              <td class="px-4 py-3 text-gray-400 font-mono text-xs">#{{ ride.id }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-muted)] font-mono text-xs">#{{ ride.id }}</td>
               <td class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ ride.rider }}</td>
-              <td class="px-4 py-3 text-gray-600">{{ ride.driver }}</td>
-              <td class="px-4 py-3 text-gray-500 truncate max-w-[140px]">{{ ride.pickup }}</td>
-              <td class="px-4 py-3 text-gray-500 truncate max-w-[140px]">{{ ride.dropoff }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-secondary)]">{{ ride.driver }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-muted)] truncate max-w-[140px]">{{ ride.pickup }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-muted)] truncate max-w-[140px]">{{ ride.dropoff }}</td>
               <td class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ ride.fare }}</td>
               <td class="px-4 py-3">
                 <span :class="statusBadge(ride.status)">{{ ride.status }}</span>
               </td>
-              <td class="px-4 py-3 text-gray-400 text-xs">{{ ride.date }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-muted)] text-xs">{{ ride.date }}</td>
             </tr>
             <tr v-if="paginatedRides.length === 0">
-              <td colspan="8" class="px-4 py-8 text-center text-gray-400">No rides found.</td>
+              <td colspan="8" class="px-4 py-8 text-center text-[var(--color-text-muted)]">No rides found.</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <!-- Pagination -->
-      <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50/30">
-        <span class="text-xs text-gray-400">
+      <div class="flex items-center justify-between px-4 py-3 border-t border-[var(--color-border)] bg-[var(--color-surface-secondary)]">
+        <span class="text-xs text-[var(--color-text-muted)]">
           Showing {{ ((currentPage - 1) * perPage) + 1 }}–{{ Math.min(currentPage * perPage, filteredRides.length) }} of {{ filteredRides.length }}
         </span>
         <div class="flex gap-1">
@@ -87,7 +87,7 @@
               'w-8 h-8 text-xs font-medium rounded-lg transition-colors',
               currentPage === p
                 ? 'bg-[#2b8659] text-white'
-                : 'text-gray-500 hover:bg-gray-100'
+                : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface-secondary)]'
             ]"
           >
             {{ p }}
@@ -158,7 +158,7 @@ function statusBadge(status) {
     case 'Active': return `${base} bg-yellow-50 text-yellow-700`
     case 'Cancelled': return `${base} bg-red-50 text-red-700`
     case 'Requested': return `${base} bg-blue-50 text-blue-700`
-    default: return `${base} bg-gray-50 text-gray-700`
+    default: return `${base} bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)]`
   }
 }
 

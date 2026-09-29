@@ -42,7 +42,7 @@ function doCancel() {
     <div class="absolute inset-0 bg-[var(--color-overlay)]" @click="emit('close')"></div>
     <div class="relative w-full max-w-lg bg-[var(--color-surface)] rounded-t-3xl z-10">
       <!-- Handle -->
-      <div class="w-10 h-1 rounded-full bg-[#191f1c]/15 mx-auto mt-3 mb-2"></div>
+      <div class="w-10 h-1 rounded-full bg-[var(--color-surface-secondary)] mx-auto mt-3 mb-2"></div>
 
       <!-- Not confirming yet — select reason -->
       <div v-if="!confirming" class="px-6 pb-8">
@@ -64,7 +64,7 @@ function doCancel() {
               'w-full text-left px-4 py-3.5 rounded-xl border text-[15px] transition-colors',
               selectedReason === reason
                 ? 'border-[#2b8659] bg-[#2b8659]/5 text-[var(--color-text-primary)] font-medium'
-                : 'border-[var(--color-border)] text-[#191f1c]/70'
+                : 'border-[var(--color-border)] text-[var(--color-text-secondary)]'
             ]"
           >
             {{ reason }}

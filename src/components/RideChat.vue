@@ -149,7 +149,7 @@ defineExpose({ toggle, hasUnread })
     <!-- Unread indicator -->
     <span
       v-if="hasUnread"
-      class="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white"
+      class="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-[var(--color-surface)]"
     ></span>
     <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
       <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -165,11 +165,11 @@ defineExpose({ toggle, hasUnread })
       <!-- Chat sheet -->
       <div class="flex-1 flex flex-col bg-[var(--color-surface)] rounded-t-3xl shadow-[0_-8px_40px_rgba(0,0,0,0.15)] overflow-hidden">
         <!-- Header -->
-        <div class="flex items-center gap-3 px-5 pt-5 pb-3 border-b border-[#191f1c]/6">
+        <div class="flex items-center gap-3 px-5 pt-5 pb-3 border-b border-[var(--color-border)]">
           <div class="flex justify-center w-full absolute left-0 top-3 pointer-events-none">
-            <div class="w-10 h-1 rounded-full bg-[#191f1c]/10"></div>
+            <div class="w-10 h-1 rounded-full bg-[var(--color-surface-secondary)]"></div>
           </div>
-          <button @click="close" class="w-9 h-9 rounded-full bg-[#191f1c]/5 flex items-center justify-center" aria-label="Close chat">
+          <button @click="close" class="w-9 h-9 rounded-full bg-[var(--color-surface-secondary)] flex items-center justify-center" aria-label="Close chat">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -187,7 +187,7 @@ defineExpose({ toggle, hasUnread })
 
         <!-- Messages list -->
         <div ref="messageListEl" class="flex-1 overflow-y-auto px-5 py-4 space-y-2.5">
-          <div v-if="messages.length === 0" class="text-center text-[13px] text-[#191f1c]/30 pt-10">
+          <div v-if="messages.length === 0" class="text-center text-[13px] text-[var(--color-text-muted)] pt-10">
             No messages yet. Send a quick message or type below.
           </div>
           <div
@@ -200,7 +200,7 @@ defineExpose({ toggle, hasUnread })
               class="max-w-[75%] px-4 py-2.5 rounded-2xl text-[13px] leading-snug"
               :class="msg.sender_id === currentUserId
                 ? 'bg-[#2b8659] text-white rounded-br-sm'
-                : 'bg-[#191f1c]/6 text-[var(--color-text-primary)] rounded-bl-sm'"
+                : 'bg-[var(--color-text-primary)]/6 text-[var(--color-text-primary)] rounded-bl-sm'"
             >
               {{ msg.content }}
             </div>
@@ -208,13 +208,13 @@ defineExpose({ toggle, hasUnread })
         </div>
 
         <!-- Input bar -->
-        <div class="px-4 pb-6 pt-3 border-t border-[#191f1c]/6 flex items-center gap-2 bg-[var(--color-surface)]">
+        <div class="px-4 pb-6 pt-3 border-t border-[var(--color-border)] flex items-center gap-2 bg-[var(--color-surface)]">
           <input
             v-model="draft"
             @keyup.enter="sendMessage(draft)"
             type="text"
             placeholder="Type a message..."
-            class="flex-1 bg-[#191f1c]/[0.04] rounded-full px-4 py-2.5 text-[13px] outline-none placeholder:text-[#191f1c]/35 font-sans"
+            class="flex-1 bg-[var(--color-surface-secondary)] rounded-full px-4 py-2.5 text-[13px] outline-none placeholder:text-[var(--color-text-muted)] font-sans"
           />
           <button
             @click="sendMessage(draft)"

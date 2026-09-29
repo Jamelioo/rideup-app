@@ -51,13 +51,13 @@ async function handleSubmit() {
   <div class="px-5 pt-2 pb-8">
     <!-- Header -->
     <div class="flex items-center justify-between mb-5">
-      <button @click="emit('back')" class="w-8 h-8 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
+      <button @click="emit('back')" class="w-8 h-8 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
       <h2 class="text-lg font-bold text-[var(--color-text-primary)]">Report safety issue</h2>
-      <button @click="emit('close')" class="w-8 h-8 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
+      <button @click="emit('close')" class="w-8 h-8 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
@@ -94,7 +94,7 @@ async function handleSubmit() {
             'px-4 py-2.5 rounded-full text-[13px] font-medium transition-colors',
             selectedCategory === cat
               ? 'bg-[#2b8659] text-white'
-              : 'bg-[#191f1c]/[0.04] text-[var(--color-text-primary)] active:bg-[#191f1c]/[0.08]'
+              : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] active:bg-[var(--color-text-primary)]/[0.08]'
           ]"
         >
           {{ cat }}
@@ -107,7 +107,7 @@ async function handleSubmit() {
         v-model="description"
         placeholder="Describe what happened..."
         rows="3"
-        class="w-full px-4 py-3 bg-[#191f1c]/[0.03] rounded-xl text-[14px] text-[var(--color-text-primary)] placeholder-[#191f1c]/30 resize-none focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30"
+        class="w-full px-4 py-3 bg-[var(--color-surface-secondary)] rounded-xl text-[14px] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] resize-none focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30"
       />
 
       <!-- Error -->
@@ -121,7 +121,7 @@ async function handleSubmit() {
           'w-full mt-5 py-3.5 font-semibold text-[14px] rounded-xl transition-colors',
           selectedCategory && !submitting
             ? 'bg-[#2b8659] text-white active:bg-[#236e49]'
-            : 'bg-[#191f1c]/10 text-[#191f1c]/30 cursor-not-allowed'
+            : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] cursor-not-allowed'
         ]"
       >
         {{ submitting ? 'Submitting...' : 'Submit report' }}

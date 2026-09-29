@@ -51,13 +51,13 @@ async function copyLink() {
   <div class="px-5 pt-2 pb-8">
     <!-- Header -->
     <div class="flex items-center justify-between mb-5">
-      <button @click="emit('back')" class="w-8 h-8 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
+      <button @click="emit('back')" class="w-8 h-8 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
       <h2 class="text-lg font-bold text-[var(--color-text-primary)]">Share my trip</h2>
-      <button @click="emit('close')" class="w-8 h-8 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
+      <button @click="emit('close')" class="w-8 h-8 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
@@ -81,11 +81,11 @@ async function copyLink() {
       <div class="space-y-2 ml-1">
         <div class="flex items-start gap-3">
           <div class="w-2 h-2 rounded-full bg-[#2b8659] mt-1.5 shrink-0" />
-          <p class="text-[13px] text-[#191f1c]/70">{{ pickup }}</p>
+          <p class="text-[13px] text-[var(--color-text-secondary)]">{{ pickup }}</p>
         </div>
         <div class="flex items-start gap-3">
-          <div class="w-2 h-2 rounded-full bg-[#191f1c] mt-1.5 shrink-0" />
-          <p class="text-[13px] text-[#191f1c]/70">{{ dropoff }}</p>
+          <div class="w-2 h-2 rounded-full bg-[var(--color-text-primary)] mt-1.5 shrink-0" />
+          <p class="text-[13px] text-[var(--color-text-secondary)]">{{ dropoff }}</p>
         </div>
       </div>
     </div>
@@ -104,7 +104,7 @@ async function copyLink() {
 
       <button
         @click="shareSMS"
-        class="w-full flex items-center justify-center gap-2.5 py-3.5 bg-[#191f1c]/[0.04] text-[var(--color-text-primary)] font-semibold text-[14px] rounded-xl active:bg-[#191f1c]/[0.08] transition-colors"
+        class="w-full flex items-center justify-center gap-2.5 py-3.5 bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] font-semibold text-[14px] rounded-xl active:bg-[var(--color-text-primary)]/[0.08] transition-colors"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
@@ -114,7 +114,7 @@ async function copyLink() {
 
       <button
         @click="copyLink"
-        class="w-full flex items-center justify-center gap-2.5 py-3.5 border border-[var(--color-border)] text-[var(--color-text-primary)] font-semibold text-[14px] rounded-xl active:bg-[#191f1c]/[0.03] transition-colors"
+        class="w-full flex items-center justify-center gap-2.5 py-3.5 border border-[var(--color-border)] text-[var(--color-text-primary)] font-semibold text-[14px] rounded-xl active:bg-[var(--color-surface-secondary)] transition-colors"
       >
         <svg v-if="!copied" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />

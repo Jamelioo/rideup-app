@@ -3,7 +3,7 @@
     <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6">Support Tickets</h1>
 
     <!-- Filter tabs -->
-    <div class="flex gap-1 bg-[var(--color-surface)] rounded-lg border border-gray-200 p-1 mb-4 w-fit">
+    <div class="flex gap-1 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] p-1 mb-4 w-fit">
       <button
         v-for="tab in filterTabs"
         :key="tab"
@@ -12,7 +12,7 @@
           'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
           activeFilter === tab
             ? 'bg-[#2b8659] text-white'
-            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+            : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)]'
         ]"
       >
         {{ tab }}
@@ -24,7 +24,7 @@
       <div
         v-for="ticket in filteredTickets"
         :key="ticket.id"
-        class="bg-[var(--color-surface)] rounded-xl border border-gray-200 overflow-hidden hover:shadow-sm transition-shadow"
+        class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden hover:shadow-sm transition-shadow"
       >
         <!-- Header row (clickable) -->
         <button
@@ -32,16 +32,16 @@
           @click="toggle(ticket.id)"
         >
           <div class="flex items-center gap-4 min-w-0">
-            <span class="text-xs text-gray-400 font-mono">#{{ ticket.id }}</span>
+            <span class="text-xs text-[var(--color-text-muted)] font-mono">#{{ ticket.id }}</span>
             <div class="min-w-0">
               <p class="text-sm font-medium text-[var(--color-text-primary)] truncate">{{ ticket.subject }}</p>
-              <p class="text-xs text-gray-400">{{ ticket.user }} -- {{ ticket.date }}</p>
+              <p class="text-xs text-[var(--color-text-muted)]">{{ ticket.user }} -- {{ ticket.date }}</p>
             </div>
           </div>
           <div class="flex items-center gap-3 flex-shrink-0">
             <span :class="ticketStatusBadge(ticket.status)">{{ ticket.status }}</span>
             <svg
-              :class="['w-4 h-4 text-gray-400 transition-transform', expanded === ticket.id ? 'rotate-180' : '']"
+              :class="['w-4 h-4 text-[var(--color-text-muted)] transition-transform', expanded === ticket.id ? 'rotate-180' : '']"
               fill="none" stroke="currentColor" viewBox="0 0 24 24"
             >
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -50,8 +50,8 @@
         </button>
 
         <!-- Expanded detail -->
-        <div v-if="expanded === ticket.id" class="px-5 pb-5 border-t border-gray-100 pt-4">
-          <p class="text-sm text-gray-600 leading-relaxed mb-4">{{ ticket.message }}</p>
+        <div v-if="expanded === ticket.id" class="px-5 pb-5 border-t border-[var(--color-border)] pt-4">
+          <p class="text-sm text-[var(--color-text-secondary)] leading-relaxed mb-4">{{ ticket.message }}</p>
           <div class="flex gap-2">
             <button
               v-if="ticket.status !== 'Resolved' && ticket.status !== 'resolved'"
@@ -78,7 +78,7 @@
         </div>
       </div>
 
-      <p v-if="filteredTickets.length === 0" class="text-center text-gray-400 py-8">No tickets found.</p>
+      <p v-if="filteredTickets.length === 0" class="text-center text-[var(--color-text-muted)] py-8">No tickets found.</p>
     </div>
   </div>
 </template>
@@ -108,7 +108,7 @@ function ticketStatusBadge(status) {
   if (s === 'open') return `${base} bg-red-50 text-red-700`
   if (s === 'in progress') return `${base} bg-yellow-50 text-yellow-700`
   if (s === 'resolved') return `${base} bg-green-50 text-green-700`
-  return `${base} bg-gray-50 text-gray-700`
+  return `${base} bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)]`
 }
 
 async function updateTicketStatus(ticket, newStatus) {

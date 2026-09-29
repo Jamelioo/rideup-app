@@ -102,7 +102,7 @@ async function cancelRequest() {
   <div class="relative min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col overflow-hidden">
     <HarborBackdrop />
     <div class="relative px-6 pt-[max(2rem,env(safe-area-inset-top))] pb-4 flex items-center gap-3">
-      <button @click="cancelRequest" class="w-10 h-10 rounded-full bg-[#191f1c]/5 border border-[var(--color-border)] flex items-center justify-center text-base" aria-label="Cancel">←</button>
+      <button @click="cancelRequest" class="w-10 h-10 rounded-full bg-[var(--color-surface-secondary)] border border-[var(--color-border)] flex items-center justify-center text-base" aria-label="Cancel">←</button>
       <div class="text-lg font-semibold">Ride<span class="text-[#2b8659]">Up</span></div>
     </div>
     <div class="relative flex-1 flex flex-col items-center justify-center gap-6 px-6">
@@ -118,12 +118,12 @@ async function cancelRequest() {
         </div>
         <div class="text-center">
           <div class="text-xl font-medium mb-1.5">{{ driverFound ? 'Driver found' : 'Looking for a driver' }}</div>
-          <div class="text-[#191f1c]/45 text-[13px]">{{ driverFound ? 'Connecting you now...' : (DEMO_MODE ? 'Connecting you with a nearby driver...' : 'Connecting you with a nearby driver') }}</div>
+          <div class="text-[var(--color-text-secondary)] text-[13px]">{{ driverFound ? 'Connecting you now...' : (DEMO_MODE ? 'Connecting you with a nearby driver...' : 'Connecting you with a nearby driver') }}</div>
           <p v-if="!timedOut && elapsedSeconds > 10" class="text-[var(--color-text-muted)] text-xs mt-2">
             Searching... {{ elapsedSeconds }}s
           </p>
         </div>
-        <button @click="cancelRequest" class="text-[#191f1c]/55 text-[13px] underline underline-offset-2 mt-2 py-2 px-4">Cancel request</button>
+        <button @click="cancelRequest" class="text-[var(--color-text-secondary)] text-[13px] underline underline-offset-2 mt-2 py-2 px-4">Cancel request</button>
       </template>
       <div v-if="timedOut" class="text-center px-6">
         <div class="w-16 h-16 rounded-full bg-[var(--color-surface-secondary)] flex items-center justify-center mx-auto mb-4">

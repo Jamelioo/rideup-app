@@ -102,7 +102,7 @@ async function shareReceipt() {
     <!-- Top Bar -->
     <div class="mb-4 flex items-center">
       <button
-        class="flex h-10 w-10 items-center justify-center rounded-full transition-colors active:bg-[#191f1c]/5"
+        class="flex h-10 w-10 items-center justify-center rounded-full transition-colors active:bg-[var(--color-surface-secondary)]"
         @click="router.back()"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -156,22 +156,22 @@ async function shareReceipt() {
         <!-- Fare Breakdown -->
         <div class="mb-5 space-y-3">
           <div class="flex items-center justify-between">
-            <span class="text-sm text-[#191f1c]/60">Base fare</span>
+            <span class="text-sm text-[var(--color-text-secondary)]">Base fare</span>
             <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.baseFare) }}</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-sm text-[#191f1c]/60">Distance ({{ receipt.distanceMiles }} mi x {{ formatCents(receipt.ratePerMile) }}/mi)</span>
+            <span class="text-sm text-[var(--color-text-secondary)]">Distance ({{ receipt.distanceMiles }} mi x {{ formatCents(receipt.ratePerMile) }}/mi)</span>
             <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.distanceCharge) }}</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-sm text-[#191f1c]/60">Time ({{ receipt.durationMinutes }} min x {{ formatCents(receipt.ratePerMinute) }}/min)</span>
+            <span class="text-sm text-[var(--color-text-secondary)]">Time ({{ receipt.durationMinutes }} min x {{ formatCents(receipt.ratePerMinute) }}/min)</span>
             <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.timeCharge) }}</span>
           </div>
 
           <div class="border-b border-[var(--color-border)]"></div>
 
           <div class="flex items-center justify-between">
-            <span class="text-sm text-[#191f1c]/60">Subtotal</span>
+            <span class="text-sm text-[var(--color-text-secondary)]">Subtotal</span>
             <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.subtotal) }}</span>
           </div>
 
@@ -212,7 +212,7 @@ async function shareReceipt() {
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-[var(--color-text-primary)]" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
-              <span class="text-xs font-medium text-[#191f1c]/60">{{ receipt.driverRating }}</span>
+              <span class="text-xs font-medium text-[var(--color-text-secondary)]">{{ receipt.driverRating }}</span>
             </div>
           </div>
         </div>
@@ -232,7 +232,7 @@ async function shareReceipt() {
 
         <router-link
           to="/support"
-          class="flex h-12 w-full items-center justify-center rounded-xl text-sm font-medium text-[var(--color-text-muted)] transition-colors active:text-[#191f1c]/70"
+          class="flex h-12 w-full items-center justify-center rounded-xl text-sm font-medium text-[var(--color-text-muted)] transition-colors active:text-[var(--color-text-secondary)]"
         >
           Report an issue
         </router-link>

@@ -4,7 +4,7 @@
 
     <!-- Filter tabs -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-      <div class="flex gap-1 bg-[var(--color-surface)] rounded-lg border border-gray-200 p-1 overflow-x-auto">
+      <div class="flex gap-1 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] p-1 overflow-x-auto">
         <button
           v-for="tab in filterTabs"
           :key="tab"
@@ -13,7 +13,7 @@
             'px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap',
             activeFilter === tab
               ? 'bg-[#2b8659] text-white'
-              : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)]'
           ]"
         >
           {{ tab }}
@@ -26,16 +26,16 @@
         v-model="search"
         type="text"
         placeholder="Search drivers..."
-        class="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30 focus:border-[#2b8659] w-full sm:w-64"
+        class="px-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30 focus:border-[#2b8659] w-full sm:w-64"
       />
     </div>
 
     <!-- Table -->
-    <div class="bg-[var(--color-surface)] rounded-xl border border-gray-200 overflow-hidden">
+    <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
-            <tr class="text-left text-gray-400 text-xs uppercase tracking-wider bg-gray-50/50">
+            <tr class="text-left text-[var(--color-text-muted)] text-xs uppercase tracking-wider bg-[var(--color-surface-secondary)]">
               <th class="px-4 py-3 font-medium">Name</th>
               <th class="px-4 py-3 font-medium">Vehicle</th>
               <th class="px-4 py-3 font-medium">Status</th>
@@ -50,12 +50,12 @@
               v-for="driver in filteredDrivers"
               :key="driver.id"
               :class="[
-                'border-t border-gray-100 transition-colors',
-                driver.status === 'Pending' ? 'bg-yellow-50/40 hover:bg-yellow-50/70' : 'hover:bg-gray-50/50'
+                'border-t border-[var(--color-border)] transition-colors',
+                driver.status === 'Pending' ? 'bg-yellow-50/40 hover:bg-yellow-50/70' : 'hover:bg-[var(--color-surface-secondary)]'
               ]"
             >
               <td class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ driver.name }}</td>
-              <td class="px-4 py-3 text-gray-500">{{ driver.vehicle }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-muted)]">{{ driver.vehicle }}</td>
               <td class="px-4 py-3">
                 <span :class="driverStatusBadge(driver.status)">{{ driver.status }}</span>
               </td>
@@ -91,11 +91,11 @@
                 >
                   Reinstate
                 </button>
-                <span v-else class="text-xs text-gray-400">--</span>
+                <span v-else class="text-xs text-[var(--color-text-muted)]">--</span>
               </td>
             </tr>
             <tr v-if="filteredDrivers.length === 0">
-              <td colspan="7" class="px-4 py-8 text-center text-gray-400">No drivers found.</td>
+              <td colspan="7" class="px-4 py-8 text-center text-[var(--color-text-muted)]">No drivers found.</td>
             </tr>
           </tbody>
         </table>
@@ -180,8 +180,8 @@ function driverStatusBadge(status) {
     case 'Approved': return `${base} bg-green-50 text-green-700`
     case 'Pending': return `${base} bg-yellow-50 text-yellow-700`
     case 'Rejected': return `${base} bg-red-50 text-red-700`
-    case 'Suspended': return `${base} bg-gray-100 text-gray-600`
-    default: return `${base} bg-gray-50 text-gray-700`
+    case 'Suspended': return `${base} bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)]`
+    default: return `${base} bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)]`
   }
 }
 

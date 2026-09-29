@@ -79,7 +79,7 @@ async function handleLogout() {
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
-      <button @click="router.push('/edit-profile')" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
+      <button @click="router.push('/edit-profile')" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
         </svg>
@@ -216,7 +216,7 @@ async function handleLogout() {
           <a href="tel:+12424529911" class="block w-full py-3.5 bg-red-500 text-white font-bold rounded-xl text-[14px] text-center mb-3">
             Call Support (242) 452-9911
           </a>
-          <a href="https://wa.me/12424529911?text=I%20would%20like%20to%20delete%20my%20RideUp%20account" target="_blank" class="block w-full py-3.5 bg-[#191f1c]/[0.04] text-[var(--color-text-primary)] font-bold rounded-xl text-[14px] text-center mb-3">
+          <a href="https://wa.me/12424529911?text=I%20would%20like%20to%20delete%20my%20RideUp%20account" target="_blank" class="block w-full py-3.5 bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] font-bold rounded-xl text-[14px] text-center mb-3">
             WhatsApp Support
           </a>
           <button @click="showDeleteConfirm = false" class="w-full py-3 text-[14px] text-[var(--color-text-muted)] font-medium">Cancel</button>
@@ -226,7 +226,7 @@ async function handleLogout() {
 
     <!-- Toast -->
     <Transition name="fade">
-      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#191f1c] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
+      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[var(--color-text-primary)] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
         {{ toast }}
       </div>
     </Transition>

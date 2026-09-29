@@ -9,7 +9,7 @@ import GoogleMap from '../../components/GoogleMap.vue'
 import HarborBackdrop from '../../components/HarborBackdrop.vue'
 
 const router = useRouter()
-const { currentRide, updateRideStatus, completeRide } = useDriver()
+const { driver, currentRide, updateRideStatus, completeRide } = useDriver()
 
 const slideProgress = ref(0)
 const isDragging = ref(false)

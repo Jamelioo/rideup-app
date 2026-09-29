@@ -54,7 +54,7 @@ function close() {
       <div class="flex items-center justify-between px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
         <button
           @click="close"
-          class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[#191f1c]/5 transition-colors"
+          class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[var(--color-surface-secondary)] transition-colors"
           aria-label="Close"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -105,16 +105,16 @@ function close() {
           <div
             v-for="(faq, index) in faqs"
             :key="index"
-            class="rounded-xl bg-[#191f1c]/[0.03] overflow-hidden transition-colors"
+            class="rounded-xl bg-[var(--color-surface-secondary)] overflow-hidden transition-colors"
           >
             <button
               @click="toggleFaq(index)"
-              class="w-full flex items-center justify-between px-4 py-4 hover:bg-[#191f1c]/[0.05] transition-colors"
+              class="w-full flex items-center justify-between px-4 py-4 hover:bg-[var(--color-surface-secondary)] transition-colors"
             >
               <span class="text-[15px] font-semibold text-left pr-3">{{ faq.question }}</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5 text-[#191f1c]/30 shrink-0 transition-transform duration-300"
+                class="w-5 h-5 text-[var(--color-text-muted)] shrink-0 transition-transform duration-300"
                 :class="{ 'rotate-90': faq.open }"
                 viewBox="0 0 24 24"
                 fill="none"
@@ -128,7 +128,7 @@ function close() {
             </button>
             <Transition name="expand">
               <div v-if="faq.open" class="px-4 pb-4">
-                <p class="text-[14px] text-[#191f1c]/70 leading-relaxed">
+                <p class="text-[14px] text-[var(--color-text-secondary)] leading-relaxed">
                   {{ faq.answer }}
                 </p>
               </div>
@@ -147,7 +147,7 @@ function close() {
           <!-- Call -->
           <a
             href="tel:+12424529911"
-            class="w-full flex items-center gap-4 px-4 py-4 bg-[#191f1c]/[0.03] rounded-xl hover:bg-[#191f1c]/[0.05] transition-colors"
+            class="w-full flex items-center gap-4 px-4 py-4 bg-[var(--color-surface-secondary)] rounded-xl hover:bg-[var(--color-surface-secondary)] transition-colors"
           >
             <div class="w-10 h-10 rounded-full bg-[#2b8659]/10 flex items-center justify-center shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#2b8659]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -165,7 +165,7 @@ function close() {
             href="https://wa.me/12424529911"
             target="_blank"
             rel="noopener noreferrer"
-            class="w-full flex items-center gap-4 px-4 py-4 bg-[#191f1c]/[0.03] rounded-xl hover:bg-[#191f1c]/[0.05] transition-colors"
+            class="w-full flex items-center gap-4 px-4 py-4 bg-[var(--color-surface-secondary)] rounded-xl hover:bg-[var(--color-surface-secondary)] transition-colors"
           >
             <div class="w-10 h-10 rounded-full bg-[#25D366]/10 flex items-center justify-center shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#25D366]" viewBox="0 0 24 24" fill="currentColor">
@@ -181,7 +181,7 @@ function close() {
           <!-- Email -->
           <a
             href="mailto:support@rideupnassau.com"
-            class="w-full flex items-center gap-4 px-4 py-4 bg-[#191f1c]/[0.03] rounded-xl hover:bg-[#191f1c]/[0.05] transition-colors"
+            class="w-full flex items-center gap-4 px-4 py-4 bg-[var(--color-surface-secondary)] rounded-xl hover:bg-[var(--color-surface-secondary)] transition-colors"
           >
             <div class="w-10 h-10 rounded-full bg-[#2b8659]/10 flex items-center justify-center shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#2b8659]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

@@ -48,7 +48,7 @@ function handleDelete() {
       <div class="w-full max-w-md bg-[var(--color-surface)] rounded-t-3xl px-6 pt-6 pb-10 shadow-xl">
         <!-- Handle -->
         <div class="flex justify-center mb-5">
-          <div class="w-10 h-1 bg-[#191f1c]/10 rounded-full"></div>
+          <div class="w-10 h-1 bg-[var(--color-surface-secondary)] rounded-full"></div>
         </div>
 
         <h3 class="text-lg font-bold text-[var(--color-text-primary)] mb-5">

@@ -53,12 +53,12 @@ const testimonials = [
     <nav class="sticky top-0 z-40 bg-[var(--color-surface)]/95 backdrop-blur-md border-b border-[var(--color-border)]">
       <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         <router-link to="/" class="text-xl font-semibold">Ride<span class="text-[#2b8659]">Up</span></router-link>
-        <router-link to="/login" class="text-[14px] font-medium text-[#191f1c]/55 hover:text-[var(--color-text-primary)] transition-colors">Already a driver? <span class="text-[var(--color-text-primary)] font-semibold">Log in</span></router-link>
+        <router-link to="/login" class="text-[14px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">Already a driver? <span class="text-[var(--color-text-primary)] font-semibold">Log in</span></router-link>
       </div>
     </nav>
 
     <!-- ==================== HERO ==================== -->
-    <section class="relative overflow-hidden bg-[#191f1c]">
+    <section class="relative overflow-hidden bg-[var(--color-text-primary)]">
       <!-- Gradient blobs -->
       <div class="absolute inset-0 pointer-events-none">
         <div class="absolute -top-32 right-0 w-[600px] h-[600px] rounded-full opacity-25" style="background: radial-gradient(circle, rgba(88,204,2,0.4), transparent 70%);"></div>
@@ -69,11 +69,11 @@ const testimonials = [
       <!-- Floating map pins -->
       <svg class="absolute top-20 right-[15%] opacity-[0.1] hidden md:block" width="28" height="40" viewBox="0 0 32 44" fill="none">
         <path d="M16 0C7.16 0 0 7.16 0 16c0 12 16 28 16 28s16-16 16-28C32 7.16 24.84 0 16 0z" fill="#2b8659"/>
-        <circle cx="16" cy="16" r="6" fill="white"/>
+        <circle cx="16" cy="16" r="6" fill="var(--color-surface)"/>
       </svg>
       <svg class="absolute bottom-28 left-[18%] opacity-[0.07] hidden lg:block" width="22" height="31" viewBox="0 0 32 44" fill="none">
-        <path d="M16 0C7.16 0 0 7.16 0 16c0 12 16 28 16 28s16-16 16-28C32 7.16 24.84 0 16 0z" fill="white"/>
-        <circle cx="16" cy="16" r="6" fill="#191f1c"/>
+        <path d="M16 0C7.16 0 0 7.16 0 16c0 12 16 28 16 28s16-16 16-28C32 7.16 24.84 0 16 0z" fill="var(--color-surface)"/>
+        <circle cx="16" cy="16" r="6" fill="currentColor"/>
       </svg>
       <!-- Route line -->
       <svg class="absolute left-[6%] top-12 opacity-[0.08] hidden lg:block" width="120" height="320" viewBox="0 0 120 320" fill="none">
@@ -126,7 +126,7 @@ const testimonials = [
               <div class="w-[250px] h-[490px] bg-[#0e1a16] rounded-[38px] p-2.5 shadow-2xl shadow-black/30">
                 <div class="w-full h-full bg-[var(--color-surface)] rounded-[30px] overflow-hidden flex flex-col">
                   <!-- Status bar -->
-                  <div class="bg-[#191f1c] text-white px-5 pt-3 pb-3">
+                  <div class="bg-[var(--color-text-primary)] text-white px-5 pt-3 pb-3">
                     <div class="flex justify-between text-[10px] mb-2 opacity-50">
                       <span>9:41</span>
                       <div class="flex gap-1 items-center">
@@ -143,21 +143,21 @@ const testimonials = [
                   </div>
                   <!-- App content -->
                   <div class="flex-1 p-3.5 bg-[var(--color-surface)]">
-                    <div class="text-[10px] text-[#191f1c]/35 mb-0.5">Today's earnings</div>
+                    <div class="text-[10px] text-[var(--color-text-muted)] mb-0.5">Today's earnings</div>
                     <div class="text-[26px] font-bold text-[var(--color-text-primary)] mb-3">$147<span class="text-[18px]">.50</span></div>
                     <!-- Stats row -->
                     <div class="grid grid-cols-3 gap-1.5 mb-3">
-                      <div class="bg-[#191f1c]/[0.04] rounded-lg py-2 text-center">
+                      <div class="bg-[var(--color-surface-secondary)] rounded-lg py-2 text-center">
                         <div class="text-[13px] font-bold text-[var(--color-text-primary)]">8</div>
-                        <div class="text-[8px] text-[#191f1c]/35">Trips</div>
+                        <div class="text-[8px] text-[var(--color-text-muted)]">Trips</div>
                       </div>
-                      <div class="bg-[#191f1c]/[0.04] rounded-lg py-2 text-center">
+                      <div class="bg-[var(--color-surface-secondary)] rounded-lg py-2 text-center">
                         <div class="text-[13px] font-bold text-[var(--color-text-primary)]">4.9</div>
-                        <div class="text-[8px] text-[#191f1c]/35">Rating</div>
+                        <div class="text-[8px] text-[var(--color-text-muted)]">Rating</div>
                       </div>
                       <div class="bg-[#2b8659]/10 rounded-lg py-2 text-center">
                         <div class="text-[13px] font-bold text-[#236e49]">6h</div>
-                        <div class="text-[8px] text-[#191f1c]/35">Online</div>
+                        <div class="text-[8px] text-[var(--color-text-muted)]">Online</div>
                       </div>
                     </div>
                     <!-- Map area -->
@@ -166,7 +166,7 @@ const testimonials = [
                       <svg class="relative" width="70" height="50" viewBox="0 0 70 50" fill="none">
                         <path d="M12 42 Q12 22 35 22 Q58 22 58 8" stroke="#2b8659" stroke-width="1.5" stroke-dasharray="3 2.5"/>
                         <circle cx="12" cy="42" r="3.5" fill="#2b8659"/>
-                        <rect x="54" y="4" width="7" height="7" rx="1.5" fill="#191f1c"/>
+                        <rect x="54" y="4" width="7" height="7" rx="1.5" fill="currentColor"/>
                       </svg>
                     </div>
                     <!-- Incoming ride -->
@@ -214,7 +214,7 @@ const testimonials = [
       <!-- Wave divider -->
       <div class="absolute bottom-0 left-0 right-0">
         <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full" preserveAspectRatio="none">
-          <path d="M0 40C240 80 480 0 720 40C960 80 1200 0 1440 40V80H0V40Z" fill="white"/>
+          <path d="M0 40C240 80 480 0 720 40C960 80 1200 0 1440 40V80H0V40Z" fill="var(--color-surface)"/>
         </svg>
       </div>
     </section>
@@ -233,7 +233,7 @@ const testimonials = [
               </svg>
             </div>
             <h3 class="text-[16px] font-bold mb-1.5">80% of every fare</h3>
-            <p class="text-[#191f1c]/55 text-[14px] leading-relaxed">Keep more of what you earn. We only take 20%.</p>
+            <p class="text-[var(--color-text-secondary)] text-[14px] leading-relaxed">Keep more of what you earn. We only take 20%.</p>
           </div>
 
           <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] text-center hover:border-[#2b8659]/20 transition-colors">
@@ -243,7 +243,7 @@ const testimonials = [
               </svg>
             </div>
             <h3 class="text-[16px] font-bold mb-1.5">Your schedule</h3>
-            <p class="text-[#191f1c]/55 text-[14px] leading-relaxed">Drive when you want. No shifts, no minimums.</p>
+            <p class="text-[var(--color-text-secondary)] text-[14px] leading-relaxed">Drive when you want. No shifts, no minimums.</p>
           </div>
 
           <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] text-center hover:border-[#2b8659]/20 transition-colors">
@@ -253,7 +253,7 @@ const testimonials = [
               </svg>
             </div>
             <h3 class="text-[16px] font-bold mb-1.5">Weekly payouts</h3>
-            <p class="text-[#191f1c]/55 text-[14px] leading-relaxed">Get paid consistently, every week by direct deposit.</p>
+            <p class="text-[var(--color-text-secondary)] text-[14px] leading-relaxed">Get paid consistently, every week by direct deposit.</p>
           </div>
 
           <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] text-center hover:border-[#2b8659]/20 transition-colors">
@@ -264,7 +264,7 @@ const testimonials = [
               </svg>
             </div>
             <h3 class="text-[16px] font-bold mb-1.5">Local support</h3>
-            <p class="text-[#191f1c]/55 text-[14px] leading-relaxed">Built for Nassau drivers. Real people, real help.</p>
+            <p class="text-[var(--color-text-secondary)] text-[14px] leading-relaxed">Built for Nassau drivers. Real people, real help.</p>
           </div>
         </div>
       </div>
@@ -315,9 +315,9 @@ const testimonials = [
       </div>
       <!-- Topo lines -->
       <svg class="absolute right-0 top-1/4 opacity-[0.05] hidden lg:block" width="300" height="300" viewBox="0 0 300 300" fill="none">
-        <ellipse cx="300" cy="150" rx="280" ry="100" stroke="#191f1c" stroke-width="1"/>
-        <ellipse cx="300" cy="150" rx="220" ry="80" stroke="#191f1c" stroke-width="1"/>
-        <ellipse cx="300" cy="150" rx="160" ry="60" stroke="#191f1c" stroke-width="1"/>
+        <ellipse cx="300" cy="150" rx="280" ry="100" stroke="currentColor" stroke-width="1"/>
+        <ellipse cx="300" cy="150" rx="220" ry="80" stroke="currentColor" stroke-width="1"/>
+        <ellipse cx="300" cy="150" rx="160" ry="60" stroke="currentColor" stroke-width="1"/>
       </svg>
 
       <div class="relative max-w-6xl mx-auto px-6 py-20 md:py-28">
@@ -328,7 +328,7 @@ const testimonials = [
         <div class="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] overflow-x-auto shadow-sm mb-8">
           <div class="min-w-[480px]">
             <!-- Header -->
-            <div class="grid grid-cols-[1fr_auto_auto_auto] gap-4 px-6 py-3 bg-[#191f1c]/[0.03] text-[12px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
+            <div class="grid grid-cols-[1fr_auto_auto_auto] gap-4 px-6 py-3 bg-[var(--color-surface-secondary)] text-[12px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
               <span>Route</span>
               <span class="text-right">Distance</span>
               <span class="text-right">Fare</span>
@@ -339,18 +339,18 @@ const testimonials = [
               v-for="(ex, i) in earningsExamples"
               :key="i"
               class="grid grid-cols-[1fr_auto_auto_auto] gap-4 px-6 py-4 items-center"
-              :class="i < earningsExamples.length - 1 ? 'border-b border-[#191f1c]/6' : ''"
+              :class="i < earningsExamples.length - 1 ? 'border-b border-[var(--color-border)]' : ''"
             >
               <div class="flex items-center gap-3">
                 <div class="flex flex-col items-center gap-0.5 shrink-0">
                   <div class="w-2 h-2 rounded-full bg-[#2b8659]"></div>
-                  <div class="w-px h-3 bg-[#191f1c]/12"></div>
-                  <div class="w-2 h-2 rounded bg-[#191f1c]/20"></div>
+                  <div class="w-px h-3 bg-[var(--color-text-primary)]/12"></div>
+                  <div class="w-2 h-2 rounded bg-[var(--color-surface-secondary)]"></div>
                 </div>
                 <span class="text-[14px] font-medium">{{ ex.route }}</span>
               </div>
-              <span class="text-[14px] text-[#191f1c]/55 text-right">{{ ex.distance }}</span>
-              <span class="text-[14px] text-[#191f1c]/60 text-right">{{ ex.fare }}</span>
+              <span class="text-[14px] text-[var(--color-text-secondary)] text-right">{{ ex.distance }}</span>
+              <span class="text-[14px] text-[var(--color-text-secondary)] text-right">{{ ex.fare }}</span>
               <span class="text-[15px] font-bold text-[#236e49] text-right">{{ ex.yourCut }}</span>
             </div>
           </div>
@@ -358,15 +358,15 @@ const testimonials = [
 
         <!-- Weekly summary cards -->
         <div class="grid sm:grid-cols-3 gap-4">
-          <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[#191f1c]/5 shadow-sm">
+          <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] shadow-sm">
             <div class="text-[var(--color-text-muted)] text-[13px] font-medium mb-1">Part-time (15 trips/week)</div>
             <div class="text-[30px] font-semibold">$200–400</div>
-            <div class="text-[12px] text-[#191f1c]/35 mt-1">per week after commission</div>
+            <div class="text-[12px] text-[var(--color-text-muted)] mt-1">per week after commission</div>
           </div>
-          <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[#191f1c]/5 shadow-sm">
+          <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] shadow-sm">
             <div class="text-[var(--color-text-muted)] text-[13px] font-medium mb-1">Full-time (40 trips/week)</div>
             <div class="text-[30px] font-semibold">$550–900</div>
-            <div class="text-[12px] text-[#191f1c]/35 mt-1">per week after commission</div>
+            <div class="text-[12px] text-[var(--color-text-muted)] mt-1">per week after commission</div>
           </div>
           <div class="bg-[#2b8659] rounded-2xl p-6 text-white shadow-lg shadow-[#2b8659]/15">
             <div class="text-white/70 text-[13px] font-medium mb-1">Your commission rate</div>
@@ -374,7 +374,7 @@ const testimonials = [
             <div class="text-[12px] text-white/50 mt-1">of every fare, every time</div>
           </div>
         </div>
-        <p class="text-[12px] text-[#191f1c]/30 mt-4">Earnings vary based on time, demand, and trips completed. Figures shown are estimates based on Nassau route averages.</p>
+        <p class="text-[12px] text-[var(--color-text-muted)] mt-4">Earnings vary based on time, demand, and trips completed. Figures shown are estimates based on Nassau route averages.</p>
       </div>
     </section>
 
@@ -403,7 +403,7 @@ const testimonials = [
               </div>
             </div>
             <!-- Quote -->
-            <p class="text-[14px] text-[#191f1c]/60 leading-relaxed mb-4">"{{ t.quote }}"</p>
+            <p class="text-[14px] text-[var(--color-text-secondary)] leading-relaxed mb-4">"{{ t.quote }}"</p>
             <!-- Trip count -->
             <div class="flex items-center gap-2">
               <div class="w-5 h-5 rounded bg-[#2b8659]/10 flex items-center justify-center">
@@ -419,11 +419,11 @@ const testimonials = [
     </section>
 
     <!-- ==================== REQUIREMENTS + TRUST ==================== -->
-    <section class="relative overflow-hidden bg-[#191f1c]">
+    <section class="relative overflow-hidden bg-[var(--color-text-primary)]">
       <!-- Wave top -->
       <div class="absolute top-0 left-0 right-0 -translate-y-[1px]">
         <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full" preserveAspectRatio="none">
-          <path d="M0 60V30C360 0 720 60 1080 30C1260 15 1380 40 1440 60H0Z" fill="#191f1c"/>
+          <path d="M0 60V30C360 0 720 60 1080 30C1260 15 1380 40 1440 60H0Z" fill="currentColor"/>
         </svg>
       </div>
       <div class="absolute inset-0 pointer-events-none">
@@ -499,7 +499,7 @@ const testimonials = [
       <!-- Wave bottom -->
       <div class="absolute bottom-0 left-0 right-0">
         <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full" preserveAspectRatio="none">
-          <path d="M0 30C240 60 480 0 720 30C960 60 1200 0 1440 30V60H0V30Z" fill="white"/>
+          <path d="M0 30C240 60 480 0 720 30C960 60 1200 0 1440 30V60H0V30Z" fill="var(--color-surface)"/>
         </svg>
       </div>
     </section>
@@ -522,19 +522,19 @@ const testimonials = [
             <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
         </button>
-        <div class="flex flex-wrap justify-center gap-x-5 gap-y-1 text-[13px] text-[#191f1c]/35">
+        <div class="flex flex-wrap justify-center gap-x-5 gap-y-1 text-[13px] text-[var(--color-text-muted)]">
           <span>5-minute application</span>
-          <span class="text-[#191f1c]/15">|</span>
+          <span class="text-[var(--color-text-muted)]">|</span>
           <span>Use your own car</span>
-          <span class="text-[#191f1c]/15">|</span>
+          <span class="text-[var(--color-text-muted)]">|</span>
           <span>No lease required</span>
         </div>
-        <p class="text-[#191f1c]/35 text-[14px] mt-8">Questions? Call us at <a href="tel:+12424529911" class="underline hover:text-[#191f1c]/60">(242) 452-9911</a></p>
+        <p class="text-[var(--color-text-muted)] text-[14px] mt-8">Questions? Call us at <a href="tel:+12424529911" class="underline hover:text-[var(--color-text-secondary)]">(242) 452-9911</a></p>
       </div>
     </section>
 
     <!-- ==================== FOOTER ==================== -->
-    <footer class="bg-[#191f1c] text-white">
+    <footer class="bg-[var(--color-text-primary)] text-white">
       <div class="max-w-6xl mx-auto px-6 py-14 grid sm:grid-cols-4 gap-8">
         <div>
           <div class="text-lg font-semibold mb-3">Ride<span class="text-[#2b8659]">Up</span></div>

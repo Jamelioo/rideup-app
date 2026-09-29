@@ -168,7 +168,7 @@ watch(() => props.isOpen, async (open) => {
             <div class="flex gap-3">
               <button
                 @click="handleNavigate('/login')"
-                class="flex-1 py-2.5 rounded-xl border border-[var(--color-border)] text-[14px] font-semibold text-[var(--color-text-primary)] active:bg-[#191f1c]/5 transition-colors"
+                class="flex-1 py-2.5 rounded-xl border border-[var(--color-border)] text-[14px] font-semibold text-[var(--color-text-primary)] active:bg-[var(--color-surface-secondary)] transition-colors"
               >
                 Log in
               </button>
@@ -183,14 +183,14 @@ watch(() => props.isOpen, async (open) => {
         </div>
 
         <!-- Divider -->
-        <div class="h-px bg-[#191f1c]/8 mx-5" />
+        <div class="h-px bg-[var(--color-border)] mx-5" />
 
         <!-- Menu Items -->
         <nav class="flex-1 overflow-y-auto py-2" aria-label="Main navigation">
           <button
             v-for="item in menuItems"
             :key="item.label"
-            class="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-[#191f1c]/[0.03] active:bg-[#191f1c]/[0.06] transition-colors text-left"
+            class="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-[var(--color-surface-secondary)] active:bg-[var(--color-surface-secondary)] transition-colors text-left"
             @click="handleNavigate(item.route)"
           >
             <!-- Icon -->
@@ -248,14 +248,14 @@ watch(() => props.isOpen, async (open) => {
             </div>
 
             <!-- Chevron -->
-            <svg class="w-5 h-5 text-[#191f1c]/25 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="w-5 h-5 text-[var(--color-text-muted)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6" />
             </svg>
           </button>
         </nav>
 
         <!-- Divider -->
-        <div class="h-px bg-[#191f1c]/8 mx-5" />
+        <div class="h-px bg-[var(--color-border)] mx-5" />
 
         <!-- Logout (when logged in) or Become a Driver CTA -->
         <div class="px-5 py-4">
@@ -278,7 +278,7 @@ watch(() => props.isOpen, async (open) => {
 
         <!-- Home Indicator -->
         <div class="flex justify-center pb-2 pt-1">
-          <div class="w-32 h-1 rounded-full bg-[#191f1c]/20" />
+          <div class="w-32 h-1 rounded-full bg-[var(--color-surface-secondary)]" />
         </div>
       </div>
     </Transition>

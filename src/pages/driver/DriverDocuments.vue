@@ -51,11 +51,11 @@ function showToast(msg) {
 
 function statusColor(status) {
   return {
-    pending: 'text-[var(--color-text-muted)] bg-[#191f1c]/5',
+    pending: 'text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)]',
     uploaded: 'text-amber-600 bg-amber-50',
     approved: 'text-[#2b8659] bg-[#2b8659]/10',
     rejected: 'text-red-500 bg-red-50',
-  }[status] || 'text-[var(--color-text-muted)] bg-[#191f1c]/5'
+  }[status] || 'text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)]'
 }
 
 function statusLabel(status) {
@@ -138,7 +138,7 @@ function goBack() {
   <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)]">
     <!-- Top bar -->
     <div class="flex items-center justify-between px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#191f1c]/5">
+      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -180,10 +180,10 @@ function goBack() {
                    :disabled="uploading === doc.key" />
             <div class="flex items-center justify-center gap-2 py-2.5 border-2 border-dashed rounded-xl transition-colors"
                  :class="uploading === doc.key
-                   ? 'border-[var(--color-border)] text-[#191f1c]/30'
+                   ? 'border-[var(--color-border)] text-[var(--color-text-muted)]'
                    : doc.status === 'rejected'
                      ? 'border-red-200 text-red-500 active:bg-red-50'
-                     : 'border-[var(--color-border)] text-[var(--color-text-muted)] active:bg-[#191f1c]/5'">
+                     : 'border-[var(--color-border)] text-[var(--color-text-muted)] active:bg-[var(--color-surface-secondary)]'">
               <!-- Loading spinner -->
               <svg v-if="uploading === doc.key" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -209,14 +209,14 @@ function goBack() {
 
       <!-- Back to profile -->
       <button @click="router.push('/driver/profile')"
-              class="w-full py-3.5 mt-6 border-2 border-[var(--color-border)] text-[14px] font-semibold rounded-2xl active:bg-[#191f1c]/5 transition-colors">
+              class="w-full py-3.5 mt-6 border-2 border-[var(--color-border)] text-[14px] font-semibold rounded-2xl active:bg-[var(--color-surface-secondary)] transition-colors">
         Back to Profile
       </button>
     </div>
 
     <!-- Toast -->
     <Transition name="fade">
-      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#191f1c] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
+      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[var(--color-text-primary)] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
         {{ toast }}
       </div>
     </Transition>
