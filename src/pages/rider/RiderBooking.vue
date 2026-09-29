@@ -518,7 +518,7 @@ async function scheduleRide({ date, time, summary }) {
               <div v-else class="flex gap-2 mt-1">
                 <input v-model="promoCode" type="text" placeholder="Enter code"
                        class="flex-1 bg-[var(--color-surface-secondary)] border-2 border-transparent rounded-xl px-4 py-3 text-[14px] font-medium outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all min-h-[44px] uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal placeholder:font-normal" />
-                <button @click="applyPromo" class="px-5 py-3 bg-[var(--color-text-primary)] text-white text-[13px] font-bold rounded-xl min-h-[44px] active:scale-95 transition-transform">Apply</button>
+                <button @click="applyPromo" class="px-5 py-3 bg-[#2b8659] text-white text-[13px] font-bold rounded-xl min-h-[44px] active:scale-95 transition-transform">Apply</button>
               </div>
             </div>
             <div v-else class="flex items-center gap-2 text-[#2b8659] text-[13px] font-semibold px-1">
@@ -532,7 +532,7 @@ async function scheduleRide({ date, time, summary }) {
               {{ isSubmitting ? 'Requesting...' : 'Request Ride' }}
             </button>
             <button @click="showSchedulePicker = true" :disabled="!canRequest"
-                    class="w-[52px] flex-shrink-0 flex items-center justify-center bg-[var(--color-text-primary)] disabled:bg-[var(--color-surface-secondary)] text-white disabled:text-[var(--color-text-muted)] rounded-2xl transition-all active:scale-[0.97]"
+                    class="w-[52px] flex-shrink-0 flex items-center justify-center bg-[var(--color-surface-secondary)] disabled:bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] disabled:text-[var(--color-text-muted)] rounded-2xl transition-all active:scale-[0.97] border border-[var(--color-border)]"
                     title="Schedule for later">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -651,7 +651,7 @@ async function scheduleRide({ date, time, summary }) {
               <div v-else class="flex gap-2 mt-1">
                 <input v-model="promoCode" type="text" placeholder="Enter code"
                        class="flex-1 bg-[var(--color-surface-secondary)] border-2 border-transparent rounded-xl px-4 py-3 text-[14px] font-medium outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all min-h-[44px] uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal placeholder:font-normal" />
-                <button @click="applyPromo" class="px-5 py-3 bg-[var(--color-text-primary)] text-white text-[13px] font-bold rounded-xl min-h-[44px] hover:opacity-90 transition-colors">Apply</button>
+                <button @click="applyPromo" class="px-5 py-3 bg-[#2b8659] text-white text-[13px] font-bold rounded-xl min-h-[44px] hover:bg-[#236e49] transition-colors">Apply</button>
               </div>
             </div>
             <div v-else class="flex items-center gap-2 text-[#2b8659] text-[13px] font-semibold px-1">
@@ -665,7 +665,7 @@ async function scheduleRide({ date, time, summary }) {
               {{ isSubmitting ? 'Requesting...' : 'Request Ride' }}
             </button>
             <button @click="showSchedulePicker = true" :disabled="!canRequest"
-                    class="w-[52px] flex-shrink-0 flex items-center justify-center bg-[var(--color-text-primary)] disabled:bg-[var(--color-surface-secondary)] text-white disabled:text-[var(--color-text-muted)] rounded-2xl transition-all hover:opacity-90 active:scale-[0.97]"
+                    class="w-[52px] flex-shrink-0 flex items-center justify-center bg-[var(--color-surface-secondary)] disabled:bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] disabled:text-[var(--color-text-muted)] rounded-2xl transition-all hover:opacity-90 active:scale-[0.97] border border-[var(--color-border)]"
                     title="Schedule for later">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />

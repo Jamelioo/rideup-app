@@ -293,10 +293,7 @@ onMounted(async () => {
     zoom: 13,
     styles: mapStyles,
     disableDefaultUI: true,
-    zoomControl: true,
-    zoomControlOptions: {
-      position: maps.ControlPosition.RIGHT_CENTER,
-    },
+    zoomControl: false,
   }
 
   map = new maps.Map(mapRef.value, mapOptions)
