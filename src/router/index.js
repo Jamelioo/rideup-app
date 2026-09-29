@@ -1,47 +1,51 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { watch } from 'vue'
-import RiderFlow from '../pages/rider/RiderFlow.vue'
-import Login from '../pages/Login.vue'
-import Signup from '../pages/Signup.vue'
-import Profile from '../pages/Profile.vue'
-import EditProfile from '../pages/EditProfile.vue'
-import MyRides from '../pages/MyRides.vue'
-import Payments from '../pages/Payments.vue'
-import SavedPlaces from '../pages/SavedPlaces.vue'
-import Support from '../pages/Support.vue'
-import About from '../pages/About.vue'
-import RiderLanding from '../pages/RiderLanding.vue'
-import DriverLanding from '../pages/DriverLanding.vue'
-import NotFound from '../pages/NotFound.vue'
-import TrustedContacts from '../pages/TrustedContacts.vue'
-import Promotions from '../pages/Promotions.vue'
-import Referrals from '../pages/Referrals.vue'
-import Privacy from '../pages/Privacy.vue'
-import Terms from '../pages/Terms.vue'
-import PaymentSuccess from '../pages/rider/PaymentSuccess.vue'
-import RideReceipt from '../pages/rider/RideReceipt.vue'
-import DriverApply from '../pages/driver/DriverApply.vue'
-import DriverPending from '../pages/driver/DriverPending.vue'
-import DriverDashboard from '../pages/driver/DriverDashboard.vue'
-import DriverActiveRide from '../pages/driver/DriverActiveRide.vue'
-import DriverEarnings from '../pages/driver/DriverEarnings.vue'
-import DriverProfile from '../pages/driver/DriverProfile.vue'
-import DriverDocuments from '../pages/driver/DriverDocuments.vue'
-import RateRide from '../pages/rider/RateRide.vue'
-import RateRider from '../pages/driver/RateRider.vue'
-import ActiveRide from '../pages/rider/ActiveRide.vue'
-import RideMessages from '../pages/rider/RideMessages.vue'
-import ScheduledRides from '../pages/rider/ScheduledRides.vue'
-import AdminLayout from '../pages/admin/AdminLayout.vue'
-import AdminDashboard from '../pages/admin/AdminDashboard.vue'
-import AdminRides from '../pages/admin/AdminRides.vue'
-import AdminUsers from '../pages/admin/AdminUsers.vue'
-import AdminDrivers from '../pages/admin/AdminDrivers.vue'
-import AdminRevenue from '../pages/admin/AdminRevenue.vue'
-import AdminSupport from '../pages/admin/AdminSupport.vue'
 import { useAuth } from '../lib/useAuth'
 import { useDriver } from '../lib/useDriver'
 import { DEMO_MODE } from '../lib/demoMode'
+
+// Eager: landing + main booking (first paint)
+import RiderLanding from '../pages/RiderLanding.vue'
+import RiderFlow from '../pages/rider/RiderFlow.vue'
+
+// Lazy: everything else
+const Login = () => import('../pages/Login.vue')
+const Signup = () => import('../pages/Signup.vue')
+const Profile = () => import('../pages/Profile.vue')
+const EditProfile = () => import('../pages/EditProfile.vue')
+const MyRides = () => import('../pages/MyRides.vue')
+const Payments = () => import('../pages/Payments.vue')
+const SavedPlaces = () => import('../pages/SavedPlaces.vue')
+const Support = () => import('../pages/Support.vue')
+const About = () => import('../pages/About.vue')
+const DriverLanding = () => import('../pages/DriverLanding.vue')
+const NotFound = () => import('../pages/NotFound.vue')
+const TrustedContacts = () => import('../pages/TrustedContacts.vue')
+const Promotions = () => import('../pages/Promotions.vue')
+const Referrals = () => import('../pages/Referrals.vue')
+const Privacy = () => import('../pages/Privacy.vue')
+const Terms = () => import('../pages/Terms.vue')
+const PaymentSuccess = () => import('../pages/rider/PaymentSuccess.vue')
+const RideReceipt = () => import('../pages/rider/RideReceipt.vue')
+const DriverApply = () => import('../pages/driver/DriverApply.vue')
+const DriverPending = () => import('../pages/driver/DriverPending.vue')
+const DriverDashboard = () => import('../pages/driver/DriverDashboard.vue')
+const DriverActiveRide = () => import('../pages/driver/DriverActiveRide.vue')
+const DriverEarnings = () => import('../pages/driver/DriverEarnings.vue')
+const DriverProfile = () => import('../pages/driver/DriverProfile.vue')
+const DriverDocuments = () => import('../pages/driver/DriverDocuments.vue')
+const RateRide = () => import('../pages/rider/RateRide.vue')
+const RateRider = () => import('../pages/driver/RateRider.vue')
+const ActiveRide = () => import('../pages/rider/ActiveRide.vue')
+const RideMessages = () => import('../pages/rider/RideMessages.vue')
+const ScheduledRides = () => import('../pages/rider/ScheduledRides.vue')
+const AdminLayout = () => import('../pages/admin/AdminLayout.vue')
+const AdminDashboard = () => import('../pages/admin/AdminDashboard.vue')
+const AdminRides = () => import('../pages/admin/AdminRides.vue')
+const AdminUsers = () => import('../pages/admin/AdminUsers.vue')
+const AdminDrivers = () => import('../pages/admin/AdminDrivers.vue')
+const AdminRevenue = () => import('../pages/admin/AdminRevenue.vue')
+const AdminSupport = () => import('../pages/admin/AdminSupport.vue')
 
 const routes = [
   { path: '/', name: 'home', component: RiderLanding, meta: { title: 'RideUp — Ride in Nassau' } },

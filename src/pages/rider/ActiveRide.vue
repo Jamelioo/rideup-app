@@ -168,10 +168,10 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <div class="px-4 pb-6 pt-3 border-t border-[var(--color-border)] flex items-center gap-2">
+    <div class="px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 border-t border-[var(--color-border)] flex items-center gap-2">
       <input v-model="draft" @keyup.enter="sendMessage" type="text" placeholder="Type a message..."
-             class="flex-1 bg-[var(--color-surface-secondary)] rounded-full px-4 py-2.5 text-[13px] outline-none placeholder:text-[var(--color-text-muted)]" />
-      <button @click="sendMessage" class="w-10 h-10 rounded-full bg-[#2b8659] text-white flex items-center justify-center">
+             class="flex-1 bg-[var(--color-surface-secondary)] rounded-full px-4 py-3 text-[13px] outline-none placeholder:text-[var(--color-text-muted)] min-h-[44px]" />
+      <button @click="sendMessage" class="w-11 h-11 rounded-full bg-[#2b8659] text-white flex items-center justify-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0l-7 7m7-7l7 7" />
         </svg>

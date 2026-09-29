@@ -146,6 +146,12 @@ async function approveDriver(driver) {
   if (supabaseConfigured) {
     const { error } = await supabase.from('drivers').update({ approved: true, status: 'approved' }).eq('id', driver.id)
     if (error) { console.error('Approve error:', error.message); return }
+    // Send approval notification (fire-and-forget)
+    fetch('/api/notify-driver', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ driverId: driver.id, type: 'approved' }),
+    }).catch(() => {})
   }
   driver.status = 'Approved'
 }

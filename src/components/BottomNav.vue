@@ -39,7 +39,7 @@ const isVisible = computed(() => {
         :key="tab.route"
         :to="tab.route"
         :class="[
-          'flex flex-col items-center gap-0.5 py-2 px-4 min-w-[64px] transition-colors',
+          'flex flex-col items-center gap-0.5 py-2.5 px-4 min-w-[64px] min-h-[48px] transition-colors',
           activeTab === tab.route ? 'text-[var(--color-brand)]' : 'text-[var(--color-text-muted)]'
         ]"
       >

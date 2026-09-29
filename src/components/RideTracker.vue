@@ -65,7 +65,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Main driver card -->
-    <div class="bg-[var(--color-surface)] rounded-t-3xl shadow-[0_-8px_40px_rgba(0,0,0,0.12)] px-6 pt-6 pb-8">
+    <div class="bg-[var(--color-surface)] rounded-t-3xl shadow-[0_-8px_40px_rgba(0,0,0,0.12)] px-6 pt-6 pb-[max(2rem,env(safe-area-inset-bottom))]">
       <!-- Handle bar -->
       <div class="flex justify-center mb-4">
         <div class="w-10 h-1 rounded-full bg-[var(--color-surface-secondary)]"></div>
@@ -112,7 +112,7 @@ onUnmounted(() => {
       <button
         v-if="showCancel"
         @click="emit('cancel')"
-        class="w-full mt-4 py-2.5 text-[13px] text-[var(--color-text-secondary)] underline underline-offset-2 transition-opacity active:opacity-60"
+        class="w-full mt-4 py-3 text-[13px] text-[var(--color-text-secondary)] underline underline-offset-2 transition-opacity active:opacity-60 min-h-[44px]"
       >
         Cancel ride
       </button>
