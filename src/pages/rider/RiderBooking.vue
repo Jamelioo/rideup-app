@@ -311,18 +311,8 @@ async function requestRide() {
     }).select().single()
     if (rideErr) { error.value = 'Something went wrong requesting your ride. Please try again.'; isSubmitting.value = false; return }
 
-    // 2. Redirect to Stripe Checkout for payment
-    const res = await fetch('/api/create-checkout-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: fare, description, rideId: ride.id }),
-    })
-    const data = await res.json()
-    if (data.url) {
-      window.location.href = data.url
-      return
-    }
-    error.value = data.error || 'Payment failed. Please try again.'
+    // 2. Go straight to searching for driver — payment happens after ride
+    emit('requested', ride)
     isSubmitting.value = false
   } catch (err) {
     error.value = 'Connection error. Please try again.'
