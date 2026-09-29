@@ -286,8 +286,7 @@ function watchThemeChanges() {
 onMounted(async () => {
   maps = await loadGoogleMaps()
 
-  // Check for AdvancedMarkerElement
-  useAdvanced = !!maps.marker?.AdvancedMarkerElement
+  useAdvanced = false // Use regular markers so JSON styles work
 
   const mapOptions = {
     center: { lat: 25.0443, lng: -77.3504 },
@@ -298,10 +297,6 @@ onMounted(async () => {
     zoomControlOptions: {
       position: maps.ControlPosition.RIGHT_CENTER,
     },
-  }
-
-  if (useAdvanced) {
-    mapOptions.mapId = 'RIDEUP_MAP'
   }
 
   map = new maps.Map(mapRef.value, mapOptions)
