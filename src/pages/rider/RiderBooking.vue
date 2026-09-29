@@ -292,8 +292,17 @@ async function requestRide() {
   try {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { error.value = 'Please log in to request a ride.'; isSubmitting.value = false; return }
-    const { data: rider, error: riderErr } = await supabase.from('riders').select('id').eq('auth_user_id', user.id).single()
-    if (riderErr || !rider) { error.value = 'Could not find your rider profile. Please try logging in again.'; isSubmitting.value = false; return }
+    let { data: rider } = await supabase.from('riders').select('id').eq('auth_user_id', user.id).maybeSingle()
+    if (!rider) {
+      const { data: newRider, error: createErr } = await supabase.from('riders').insert({
+        auth_user_id: user.id,
+        name: user.user_metadata?.name || user.email?.split('@')[0] || 'Rider',
+        email: user.email,
+        phone: user.phone || '',
+      }).select('id').single()
+      if (createErr || !newRider) { error.value = 'Could not create your rider profile. Please try again.'; isSubmitting.value = false; return }
+      rider = newRider
+    }
     const { data: ride, error: rideErr } = await supabase.from('rides').insert({
       rider_id: rider.id, status: 'requested',
       pickup_address: pickup.value.address, pickup_lat: pickup.value.lat, pickup_lng: pickup.value.lng,
@@ -339,8 +348,17 @@ async function scheduleRide({ date, time, summary }) {
   try {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { error.value = 'Please log in to schedule a ride.'; isScheduling.value = false; return }
-    const { data: rider, error: riderErr } = await supabase.from('riders').select('id').eq('auth_user_id', user.id).single()
-    if (riderErr || !rider) { error.value = 'Could not find your rider profile.'; isScheduling.value = false; return }
+    let { data: rider } = await supabase.from('riders').select('id').eq('auth_user_id', user.id).maybeSingle()
+    if (!rider) {
+      const { data: newRider, error: createErr } = await supabase.from('riders').insert({
+        auth_user_id: user.id,
+        name: user.user_metadata?.name || user.email?.split('@')[0] || 'Rider',
+        email: user.email,
+        phone: user.phone || '',
+      }).select('id').single()
+      if (createErr || !newRider) { error.value = 'Could not create your rider profile.'; isScheduling.value = false; return }
+      rider = newRider
+    }
     const { error: insertErr } = await supabase.from('scheduled_rides').insert({
       rider_id: rider.id,
       pickup_address: pickup.value.address,
