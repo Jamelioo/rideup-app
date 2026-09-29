@@ -1,8 +1,28 @@
 <script setup>
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { supabase } from '../lib/supabase'
+import { DEMO_MODE } from '../lib/demoMode'
 
 const router = useRouter()
 const whatsappLink = 'https://wa.me/12424529911?text=' + encodeURIComponent("Hi! I'd like to apply to drive for RideUp Nassau.")
+
+// If already logged in as an approved driver, go straight to dashboard
+onMounted(async () => {
+  if (DEMO_MODE) return
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  const { data: driver } = await supabase
+    .from('drivers')
+    .select('approved, status')
+    .eq('auth_user_id', user.id)
+    .maybeSingle()
+  if (driver?.approved) {
+    router.replace('/driver/dashboard')
+  } else if (driver) {
+    router.replace('/driver/pending')
+  }
+})
 
 function goToApply() {
   router.push('/driver/apply')
@@ -53,7 +73,7 @@ const testimonials = [
     <nav class="sticky top-0 z-40 bg-[var(--color-surface)]/95 backdrop-blur-md border-b border-[var(--color-border)]">
       <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         <router-link to="/" class="text-xl font-semibold">Ride<span class="text-[#2b8659]">Up</span></router-link>
-        <router-link to="/login" class="text-[14px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">Already a driver? <span class="text-[var(--color-text-primary)] font-semibold">Log in</span></router-link>
+        <router-link to="/driver/dashboard" class="text-[14px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">Already a driver? <span class="text-[var(--color-text-primary)] font-semibold">Log in</span></router-link>
       </div>
     </nav>
 
