@@ -18,6 +18,8 @@ const rideId = ref(null)
 const showCheck = ref(false)
 const loading = ref(true)
 
+const verified = ref(false)
+
 onMounted(async () => {
   setTimeout(() => { showCheck.value = true }, 300)
 
@@ -25,8 +27,26 @@ onMounted(async () => {
     fareAmount.value = '$12.50'
     pickup.value = 'Bahamar Resort'
     dropoff.value = 'Downtown Nassau'
+    verified.value = true
     loading.value = false
     return
+  }
+
+  // Server-side payment verification
+  if (sessionId.value) {
+    try {
+      const res = await fetch('/api/verify-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: sessionId.value }),
+      })
+      const data = await res.json()
+      if (data.paid) {
+        verified.value = true
+        if (data.rideId) rideId.value = data.rideId
+        if (data.amount) fareAmount.value = formatFare(data.amount)
+      }
+    } catch (e) { /* fall through to DB lookup */ }
   }
 
   if (!user.value) { loading.value = false; return }
@@ -36,7 +56,7 @@ onMounted(async () => {
       .from('riders')
       .select('id')
       .eq('auth_user_id', user.value.id)
-      .single()
+      .maybeSingle()
 
     if (rider) {
       const { data: ride } = await supabase
@@ -45,13 +65,14 @@ onMounted(async () => {
         .eq('rider_id', rider.id)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single()
+        .maybeSingle()
 
       if (ride) {
-        rideId.value = ride.id
-        fareAmount.value = formatFare(ride.fare_cents)
+        if (!rideId.value) rideId.value = ride.id
+        if (!fareAmount.value) fareAmount.value = formatFare(ride.fare_cents)
         pickup.value = ride.pickup_address || 'Pickup'
         dropoff.value = ride.dropoff_address || 'Dropoff'
+        verified.value = true
       }
     }
   } catch (e) {
@@ -59,6 +80,14 @@ onMounted(async () => {
   }
   loading.value = false
 })
+
+function findDriver() {
+  if (rideId.value) {
+    router.push({ name: 'active-ride', params: { rideId: rideId.value } })
+  } else {
+    router.push('/book')
+  }
+}
 
 function viewReceipt() {
   if (rideId.value) {
@@ -141,14 +170,21 @@ function goHome() {
     <!-- Buttons -->
     <div class="flex w-full max-w-sm flex-col gap-3">
       <button
-        @click="viewReceipt"
+        v-if="rideId"
+        @click="findDriver"
         class="flex h-12 w-full items-center justify-center rounded-xl bg-[#2b8659] text-base font-semibold text-white transition-colors active:bg-[#236e49]"
+      >
+        Find my driver
+      </button>
+      <button
+        @click="viewReceipt"
+        class="flex h-12 w-full items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-base font-semibold text-[var(--color-text-primary)] transition-colors active:bg-[var(--color-surface-secondary)]"
       >
         View receipt
       </button>
       <button
         @click="goHome"
-        class="flex h-12 w-full items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-base font-semibold text-[var(--color-text-primary)] transition-colors active:bg-[var(--color-surface-secondary)]"
+        class="flex h-12 w-full items-center justify-center text-sm font-medium text-[var(--color-text-muted)] transition-colors"
       >
         Back to home
       </button>

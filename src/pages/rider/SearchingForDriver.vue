@@ -34,6 +34,10 @@ function navigateToActiveRide(matchData) {
         vehicle: vehicleName,
         plate: plateNum,
         eta: matchData.eta_minutes || 4,
+        pickupLat: matchData.pickup_lat || ride.value?.pickup_lat || '',
+        pickupLng: matchData.pickup_lng || ride.value?.pickup_lng || '',
+        dropoffLat: matchData.dropoff_lat || ride.value?.dropoff_lat || '',
+        dropoffLng: matchData.dropoff_lng || ride.value?.dropoff_lng || '',
       },
     })
   }, 1500) // Brief pause to show "Driver found" before navigating

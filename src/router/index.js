@@ -123,7 +123,7 @@ router.beforeEach(async (to) => {
     return { path: '/book' }
   }
 
-  if (to.meta.requiresAdmin && user.value?.user_metadata?.role !== 'admin') {
+  if (to.meta.requiresAdmin && !DEMO_MODE && user.value?.user_metadata?.role !== 'admin') {
     return { path: '/book' }
   }
 

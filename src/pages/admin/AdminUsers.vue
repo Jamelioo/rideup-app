@@ -115,8 +115,15 @@ const filteredUsers = computed(() => {
   return list
 })
 
-function toggleUserStatus(user) {
-  user.status = user.status === 'Active' ? 'Suspended' : 'Active'
+async function toggleUserStatus(user) {
+  const newStatus = user.status === 'Active' ? 'Suspended' : 'Active'
+  user.status = newStatus
+  if (supabaseConfigured) {
+    await supabase
+      .from('riders')
+      .update({ status: newStatus.toLowerCase() })
+      .eq('id', user.id)
+  }
 }
 
 onMounted(async () => {
@@ -136,7 +143,7 @@ onMounted(async () => {
         rides: r.total_rides || 0,
         rating: r.rating || 0,
         joined: r.created_at ? r.created_at.split('T')[0] : '-',
-        status: 'Active',
+        status: r.status === 'suspended' ? 'Suspended' : 'Active',
       }))
     }
   } catch (e) { /* keep empty */ }
