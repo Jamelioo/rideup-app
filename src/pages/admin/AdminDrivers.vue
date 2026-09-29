@@ -160,6 +160,11 @@ async function rejectDriver(driver) {
   if (supabaseConfigured) {
     const { error } = await supabase.from('drivers').update({ approved: false, status: 'rejected' }).eq('id', driver.id)
     if (error) { console.error('Reject error:', error.message); return }
+    fetch('/api/notify-driver', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ driverId: driver.id, type: 'rejected' }),
+    }).catch(() => {})
   }
   driver.status = 'Rejected'
 }

@@ -1,10 +1,18 @@
 import Stripe from 'stripe'
+import { rateLimit } from './_rateLimit.js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+const checkRate = rateLimit({ maxRequests: 10, windowMs: 60_000 })
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  const blocked = checkRate(req)
+  if (blocked) {
+    res.setHeader('Retry-After', blocked.retryAfter)
+    return res.status(429).json({ error: 'Too many requests. Try again shortly.' })
   }
 
   const { sessionId } = req.body
