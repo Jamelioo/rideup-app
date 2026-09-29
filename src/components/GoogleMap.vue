@@ -300,6 +300,10 @@ onMounted(async () => {
     },
   }
 
+  if (useAdvanced) {
+    mapOptions.mapId = 'RIDEUP_MAP'
+  }
+
   map = new maps.Map(mapRef.value, mapOptions)
 
   map.addListener('click', (e) => {
