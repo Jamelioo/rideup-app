@@ -181,7 +181,7 @@ const slideThumbStyle = computed(() => {
     <!-- MOBILE bottom sheet -->
     <div class="md:hidden absolute bottom-0 left-0 right-0 z-10 bg-[var(--color-surface)] rounded-t-[28px] shadow-[0_-4px_40px_rgba(0,0,0,0.1)]" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
       <div class="flex justify-center pt-3 pb-2">
-        <div class="w-9 h-[5px] rounded-full bg-[#191f1c]/10"></div>
+        <div class="w-9 h-[5px] rounded-full bg-[var(--color-border)]"></div>
       </div>
       <div class="px-5 pb-6">
         <!-- Trip complete summary -->
@@ -205,7 +205,7 @@ const slideThumbStyle = computed(() => {
           <!-- Status progress bar -->
           <div class="flex items-center gap-1 mb-4">
             <template v-for="(step, idx) in phaseSteps" :key="step.key">
-              <div class="flex-1 h-1 rounded-full" :class="step.done || step.active ? 'bg-[#2b8659]' : 'bg-[#191f1c]/10'"></div>
+              <div class="flex-1 h-1 rounded-full" :class="step.done || step.active ? 'bg-[#2b8659]' : 'bg-[var(--color-border)]'"></div>
             </template>
           </div>
 
@@ -232,8 +232,8 @@ const slideThumbStyle = computed(() => {
             <div class="flex gap-3">
               <div class="flex flex-col items-center pt-[6px]">
                 <div class="w-[10px] h-[10px] rounded-full border-[2.5px] border-[#2b8659] bg-[var(--color-surface)] flex-shrink-0"></div>
-                <div class="w-[2px] flex-1 my-1 bg-[#191f1c]/10 rounded-full min-h-[12px]"></div>
-                <div class="w-[10px] h-[10px] rounded-[2px] bg-[#191f1c] flex-shrink-0"></div>
+                <div class="w-[2px] flex-1 my-1 bg-[var(--color-border)] rounded-full min-h-[12px]"></div>
+                <div class="w-[10px] h-[10px] rounded-[2px] bg-[var(--color-text-primary)] flex-shrink-0"></div>
               </div>
               <div class="flex-1 space-y-2">
                 <div>
@@ -278,8 +278,8 @@ const slideThumbStyle = computed(() => {
 
           <!-- Navigate button -->
           <a v-if="phase !== 'completed'" :href="getNavUrl()" target="_blank" rel="noopener"
-             class="w-full py-3 mt-2 border-2 border-[var(--color-border)] font-semibold text-[14px] rounded-2xl flex items-center justify-center gap-2 active:bg-[#191f1c]/5 transition-colors">
-            <svg class="w-4 h-4 text-[#191f1c]/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+             class="w-full py-3 mt-2 border-2 border-[var(--color-border)] font-semibold text-[14px] rounded-2xl flex items-center justify-center gap-2 active:bg-[var(--color-surface-secondary)] transition-colors">
+            <svg class="w-4 h-4 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
             </svg>
             Open in Google Maps
@@ -319,8 +319,8 @@ const slideThumbStyle = computed(() => {
           <div class="flex items-center gap-1 mb-5">
             <template v-for="(step, idx) in phaseSteps" :key="step.key">
               <div class="flex-1">
-                <div class="h-1 rounded-full" :class="step.done || step.active ? 'bg-[#2b8659]' : 'bg-[#191f1c]/10'"></div>
-                <div class="text-[10px] text-center mt-1" :class="step.active ? 'text-[#2b8659] font-semibold' : 'text-[#191f1c]/30'">{{ step.label }}</div>
+                <div class="h-1 rounded-full" :class="step.done || step.active ? 'bg-[#2b8659]' : 'bg-[var(--color-border)]'"></div>
+                <div class="text-[10px] text-center mt-1" :class="step.active ? 'text-[#2b8659] font-semibold' : 'text-[var(--color-text-muted)]'">{{ step.label }}</div>
               </div>
             </template>
           </div>
@@ -348,8 +348,8 @@ const slideThumbStyle = computed(() => {
             <div class="flex gap-3">
               <div class="flex flex-col items-center pt-[6px]">
                 <div class="w-[10px] h-[10px] rounded-full border-[2.5px] border-[#2b8659] bg-[var(--color-surface)] flex-shrink-0"></div>
-                <div class="w-[2px] flex-1 my-1 bg-[#191f1c]/10 rounded-full min-h-[16px]"></div>
-                <div class="w-[10px] h-[10px] rounded-[2px] bg-[#191f1c] flex-shrink-0"></div>
+                <div class="w-[2px] flex-1 my-1 bg-[var(--color-border)] rounded-full min-h-[16px]"></div>
+                <div class="w-[10px] h-[10px] rounded-[2px] bg-[var(--color-text-primary)] flex-shrink-0"></div>
               </div>
               <div class="flex-1 space-y-3">
                 <div>
@@ -366,8 +366,8 @@ const slideThumbStyle = computed(() => {
 
           <!-- Navigate button -->
           <a :href="getNavUrl()" target="_blank" rel="noopener"
-             class="w-full py-3 mb-3 border-2 border-[var(--color-border)] font-semibold text-[14px] rounded-2xl flex items-center justify-center gap-2 hover:bg-[#191f1c]/5 transition-colors">
-            <svg class="w-4 h-4 text-[#191f1c]/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+             class="w-full py-3 mb-3 border-2 border-[var(--color-border)] font-semibold text-[14px] rounded-2xl flex items-center justify-center gap-2 hover:bg-[var(--color-surface-secondary)] transition-colors">
+            <svg class="w-4 h-4 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
             </svg>
             Open in Google Maps
@@ -398,7 +398,7 @@ const slideThumbStyle = computed(() => {
             {{ phaseAction }}
           </button>
           <button v-if="phase === 'accepted'" @click="cancelRide"
-                  class="w-full py-3 mt-2 text-[var(--color-text-muted)] font-semibold text-[13px] hover:text-[#191f1c]/60">
+                  class="w-full py-3 mt-2 text-[var(--color-text-muted)] font-semibold text-[13px] hover:text-[var(--color-text-secondary)]">
             Cancel Ride
           </button>
         </template>

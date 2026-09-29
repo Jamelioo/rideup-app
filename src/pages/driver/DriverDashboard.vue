@@ -118,7 +118,7 @@ const initials = computed(() => {
     <!-- MOBILE: Top bar -->
     <div class="md:hidden absolute top-0 left-0 right-0 z-10 px-5 pt-[max(2rem,env(safe-area-inset-top))] flex items-center justify-between pointer-events-none">
       <button @click="menuOpen = true" class="pointer-events-auto w-11 h-11 rounded-full bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.1)] flex items-center justify-center active:scale-95 transition-transform">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect y="3" width="18" height="1.5" rx="0.75" fill="#191f1c"/><rect y="8.25" width="18" height="1.5" rx="0.75" fill="#191f1c"/><rect y="13.5" width="18" height="1.5" rx="0.75" fill="#191f1c"/></svg>
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect y="3" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="8.25" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="13.5" width="18" height="1.5" rx="0.75" fill="currentColor"/></svg>
       </button>
       <div class="pointer-events-auto bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.1)] rounded-full px-5 py-2 text-[17px] font-bold tracking-tight">Ride<span class="text-[#2b8659]">Up</span> <span class="text-[11px] font-sans font-normal text-[var(--color-text-muted)] ml-0.5">Driver</span></div>
       <button @click="router.push('/driver/profile')" class="pointer-events-auto w-11 h-11 rounded-full bg-[#2b8659] shadow-[0_2px_12px_rgba(0,0,0,0.1)] flex items-center justify-center text-white text-[13px] font-bold">
@@ -129,7 +129,7 @@ const initials = computed(() => {
     <!-- MOBILE: Bottom sheet -->
     <div class="md:hidden absolute bottom-0 left-0 right-0 z-10 bg-[var(--color-surface)] rounded-t-[28px] shadow-[0_-4px_40px_rgba(0,0,0,0.1)]" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
       <div class="flex justify-center pt-3 pb-2">
-        <div class="w-9 h-[5px] rounded-full bg-[#191f1c]/10"></div>
+        <div class="w-9 h-[5px] rounded-full bg-[var(--color-text-muted)]"></div>
       </div>
       <div class="px-5 pb-6">
         <div v-if="driverLoading" class="py-8 text-center text-[13px] text-[var(--color-text-muted)]">Loading...</div>
@@ -139,14 +139,14 @@ const initials = computed(() => {
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-3">
             <span v-if="isOnline" class="w-2.5 h-2.5 rounded-full bg-[#2b8659] animate-pulse"></span>
-            <span v-else class="w-2.5 h-2.5 rounded-full bg-[#191f1c]/20"></span>
+            <span v-else class="w-2.5 h-2.5 rounded-full bg-[var(--color-text-muted)]"></span>
             <span class="text-[15px] font-bold" :class="isOnline ? 'text-[#2b8659]' : 'text-[var(--color-text-muted)]'">
               {{ isOnline ? "You're Online" : "You're Offline" }}
             </span>
           </div>
           <button @click="toggleOnline"
                   class="relative w-[52px] h-[30px] rounded-full transition-colors duration-200 flex-shrink-0"
-                  :class="isOnline ? 'bg-[#2b8659]' : 'bg-[#191f1c]/20'">
+                  :class="isOnline ? 'bg-[#2b8659]' : 'bg-[var(--color-text-muted)]'">
             <span class="absolute top-[3px] w-6 h-6 rounded-full bg-[var(--color-surface)] shadow-sm transition-transform duration-200"
                   :class="isOnline ? 'left-[25px]' : 'left-[3px]'"></span>
           </button>
@@ -180,7 +180,7 @@ const initials = computed(() => {
         </div>
 
         <!-- Rating -->
-        <button @click="router.push('/driver/earnings')" class="w-full bg-[var(--color-surface-secondary)] rounded-2xl p-4 text-left active:bg-[#f0f0f0] transition-colors mb-4 flex items-center justify-between">
+        <button @click="router.push('/driver/earnings')" class="w-full bg-[var(--color-surface-secondary)] rounded-2xl p-4 text-left active:bg-[var(--color-surface-secondary)] transition-colors mb-4 flex items-center justify-between">
           <div>
             <div class="text-[11px] text-[var(--color-text-muted)] font-medium">Rating</div>
             <div class="text-[18px] font-bold mt-0.5">{{ driver?.rating || '5.0' }} <span class="text-[14px]">&#9733;</span></div>
@@ -208,8 +208,8 @@ const initials = computed(() => {
       <div class="px-6 pt-8 pb-4 flex items-center justify-between">
         <div class="text-[22px] font-bold tracking-tight">Ride<span class="text-[#2b8659]">Up</span> <span class="text-[12px] font-sans font-normal text-[var(--color-text-muted)] ml-0.5">Driver</span></div>
         <div class="flex items-center gap-2">
-          <button @click="menuOpen = true" class="w-10 h-10 rounded-full hover:bg-[#191f1c]/5 flex items-center justify-center transition-colors">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect y="3" width="18" height="1.5" rx="0.75" fill="#191f1c"/><rect y="8.25" width="18" height="1.5" rx="0.75" fill="#191f1c"/><rect y="13.5" width="18" height="1.5" rx="0.75" fill="#191f1c"/></svg>
+          <button @click="menuOpen = true" class="w-10 h-10 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center transition-colors">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect y="3" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="8.25" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="13.5" width="18" height="1.5" rx="0.75" fill="currentColor"/></svg>
           </button>
           <button @click="router.push('/driver/profile')" class="w-10 h-10 rounded-full bg-[#2b8659] flex items-center justify-center text-white text-[13px] font-bold">
             {{ initials }}
@@ -225,14 +225,14 @@ const initials = computed(() => {
         <div class="flex items-center justify-between mb-5 bg-[var(--color-surface-secondary)] rounded-2xl p-4">
           <div class="flex items-center gap-3">
             <span v-if="isOnline" class="w-3 h-3 rounded-full bg-[#2b8659] animate-pulse"></span>
-            <span v-else class="w-3 h-3 rounded-full bg-[#191f1c]/20"></span>
+            <span v-else class="w-3 h-3 rounded-full bg-[var(--color-text-muted)]"></span>
             <span class="text-[16px] font-bold" :class="isOnline ? 'text-[#2b8659]' : 'text-[var(--color-text-muted)]'">
               {{ isOnline ? "You're Online" : "You're Offline" }}
             </span>
           </div>
           <button @click="toggleOnline"
                   class="relative w-[56px] h-[32px] rounded-full transition-colors duration-200 flex-shrink-0"
-                  :class="isOnline ? 'bg-[#2b8659]' : 'bg-[#191f1c]/20'">
+                  :class="isOnline ? 'bg-[#2b8659]' : 'bg-[var(--color-text-muted)]'">
             <span class="absolute top-[3px] w-[26px] h-[26px] rounded-full bg-[var(--color-surface)] shadow-sm transition-transform duration-200"
                   :class="isOnline ? 'left-[27px]' : 'left-[3px]'"></span>
           </button>
@@ -266,7 +266,7 @@ const initials = computed(() => {
         </div>
 
         <!-- Rating -->
-        <button @click="router.push('/driver/earnings')" class="w-full bg-[var(--color-surface-secondary)] rounded-2xl p-4 text-left hover:bg-[#f0f0f0] transition-colors mb-5 flex items-center justify-between">
+        <button @click="router.push('/driver/earnings')" class="w-full bg-[var(--color-surface-secondary)] rounded-2xl p-4 text-left hover:bg-[var(--color-surface-secondary)] transition-colors mb-5 flex items-center justify-between">
           <div>
             <div class="text-[11px] text-[var(--color-text-muted)] font-medium">Rating</div>
             <div class="text-[22px] font-bold mt-0.5">{{ driver?.rating || '5.0' }} <span class="text-[16px]">&#9733;</span></div>
