@@ -73,8 +73,32 @@ async function fetchDriver(authUserId) {
   if (!error && data) {
     driver.value = data
     isOnline.value = data.status === 'online'
+    // Auto-subscribe to ride requests if driver was already online
+    if (isOnline.value) {
+      requestNotificationPermission()
+      subscribeToRides()
+      // Also check for any existing ride requests we may have missed
+      pollExistingRequests()
+    }
   }
   loading.value = false
+}
+
+async function pollExistingRequests() {
+  if (!driver.value) return
+  const { data: rides } = await supabase
+    .from('rides')
+    .select('*')
+    .eq('status', 'requested')
+    .order('created_at', { ascending: false })
+    .limit(1)
+  if (rides && rides.length > 0) {
+    const ride = rides[0]
+    if (!ride.declined_by || !ride.declined_by.includes(driver.value.id)) {
+      incomingRequest.value = ride
+      showRideNotification(ride)
+    }
+  }
 }
 
 async function goOnline() {
