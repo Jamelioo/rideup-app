@@ -68,11 +68,14 @@ onMounted(async () => {
     if (elapsedTimer) clearInterval(elapsedTimer)
   }, 90000)
 
-  const { data } = await supabase.from('rides').select('*').eq('id', props.rideId).single()
+  console.log('[SearchingForDriver] rideId prop:', props.rideId)
+  const { data, error: fetchErr } = await supabase.from('rides').select('*').eq('id', props.rideId).single()
+  console.log('[SearchingForDriver] initial fetch:', data ? `status=${data.status}` : 'null', fetchErr?.message || '')
   ride.value = data
 
   // Handle ride status changes (from realtime or polling)
   function handleRideUpdate(updatedRide) {
+    console.log('[SearchingForDriver] ride update:', updatedRide.status, updatedRide.driver_id)
     if (driverFound.value) return // already matched, ignore
     ride.value = updatedRide
     if (updatedRide.status === 'accepted') {
@@ -91,13 +94,17 @@ onMounted(async () => {
   // Realtime subscription
   channel = supabase.channel(`ride-${props.rideId}`)
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rides', filter: `id=eq.${props.rideId}` }, (payload) => {
+      console.log('[SearchingForDriver] realtime update:', payload.new?.status)
       handleRideUpdate(payload.new)
-    }).subscribe()
+    }).subscribe((status) => {
+      console.log('[SearchingForDriver] realtime subscription:', status)
+    })
 
   // Polling fallback — checks every 5 seconds in case realtime misses the update
   pollTimer = setInterval(async () => {
     if (driverFound.value || timedOut.value || paymentFailed.value) return
-    const { data: polledRide } = await supabase.from('rides').select('*').eq('id', props.rideId).single()
+    const { data: polledRide, error: pollErr } = await supabase.from('rides').select('*').eq('id', props.rideId).single()
+    console.log('[SearchingForDriver] poll:', polledRide ? `status=${polledRide.status}` : 'null', pollErr?.message || '')
     if (polledRide && polledRide.status !== 'requested') {
       handleRideUpdate(polledRide)
     }
