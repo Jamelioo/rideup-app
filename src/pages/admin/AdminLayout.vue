@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen bg-[var(--color-surface-secondary)] font-sans">
+  <div class="flex h-dvh bg-[var(--color-surface-secondary)] font-sans">
     <!-- Mobile overlay -->
     <div
       v-if="sidebarOpen"
@@ -60,7 +60,7 @@
         <button
           class="lg:hidden p-2 -ml-2 text-[var(--color-text-secondary)] hover:text-gray-900 rounded-lg hover:bg-[var(--color-surface-secondary)]"
           @click="sidebarOpen = !sidebarOpen"
-        >
+         aria-label="Toggle navigation menu">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
           </svg>

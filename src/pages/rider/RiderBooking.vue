@@ -370,13 +370,10 @@ async function saveCardForUser(user, cardElement, stripe) {
   })
   if (stripeError) throw new Error(stripeError.message)
 
-  await supabase
-    .from('riders')
-    .update({
-      stripe_customer_id: customer_id,
-      payment_method_id: setupIntent.payment_method,
-    })
-    .eq('auth_user_id', user.id)
+  // The server re-verifies the SetupIntent with Stripe and stores the card (clients can't write it).
+  const saveRes = await apiPost('/api/save-payment-method', { setupIntentId: setupIntent.id })
+  const saved = await saveRes.json().catch(() => ({}))
+  if (!saveRes.ok || !saved.success) throw new Error('Could not save your card. Please try again.')
 
   return { customer_id, payment_method_id: setupIntent.payment_method }
 }
@@ -490,7 +487,7 @@ async function scheduleRide({ date, time, summary }) {
 </script>
 
 <template>
-  <div class="relative h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] overflow-hidden">
+  <div class="relative h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)] overflow-hidden">
     <SideMenu :is-open="menuOpen" @close="menuOpen = false" />
 
     <!-- Map fills the whole screen on mobile, right side on desktop -->
@@ -509,15 +506,15 @@ async function scheduleRide({ date, time, summary }) {
 
     <!-- Top bar — floats over map on mobile, inside panel on desktop -->
     <div class="absolute top-0 left-0 right-0 z-20 px-5 pt-[max(2rem,env(safe-area-inset-top))] flex items-center justify-between pointer-events-none md:hidden">
-      <button @click="menuOpen = true" class="pointer-events-auto w-11 h-11 rounded-full bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.1)] flex items-center justify-center active:scale-95 transition-transform">
+      <button @click="menuOpen = true" class="pointer-events-auto w-11 h-11 rounded-full bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.1)] flex items-center justify-center active:scale-95 transition-transform" aria-label="Open menu">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect y="3" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="8.25" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="13.5" width="18" height="1.5" rx="0.75" fill="currentColor"/></svg>
       </button>
-      <div class="pointer-events-auto bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.1)] rounded-full px-5 py-2 text-[17px] font-bold tracking-tight">Ride<span class="text-[#2b8659]">Up</span></div>
+      <div class="pointer-events-auto bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.1)] rounded-full px-5 py-2 text-[17px] font-bold tracking-tight">Ride<span class="text-[var(--color-brand)]">Up</span></div>
       <div class="w-11 h-11"></div>
     </div>
 
     <!-- MOBILE: Bottom sheet -->
-    <div ref="sheetRef" class="md:hidden absolute bottom-0 left-0 right-0 z-10 bg-[var(--color-surface)] rounded-t-[28px] shadow-[0_-4px_40px_rgba(0,0,0,0.1)] overflow-hidden" style="padding-bottom: env(safe-area-inset-bottom, 0px); transition: height 0.3s cubic-bezier(0.25, 1, 0.5, 1);">
+    <div ref="sheetRef" class="md:hidden absolute bottom-[var(--bottom-nav-h,0px)] left-0 right-0 z-10 bg-[var(--color-surface)] rounded-t-[28px] shadow-[0_-4px_40px_rgba(0,0,0,0.1)] overflow-hidden" style="padding-bottom: env(safe-area-inset-bottom, 0px); transition: height 0.3s cubic-bezier(0.25, 1, 0.5, 1);">
       <!-- Drag handle -->
       <div class="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing touch-none"
            @touchstart.passive="onDragStart"
@@ -542,7 +539,7 @@ async function scheduleRide({ date, time, summary }) {
           </div>
           <div class="flex-1 space-y-2">
             <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 border-2 transition-all duration-200"
-                 :class="activeInput === 'pickup' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(88,204,2,0.12)]' : 'border-transparent'">
+                 :class="activeInput === 'pickup' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
               <input v-if="!DEMO_MODE" ref="pickupInput" type="text" placeholder="Pickup location"
                      @focus="activeInput = 'pickup'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
@@ -566,7 +563,7 @@ async function scheduleRide({ date, time, summary }) {
               {{ isLocating ? 'Locating...' : 'Use current location' }}
             </button>
             <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 border-2 transition-all duration-200"
-                 :class="activeInput === 'dropoff' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(88,204,2,0.12)]' : 'border-transparent'">
+                 :class="activeInput === 'dropoff' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
               <input v-if="!DEMO_MODE" ref="dropoffInput" type="text" placeholder="Where to?"
                      @focus="activeInput = 'dropoff'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
@@ -578,7 +575,7 @@ async function scheduleRide({ date, time, summary }) {
           </div>
         </div>
 
-        <p v-if="DEMO_MODE && !hasRoute" class="text-[#2b8659] text-[12px] mt-3 ml-[22px] font-medium">Demo mode — enter any two spots to see live pricing</p>
+        <p v-if="DEMO_MODE && !hasRoute" class="text-[var(--color-brand)] text-[12px] mt-3 ml-[22px] font-medium">Demo mode — enter any two spots to see live pricing</p>
         <div v-if="!mapsReady && !error && !DEMO_MODE" class="text-[var(--color-text-muted)] text-sm text-center py-10">Loading map...</div>
         <div v-if="error" class="bg-red-50 border border-red-200 text-red-600 text-[13px] rounded-xl px-4 py-3 mt-3">{{ error }}</div>
         <div v-if="isCalculating" class="flex items-center gap-2.5 text-[var(--color-text-muted)] text-[13px] mt-4 ml-[22px]">
@@ -601,7 +598,7 @@ async function scheduleRide({ date, time, summary }) {
           <div class="space-y-2">
             <button v-for="vehicle in VEHICLE_TYPES" :key="vehicle.id" @click="selectedVehicle = vehicle.id"
                     class="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border-2 transition-all duration-200"
-                    :class="selectedVehicle === vehicle.id ? 'border-[#2b8659] bg-[#2b8659]/[0.06] shadow-[0_0_0_3px_rgba(88,204,2,0.08)]' : 'border-transparent bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-secondary)] active:scale-[0.99]'">
+                    :class="selectedVehicle === vehicle.id ? 'border-[#2b8659] bg-[#2b8659]/[0.06] shadow-[0_0_0_3px_rgba(43,134,89,0.08)]' : 'border-transparent bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-secondary)] active:scale-[0.99]'">
               <div class="flex items-center gap-3">
                 <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl" :class="selectedVehicle === vehicle.id ? 'bg-[#2b8659]/15' : 'bg-[var(--color-surface)]'">{{ vehicle.icon }}</div>
                 <div class="text-left">
@@ -610,7 +607,7 @@ async function scheduleRide({ date, time, summary }) {
                 </div>
               </div>
               <div class="text-right">
-                <div class="text-[16px] font-bold" :class="selectedVehicle === vehicle.id ? 'text-[#2b8659]' : ''">{{ formatFare(fareEstimates[vehicle.id]) }}</div>
+                <div class="text-[16px] font-bold" :class="selectedVehicle === vehicle.id ? 'text-[var(--color-brand)]' : ''">{{ formatFare(fareEstimates[vehicle.id]) }}</div>
               </div>
             </button>
           </div>
@@ -636,8 +633,8 @@ async function scheduleRide({ date, time, summary }) {
     <div class="hidden md:flex absolute inset-y-0 left-0 z-10 w-[400px] bg-[var(--color-surface)] shadow-[4px_0_24px_rgba(0,0,0,0.08)] flex-col">
       <!-- Panel header -->
       <div class="px-6 pt-8 pb-2 flex items-center justify-between">
-        <div class="text-[22px] font-bold tracking-tight">Ride<span class="text-[#2b8659]">Up</span></div>
-        <button @click="menuOpen = true" class="w-10 h-10 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center transition-colors">
+        <div class="text-[22px] font-bold tracking-tight">Ride<span class="text-[var(--color-brand)]">Up</span></div>
+        <button @click="menuOpen = true" class="w-10 h-10 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center transition-colors" aria-label="Open menu">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect y="3" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="8.25" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="13.5" width="18" height="1.5" rx="0.75" fill="currentColor"/></svg>
         </button>
       </div>
@@ -657,7 +654,7 @@ async function scheduleRide({ date, time, summary }) {
           </div>
           <div class="flex-1 space-y-2">
             <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3.5 border-2 transition-all duration-200"
-                 :class="activeInput === 'pickup' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(88,204,2,0.12)]' : 'border-transparent'">
+                 :class="activeInput === 'pickup' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
               <input v-if="!DEMO_MODE" ref="pickupInput" type="text" placeholder="Pickup location"
                      @focus="activeInput = 'pickup'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
@@ -681,7 +678,7 @@ async function scheduleRide({ date, time, summary }) {
               {{ isLocating ? 'Locating...' : 'Use current location' }}
             </button>
             <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3.5 border-2 transition-all duration-200"
-                 :class="activeInput === 'dropoff' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(88,204,2,0.12)]' : 'border-transparent'">
+                 :class="activeInput === 'dropoff' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
               <input v-if="!DEMO_MODE" ref="dropoffInput" type="text" placeholder="Where to?"
                      @focus="activeInput = 'dropoff'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
@@ -693,7 +690,7 @@ async function scheduleRide({ date, time, summary }) {
           </div>
         </div>
 
-        <p v-if="DEMO_MODE && !hasRoute" class="text-[#2b8659] text-[12px] mt-3 ml-[22px] font-medium">Demo mode — enter any two spots to see live pricing</p>
+        <p v-if="DEMO_MODE && !hasRoute" class="text-[var(--color-brand)] text-[12px] mt-3 ml-[22px] font-medium">Demo mode — enter any two spots to see live pricing</p>
         <div v-if="!mapsReady && !error && !DEMO_MODE" class="text-[var(--color-text-muted)] text-sm text-center py-10">Loading map...</div>
         <div v-if="error" class="bg-red-50 border border-red-200 text-red-600 text-[13px] rounded-xl px-4 py-3 mt-3">{{ error }}</div>
         <div v-if="isCalculating" class="flex items-center gap-2.5 text-[var(--color-text-muted)] text-[13px] mt-4 ml-[22px]">
@@ -716,7 +713,7 @@ async function scheduleRide({ date, time, summary }) {
           <div class="space-y-2">
             <button v-for="vehicle in VEHICLE_TYPES" :key="vehicle.id" @click="selectedVehicle = vehicle.id"
                     class="w-full flex items-center justify-between px-4 py-4 rounded-2xl border-2 transition-all duration-200"
-                    :class="selectedVehicle === vehicle.id ? 'border-[#2b8659] bg-[#2b8659]/[0.06] shadow-[0_0_0_3px_rgba(88,204,2,0.08)]' : 'border-transparent bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-secondary)]'">
+                    :class="selectedVehicle === vehicle.id ? 'border-[#2b8659] bg-[#2b8659]/[0.06] shadow-[0_0_0_3px_rgba(43,134,89,0.08)]' : 'border-transparent bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-secondary)]'">
               <div class="flex items-center gap-3.5">
                 <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl" :class="selectedVehicle === vehicle.id ? 'bg-[#2b8659]/15' : 'bg-[var(--color-surface)]'">{{ vehicle.icon }}</div>
                 <div class="text-left">
@@ -725,7 +722,7 @@ async function scheduleRide({ date, time, summary }) {
                 </div>
               </div>
               <div class="text-right">
-                <div class="text-[17px] font-bold" :class="selectedVehicle === vehicle.id ? 'text-[#2b8659]' : ''">{{ formatFare(fareEstimates[vehicle.id]) }}</div>
+                <div class="text-[17px] font-bold" :class="selectedVehicle === vehicle.id ? 'text-[var(--color-brand)]' : ''">{{ formatFare(fareEstimates[vehicle.id]) }}</div>
               </div>
             </button>
           </div>
@@ -753,7 +750,7 @@ async function scheduleRide({ date, time, summary }) {
 
     <!-- Toast -->
     <Transition name="fade">
-      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[10000] bg-[var(--color-text-primary)] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
+      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[10000] bg-[#191f1c] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
         {{ toast }}
       </div>
     </Transition>

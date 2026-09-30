@@ -87,6 +87,11 @@ async function fetchDriver(authUserId) {
   loading.value = false
 }
 
+// Which ride classes this driver's vehicle can serve (an XL van can take any; a standard car can't take XL).
+function acceptableRideTypes() {
+  return driver.value?.vehicle_type === 'xl' ? ['standard', 'xl', 'premium'] : ['standard', 'premium']
+}
+
 async function pollExistingRequests() {
   if (!driver.value) return
   // Only show rides created within the last 90 seconds
@@ -95,6 +100,7 @@ async function pollExistingRequests() {
     .from('rides')
     .select('*')
     .eq('status', 'requested')
+    .in('vehicle_type', acceptableRideTypes())
     .gte('created_at', cutoff)
     .order('created_at', { ascending: false })
     .limit(1)
@@ -151,6 +157,7 @@ function subscribeToRides() {
     }, (payload) => {
       const ride = payload.new
       if (ride.declined_by && ride.declined_by.includes(driver.value.id)) return
+      if (!acceptableRideTypes().includes(ride.vehicle_type)) return
       incomingRequest.value = ride
       showRideNotification(ride)
     })

@@ -71,10 +71,10 @@ const steps = [
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
+  <div class="min-h-dvh bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top Bar -->
     <div class="flex items-center gap-3 px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
-      <button @click="router.back()" class="w-10 h-10 flex items-center justify-center">
+      <button @click="router.back()" class="w-10 h-10 flex items-center justify-center" aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -98,7 +98,7 @@ const steps = [
       <div class="mb-6">
         <h2 class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Your referral code</h2>
         <div class="border-2 border-dashed border-[#2b8659]/30 rounded-xl p-4 flex items-center justify-between bg-[var(--color-surface-secondary)]/50">
-          <span class="text-xl font-bold tracking-[0.15em] text-[#2b8659]">{{ referralCode }}</span>
+          <span class="text-xl font-bold tracking-[0.15em] text-[var(--color-brand)]">{{ referralCode }}</span>
           <button
             @click="copyCode"
             class="flex items-center gap-1.5 px-4 py-2 bg-[#2b8659] text-white text-[13px] font-bold rounded-lg active:scale-[0.97] transition-all"
@@ -130,7 +130,7 @@ const steps = [
           </a>
           <a
             :href="smsUrl"
-            class="flex items-center justify-center gap-2 py-3.5 bg-[var(--color-text-primary)] text-white font-bold text-[14px] rounded-xl active:scale-[0.97] transition-all"
+            class="flex items-center justify-center gap-2 py-3.5 bg-[#191f1c] text-white font-bold text-[14px] rounded-xl active:scale-[0.97] transition-all"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -158,13 +158,13 @@ const steps = [
 
       <!-- Credits Balance -->
       <div class="mb-6">
-        <div class="bg-[var(--color-text-primary)] rounded-2xl p-5 flex items-center justify-between">
+        <div class="bg-[#191f1c] rounded-2xl p-5 flex items-center justify-between">
           <div>
             <p class="text-white/50 text-[12px] uppercase tracking-wider font-semibold">Total credits earned</p>
             <p class="text-white text-3xl font-bold mt-1">${{ (totalCredits || 0).toFixed(2) }}</p>
           </div>
           <div class="w-12 h-12 bg-[var(--color-surface)]/10 rounded-full flex items-center justify-center">
-            <svg class="w-6 h-6 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg class="w-6 h-6 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
@@ -176,7 +176,7 @@ const steps = [
         <h2 class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Referral history</h2>
 
         <div v-if="loading" class="py-12 text-center">
-          <svg class="w-6 h-6 animate-spin text-[#2b8659] mx-auto" viewBox="0 0 24 24" fill="none">
+          <svg class="w-6 h-6 animate-spin text-[var(--color-brand)] mx-auto" viewBox="0 0 24 24" fill="none">
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.4 31.4" stroke-linecap="round" />
           </svg>
         </div>
@@ -197,14 +197,14 @@ const steps = [
           >
             <div class="flex items-center gap-3">
               <div class="w-9 h-9 rounded-full bg-[var(--color-surface-secondary)] flex items-center justify-center">
-                <span class="text-[#2b8659] text-[13px] font-bold">{{ ref.name?.charAt(0)?.toUpperCase() || '?' }}</span>
+                <span class="text-[var(--color-brand)] text-[13px] font-bold">{{ ref.name?.charAt(0)?.toUpperCase() || '?' }}</span>
               </div>
               <div>
                 <p class="text-[14px] font-bold">{{ ref.name || 'Friend' }}</p>
                 <p class="text-[12px] text-[var(--color-text-muted)]">{{ formatDate(ref.date) }}</p>
               </div>
             </div>
-            <span class="text-[#2b8659] text-[14px] font-bold">+$5.00</span>
+            <span class="text-[var(--color-brand)] text-[14px] font-bold">+$5.00</span>
           </div>
         </div>
       </div>

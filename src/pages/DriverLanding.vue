@@ -67,22 +67,22 @@ const testimonials = [
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] font-[var(--font-sans)]">
+  <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)] font-[var(--font-sans)]">
 
     <!-- Nav Bar — simplified for conversion -->
     <nav class="sticky top-0 z-40 bg-[var(--color-surface)]/95 backdrop-blur-md border-b border-[var(--color-border)]">
       <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        <router-link to="/" class="text-xl font-semibold">Ride<span class="text-[#2b8659]">Up</span></router-link>
+        <router-link to="/" class="text-xl font-semibold">Ride<span class="text-[var(--color-brand)]">Up</span></router-link>
         <router-link to="/driver/dashboard" class="text-[14px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">Already a driver? <span class="text-[var(--color-text-primary)] font-semibold">Log in</span></router-link>
       </div>
     </nav>
 
     <!-- ==================== HERO ==================== -->
-    <section class="relative overflow-hidden bg-[var(--color-text-primary)]">
+    <section class="relative overflow-hidden bg-[#191f1c]">
       <!-- Gradient blobs -->
       <div class="absolute inset-0 pointer-events-none">
-        <div class="absolute -top-32 right-0 w-[600px] h-[600px] rounded-full opacity-25" style="background: radial-gradient(circle, rgba(88,204,2,0.4), transparent 70%);"></div>
-        <div class="absolute bottom-0 -left-20 w-[400px] h-[400px] rounded-full opacity-15" style="background: radial-gradient(circle, rgba(75,179,0,0.5), transparent 70%);"></div>
+        <div class="absolute -top-32 right-0 w-[600px] h-[600px] rounded-full opacity-25" style="background: radial-gradient(circle, rgba(43,134,89,0.4), transparent 70%);"></div>
+        <div class="absolute bottom-0 -left-20 w-[400px] h-[400px] rounded-full opacity-15" style="background: radial-gradient(circle, rgba(43,134,89,0.5), transparent 70%);"></div>
       </div>
       <!-- Dot grid -->
       <div class="absolute inset-0 pointer-events-none opacity-[0.15]" style="background-image: radial-gradient(circle, rgba(255,255,255,0.4) 0.8px, transparent 0.8px); background-size: 28px 28px;"></div>
@@ -107,14 +107,14 @@ const testimonials = [
           <!-- Left: hero copy — 80% is the headline -->
           <div>
             <div class="inline-flex items-center gap-2 bg-[var(--color-surface)]/10 text-white/80 text-[13px] font-medium px-4 py-1.5 rounded-full mb-5">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               Now recruiting drivers in Nassau
             </div>
             <h1 class="text-white leading-[1.05] font-medium tracking-tight mb-4">
-              <span class="block text-[44px] sm:text-[56px] lg:text-[68px]">Keep <span class="text-[#2b8659]">80%</span></span>
+              <span class="block text-[44px] sm:text-[56px] lg:text-[68px]">Keep <span class="text-[var(--color-brand)]">80%</span></span>
               <span class="block text-[32px] sm:text-[40px] lg:text-[46px] text-white/80">of Every Fare.</span>
             </h1>
             <p class="text-white/55 text-[16px] leading-relaxed max-w-md mb-6">
@@ -146,38 +146,38 @@ const testimonials = [
               <div class="w-[250px] h-[490px] bg-[#0e1a16] rounded-[38px] p-2.5 shadow-2xl shadow-black/30">
                 <div class="w-full h-full bg-[var(--color-surface)] rounded-[30px] overflow-hidden flex flex-col">
                   <!-- Status bar -->
-                  <div class="bg-[var(--color-text-primary)] text-white px-5 pt-3 pb-3">
-                    <div class="flex justify-between text-[10px] mb-2 opacity-50">
+                  <div class="bg-[#191f1c] text-white px-5 pt-3 pb-3">
+                    <div class="flex justify-between text-[11px] mb-2 opacity-50">
                       <span>9:41</span>
                       <div class="flex gap-1 items-center">
                         <div class="w-3.5 h-2 border border-white/50 rounded-sm"><div class="w-2.5 h-1 bg-[var(--color-surface)]/50 rounded-sm m-px"></div></div>
                       </div>
                     </div>
                     <div class="flex items-center justify-between">
-                      <div class="text-[14px] font-bold font-serif">Ride<span class="text-[#2b8659]">Up</span> <span class="text-[9px] font-normal text-white/50 ml-0.5">Driver</span></div>
+                      <div class="text-[14px] font-bold font-serif">Ride<span class="text-[var(--color-brand)]">Up</span> <span class="text-[11px] font-normal text-white/50 ml-0.5">Driver</span></div>
                       <div class="flex items-center gap-1 bg-[#2b8659]/20 px-2 py-0.5 rounded-full">
                         <div class="w-1.5 h-1.5 rounded-full bg-[#2b8659]"></div>
-                        <span class="text-[9px] text-[#2b8659] font-semibold">Online</span>
+                        <span class="text-[11px] text-[var(--color-brand)] font-semibold">Online</span>
                       </div>
                     </div>
                   </div>
                   <!-- App content -->
                   <div class="flex-1 p-3.5 bg-[var(--color-surface)]">
-                    <div class="text-[10px] text-[var(--color-text-muted)] mb-0.5">Today's earnings</div>
+                    <div class="text-[11px] text-[var(--color-text-muted)] mb-0.5">Today's earnings</div>
                     <div class="text-[26px] font-bold text-[var(--color-text-primary)] mb-3">$147<span class="text-[18px]">.50</span></div>
                     <!-- Stats row -->
                     <div class="grid grid-cols-3 gap-1.5 mb-3">
                       <div class="bg-[var(--color-surface-secondary)] rounded-lg py-2 text-center">
                         <div class="text-[13px] font-bold text-[var(--color-text-primary)]">8</div>
-                        <div class="text-[8px] text-[var(--color-text-muted)]">Trips</div>
+                        <div class="text-[11px] text-[var(--color-text-muted)]">Trips</div>
                       </div>
                       <div class="bg-[var(--color-surface-secondary)] rounded-lg py-2 text-center">
                         <div class="text-[13px] font-bold text-[var(--color-text-primary)]">4.9</div>
-                        <div class="text-[8px] text-[var(--color-text-muted)]">Rating</div>
+                        <div class="text-[11px] text-[var(--color-text-muted)]">Rating</div>
                       </div>
                       <div class="bg-[#2b8659]/10 rounded-lg py-2 text-center">
                         <div class="text-[13px] font-bold text-[#236e49]">6h</div>
-                        <div class="text-[8px] text-[var(--color-text-muted)]">Online</div>
+                        <div class="text-[11px] text-[var(--color-text-muted)]">Online</div>
                       </div>
                     </div>
                     <!-- Map area -->
@@ -192,20 +192,20 @@ const testimonials = [
                     <!-- Incoming ride -->
                     <div class="bg-[#2b8659]/10 rounded-xl p-2.5 border border-[#2b8659]/15">
                       <div class="flex items-center justify-between mb-1.5">
-                        <span class="text-[9px] font-semibold text-[#236e49] uppercase tracking-wide">New request</span>
+                        <span class="text-[11px] font-semibold text-[#236e49] uppercase tracking-wide">New request</span>
                         <span class="text-[12px] font-bold text-[var(--color-text-primary)]">$14.50</span>
                       </div>
                       <div class="flex items-center gap-1.5 mb-2">
                         <div class="w-1.5 h-1.5 rounded-full bg-[#2b8659]"></div>
-                        <span class="text-[9px] text-[var(--color-text-muted)]">Cable Beach → Downtown · 4.2 mi</span>
+                        <span class="text-[11px] text-[var(--color-text-muted)]">Cable Beach → Downtown · 4.2 mi</span>
                       </div>
-                      <div class="bg-[#2b8659] text-white text-[10px] font-bold text-center py-1.5 rounded-lg">Accept ride</div>
+                      <div class="bg-[#2b8659] text-white text-[11px] font-bold text-center py-1.5 rounded-lg">Accept ride</div>
                     </div>
                   </div>
                 </div>
               </div>
               <!-- Glow -->
-              <div class="absolute -inset-8 -z-10 rounded-full opacity-30" style="background: radial-gradient(circle, rgba(88,204,2,0.25), transparent 70%);"></div>
+              <div class="absolute -inset-8 -z-10 rounded-full opacity-30" style="background: radial-gradient(circle, rgba(43,134,89,0.25), transparent 70%);"></div>
             </div>
           </div>
         </div>
@@ -248,7 +248,7 @@ const testimonials = [
         <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] text-center hover:border-[#2b8659]/20 transition-colors">
             <div class="w-14 h-14 rounded-2xl bg-[#2b8659]/10 flex items-center justify-center mx-auto mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
@@ -258,7 +258,7 @@ const testimonials = [
 
           <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] text-center hover:border-[#2b8659]/20 transition-colors">
             <div class="w-14 h-14 rounded-2xl bg-[#2b8659]/10 flex items-center justify-center mx-auto mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
@@ -268,7 +268,7 @@ const testimonials = [
 
           <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] text-center hover:border-[#2b8659]/20 transition-colors">
             <div class="w-14 h-14 rounded-2xl bg-[#2b8659]/10 flex items-center justify-center mx-auto mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
               </svg>
             </div>
@@ -278,7 +278,7 @@ const testimonials = [
 
           <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] text-center hover:border-[#2b8659]/20 transition-colors">
             <div class="w-14 h-14 rounded-2xl bg-[#2b8659]/10 flex items-center justify-center mx-auto mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
@@ -305,7 +305,7 @@ const testimonials = [
             <p class="text-[var(--color-text-muted)] text-[14px] leading-relaxed">Submit your license, vehicle info, and phone number. The whole form takes about 5 minutes.</p>
             <!-- Connector arrow (desktop) -->
             <div class="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 w-8 h-8 bg-[var(--color-surface)] rounded-full border border-[#2b8659]/15 flex items-center justify-center">
-              <svg class="w-4 h-4 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+              <svg class="w-4 h-4 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
             </div>
           </div>
           <div class="relative bg-[#2b8659]/[0.06] rounded-2xl md:rounded-none p-7 border border-[#2b8659]/10 md:border-l-0">
@@ -313,7 +313,7 @@ const testimonials = [
             <h3 class="text-[17px] font-bold mb-2">Get approved</h3>
             <p class="text-[var(--color-text-muted)] text-[14px] leading-relaxed">We verify your documents and run a background check. Vehicle inspection is free and takes 20 minutes.</p>
             <div class="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 w-8 h-8 bg-[var(--color-surface)] rounded-full border border-[#2b8659]/15 flex items-center justify-center">
-              <svg class="w-4 h-4 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+              <svg class="w-4 h-4 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
             </div>
           </div>
           <div class="bg-[#2b8659]/[0.06] rounded-2xl md:rounded-l-none p-7 border border-[#2b8659]/10 md:border-l-0">
@@ -427,7 +427,7 @@ const testimonials = [
             <!-- Trip count -->
             <div class="flex items-center gap-2">
               <div class="w-5 h-5 rounded bg-[#2b8659]/10 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
@@ -439,7 +439,7 @@ const testimonials = [
     </section>
 
     <!-- ==================== REQUIREMENTS + TRUST ==================== -->
-    <section class="relative overflow-hidden bg-[var(--color-text-primary)]">
+    <section class="relative overflow-hidden bg-[#191f1c]">
       <!-- Wave top -->
       <div class="absolute top-0 left-0 right-0 -translate-y-[1px]">
         <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full" preserveAspectRatio="none">
@@ -447,7 +447,7 @@ const testimonials = [
         </svg>
       </div>
       <div class="absolute inset-0 pointer-events-none">
-        <div class="absolute top-1/3 left-1/4 w-72 h-72 rounded-full opacity-10" style="background: radial-gradient(circle, rgba(88,204,2,0.5), transparent 70%);"></div>
+        <div class="absolute top-1/3 left-1/4 w-72 h-72 rounded-full opacity-10" style="background: radial-gradient(circle, rgba(43,134,89,0.5), transparent 70%);"></div>
       </div>
       <div class="absolute inset-0 pointer-events-none opacity-[0.05]" style="background-image: radial-gradient(circle, rgba(255,255,255,0.5) 0.6px, transparent 0.6px); background-size: 20px 20px;"></div>
 
@@ -455,7 +455,7 @@ const testimonials = [
         <div class="md:grid md:grid-cols-2 md:gap-16 md:items-start">
           <!-- Left: Requirements -->
           <div>
-            <div class="inline-flex items-center gap-2 bg-[#2b8659]/15 text-[#2b8659] text-[13px] font-semibold px-4 py-1.5 rounded-full mb-6">
+            <div class="inline-flex items-center gap-2 bg-[#2b8659]/15 text-[var(--color-brand)] text-[13px] font-semibold px-4 py-1.5 rounded-full mb-6">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4" />
               </svg>
@@ -465,7 +465,7 @@ const testimonials = [
             <ul class="space-y-3 mb-8">
               <li v-for="req in requirements" :key="req" class="flex items-center gap-4 bg-[var(--color-surface)]/[0.06] rounded-xl px-5 py-4 border border-white/8">
                 <div class="w-8 h-8 rounded-lg bg-[#2b8659]/20 flex items-center justify-center shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
@@ -480,18 +480,18 @@ const testimonials = [
             <div class="space-y-4 mb-8">
               <div class="flex items-start gap-4">
                 <div class="w-10 h-10 rounded-xl bg-[var(--color-surface)]/[0.06] flex items-center justify-center shrink-0 mt-0.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
                 </div>
                 <div>
                   <div class="text-white text-[15px] font-semibold mb-1">Local phone support</div>
-                  <div class="text-white/45 text-[14px]">Call <a href="tel:+12424529911" class="text-[#2b8659] hover:underline">(242) 452-9911</a> — real people in Nassau, not a call center</div>
+                  <div class="text-white/45 text-[14px]">Call <a href="tel:+12424529911" class="text-[var(--color-brand)] hover:underline">(242) 452-9911</a> — real people in Nassau, not a call center</div>
                 </div>
               </div>
               <div class="flex items-start gap-4">
                 <div class="w-10 h-10 rounded-xl bg-[var(--color-surface)]/[0.06] flex items-center justify-center shrink-0 mt-0.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                 </div>
@@ -502,13 +502,13 @@ const testimonials = [
               </div>
               <div class="flex items-start gap-4">
                 <div class="w-10 h-10 rounded-xl bg-[var(--color-surface)]/[0.06] flex items-center justify-center shrink-0 mt-0.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
                 <div>
                   <div class="text-white text-[15px] font-semibold mb-1">Verified riders only</div>
-                  <div class="text-white/45 text-[14px]">Every rider is phone-verified before they can request a ride</div>
+                  <div class="text-white/45 text-[14px]">Every rider has a payment card on file before they can request a ride</div>
                 </div>
               </div>
             </div>
@@ -526,7 +526,7 @@ const testimonials = [
 
     <!-- ==================== FINAL CTA ==================== -->
     <section class="relative overflow-hidden">
-      <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse 60% 80% at 50% 80%, rgba(88,204,2,0.06), transparent 60%);"></div>
+      <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse 60% 80% at 50% 80%, rgba(43,134,89,0.06), transparent 60%);"></div>
       <div class="absolute top-10 left-[10%] w-20 h-20 rounded-full border border-[#2b8659]/10 hidden lg:block"></div>
       <div class="absolute bottom-8 right-[8%] w-28 h-28 rounded-full border border-[#2b8659]/8 hidden lg:block"></div>
 
@@ -554,10 +554,10 @@ const testimonials = [
     </section>
 
     <!-- ==================== FOOTER ==================== -->
-    <footer class="bg-[var(--color-text-primary)] text-white">
+    <footer class="bg-[#191f1c] text-white">
       <div class="max-w-6xl mx-auto px-6 py-14 grid sm:grid-cols-4 gap-8">
         <div>
-          <div class="text-lg font-semibold mb-3">Ride<span class="text-[#2b8659]">Up</span></div>
+          <div class="text-lg font-semibold mb-3">Ride<span class="text-[var(--color-brand)]">Up</span></div>
           <p class="text-white/40 text-[13px] leading-relaxed">Nassau's on-demand ride service. Available 24/7 across New Providence.</p>
         </div>
         <div>

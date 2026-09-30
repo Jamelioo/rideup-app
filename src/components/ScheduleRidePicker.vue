@@ -97,7 +97,7 @@ function confirm() {
           <!-- Header -->
           <div class="flex items-center justify-between mb-5">
             <h2 class="text-[22px] font-bold text-[var(--color-text-primary)] tracking-tight">Schedule ride</h2>
-            <button @click="emit('close')" class="w-9 h-9 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center transition-colors">
+            <button @click="emit('close')" class="w-9 h-9 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center transition-colors" aria-label="Close">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
           </div>
@@ -114,10 +114,10 @@ function confirm() {
                 ? 'border-[#2b8659] bg-[#2b8659]/[0.06]'
                 : 'border-transparent bg-[var(--color-surface-secondary)] active:scale-[0.97]'"
             >
-              <div class="text-[11px] font-semibold uppercase tracking-wider" :class="selectedDate === date.value ? 'text-[#2b8659]' : 'text-[var(--color-text-muted)]'">
+              <div class="text-[11px] font-semibold uppercase tracking-wider" :class="selectedDate === date.value ? 'text-[var(--color-brand)]' : 'text-[var(--color-text-muted)]'">
                 {{ date.dayName }}
               </div>
-              <div class="text-[20px] font-bold mt-0.5" :class="selectedDate === date.value ? 'text-[#2b8659]' : 'text-[var(--color-text-primary)]'">
+              <div class="text-[20px] font-bold mt-0.5" :class="selectedDate === date.value ? 'text-[var(--color-brand)]' : 'text-[var(--color-text-primary)]'">
                 {{ date.dayNum }}
               </div>
             </button>
@@ -132,7 +132,7 @@ function confirm() {
               @click="selectedTime = time.value"
               class="py-3 rounded-xl border-2 text-[14px] font-semibold transition-all duration-200"
               :class="selectedTime === time.value
-                ? 'border-[#2b8659] bg-[#2b8659]/[0.06] text-[#2b8659]'
+                ? 'border-[#2b8659] bg-[#2b8659]/[0.06] text-[var(--color-brand)]'
                 : 'border-transparent bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] active:scale-[0.97]'"
             >
               {{ time.label }}
@@ -141,7 +141,7 @@ function confirm() {
 
           <!-- Summary -->
           <div v-if="selectedSummary" class="mt-5 flex items-center gap-2.5 bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3">
-            <svg class="w-5 h-5 text-[#2b8659] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg class="w-5 h-5 text-[var(--color-brand)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span class="text-[14px] font-semibold text-[var(--color-text-primary)]">{{ selectedSummary }}</span>

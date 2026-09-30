@@ -7,10 +7,10 @@ function goBack() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)]">
+  <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)]">
     <div class="sticky top-0 z-40 bg-[var(--color-surface)] border-b border-[var(--color-border)]">
       <div class="flex items-center px-4 pt-[max(0.875rem,env(safe-area-inset-top))] pb-3.5 max-w-2xl mx-auto">
-        <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]">
+        <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
@@ -45,12 +45,12 @@ function goBack() {
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Your Rights</h2>
-        <p>You can request access to, correction of, or deletion of your personal data at any time by contacting us at <a href="tel:+12424529911" class="text-[#2b8659] font-semibold">(242) 452-9911</a>.</p>
+        <p>You can request access to, correction of, or deletion of your personal data at any time by contacting us at <a href="tel:+12424529911" class="text-[var(--color-brand)] font-semibold">(242) 452-9911</a>.</p>
       </section>
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Contact Us</h2>
-        <p>If you have questions about this privacy policy, contact us at <a href="tel:+12424529911" class="text-[#2b8659] font-semibold">(242) 452-9911</a> or email <a href="mailto:support@rideupnassau.com" class="text-[#2b8659] font-semibold">support@rideupnassau.com</a>.</p>
+        <p>If you have questions about this privacy policy, contact us at <a href="tel:+12424529911" class="text-[var(--color-brand)] font-semibold">(242) 452-9911</a> or email <a href="mailto:support@rideupnassau.com" class="text-[var(--color-brand)] font-semibold">support@rideupnassau.com</a>.</p>
       </section>
     </div>
   </div>

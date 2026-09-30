@@ -116,11 +116,11 @@ onMounted(fetchScheduledRides)
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-surface-secondary)]">
+  <div class="min-h-dvh bg-[var(--color-surface-secondary)]">
     <!-- Header -->
     <div class="bg-[var(--color-surface)] border-b border-[var(--color-border)]">
       <div class="max-w-lg mx-auto px-5 pt-[max(1.5rem,env(safe-area-inset-top))] pb-4 flex items-center gap-3">
-        <button @click="router.back()" class="w-10 h-10 rounded-full hover:bg-[var(--color-text-primary)]/5 flex items-center justify-center transition-colors -ml-2">
+        <button @click="router.back()" class="w-10 h-10 rounded-full hover:bg-[var(--color-text-primary)]/5 flex items-center justify-center transition-colors -ml-2" aria-label="Back">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
@@ -143,7 +143,7 @@ onMounted(fetchScheduledRides)
       <!-- Empty state -->
       <div v-else-if="rides.length === 0" class="text-center py-20">
         <div class="w-16 h-16 rounded-full bg-[#2b8659]/10 flex items-center justify-center mx-auto mb-4">
-          <svg class="w-7 h-7 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+          <svg class="w-7 h-7 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
         </div>
@@ -167,7 +167,7 @@ onMounted(fetchScheduledRides)
                   </div>
                   <div>
                     <p class="text-[14px] font-bold text-[var(--color-text-primary)]">{{ getVehicleName(ride.vehicle_type) }}</p>
-                    <p class="text-[12px] text-[#2b8659] font-semibold">{{ formatDateTime(ride.scheduled_at) }}</p>
+                    <p class="text-[12px] text-[var(--color-brand)] font-semibold">{{ formatDateTime(ride.scheduled_at) }}</p>
                   </div>
                 </div>
                 <span class="text-[16px] font-bold text-[var(--color-text-primary)]">{{ formatFare(ride.fare_cents) }}</span>

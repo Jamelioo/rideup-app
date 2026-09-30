@@ -120,3 +120,37 @@ Scope: code review of `api/`, `src/lib`, router, schema/RLS, and the rider, driv
 Still open from the critical list's neighbours: riders can still write their own `stripe_customer_id`/`payment_method_id` directly (should move to a server endpoint that reads the SetupIntent), `verify-session` is unauthenticated, and everything in the High/Medium sections.
 
 Deploy order: run `supabase/migrations/002_security_hardening.sql`, set `SUPABASE_SERVICE_ROLE_KEY` in Vercel, re-grant admin, then deploy the code (old client + new DB will fail ride accept; new client + old DB will fail the `accept_ride` RPC).
+
+
+## Remediation status — High items and screenshot UI/UX audit
+
+Screenshots were taken with Playwright/Chromium in demo mode at 390px (light + dark) and 1280px, across ~24 routes. Logged-in-only states (bottom nav over the booking sheet, real ride flow with live data, Stripe card entry) could not be rendered without real Supabase/Stripe keys and are **untested visually**.
+
+**UI/UX findings from screenshots — fixed**
+- **Driver landing page unreadable in dark mode** (hero used the text colour as its "dark" background, so white text sat on a pale panel; also footer, referral card, 404, toasts). Fixed with a fixed dark colour.
+- Faint text everywhere (placeholders, helper text, "Continue as guest"): muted/secondary text colours raised to readable contrast in light and dark.
+- 21 leftover lime-green glows/favicon → brand green; brand-coloured text now uses the theme token (lighter on dark).
+- `100vh` → `100dvh` (34 places); text under 11px removed; 38 icon-only buttons + 2 switches + 2 social links + 1 image now labelled; slide-to-complete now keyboard/tap accessible.
+- Bottom nav no longer hides the booking sheet (sheet sits above it via `--bottom-nav-h`) — logic only, not visually verified logged-in.
+- PWA: real 192/512/maskable PNG icons, Apple touch icon, share image (`og-image.png`), `summary_large_image`; removed Vite template leftovers, Netlify `_redirects`, dead sitemap line.
+- Landing hero mockup now shows real product names and realistic prices; Payments page copy/state matches the real flow (shows the actual card on file instead of a permanent fake checkmark).
+- Not fixed (by choice): admin tables are not phone-friendly (horizontal scroll, actions off-screen); demo banner wraps to two lines and adds 48px to `h-dvh` screens in demo mode only; driver-landing "200+ drivers", testimonials and mock earnings remain unverifiable marketing copy.
+
+| # | High item | Status |
+|---|-----------|--------|
+| 10 | Schema/code mismatches | **Fixed** — migration 003 (scheduled_rides columns/FK/policy, card + payout + receipt columns, realtime on rides/chat); conflicting `supabase/schema.sql` removed; README lists the run order. |
+| 11 | Status name mismatch | **Fixed** — rider UI maps `accepted/in_progress` to tracker states. |
+| 12 | Riders can't see driver details | **Fixed** — `get_ride_driver` RPC (participants only), used by search, live-ride and receipt screens. |
+| 13 | "undefined minutes away" match screen | **Fixed** — match details built before the screen is shown. |
+| 14 | Card saved from Payments page never stored | **Fixed** — webhook stores setup-mode cards; in-app path goes through new `/api/save-payment-method` (verifies the SetupIntent belongs to the user's Stripe customer; client can no longer write card fields). |
+| 15 | Currency mismatch | **Fixed** — USD everywhere (checkout session and copy). |
+| 16 | "Phone-verified" claim / anonymous sign-ins | **Claim fixed** (now "payment card on file"). Anonymous sign-in abuse limits and CAPTCHA must be configured in the Supabase dashboard. |
+| 17 | Driver payout not computed | **Fixed** — 20% fee / 80% payout stored per ride; driver screens show payout; admin pages relabelled "Gross bookings"; fake "instant cash out" text removed. |
+| 18 | Unthrottled GPS DB writes | **Fixed** — at most one every 10s (live position still streams over realtime). |
+| 19 | Cancel flows | **Fixed** — rider cancel releases the hold and cancels the ride; driver screen reacts when the rider cancels; rider sees a cancelled screen. Cancellation **fee** is still never charged (needs a policy decision). |
+| 20 | Fake receipt / unchecked "verified" | **Fixed** — no placeholder data; real line items, real card; unpaid rides aren't marked verified. |
+| 21 | Driver request targeting/expiry | **Partly fixed** — vehicle-type filtering and request expiry (rider timeout cancels; server cleanup in the dispatcher). No distance-based matching (drivers don't share location yet). |
+| 22 | Scheduled rides never dispatched | **Fixed in code** — `/api/dispatch-scheduled`; it must be called every minute (Vercel Pro cron, pg_cron, or external pinger) with `CRON_SECRET`. Not scheduled automatically. |
+| 23 | Committed test-results | **Fixed** — removed and gitignored. |
+
+Deploy order now: run migrations 002 then 003, set `SUPABASE_SERVICE_ROLE_KEY` and `CRON_SECRET`, add the Stripe webhook events above, then deploy.

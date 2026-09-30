@@ -54,10 +54,10 @@ async function handleLogin() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col">
+  <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top bar -->
     <div class="flex items-center px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]">
+      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -93,10 +93,10 @@ async function handleLogin() {
       </div>
 
       <div class="text-right">
-        <button type="button" @click="forgotPassword" class="text-[13px] text-[#2b8659] font-medium">Forgot password?</button>
+        <button type="button" @click="forgotPassword" class="text-[13px] text-[var(--color-brand)] font-medium">Forgot password?</button>
       </div>
 
-      <p v-if="resetSent" class="text-[#2b8659] text-[13px] font-medium mb-4">Password reset link sent! Check your email.</p>
+      <p v-if="resetSent" class="text-[var(--color-brand)] text-[13px] font-medium mb-4">Password reset link sent! Check your email.</p>
       <p v-if="error" class="text-red-500 text-[13px] mb-4">{{ error }}</p>
 
       <button
@@ -109,7 +109,7 @@ async function handleLogin() {
 
       <div class="text-center mt-6 text-[14px] text-[var(--color-text-muted)]">
         Don't have an account?
-        <router-link to="/signup" class="text-[#2b8659] font-semibold">Sign up</router-link>
+        <router-link to="/signup" class="text-[var(--color-brand)] font-semibold">Sign up</router-link>
       </div>
 
       <button @click="router.push('/')" class="w-full py-3 mt-4 text-[14px] font-semibold text-[var(--color-text-muted)] active:text-[var(--color-text-secondary)] transition-colors">

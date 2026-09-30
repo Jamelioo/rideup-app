@@ -31,6 +31,24 @@ export default async function handler(req, res) {
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object
+
+      // Card added from the Payments page (Checkout setup mode): store the verified card on the rider.
+      if (session.mode === 'setup' && session.setup_intent && session.customer) {
+        const si = await stripe.setupIntents.retrieve(session.setup_intent, { expand: ['payment_method'] })
+        const pm = si.payment_method
+        if (si.status === 'succeeded' && pm) {
+          await supabase
+            .from('riders')
+            .update({
+              payment_method_id: pm.id,
+              card_brand: pm.card?.brand || null,
+              card_last4: pm.card?.last4 || null,
+            })
+            .eq('stripe_customer_id', session.customer)
+        }
+        break
+      }
+
       const rideId = session.metadata?.rideId
 
       // Only a fully paid session counts; never touch rides.status (it's the ride lifecycle, not payment).

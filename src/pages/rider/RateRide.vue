@@ -63,7 +63,7 @@ function skip() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
+  <div class="min-h-dvh bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Success state -->
     <Transition name="fade">
       <div v-if="submitted" class="flex-1 flex flex-col items-center justify-center px-6">
@@ -81,7 +81,7 @@ function skip() {
     <div v-if="!submitted" class="flex-1 flex flex-col max-w-lg mx-auto w-full">
       <!-- Top bar -->
       <div class="flex items-center px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4">
-        <button @click="skip" class="w-10 h-10 flex items-center justify-center">
+        <button @click="skip" class="w-10 h-10 flex items-center justify-center" aria-label="Skip">
           <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>

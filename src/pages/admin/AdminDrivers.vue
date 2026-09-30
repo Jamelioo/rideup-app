@@ -87,7 +87,7 @@
                 <button
                   v-else-if="driver.status === 'Suspended'"
                   @click="reinstateDriver(driver)"
-                  class="text-xs font-medium px-3 py-1.5 rounded-lg bg-green-50 text-[#2b8659] hover:bg-green-100 transition-colors"
+                  class="text-xs font-medium px-3 py-1.5 rounded-lg bg-green-50 text-[var(--color-brand)] hover:bg-green-100 transition-colors"
                 >
                   Reinstate
                 </button>

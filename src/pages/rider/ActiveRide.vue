@@ -5,6 +5,7 @@ import GoogleMap from '../../components/GoogleMap.vue'
 import RideTracker from '../../components/RideTracker.vue'
 import { supabase } from '../../lib/supabase'
 import { DEMO_MODE } from '../../lib/demoMode'
+import { apiPost } from '../../lib/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -30,7 +31,19 @@ const draft = ref('')
 
 // Driver location tracking
 let locationChannel = null
+let statusChannel = null
 let statusTimers = []
+const cancelled = ref(false)
+
+// Database statuses -> the tracker's vocabulary
+function toTrackerStatus(dbStatus) {
+  switch (dbStatus) {
+    case 'driver_arrived': return 'driver_arrived'
+    case 'in_progress': return 'on_trip'
+    case 'completed': return 'completed'
+    default: return 'driver_enroute' // accepted / pending_driver_response
+  }
+}
 
 const statusBarText = computed(() => {
   switch (rideStatus.value) {
@@ -60,7 +73,8 @@ onMounted(async () => {
   // Real mode: load ride data and subscribe to updates
   const { data } = await supabase.from('rides').select('*').eq('id', rideId).single()
   if (data) {
-    rideStatus.value = data.status
+    if (data.status === 'cancelled') { cancelled.value = true }
+    rideStatus.value = toTrackerStatus(data.status)
     if (data.pickup_lat && data.pickup_lng) {
       pickup.value = { lat: data.pickup_lat, lng: data.pickup_lng }
     }
@@ -71,11 +85,13 @@ onMounted(async () => {
       driverLocation.value = { lat: data.driver_lat, lng: data.driver_lng }
     }
     if (data.driver_id) {
-      const { data: driverData } = await supabase.from('drivers').select('name, vehicle, license_plate, rating, phone').eq('id', data.driver_id).single()
+      // Drivers' rows are private; riders read them via an RPC limited to their own ride.
+      const { data: rpc } = await supabase.rpc('get_ride_driver', { p_ride_id: rideId })
+      const driverData = Array.isArray(rpc) ? rpc[0] : rpc
       if (driverData) {
         driverName.value = driverData.name || driverName.value
         driverRating.value = driverData.rating || driverRating.value
-        vehicle.value = driverData.vehicle || vehicle.value
+        vehicle.value = [driverData.vehicle_color, driverData.vehicle_make, driverData.vehicle_model].filter(Boolean).join(' ') || vehicle.value
         plate.value = driverData.license_plate || plate.value
         driverPhone.value = driverData.phone || driverPhone.value
       }
@@ -91,10 +107,11 @@ onMounted(async () => {
   }).subscribe()
 
   // Subscribe to ride status changes
-  supabase.channel(`ride-status-${rideId}`)
+  statusChannel = supabase.channel(`ride-status-${rideId}`)
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rides', filter: `id=eq.${rideId}` }, (payload) => {
       if (payload.new?.status) {
-        rideStatus.value = payload.new.status
+        if (payload.new.status === 'cancelled') { cancelled.value = true; return }
+        rideStatus.value = toTrackerStatus(payload.new.status)
         if (payload.new.status === 'completed') {
           setTimeout(() => {
             router.push({ name: 'rate-ride', params: { rideId } })
@@ -126,8 +143,15 @@ function startDemoSimulation() {
   statusTimers = [arriveTimer, tripTimer, completeTimer]
 }
 
-function cancelRide() {
+async function cancelRide() {
   statusTimers.forEach(clearTimeout)
+  if (!DEMO_MODE) {
+    // Release the card hold first (it's refused once the trip has started), then cancel the ride.
+    await apiPost('/api/cancel-payment', { rideId }).catch(() => {})
+    await supabase.from('rides')
+      .update({ status: 'cancelled', cancelled_at: new Date().toISOString(), cancel_reason: 'cancelled_by_rider' })
+      .eq('id', rideId)
+  }
   router.push({ name: 'book' })
 }
 
@@ -148,6 +172,7 @@ function sendMessage() {
 onUnmounted(() => {
   statusTimers.forEach(clearTimeout)
   if (locationChannel) supabase.removeChannel(locationChannel)
+  if (statusChannel) supabase.removeChannel(statusChannel)
 })
 </script>
 
@@ -178,7 +203,7 @@ onUnmounted(() => {
     <div class="px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 border-t border-[var(--color-border)] flex items-center gap-2">
       <input v-model="draft" @keyup.enter="sendMessage" type="text" placeholder="Type a message..."
              class="flex-1 bg-[var(--color-surface-secondary)] rounded-full px-4 py-3 text-[13px] outline-none placeholder:text-[var(--color-text-muted)] min-h-[44px]" />
-      <button @click="sendMessage" class="w-11 h-11 rounded-full bg-[#2b8659] text-white flex items-center justify-center">
+      <button @click="sendMessage" class="w-11 h-11 rounded-full bg-[#2b8659] text-white flex items-center justify-center" aria-label="Send message">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0l-7 7m7-7l7 7" />
         </svg>
@@ -199,12 +224,22 @@ onUnmounted(() => {
         <div class="flex-1">
           <div class="text-[15px] font-semibold">{{ statusBarText }}</div>
         </div>
-        <div class="text-lg font-semibold">Ride<span class="text-[#2b8659]">Up</span></div>
+        <div class="text-lg font-semibold">Ride<span class="text-[var(--color-brand)]">Up</span></div>
       </div>
     </div>
 
     <!-- Full-screen map -->
     <GoogleMap :pickup="pickup" :dropoff="dropoff" :driver-location="driverLocation" />
+
+    <!-- Ride cancelled (by the driver or the system) -->
+    <div v-if="cancelled" role="alertdialog" aria-modal="true" aria-labelledby="ride-cancelled-title"
+         class="fixed inset-0 z-[200] bg-black/60 flex items-center justify-center px-6">
+      <div class="bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-3xl p-6 max-w-sm w-full text-center">
+        <h2 id="ride-cancelled-title" class="text-xl font-bold mb-2">Ride cancelled</h2>
+        <p class="text-[var(--color-text-secondary)] text-sm mb-6">This ride was cancelled. Any hold on your card has been released.</p>
+        <button @click="router.push({ name: 'book' })" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px]">Book another ride</button>
+      </div>
+    </div>
 
     <!-- Ride tracker overlay -->
     <RideTracker

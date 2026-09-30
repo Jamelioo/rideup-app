@@ -14,10 +14,10 @@ on the backend.
     for a driver to accept via Supabase Realtime
   - `RiderFlow.vue` — parent component wiring the two screens together
 
-- **Database schema** (`supabase/schema.sql`)
-  - `riders`, `drivers`, `rides`, `driver_locations` tables
-  - Row Level Security policies so riders/drivers only see their own data
-  - Realtime enabled on `rides` and `driver_locations`
+- **Database schema** (`supabase-schema.sql` + `supabase/migrations/`)
+  - `riders`, `drivers`, `rides`, `scheduled_rides`, `ride_messages`, support/safety tables
+  - Row Level Security + guard triggers so users can only touch their own data and can't edit fares, payments or driver approval
+  - Realtime enabled on `rides` and `ride_messages`
 
 - **Fare calculation** (`src/lib/pricing.js`)
   - Distance + time based pricing, separate rates for Standard vs XL
@@ -55,9 +55,10 @@ npm install
 
 1. Go to [supabase.com/dashboard](https://supabase.com/dashboard)
 2. Create a new project (e.g. "rideup-nassau")
-3. Once it's ready, go to the **SQL Editor** and paste in the entire
-   contents of `supabase/schema.sql`, then run it — this creates all
-   the tables, security policies, and enables realtime
+3. Once it's ready, go to the **SQL Editor** and run these files **in order**:
+   `supabase-schema.sql`, then `supabase/migrations/001_create_leads_table.sql`,
+   `002_security_hardening.sql`, `003_high_priority_fixes.sql`.
+   (`002` explains how to grant your admin account the `app_metadata` admin role.)
 4. Go to **Project Settings → API** — copy the **Project URL** and
    **anon public key**
 
@@ -94,3 +95,19 @@ insert a test rider row in Supabase's Table Editor with your test
 Push this to a GitHub repo, then connect it to **Netlify** or **Vercel**
 for automatic deploys on push. Add the same three env vars in their
 dashboard settings.
+
+
+## Server configuration (Vercel environment variables)
+
+| Variable | Used by |
+|---|---|
+| `SUPABASE_SERVICE_ROLE_KEY` | every protected `/api/*` route (they refuse to run without it) |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | payments + webhook (listen for `checkout.session.completed` and `payment_intent.payment_failed`) |
+| `CRON_SECRET` | `/api/dispatch-scheduled` |
+| `RESEND_API_KEY`, `EMAIL_FROM` | driver approval emails |
+
+### Scheduled rides and stale requests
+
+`/api/dispatch-scheduled` turns due scheduled rides into live requests and cancels requests no driver answered
+within 5 minutes. Call it every minute with `Authorization: Bearer $CRON_SECRET` — Vercel Cron (Pro plan),
+Supabase `pg_cron` + `pg_net`, or any external pinger. Without it, scheduled rides are saved but never dispatched.

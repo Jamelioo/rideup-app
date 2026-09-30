@@ -53,7 +53,7 @@ export default async function handler(req, res) {
 
     const { data: rider } = await admin
       .from('riders')
-      .select('stripe_customer_id, payment_method_id')
+      .select('stripe_customer_id, payment_method_id, card_brand, card_last4')
       .eq('id', ride.rider_id)
       .maybeSingle()
 
@@ -91,16 +91,26 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, error: 'payment_failed' })
     }
 
-    const { error: updateErr } = await admin
+    const { data: promoted, error: updateErr } = await admin
       .from('rides')
       .update({
         status: 'accepted',
         payment_intent_id: paymentIntent.id,
         payment_status: 'authorized',
+        payment_brand: rider.card_brand || null,
+        payment_last4: rider.card_last4 || null,
       })
       .eq('id', rideId)
       .eq('status', 'pending_driver_response')
+      .select('id')
     if (updateErr) throw updateErr
+
+    // The rider cancelled while we were holding the card: release it and tell the driver.
+    if (!promoted?.length) {
+      await stripe.paymentIntents.cancel(paymentIntent.id).catch((e) => console.error('Release hold failed:', e.message))
+      await admin.from('rides').update({ payment_status: 'cancelled' }).eq('id', rideId)
+      return res.status(409).json({ success: false, error: 'ride_unavailable' })
+    }
 
     return res.status(200).json({ success: true, payment_intent_id: paymentIntent.id })
   } catch (err) {

@@ -82,10 +82,10 @@ async function saveEmail() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)]">
+  <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)]">
     <!-- Top bar -->
     <div class="flex items-center justify-between px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]">
+      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -125,7 +125,7 @@ async function saveEmail() {
             <span class="text-[14px] font-semibold capitalize">{{ driver?.vehicle_type || 'standard' }}</span>
           </div>
         </div>
-        <button @click="showToast('Contact support at (242) 452-9911')" class="text-[13px] text-[#2b8659] font-semibold mt-2 px-1">Edit Vehicle</button>
+        <button @click="showToast('Contact support at (242) 452-9911')" class="text-[13px] text-[var(--color-brand)] font-semibold mt-2 px-1">Edit Vehicle</button>
       </div>
 
       <!-- Stats -->
@@ -153,14 +153,14 @@ async function saveEmail() {
         <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-4 space-y-3">
           <div class="flex items-center justify-between">
             <span class="text-[14px]">Driver's License</span>
-            <span class="text-[12px] text-[#2b8659] font-semibold">✓ On file</span>
+            <span class="text-[12px] text-[var(--color-brand)] font-semibold">✓ On file</span>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-[14px]">Insurance</span>
-            <span class="text-[12px] text-[#2b8659] font-semibold">✓ On file</span>
+            <span class="text-[12px] text-[var(--color-brand)] font-semibold">✓ On file</span>
           </div>
         </div>
-        <button @click="router.push('/driver/documents')" class="text-[13px] text-[#2b8659] font-semibold mt-2 px-1">Upload / Update</button>
+        <button @click="router.push('/driver/documents')" class="text-[13px] text-[var(--color-brand)] font-semibold mt-2 px-1">Upload / Update</button>
       </div>
 
       <!-- Account -->
@@ -172,12 +172,12 @@ async function saveEmail() {
               <div class="text-[13px] text-[var(--color-text-muted)]">Phone</div>
               <div v-if="editingPhone" class="flex items-center gap-2 mt-1">
                 <input v-model="editPhone" type="tel" class="text-[14px] font-semibold bg-[var(--color-surface)] border border-[var(--color-border)] px-3 py-1.5 rounded-lg w-40 outline-none focus:ring-2 focus:ring-[#2b8659]/30" />
-                <button @click="savePhone" :disabled="saving" class="text-[12px] text-[#2b8659] font-semibold">Save</button>
+                <button @click="savePhone" :disabled="saving" class="text-[12px] text-[var(--color-brand)] font-semibold">Save</button>
                 <button @click="editingPhone = false" class="text-[12px] text-[var(--color-text-muted)]">Cancel</button>
               </div>
               <div v-else class="text-[14px] font-semibold">{{ driver?.phone || '—' }}</div>
             </div>
-            <button v-if="!editingPhone" @click="startEditPhone" class="text-[12px] text-[#2b8659] font-semibold">Edit</button>
+            <button v-if="!editingPhone" @click="startEditPhone" class="text-[12px] text-[var(--color-brand)] font-semibold">Edit</button>
           </div>
           <div class="border-t border-[var(--color-border)]"></div>
           <div class="flex items-center justify-between">
@@ -185,12 +185,12 @@ async function saveEmail() {
               <div class="text-[13px] text-[var(--color-text-muted)]">Email</div>
               <div v-if="editingEmail" class="flex items-center gap-2 mt-1">
                 <input v-model="editEmail" type="email" class="text-[14px] font-semibold bg-[var(--color-surface)] border border-[var(--color-border)] px-3 py-1.5 rounded-lg w-40 outline-none focus:ring-2 focus:ring-[#2b8659]/30" />
-                <button @click="saveEmail" :disabled="saving" class="text-[12px] text-[#2b8659] font-semibold">Save</button>
+                <button @click="saveEmail" :disabled="saving" class="text-[12px] text-[var(--color-brand)] font-semibold">Save</button>
                 <button @click="editingEmail = false" class="text-[12px] text-[var(--color-text-muted)]">Cancel</button>
               </div>
               <div v-else class="text-[14px] font-semibold">{{ driver?.email || '—' }}</div>
             </div>
-            <button v-if="!editingEmail" @click="startEditEmail" class="text-[12px] text-[#2b8659] font-semibold">Edit</button>
+            <button v-if="!editingEmail" @click="startEditEmail" class="text-[12px] text-[var(--color-brand)] font-semibold">Edit</button>
           </div>
         </div>
         <button @click="showToast('Contact support at (242) 452-9911')" class="text-[13px] text-[var(--color-text-muted)] font-semibold mt-2 px-1 underline underline-offset-2">Change Password</button>
@@ -211,7 +211,7 @@ async function saveEmail() {
 
     <!-- Toast -->
     <Transition name="fade">
-      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[var(--color-text-primary)] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
+      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#191f1c] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
         {{ toast }}
       </div>
     </Transition>

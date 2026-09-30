@@ -67,7 +67,7 @@
                     'text-xs font-medium px-3 py-1.5 rounded-lg transition-colors',
                     user.status === 'Active'
                       ? 'text-red-600 bg-red-50 hover:bg-red-100'
-                      : 'text-[#2b8659] bg-green-50 hover:bg-green-100'
+                      : 'text-[var(--color-brand)] bg-green-50 hover:bg-green-100'
                   ]"
                 >
                   {{ user.status === 'Active' ? 'Suspend' : 'Unsuspend' }}

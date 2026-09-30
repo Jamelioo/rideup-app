@@ -5,7 +5,7 @@ import { useDriver } from '../../lib/useDriver'
 import { useAuth } from '../../lib/useAuth'
 import { supabase } from '../../lib/supabase'
 import { DEMO_MODE } from '../../lib/demoMode'
-import { formatFare } from '../../lib/pricing'
+import { formatFare, driverPayout } from '../../lib/pricing'
 import { generateFakeEarnings } from '../../lib/demoDriverMode'
 import GoogleMap from '../../components/GoogleMap.vue'
 import HarborBackdrop from '../../components/HarborBackdrop.vue'
@@ -27,7 +27,7 @@ let hoursTimer = null
 async function refreshStats() {
   if (DEMO_MODE) {
     const { today } = generateFakeEarnings()
-    todayEarnings.value = today.reduce((sum, t) => sum + t.fare_cents, 0)
+    todayEarnings.value = today.reduce((sum, t) => sum + driverPayout(t), 0)
     todayTrips.value = today.length
     hoursOnline.value = 5.8
     lastRide.value = today[0]
@@ -41,7 +41,7 @@ async function refreshStats() {
 
   const { data, error } = await supabase
     .from('rides')
-    .select('fare_cents, pickup_address, dropoff_address, distance_miles, completed_at')
+    .select('fare_cents, driver_payout_cents, pickup_address, dropoff_address, distance_miles, completed_at')
     .eq('driver_id', driver.value.id)
     .eq('status', 'completed')
     .gte('completed_at', todayStart.toISOString())
@@ -53,7 +53,7 @@ async function refreshStats() {
   }
 
   if (data && data.length > 0) {
-    todayEarnings.value = data.reduce((sum, r) => sum + (r.fare_cents || 0), 0)
+    todayEarnings.value = data.reduce((sum, r) => sum + driverPayout(r), 0)
     todayTrips.value = data.length
     lastRide.value = data[0]
   } else {
@@ -137,7 +137,7 @@ const initials = computed(() => {
 </script>
 
 <template>
-  <div class="relative h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] overflow-hidden">
+  <div class="relative h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)] overflow-hidden">
     <SideMenu :is-open="menuOpen" @close="menuOpen = false" />
 
     <!-- Incoming ride request overlay -->
@@ -160,10 +160,10 @@ const initials = computed(() => {
 
     <!-- MOBILE: Top bar -->
     <div class="md:hidden absolute top-0 left-0 right-0 z-10 px-5 pt-[max(2rem,env(safe-area-inset-top))] flex items-center justify-between pointer-events-none">
-      <button @click="menuOpen = true" class="pointer-events-auto w-11 h-11 rounded-full bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.1)] flex items-center justify-center active:scale-95 transition-transform">
+      <button @click="menuOpen = true" class="pointer-events-auto w-11 h-11 rounded-full bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.1)] flex items-center justify-center active:scale-95 transition-transform" aria-label="Open menu">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect y="3" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="8.25" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="13.5" width="18" height="1.5" rx="0.75" fill="currentColor"/></svg>
       </button>
-      <div class="pointer-events-auto bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.1)] rounded-full px-5 py-2 text-[17px] font-bold tracking-tight">Ride<span class="text-[#2b8659]">Up</span> <span class="text-[11px] font-sans font-normal text-[var(--color-text-muted)] ml-0.5">Driver</span></div>
+      <div class="pointer-events-auto bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.1)] rounded-full px-5 py-2 text-[17px] font-bold tracking-tight">Ride<span class="text-[var(--color-brand)]">Up</span> <span class="text-[11px] font-sans font-normal text-[var(--color-text-muted)] ml-0.5">Driver</span></div>
       <button @click="router.push('/driver/profile')" class="pointer-events-auto w-11 h-11 rounded-full bg-[#2b8659] shadow-[0_2px_12px_rgba(0,0,0,0.1)] flex items-center justify-center text-white text-[13px] font-bold">
         {{ initials }}
       </button>
@@ -183,13 +183,13 @@ const initials = computed(() => {
           <div class="flex items-center gap-3">
             <span v-if="isOnline" class="w-2.5 h-2.5 rounded-full bg-[#2b8659] animate-pulse"></span>
             <span v-else class="w-2.5 h-2.5 rounded-full bg-[var(--color-text-muted)]"></span>
-            <span class="text-[15px] font-bold" :class="isOnline ? 'text-[#2b8659]' : 'text-[var(--color-text-muted)]'">
+            <span class="text-[15px] font-bold" :class="isOnline ? 'text-[var(--color-brand)]' : 'text-[var(--color-text-muted)]'">
               {{ isOnline ? "You're Online" : "You're Offline" }}
             </span>
           </div>
           <button @click="toggleOnline"
                   class="relative w-[52px] h-[30px] rounded-full transition-colors duration-200 flex-shrink-0"
-                  :class="isOnline ? 'bg-[#2b8659]' : 'bg-[var(--color-text-muted)]'">
+                  :class="isOnline ? 'bg-[#2b8659]' : 'bg-[var(--color-text-muted)]'" role="switch" :aria-checked="String(isOnline)" aria-label="Go online">
             <span class="absolute top-[3px] w-6 h-6 rounded-full bg-[var(--color-surface)] shadow-sm transition-transform duration-200"
                   :class="isOnline ? 'left-[25px]' : 'left-[3px]'"></span>
           </button>
@@ -203,7 +203,7 @@ const initials = computed(() => {
         <!-- Online waiting message -->
         <div v-if="isOnline && !currentRide && !incomingRequest" class="bg-[var(--color-surface-secondary)] rounded-2xl p-4 mb-4 flex items-center gap-3">
           <span class="w-3 h-3 rounded-full bg-[#2b8659] animate-pulse flex-shrink-0"></span>
-          <p class="text-[14px] text-[#2b8659] font-medium">Waiting for rides...</p>
+          <p class="text-[14px] text-[var(--color-brand)] font-medium">Waiting for rides...</p>
         </div>
 
         <!-- Today's summary -->
@@ -239,7 +239,7 @@ const initials = computed(() => {
               <div class="text-[14px] font-semibold">{{ lastRide.rider_name || 'Rider' }}</div>
               <div class="text-[11px] text-[var(--color-text-muted)] mt-0.5">{{ lastRide.distance_miles != null ? lastRide.distance_miles.toFixed(1) : '0.0' }} mi</div>
             </div>
-            <div class="text-[15px] font-bold text-[#2b8659]">+{{ formatFare(lastRide.fare_cents) }}</div>
+            <div class="text-[15px] font-bold text-[var(--color-brand)]">+{{ formatFare(driverPayout(lastRide)) }}</div>
           </div>
         </div>
         </template>
@@ -249,9 +249,9 @@ const initials = computed(() => {
     <!-- DESKTOP: Side panel -->
     <div class="hidden md:flex absolute inset-y-0 left-0 z-10 w-[400px] bg-[var(--color-surface)] shadow-[4px_0_24px_rgba(0,0,0,0.08)] flex-col">
       <div class="px-6 pt-8 pb-4 flex items-center justify-between">
-        <div class="text-[22px] font-bold tracking-tight">Ride<span class="text-[#2b8659]">Up</span> <span class="text-[12px] font-sans font-normal text-[var(--color-text-muted)] ml-0.5">Driver</span></div>
+        <div class="text-[22px] font-bold tracking-tight">Ride<span class="text-[var(--color-brand)]">Up</span> <span class="text-[12px] font-sans font-normal text-[var(--color-text-muted)] ml-0.5">Driver</span></div>
         <div class="flex items-center gap-2">
-          <button @click="menuOpen = true" class="w-10 h-10 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center transition-colors">
+          <button @click="menuOpen = true" class="w-10 h-10 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center transition-colors" aria-label="Open menu">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect y="3" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="8.25" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="13.5" width="18" height="1.5" rx="0.75" fill="currentColor"/></svg>
           </button>
           <button @click="router.push('/driver/profile')" class="w-10 h-10 rounded-full bg-[#2b8659] flex items-center justify-center text-white text-[13px] font-bold">
@@ -269,13 +269,13 @@ const initials = computed(() => {
           <div class="flex items-center gap-3">
             <span v-if="isOnline" class="w-3 h-3 rounded-full bg-[#2b8659] animate-pulse"></span>
             <span v-else class="w-3 h-3 rounded-full bg-[var(--color-text-muted)]"></span>
-            <span class="text-[16px] font-bold" :class="isOnline ? 'text-[#2b8659]' : 'text-[var(--color-text-muted)]'">
+            <span class="text-[16px] font-bold" :class="isOnline ? 'text-[var(--color-brand)]' : 'text-[var(--color-text-muted)]'">
               {{ isOnline ? "You're Online" : "You're Offline" }}
             </span>
           </div>
           <button @click="toggleOnline"
                   class="relative w-[56px] h-[32px] rounded-full transition-colors duration-200 flex-shrink-0"
-                  :class="isOnline ? 'bg-[#2b8659]' : 'bg-[var(--color-text-muted)]'">
+                  :class="isOnline ? 'bg-[#2b8659]' : 'bg-[var(--color-text-muted)]'" role="switch" :aria-checked="String(isOnline)" aria-label="Go online">
             <span class="absolute top-[3px] w-[26px] h-[26px] rounded-full bg-[var(--color-surface)] shadow-sm transition-transform duration-200"
                   :class="isOnline ? 'left-[27px]' : 'left-[3px]'"></span>
           </button>
@@ -289,7 +289,7 @@ const initials = computed(() => {
         <!-- Online waiting message -->
         <div v-if="isOnline && !currentRide && !incomingRequest" class="bg-[var(--color-surface-secondary)] rounded-2xl p-4 mb-5 flex items-center gap-3">
           <span class="w-3 h-3 rounded-full bg-[#2b8659] animate-pulse flex-shrink-0"></span>
-          <p class="text-[14px] text-[#2b8659] font-medium">Waiting for rides...</p>
+          <p class="text-[14px] text-[var(--color-brand)] font-medium">Waiting for rides...</p>
         </div>
 
         <!-- Today's summary -->
@@ -325,7 +325,7 @@ const initials = computed(() => {
               <div class="text-[14px] font-semibold">{{ lastRide.rider_name || 'Rider' }}</div>
               <div class="text-[11px] text-[var(--color-text-muted)] mt-0.5">{{ lastRide.distance_miles != null ? lastRide.distance_miles.toFixed(1) : '0.0' }} mi</div>
             </div>
-            <div class="text-[15px] font-bold text-[#2b8659]">+{{ formatFare(lastRide.fare_cents) }}</div>
+            <div class="text-[15px] font-bold text-[var(--color-brand)]">+{{ formatFare(driverPayout(lastRide)) }}</div>
           </div>
         </div>
         <div v-else-if="isOnline" class="text-center text-[13px] text-[var(--color-text-muted)] py-4">

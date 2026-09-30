@@ -1,4 +1,3 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://rideupnassau.com/sitemap.xml

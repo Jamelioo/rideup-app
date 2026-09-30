@@ -42,7 +42,7 @@ export default async function handler(req, res) {
       line_items: [
         {
           price_data: {
-            currency: 'bsd',
+            currency: 'usd',
             product_data: { name: 'RideUp Ride' },
             unit_amount: ride.fare_cents,
           },

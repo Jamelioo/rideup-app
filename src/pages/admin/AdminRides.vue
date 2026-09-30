@@ -34,18 +34,18 @@
           <thead>
             <tr class="text-left text-[var(--color-text-muted)] text-xs uppercase tracking-wider bg-[var(--color-surface-secondary)]">
               <th class="px-4 py-3 font-medium cursor-pointer hover:text-[var(--color-text-secondary)]" @click="toggleSort('id')">
-                ID <span v-if="sortKey === 'id'" class="text-[#2b8659]">{{ sortDir === 'asc' ? '&#9650;' : '&#9660;' }}</span>
+                ID <span v-if="sortKey === 'id'" class="text-[var(--color-brand)]">{{ sortDir === 'asc' ? '&#9650;' : '&#9660;' }}</span>
               </th>
               <th class="px-4 py-3 font-medium">Rider</th>
               <th class="px-4 py-3 font-medium">Driver</th>
               <th class="px-4 py-3 font-medium">Pickup</th>
               <th class="px-4 py-3 font-medium">Dropoff</th>
               <th class="px-4 py-3 font-medium cursor-pointer hover:text-[var(--color-text-secondary)]" @click="toggleSort('fare')">
-                Fare <span v-if="sortKey === 'fare'" class="text-[#2b8659]">{{ sortDir === 'asc' ? '&#9650;' : '&#9660;' }}</span>
+                Fare <span v-if="sortKey === 'fare'" class="text-[var(--color-brand)]">{{ sortDir === 'asc' ? '&#9650;' : '&#9660;' }}</span>
               </th>
               <th class="px-4 py-3 font-medium">Status</th>
               <th class="px-4 py-3 font-medium cursor-pointer hover:text-[var(--color-text-secondary)]" @click="toggleSort('date')">
-                Date <span v-if="sortKey === 'date'" class="text-[#2b8659]">{{ sortDir === 'asc' ? '&#9650;' : '&#9660;' }}</span>
+                Date <span v-if="sortKey === 'date'" class="text-[var(--color-brand)]">{{ sortDir === 'asc' ? '&#9650;' : '&#9660;' }}</span>
               </th>
             </tr>
           </thead>

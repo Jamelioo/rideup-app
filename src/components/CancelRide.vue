@@ -111,7 +111,7 @@ function doCancel() {
         </button>
         <button
           @click="confirming = false"
-          class="w-full py-3 text-[#2b8659] text-[15px] font-semibold mt-2"
+          class="w-full py-3 text-[var(--color-brand)] text-[15px] font-semibold mt-2"
         >
           No, keep ride
         </button>

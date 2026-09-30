@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch, nextTick, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
 
@@ -29,10 +29,17 @@ const isVisible = computed(() => {
   if (hiddenPrefixes.some(p => path.startsWith(p))) return false
   return true
 })
+// Publish the nav's height so bottom sheets can sit above it instead of underneath.
+const navEl = ref(null)
+watch(isVisible, async (visible) => {
+  await nextTick()
+  document.documentElement.style.setProperty('--bottom-nav-h', visible && navEl.value ? `${navEl.value.offsetHeight}px` : '0px')
+}, { immediate: true })
+onUnmounted(() => document.documentElement.style.removeProperty('--bottom-nav-h'))
 </script>
 
 <template>
-  <div v-if="isVisible" class="fixed bottom-0 left-0 right-0 z-[100] bg-[var(--color-surface)] border-t border-[var(--color-border)] pb-[env(safe-area-inset-bottom)]">
+  <div v-if="isVisible" ref="navEl" class="fixed bottom-0 left-0 right-0 z-[100] bg-[var(--color-surface)] border-t border-[var(--color-border)] pb-[env(safe-area-inset-bottom)]">
     <nav class="flex items-center justify-around max-w-lg mx-auto">
       <router-link
         v-for="tab in tabs"
@@ -56,7 +63,7 @@ const isVisible = computed(() => {
         <svg v-else-if="tab.icon === 'account'" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
         </svg>
-        <span class="text-[10px] font-medium">{{ tab.label }}</span>
+        <span class="text-[11px] font-medium">{{ tab.label }}</span>
       </router-link>
     </nav>
   </div>

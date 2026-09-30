@@ -42,14 +42,14 @@ async function checkStatus() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col items-center justify-center px-6 pt-[max(1.5rem,env(safe-area-inset-top))]">
+  <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col items-center justify-center px-6 pt-[max(1.5rem,env(safe-area-inset-top))]">
     <div class="max-w-sm w-full text-center">
       <!-- Logo -->
-      <div class="text-2xl font-bold mb-10">Ride<span class="text-[#2b8659]">Up</span></div>
+      <div class="text-2xl font-bold mb-10">Ride<span class="text-[var(--color-brand)]">Up</span></div>
 
       <!-- Icon -->
       <div class="w-20 h-20 rounded-full bg-[#2b8659]/10 flex items-center justify-center mx-auto mb-6">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       </div>
@@ -64,12 +64,12 @@ async function checkStatus() {
       </p>
 
       <button @click="checkStatus" :disabled="checking"
-              class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(88,204,2,0.3)] disabled:opacity-50">
+              class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:opacity-50">
         {{ checking ? 'Checking...' : 'Check Status' }}
       </button>
 
       <button v-if="DEMO_MODE" @click="router.push('/driver/dashboard')"
-              class="w-full py-3 mt-3 text-[#2b8659] font-semibold text-[14px]">
+              class="w-full py-3 mt-3 text-[var(--color-brand)] font-semibold text-[14px]">
         Skip to Dashboard (Demo)
       </button>
 

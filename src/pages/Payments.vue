@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
 import { apiPost } from '../lib/api'
+import { supabase, supabaseConfigured } from '../lib/supabase'
 
 const router = useRouter()
 const route = useRoute()
@@ -11,6 +12,21 @@ const { user } = useAuth()
 const loading = ref(false)
 const error = ref(null)
 const cardAdded = ref(route.query.card === 'added')
+const card = ref(null) // { brand, last4 } when a card is on file
+
+async function loadCard() {
+  if (!supabaseConfigured || !user.value) return
+  const { data } = await supabase
+    .from('riders')
+    .select('payment_method_id, card_brand, card_last4')
+    .eq('auth_user_id', user.value.id)
+    .maybeSingle()
+  card.value = data?.payment_method_id
+    ? { brand: data.card_brand || 'Card', last4: data.card_last4 || '' }
+    : null
+}
+
+const brandLabel = (b) => (b ? b.charAt(0).toUpperCase() + b.slice(1) : 'Card')
 
 async function addCard() {
   loading.value = true
@@ -30,15 +46,18 @@ async function addCard() {
   loading.value = false
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await loadCard()
   if (cardAdded.value) {
     setTimeout(() => { cardAdded.value = false }, 4000)
+    // The card is saved by Stripe's webhook a moment after redirecting back; check again shortly.
+    if (!card.value) setTimeout(loadCard, 3000)
   }
 })
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)]">
+  <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)]">
 
     <!-- Top bar -->
     <div class="sticky top-0 z-40 bg-[var(--color-surface)] border-b border-[var(--color-border)]">
@@ -46,7 +65,7 @@ onMounted(() => {
         <button
           @click="router.back()"
           class="w-9 h-9 flex items-center justify-center rounded-full active:bg-[#191f1c]/5 transition-colors"
-        >
+         aria-label="Back">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M19 12H5" />
             <path d="M12 19l-7-7 7-7" />
@@ -60,7 +79,7 @@ onMounted(() => {
     <div class="px-5 pt-6 pb-10 max-w-lg mx-auto">
 
       <!-- Success banner -->
-      <div v-if="cardAdded" class="mb-4 bg-[#2b8659]/10 text-[#2b8659] text-[14px] font-medium rounded-xl px-4 py-3 flex items-center gap-2">
+      <div v-if="cardAdded" class="mb-4 bg-[#2b8659]/10 text-[var(--color-brand)] text-[14px] font-medium rounded-xl px-4 py-3 flex items-center gap-2">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="20 6 9 17 4 12" />
         </svg>
@@ -87,10 +106,14 @@ onMounted(() => {
               </svg>
             </div>
             <div class="flex-1">
-              <span class="text-[15px] font-medium text-[var(--color-text-primary)]">Debit/Credit Card</span>
-              <p class="text-[13px] text-[var(--color-text-muted)] mt-0.5">Pay securely when you confirm your ride</p>
+              <span class="text-[15px] font-medium text-[var(--color-text-primary)]">
+                {{ card ? `${brandLabel(card.brand)}${card.last4 ? ' •••• ' + card.last4 : ''}` : 'No card on file' }}
+              </span>
+              <p class="text-[13px] text-[var(--color-text-muted)] mt-0.5">
+                {{ card ? 'Used for your rides' : 'Add a card to request rides' }}
+              </p>
             </div>
-            <div class="w-6 h-6 rounded-full bg-[#2b8659] flex items-center justify-center shrink-0">
+            <div v-if="card" class="w-6 h-6 rounded-full bg-[#2b8659] flex items-center justify-center shrink-0" aria-label="Default payment method">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
@@ -109,7 +132,7 @@ onMounted(() => {
               </svg>
             </div>
             <span class="flex-1 text-left text-[15px] font-medium text-[var(--color-text-muted)]">
-              {{ loading ? 'Opening...' : 'Add a card' }}
+              {{ loading ? 'Opening...' : (card ? 'Replace card' : 'Add a card') }}
             </span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="text-[var(--color-text-muted)] shrink-0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6" />
@@ -150,7 +173,7 @@ onMounted(() => {
             <div>
               <p class="text-[14px] font-semibold text-[var(--color-text-primary)] leading-snug">How payment works</p>
               <p class="text-[13px] text-[var(--color-text-muted)] mt-1.5 leading-relaxed">
-                When you confirm a ride, you'll be taken to a secure Stripe checkout page to enter your card details. You see the exact fare before paying. All payments are processed in BSD (Bahamian Dollar).
+                When a driver accepts your ride, a hold for the fare is placed on your card. You're charged the exact fare you saw when the trip ends, and the hold is released if the ride is cancelled. All payments are processed in USD.
               </p>
             </div>
           </div>
