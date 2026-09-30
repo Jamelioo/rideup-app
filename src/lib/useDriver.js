@@ -112,6 +112,7 @@ async function goOnline() {
   if (!driver.value) return
   await supabase.from('drivers').update({ status: 'online' }).eq('id', driver.value.id)
   subscribeToRides()
+  pollExistingRequests()
 }
 
 async function goOffline() {

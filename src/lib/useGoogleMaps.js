@@ -22,10 +22,15 @@ export function loadGoogleMaps() {
       return
     }
 
+    // Use callback approach to ensure Maps API is fully initialized
+    const callbackName = '_gmapsReady'
+    window[callbackName] = () => {
+      resolve(window.google.maps)
+      delete window[callbackName]
+    }
     const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry,marker&v=weekly&loading=async`
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry,marker&v=weekly&callback=${callbackName}`
     script.async = true
-    script.onload = () => resolve(window.google.maps)
     script.onerror = () => reject(new Error('Failed to load Google Maps script'))
     document.head.appendChild(script)
   })
