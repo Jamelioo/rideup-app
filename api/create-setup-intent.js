@@ -1,44 +1,43 @@
 import Stripe from 'stripe'
-import { createClient } from '@supabase/supabase-js'
+import { admin, requireUser, fail } from './_auth.js'
+import { rateLimit } from './_rateLimit.js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
-const supabase = createClient(
-  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
+const checkRate = rateLimit({ maxRequests: 10, windowMs: 60_000 })
 
+// Creates a SetupIntent for the *signed-in* user. The user id comes from the verified JWT, never the body.
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+
+  const blocked = checkRate(req)
+  if (blocked) {
+    res.setHeader('Retry-After', blocked.retryAfter)
+    return res.status(429).json({ error: 'Too many requests. Try again shortly.' })
   }
 
-  const { userId, name, email } = req.body
+  const user = await requireUser(req, res)
+  if (!user) return
 
-  if (!userId) {
-    return res.status(400).json({ error: 'userId is required' })
-  }
+  const { name } = req.body || {}
 
   try {
-    const { data: rider } = await supabase
+    const { data: rider } = await admin
       .from('riders')
       .select('stripe_customer_id')
-      .eq('auth_user_id', userId)
+      .eq('auth_user_id', user.id)
       .maybeSingle()
 
     let customerId = rider?.stripe_customer_id
 
     if (!customerId) {
       const customer = await stripe.customers.create({
-        name: name || undefined,
-        email: email || undefined,
-        metadata: { supabase_user_id: userId },
+        name: typeof name === 'string' ? name.slice(0, 100) : undefined,
+        email: user.email || undefined,
+        metadata: { supabase_user_id: user.id },
       })
       customerId = customer.id
 
-      await supabase
-        .from('riders')
-        .update({ stripe_customer_id: customerId })
-        .eq('auth_user_id', userId)
+      await admin.from('riders').update({ stripe_customer_id: customerId }).eq('auth_user_id', user.id)
     }
 
     const setupIntent = await stripe.setupIntents.create({
@@ -46,12 +45,8 @@ export default async function handler(req, res) {
       payment_method_types: ['card'],
     })
 
-    res.status(200).json({
-      client_secret: setupIntent.client_secret,
-      customer_id: customerId,
-    })
+    return res.status(200).json({ client_secret: setupIntent.client_secret, customer_id: customerId })
   } catch (err) {
-    console.error('Setup intent error:', err.message)
-    res.status(500).json({ error: err.message })
+    return fail(res, 'Setup intent error', err)
   }
 }

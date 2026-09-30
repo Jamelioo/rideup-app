@@ -14,7 +14,7 @@ import DriverRideRequest from './DriverRideRequest.vue'
 
 const router = useRouter()
 const { user } = useAuth()
-const { driver, isOnline, incomingRequest, currentRide, loading: driverLoading, fetchDriver, goOnline, goOffline } = useDriver()
+const { driver, isOnline, incomingRequest, currentRide, loading: driverLoading, acceptError, fetchDriver, goOnline, goOffline } = useDriver()
 
 const menuOpen = ref(false)
 const todayEarnings = ref(0)
@@ -146,6 +146,11 @@ const initials = computed(() => {
       :request="incomingRequest"
       @accepted="handleRideAccepted"
     />
+
+    <div v-if="acceptError" role="alert" class="absolute top-[max(1rem,env(safe-area-inset-top))] left-4 right-4 z-50 bg-red-600 text-white text-[14px] font-medium rounded-xl px-4 py-3 shadow-lg flex items-start gap-3">
+      <span class="flex-1">{{ acceptError }}</span>
+      <button @click="acceptError = ''" class="font-bold" aria-label="Dismiss">✕</button>
+    </div>
 
     <!-- Map fills right side on desktop, top on mobile -->
     <div class="absolute inset-0 md:left-[400px]">

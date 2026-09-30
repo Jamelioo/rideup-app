@@ -1,92 +1,109 @@
 import Stripe from 'stripe'
-import { createClient } from '@supabase/supabase-js'
+import { admin, requireUser, getDriverForUser, fail } from './_auth.js'
+import { rateLimit } from './_rateLimit.js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
-const supabase = createClient(
-  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
+const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
 
+async function cancelForPayment(rideId) {
+  await admin
+    .from('rides')
+    .update({ status: 'cancelled', cancel_reason: 'payment_failed', cancelled_at: new Date().toISOString() })
+    .eq('id', rideId)
+}
+
+// Called by the driver right after claiming a ride (accept_ride RPC leaves it in
+// 'pending_driver_response'). Holds the rider's card, then promotes the ride to 'accepted'.
+// If the hold fails the ride is cancelled and the driver is told so.
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+
+  const blocked = checkRate(req)
+  if (blocked) {
+    res.setHeader('Retry-After', blocked.retryAfter)
+    return res.status(429).json({ error: 'Too many requests. Try again shortly.' })
   }
 
-  const { rideId } = req.body
+  const user = await requireUser(req, res)
+  if (!user) return
 
-  if (!rideId) {
-    return res.status(400).json({ error: 'rideId is required' })
-  }
+  const { rideId } = req.body || {}
+  if (!rideId) return res.status(400).json({ error: 'rideId is required' })
 
   try {
-    const { data: ride, error: rideErr } = await supabase
-      .from('rides')
-      .select('fare_cents, rider_id')
-      .eq('id', rideId)
-      .single()
+    const driver = await getDriverForUser(user.id)
+    if (!driver?.approved) return res.status(403).json({ error: 'Not an approved driver' })
 
-    if (rideErr || !ride) {
-      return res.status(404).json({ error: 'Ride not found' })
+    const { data: ride } = await admin
+      .from('rides')
+      .select('id, fare_cents, rider_id, driver_id, status, payment_status, payment_intent_id')
+      .eq('id', rideId)
+      .maybeSingle()
+
+    if (!ride) return res.status(404).json({ error: 'Ride not found' })
+    if (ride.driver_id !== driver.id) return res.status(403).json({ error: 'Not your ride' })
+
+    // Idempotent retry
+    if (ride.payment_status === 'authorized' && ride.payment_intent_id) {
+      return res.status(200).json({ success: true, payment_intent_id: ride.payment_intent_id })
+    }
+    if (ride.status !== 'pending_driver_response') {
+      return res.status(409).json({ success: false, error: 'ride_unavailable' })
     }
 
-    const { data: rider, error: riderErr } = await supabase
+    const { data: rider } = await admin
       .from('riders')
       .select('stripe_customer_id, payment_method_id')
       .eq('id', ride.rider_id)
-      .single()
+      .maybeSingle()
 
-    if (riderErr || !rider) {
-      return res.status(404).json({ error: 'Rider not found' })
-    }
-
-    if (!rider.stripe_customer_id || !rider.payment_method_id) {
-      await supabase
-        .from('rides')
-        .update({ status: 'cancelled', cancel_reason: 'payment_failed' })
-        .eq('id', rideId)
+    if (!rider?.stripe_customer_id || !rider?.payment_method_id) {
+      await cancelForPayment(rideId)
       return res.status(400).json({ success: false, error: 'no_payment_method' })
     }
 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: ride.fare_cents,
-      currency: 'usd',
-      customer: rider.stripe_customer_id,
-      payment_method: rider.payment_method_id,
-      capture_method: 'manual',
-      confirm: true,
-      off_session: true,
-      metadata: { ride_id: rideId },
-    })
-
-    if (paymentIntent.status === 'requires_capture') {
-      await supabase
-        .from('rides')
-        .update({
-          payment_intent_id: paymentIntent.id,
-          payment_status: 'authorized',
-        })
-        .eq('id', rideId)
-
-      return res.status(200).json({ success: true, payment_intent_id: paymentIntent.id })
+    let paymentIntent
+    try {
+      paymentIntent = await stripe.paymentIntents.create(
+        {
+          amount: ride.fare_cents,
+          currency: 'usd',
+          customer: rider.stripe_customer_id,
+          payment_method: rider.payment_method_id,
+          capture_method: 'manual',
+          confirm: true,
+          off_session: true,
+          metadata: { ride_id: rideId },
+        },
+        { idempotencyKey: `authorize-ride-${rideId}` }
+      )
+    } catch (err) {
+      console.error('Authorize ride Stripe error:', err.message)
+      await cancelForPayment(rideId)
+      return res.status(400).json({
+        success: false,
+        error: err.type === 'StripeCardError' ? 'card_declined' : 'payment_failed',
+      })
     }
 
-    await supabase
+    if (paymentIntent.status !== 'requires_capture') {
+      await cancelForPayment(rideId)
+      return res.status(400).json({ success: false, error: 'payment_failed' })
+    }
+
+    const { error: updateErr } = await admin
       .from('rides')
-      .update({ status: 'cancelled', cancel_reason: 'payment_failed' })
+      .update({
+        status: 'accepted',
+        payment_intent_id: paymentIntent.id,
+        payment_status: 'authorized',
+      })
       .eq('id', rideId)
+      .eq('status', 'pending_driver_response')
+    if (updateErr) throw updateErr
 
-    return res.status(400).json({ success: false, error: 'payment_failed' })
+    return res.status(200).json({ success: true, payment_intent_id: paymentIntent.id })
   } catch (err) {
-    console.error('Authorize ride error:', err.message)
-
-    if (err.type === 'StripeCardError') {
-      await supabase
-        .from('rides')
-        .update({ status: 'cancelled', cancel_reason: 'payment_failed' })
-        .eq('id', rideId)
-      return res.status(400).json({ success: false, error: 'card_declined' })
-    }
-
-    res.status(500).json({ error: err.message })
+    return fail(res, 'Authorize ride error', err)
   }
 }

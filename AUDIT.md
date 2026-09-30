@@ -102,3 +102,21 @@ Scope: code review of `api/`, `src/lib`, router, schema/RLS, and the rider, driv
 4. Payments: one card-saving path, one currency, webhook handling for PaymentIntents, cancel/fee handling (#9, #14, #15, #19).
 5. Remove/replace fabricated claims and testimonials; update Terms/Privacy.
 6. Visual pass: replace lime remnants, use the brand token, fix contrast and aria-labels, `100dvh`, PWA icons.
+
+## Remediation status (critical items)
+
+| # | Item | Status |
+|---|------|--------|
+| 1 | Admin via `user_metadata` | **Fixed** — `app_metadata` in router, SideMenu, RLS (`is_admin()`), API. Existing admins must be re-granted (see migration header). |
+| 2 | Driver self-approval | **Fixed** — `guard_drivers` trigger locks `approved`/`rating`/trip counts; only approved drivers can go online. |
+| 3 | Unauthenticated `/api/*` | **Fixed** — JWT required on authorize/capture/cancel/setup-intent/setup-session/checkout/notify; ownership checked; notify-driver is admin-only. `verify-session` is still open (needs a Stripe session id). |
+| 4 | Client-written fare/payment fields | **Fixed** — fare recomputed from coordinates in a DB trigger (rates must stay in sync with `pricing.js`); protected columns; status-transition rules. |
+| 5 | Promo / credits | **Mitigated** — booking promo removed so nothing client-side changes price; server recomputes fare. The Promotions/Referrals pages still keep display-only data in `user_metadata` and grant nothing; a real promo system needs a server table. |
+| 6 | Free rides | **Fixed** — accept only succeeds if the card hold succeeds; failure cancels the ride and tells the driver; capture requires a completed ride with an authorized payment. |
+| 7 | Accept race / RLS | **Fixed** — atomic `accept_ride` / `decline_ride` RPCs; drivers can see open requests. |
+| 8 | Chat readable by all | **Fixed** — participants/admin only; `message` column renamed to `content`. |
+| 9 | Webhook | **Partly fixed** — no longer writes `rides.status`, requires service key, handles `payment_intent.payment_failed`, generic errors. Refund/dispute handling still TODO. |
+
+Still open from the critical list's neighbours: riders can still write their own `stripe_customer_id`/`payment_method_id` directly (should move to a server endpoint that reads the SetupIntent), `verify-session` is unauthenticated, and everything in the High/Medium sections.
+
+Deploy order: run `supabase/migrations/002_security_hardening.sql`, set `SUPABASE_SERVICE_ROLE_KEY` in Vercel, re-grant admin, then deploy the code (old client + new DB will fail ride accept; new client + old DB will fail the `accept_ride` RPC).

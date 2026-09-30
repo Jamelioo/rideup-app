@@ -2,6 +2,7 @@
 import { ref, readonly } from 'vue'
 import { supabase, supabaseConfigured } from './supabase'
 import { DEMO_MODE } from './demoMode'
+import { apiPost } from './api'
 import { DEMO_DRIVER_PROFILE, generateFakeRideRequest } from './demoDriverMode'
 
 const driver = ref(null)
@@ -9,6 +10,7 @@ const isOnline = ref(false)
 const currentRide = ref(null)
 const incomingRequest = ref(null)
 const loading = ref(true)
+const acceptError = ref('')
 
 let initialized = false
 let rideSubscription = null
@@ -196,46 +198,53 @@ function stopFakeRequests() {
   if (fakeRequestTimer) { clearTimeout(fakeRequestTimer); fakeRequestTimer = null }
 }
 
+const ACCEPT_ERRORS = {
+  no_payment_method: "The rider's card couldn't be verified, so the ride was cancelled.",
+  card_declined: "The rider's card was declined, so the ride was cancelled.",
+  payment_failed: "The rider's payment couldn't be authorized, so the ride was cancelled.",
+  ride_unavailable: 'This ride is no longer available.',
+}
+
+// Returns true only when the ride is claimed AND the rider's card is held.
 async function acceptRide(ride) {
   incomingRequest.value = null
+  acceptError.value = ''
 
   if (DEMO_MODE) {
     currentRide.value = { ...ride, status: 'accepted', accepted_at: new Date().toISOString() }
-    return
+    return true
   }
 
-  if (!driver.value) return
+  if (!driver.value) return false
 
   try {
-    // Try pre-authorizing payment (only if rider has a card on file)
-    let paymentOk = false
-    try {
-      const res = await fetch('/api/authorize-ride', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rideId: ride.id }),
-      })
-      const result = await res.json()
-      paymentOk = result.success
-      if (!paymentOk) console.warn('Payment pre-auth skipped or failed:', result.error)
-    } catch (payErr) {
-      console.warn('Payment API unavailable, proceeding without pre-auth:', payErr.message)
+    // 1. Atomically claim the ride (server rejects it if another driver got there first).
+    const { data: claimed, error: claimErr } = await supabase.rpc('accept_ride', { p_ride_id: ride.id })
+    const claimedRide = Array.isArray(claimed) ? claimed[0] : claimed
+    if (claimErr || !claimedRide?.id) {
+      acceptError.value = claimErr?.code === '23505'
+        ? 'You already have an active ride.'
+        : 'Another driver already took this ride.'
+      return false
     }
 
-    // Update ride status in DB regardless — core matching must work
-    const { error: rideErr } = await supabase.from('rides').update({
-      driver_id: driver.value.id,
-      status: 'accepted',
-      accepted_at: new Date().toISOString(),
-    }).eq('id', ride.id)
-    if (rideErr) console.error('Accept ride DB error:', rideErr.message)
+    // 2. Hold the rider's card. Without it the ride doesn't go ahead.
+    const res = await apiPost('/api/authorize-ride', { rideId: ride.id })
+    const result = await res.json().catch(() => ({}))
+    if (!res.ok || !result.success) {
+      acceptError.value = ACCEPT_ERRORS[result.error] || "Couldn't confirm payment for this ride. Please try another."
+      return false
+    }
 
     const { error: driverErr } = await supabase.from('drivers').update({ status: 'on_trip' }).eq('id', driver.value.id)
     if (driverErr) console.error('Driver status update error:', driverErr.message)
 
-    currentRide.value = { ...ride, status: 'accepted', accepted_at: new Date().toISOString() }
+    currentRide.value = { ...claimedRide, status: 'accepted' }
+    return true
   } catch (err) {
     console.error('Accept ride error:', err)
+    acceptError.value = 'Connection problem. Please try again.'
+    return false
   }
 }
 
@@ -243,9 +252,10 @@ function declineRide(ride) {
   incomingRequest.value = null
   if (DEMO_MODE) return
 
-  supabase.from('rides').update({
-    declined_by: [...(ride.declined_by || []), driver.value.id],
-  }).eq('id', ride.id)
+  // Server appends this driver to declined_by (drivers can't edit unassigned rides directly).
+  supabase.rpc('decline_ride', { p_ride_id: ride.id }).then(({ error }) => {
+    if (error) console.error('Decline ride error:', error.message)
+  })
 }
 
 async function updateRideStatus(status) {
@@ -255,20 +265,24 @@ async function updateRideStatus(status) {
   if (status === 'in_progress') timestamps.started_at = new Date().toISOString()
   if (status === 'completed') timestamps.completed_at = new Date().toISOString()
 
-  currentRide.value = { ...currentRide.value, status, ...timestamps }
+  const previous = currentRide.value
+  currentRide.value = { ...previous, status, ...timestamps }
+
+  if (DEMO_MODE || !driver.value) return
+
+  const { error } = await supabase.from('rides').update({ status, ...timestamps }).eq('id', previous.id)
+  if (error) {
+    // Server refused the change (e.g. invalid transition) — don't leave the UI ahead of the database.
+    console.error('Ride status update error:', error.message)
+    currentRide.value = previous
+    return false
+  }
 
   if (status === 'completed') {
-    if (!DEMO_MODE && driver.value) {
-      await supabase.from('rides').update({ status, ...timestamps }).eq('id', currentRide.value.id)
-      await supabase.from('drivers').update({
-        status: 'online',
-        total_trips: (driver.value.total_trips || 0) + 1,
-      }).eq('id', driver.value.id)
-      driver.value.total_trips = (driver.value.total_trips || 0) + 1
-    }
-  } else if (!DEMO_MODE) {
-    await supabase.from('rides').update({ status, ...timestamps }).eq('id', currentRide.value.id)
+    // total_trips is incremented server-side when the ride is marked completed.
+    await supabase.from('drivers').update({ status: 'online' }).eq('id', driver.value.id)
   }
+  return true
 }
 
 function completeRide() {
@@ -283,6 +297,7 @@ export function useDriver() {
     currentRide,
     incomingRequest,
     loading: readonly(loading),
+    acceptError,
     fetchDriver,
     goOnline,
     goOffline,
