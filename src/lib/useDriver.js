@@ -43,6 +43,18 @@ function showRideNotification(ride) {
   } catch (e) { /* Notification API not fully supported */ }
 }
 
+// Clears everything tied to the signed-in driver (called on sign-out so the next user on this tab starts clean).
+function reset() {
+  stopFakeRequests()
+  unsubscribeFromRides()
+  driver.value = null
+  isOnline.value = false
+  currentRide.value = null
+  incomingRequest.value = null
+  acceptError.value = ''
+  loading.value = true
+}
+
 function init() {
   if (initialized) return
   initialized = true
@@ -306,6 +318,7 @@ export function useDriver() {
     loading: readonly(loading),
     acceptError,
     fetchDriver,
+    reset,
     goOnline,
     goOffline,
     acceptRide,

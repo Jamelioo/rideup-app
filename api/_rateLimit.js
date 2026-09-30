@@ -1,5 +1,7 @@
-// Simple in-memory rate limiter for Vercel serverless functions
-// Resets per-instance (shared across requests within the same warm instance)
+// Simple in-memory rate limiter for Vercel serverless functions.
+// Best-effort only: counters live in one warm instance, so this slows abuse and accidents but is not a
+// hard guarantee. Auth, ownership checks and Stripe idempotency keys are the real protections.
+// For hard limits put Vercel's WAF / rate-limit rules or an external store in front of /api.
 const store = new Map()
 
 const CLEANUP_INTERVAL = 60_000
@@ -14,10 +16,21 @@ function cleanup(windowMs) {
   }
 }
 
+// On Vercel the edge sets x-vercel-forwarded-for / x-real-ip itself. The left-most x-forwarded-for
+// entry is whatever the client sent, so it must not be trusted as the rate-limit key.
+function clientIp(req) {
+  return (
+    req.headers['x-vercel-forwarded-for']?.split(',')[0]?.trim() ||
+    req.headers['x-real-ip'] ||
+    req.socket?.remoteAddress ||
+    'unknown'
+  )
+}
+
 export function rateLimit({ maxRequests = 10, windowMs = 60_000 } = {}) {
   return function check(req) {
     cleanup(windowMs)
-    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown'
+    const ip = clientIp(req)
     const now = Date.now()
     const entry = store.get(ip)
 

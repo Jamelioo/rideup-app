@@ -1,16 +1,12 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
-import { supabase } from '../lib/supabase'
 
 const router = useRouter()
 const { user } = useAuth()
 
-const loading = ref(true)
 const copied = ref(false)
-const referrals = ref([])
-const totalCredits = ref(0)
 
 const referralCode = computed(() => {
   if (!user.value?.id) return 'RIDEUP-XXXX'
@@ -19,7 +15,7 @@ const referralCode = computed(() => {
 })
 
 const shareMessage = computed(() =>
-  `Get $5 off your first RideUp ride in Nassau! Use my code ${referralCode.value} when you sign up. Download RideUp today.`
+  `Try RideUp for rides around Nassau — flat upfront fares, no surprises. Sign up at https://rideupnassau.com`
 )
 
 const whatsappUrl = computed(() =>
@@ -29,17 +25,6 @@ const whatsappUrl = computed(() =>
 const smsUrl = computed(() =>
   `sms:?body=${encodeURIComponent(shareMessage.value)}`
 )
-
-onMounted(() => {
-  loadReferrals()
-})
-
-function loadReferrals() {
-  const meta = user.value?.user_metadata
-  referrals.value = Array.isArray(meta?.referral_history) ? [...meta.referral_history] : []
-  totalCredits.value = meta?.referral_credits || 0
-  loading.value = false
-}
 
 async function copyCode() {
   try {
@@ -59,14 +44,10 @@ async function copyCode() {
   }
 }
 
-function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-}
-
 const steps = [
-  { number: '1', title: 'Share your code', description: 'Send your unique referral code to friends' },
-  { number: '2', title: 'Friend signs up', description: 'They create an account using your code' },
-  { number: '3', title: 'Both get $5', description: 'You and your friend each earn $5 credit' },
+  { number: '1', title: 'Share RideUp', description: 'Send the link to friends and family in Nassau' },
+  { number: '2', title: 'They sign up', description: 'They create an account or book as a guest' },
+  { number: '3', title: 'Everyone rides', description: 'Flat upfront fares across New Providence' },
 ]
 </script>
 
@@ -90,8 +71,8 @@ const steps = [
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
           </svg>
         </div>
-        <h2 class="text-2xl font-bold mb-2">Invite friends, earn $5</h2>
-        <p class="text-[14px] text-[var(--color-text-muted)]">Share your code and you both get $5 credit toward your next ride</p>
+        <h2 class="text-2xl font-bold mb-2">Invite friends</h2>
+        <p class="text-[14px] text-[var(--color-text-muted)]">Know someone who needs a ride in Nassau? Send them RideUp. Referral rewards are coming soon.</p>
       </div>
 
       <!-- Referral Code -->
@@ -152,59 +133,6 @@ const steps = [
               <p class="text-[15px] font-bold">{{ step.title }}</p>
               <p class="text-[13px] text-[var(--color-text-muted)]">{{ step.description }}</p>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Credits Balance -->
-      <div class="mb-6">
-        <div class="bg-[#191f1c] rounded-2xl p-5 flex items-center justify-between">
-          <div>
-            <p class="text-white/50 text-[12px] uppercase tracking-wider font-semibold">Total credits earned</p>
-            <p class="text-white text-3xl font-bold mt-1">${{ (totalCredits || 0).toFixed(2) }}</p>
-          </div>
-          <div class="w-12 h-12 bg-[var(--color-surface)]/10 rounded-full flex items-center justify-center">
-            <svg class="w-6 h-6 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      <!-- Referral History -->
-      <div class="mb-8">
-        <h2 class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Referral history</h2>
-
-        <div v-if="loading" class="py-12 text-center">
-          <svg class="w-6 h-6 animate-spin text-[var(--color-brand)] mx-auto" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.4 31.4" stroke-linecap="round" />
-          </svg>
-        </div>
-
-        <div v-else-if="referrals.length === 0" class="py-10 text-center border border-[var(--color-border)] rounded-xl">
-          <svg class="w-10 h-10 text-[var(--color-text-muted)] mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-          <p class="text-[14px] text-[var(--color-text-muted)]">No referrals yet</p>
-          <p class="text-[13px] text-[var(--color-text-muted)] mt-1">Share your code to start earning</p>
-        </div>
-
-        <div v-else class="space-y-3">
-          <div
-            v-for="ref in referrals"
-            :key="ref.email"
-            class="border border-[var(--color-border)] rounded-xl p-4 flex items-center justify-between"
-          >
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-full bg-[var(--color-surface-secondary)] flex items-center justify-center">
-                <span class="text-[var(--color-brand)] text-[13px] font-bold">{{ ref.name?.charAt(0)?.toUpperCase() || '?' }}</span>
-              </div>
-              <div>
-                <p class="text-[14px] font-bold">{{ ref.name || 'Friend' }}</p>
-                <p class="text-[12px] text-[var(--color-text-muted)]">{{ formatDate(ref.date) }}</p>
-              </div>
-            </div>
-            <span class="text-[var(--color-brand)] text-[14px] font-bold">+$5.00</span>
           </div>
         </div>
       </div>

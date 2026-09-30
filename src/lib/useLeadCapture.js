@@ -43,7 +43,8 @@ export function useLeadCapture(source) {
         .from('leads')
         .insert({ phone: trimmed, source })
 
-      if (dbError) {
+      // 23505 = this number is already on the list — from the visitor's side that's still a success.
+      if (dbError && dbError.code !== '23505') {
         error.value = 'Something went wrong. Please try again.'
         console.error('Lead capture error:', dbError)
         return

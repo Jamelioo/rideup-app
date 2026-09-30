@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { formatFare } from '../../lib/pricing'
+import { apiPost } from '../../lib/api'
 import { DEMO_MODE } from '../../lib/demoMode'
 
 const route = useRoute()
@@ -35,11 +36,7 @@ onMounted(async () => {
   // Server-side payment verification
   if (sessionId.value) {
     try {
-      const res = await fetch('/api/verify-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: sessionId.value }),
-      })
+      const res = await apiPost('/api/verify-session', { sessionId: sessionId.value })
       const data = await res.json()
       if (data.paid) {
         verified.value = true
