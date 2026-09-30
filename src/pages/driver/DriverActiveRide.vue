@@ -5,6 +5,7 @@ import { useDriver } from '../../lib/useDriver'
 import { DEMO_MODE } from '../../lib/demoMode'
 import { formatFare } from '../../lib/pricing'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
+import { apiPost } from '../../lib/api'
 import GoogleMap from '../../components/GoogleMap.vue'
 import HarborBackdrop from '../../components/HarborBackdrop.vue'
 
@@ -60,16 +61,18 @@ async function advancePhase() {
 async function handleSlideComplete() {
   if (slideComplete.value) return
   slideComplete.value = true
-  await updateRideStatus('completed')
+  const completed = await updateRideStatus('completed')
+  if (completed === false) {
+    // Server didn't accept the completion; let the driver try again and don't capture payment.
+    slideComplete.value = false
+    slideProgress.value = 0
+    return
+  }
 
   // Capture the payment hold
   if (!DEMO_MODE && currentRide.value?.id) {
     try {
-      await fetch('/api/capture-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rideId: currentRide.value.id }),
-      })
+      await apiPost('/api/capture-payment', { rideId: currentRide.value.id })
     } catch (err) {
       console.error('Capture payment error:', err)
     }
@@ -155,11 +158,7 @@ async function cancelRide() {
   if (!DEMO_MODE && currentRide.value) {
     // Release payment hold if one exists
     try {
-      await fetch('/api/cancel-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rideId: currentRide.value.id }),
-      })
+      await apiPost('/api/cancel-payment', { rideId: currentRide.value.id })
     } catch (err) {
       console.error('Cancel payment error:', err)
     }

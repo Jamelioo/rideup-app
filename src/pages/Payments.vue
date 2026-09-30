@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
+import { apiPost } from '../lib/api'
 
 const router = useRouter()
 const route = useRoute()
@@ -16,11 +17,7 @@ async function addCard() {
   error.value = null
 
   try {
-    const res = await fetch('/api/create-setup-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: user.value?.email }),
-    })
+    const res = await apiPost('/api/create-setup-session')
     const data = await res.json()
     if (data.url) {
       window.location.href = data.url

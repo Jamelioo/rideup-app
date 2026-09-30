@@ -1,11 +1,9 @@
-import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
+import { admin as supabase, requireUser, isAdmin } from './_auth.js'
 import { rateLimit } from './_rateLimit.js'
 
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
-)
+const escapeHtml = (s) =>
+  String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 const checkRate = rateLimit({ maxRequests: 5, windowMs: 60_000 })
@@ -21,7 +19,12 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Too many requests. Try again shortly.' })
   }
 
-  const { driverId, type } = req.body
+  // Admin-only: this sends approval/rejection emails to drivers.
+  const user = await requireUser(req, res)
+  if (!user) return
+  if (!isAdmin(user)) return res.status(403).json({ error: 'Admins only' })
+
+  const { driverId, type } = req.body || {}
 
   if (!driverId || !type) {
     return res.status(400).json({ error: 'Missing driverId or type' })
@@ -38,7 +41,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ sent: false, reason: 'No email on file' })
     }
 
-    const driverName = driver.name || 'Driver'
+    const driverName = escapeHtml(driver.name || 'Driver')
     const fromAddress = process.env.EMAIL_FROM || 'RideUp <noreply@rideupnassau.com>'
 
     const templates = {
@@ -73,7 +76,7 @@ export default async function handler(req, res) {
 
     const template = templates[type]
     if (!template) {
-      return res.status(400).json({ error: `Unknown notification type: ${type}` })
+      return res.status(400).json({ error: 'Unknown notification type' })
     }
 
     if (resend) {
@@ -83,11 +86,11 @@ export default async function handler(req, res) {
         subject: template.subject,
         html: template.html,
       })
-      return res.status(200).json({ sent: true, email: driver.email })
+      return res.status(200).json({ sent: true })
     }
 
-    // No email service configured — log and return
-    console.log(`[NOTIFY] ${type}: ${driverName} (${driver.email})`)
+    // No email service configured
+    console.log(`[NOTIFY] ${type} for driver ${driverId} skipped`)
     res.status(200).json({ sent: false, reason: 'No email service configured (add RESEND_API_KEY)' })
   } catch (err) {
     console.error('Notify error:', err.message)

@@ -1,51 +1,54 @@
 import Stripe from 'stripe'
-import { createClient } from '@supabase/supabase-js'
+import { admin, requireUser, rideRoles, fail } from './_auth.js'
+import { rateLimit } from './_rateLimit.js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
-const supabase = createClient(
-  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
+const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
 
+// Captures the held payment once the ride is completed. Only the ride's driver (or an admin) may call it.
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+
+  const blocked = checkRate(req)
+  if (blocked) {
+    res.setHeader('Retry-After', blocked.retryAfter)
+    return res.status(429).json({ error: 'Too many requests. Try again shortly.' })
   }
 
-  const { rideId } = req.body
+  const user = await requireUser(req, res)
+  if (!user) return
 
-  if (!rideId) {
-    return res.status(400).json({ error: 'rideId is required' })
-  }
+  const { rideId } = req.body || {}
+  if (!rideId) return res.status(400).json({ error: 'rideId is required' })
 
   try {
-    const { data: ride } = await supabase
+    const { data: ride } = await admin
       .from('rides')
-      .select('payment_intent_id, payment_status')
+      .select('id, rider_id, driver_id, status, payment_intent_id, payment_status')
       .eq('id', rideId)
-      .single()
+      .maybeSingle()
+    if (!ride) return res.status(404).json({ error: 'Ride not found' })
 
-    if (!ride?.payment_intent_id) {
-      return res.status(400).json({ error: 'No payment intent for this ride' })
+    const roles = await rideRoles(ride, user)
+    if (!roles.driver && !roles.admin) return res.status(403).json({ error: 'Not allowed' })
+
+    if (ride.status !== 'completed') return res.status(409).json({ error: 'Ride is not completed' })
+    if (ride.payment_status === 'captured') return res.status(200).json({ success: true, already_captured: true })
+    if (!ride.payment_intent_id || ride.payment_status !== 'authorized') {
+      return res.status(400).json({ error: 'No authorized payment for this ride' })
     }
 
-    if (ride.payment_status === 'captured') {
-      return res.status(200).json({ success: true, already_captured: true })
-    }
+    await stripe.paymentIntents.capture(ride.payment_intent_id, undefined, {
+      idempotencyKey: `capture-ride-${rideId}`,
+    })
 
-    await stripe.paymentIntents.capture(ride.payment_intent_id)
-
-    await supabase
+    await admin
       .from('rides')
-      .update({
-        payment_status: 'captured',
-        paid_at: new Date().toISOString(),
-      })
+      .update({ payment_status: 'captured', paid_at: new Date().toISOString() })
       .eq('id', rideId)
 
-    res.status(200).json({ success: true })
+    return res.status(200).json({ success: true })
   } catch (err) {
-    console.error('Capture payment error:', err.message)
-    res.status(500).json({ error: err.message })
+    return fail(res, 'Capture payment error', err)
   }
 }

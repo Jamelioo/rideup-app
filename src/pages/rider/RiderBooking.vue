@@ -6,6 +6,7 @@ export default { name: 'RiderBooking' }
 import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase'
+import { apiPost } from '../../lib/api'
 import { loadGoogleMaps, reverseGeocode } from '../../lib/useGoogleMaps'
 import { calculateFare, formatFare, VEHICLE_TYPES } from '../../lib/pricing'
 import { DEMO_MODE, DEMO_LOCATIONS, fakeRoute } from '../../lib/demoMode'
@@ -33,9 +34,6 @@ const isCalculating = ref(false)
 const error = ref(null)
 const isSubmitting = ref(false)
 const mapsReady = ref(DEMO_MODE)
-const promoCode = ref('')
-const showPromo = ref(false)
-const promoApplied = ref(false)
 const activeInput = ref('pickup')
 const mapRef = ref(null)
 const isLocating = ref(false)
@@ -248,7 +246,6 @@ const fareEstimates = computed(() => {
   const estimates = {}
   for (const v of VEHICLE_TYPES) {
     let fare = calculateFare(distanceMiles.value, durationMinutes.value, v.id)
-    if (promoApplied.value) fare = Math.round(fare * 0.9)
     estimates[v.id] = fare
   }
   return estimates
@@ -264,10 +261,6 @@ function showToast(msg) {
 
 const canRequest = computed(() => pickup.value && dropoff.value && fareEstimates.value[selectedVehicle.value] && !isSubmitting.value)
 const hasRoute = computed(() => distanceMiles.value && !isCalculating.value)
-
-function applyPromo() {
-  if (promoCode.value.trim().length > 0) { promoApplied.value = true; showPromo.value = false }
-}
 
 const emit = defineEmits(['requested'])
 
@@ -366,14 +359,8 @@ async function createRideForUser(user, guestInfo = null) {
 }
 
 async function saveCardForUser(user, cardElement, stripe) {
-  const res = await fetch('/api/create-setup-intent', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      userId: user.id,
-      name: user.user_metadata?.name || user.email?.split('@')[0] || 'Rider',
-      email: user.email || null,
-    }),
+  const res = await apiPost('/api/create-setup-intent', {
+    name: user.user_metadata?.name || user.email?.split('@')[0] || 'Rider',
   })
   const { client_secret, customer_id, error: apiError } = await res.json()
   if (apiError) throw new Error(apiError)
@@ -624,26 +611,8 @@ async function scheduleRide({ date, time, summary }) {
               </div>
               <div class="text-right">
                 <div class="text-[16px] font-bold" :class="selectedVehicle === vehicle.id ? 'text-[#2b8659]' : ''">{{ formatFare(fareEstimates[vehicle.id]) }}</div>
-                <div v-if="promoApplied" class="text-[10px] text-[#2b8659] font-semibold">10% off</div>
               </div>
             </button>
-          </div>
-          <div class="mt-3">
-            <div v-if="!promoApplied">
-              <button v-if="!showPromo" @click="showPromo = true" class="text-[13px] text-[#2b8659] font-semibold flex items-center gap-1.5 px-2 py-2.5 min-h-[44px]">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
-                Add promo code
-              </button>
-              <div v-else class="flex gap-2 mt-1">
-                <input v-model="promoCode" type="text" placeholder="Enter code"
-                       class="flex-1 bg-[var(--color-surface-secondary)] border-2 border-transparent rounded-xl px-4 py-3 text-[14px] font-medium outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all min-h-[44px] uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal placeholder:font-normal" />
-                <button @click="applyPromo" class="px-5 py-3 bg-[#2b8659] text-white text-[13px] font-bold rounded-xl min-h-[44px] active:scale-95 transition-transform">Apply</button>
-              </div>
-            </div>
-            <div v-else class="flex items-center gap-2 text-[#2b8659] text-[13px] font-semibold px-1">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-              Promo applied — 10% off
-            </div>
           </div>
           <div class="flex gap-2.5 mt-4">
             <button @click="requestRide" :disabled="!canRequest"
@@ -757,26 +726,8 @@ async function scheduleRide({ date, time, summary }) {
               </div>
               <div class="text-right">
                 <div class="text-[17px] font-bold" :class="selectedVehicle === vehicle.id ? 'text-[#2b8659]' : ''">{{ formatFare(fareEstimates[vehicle.id]) }}</div>
-                <div v-if="promoApplied" class="text-[10px] text-[#2b8659] font-semibold">10% off</div>
               </div>
             </button>
-          </div>
-          <div class="mt-3">
-            <div v-if="!promoApplied">
-              <button v-if="!showPromo" @click="showPromo = true" class="text-[13px] text-[#2b8659] font-semibold flex items-center gap-1.5 px-2 py-2.5 min-h-[44px]">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
-                Add promo code
-              </button>
-              <div v-else class="flex gap-2 mt-1">
-                <input v-model="promoCode" type="text" placeholder="Enter code"
-                       class="flex-1 bg-[var(--color-surface-secondary)] border-2 border-transparent rounded-xl px-4 py-3 text-[14px] font-medium outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all min-h-[44px] uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal placeholder:font-normal" />
-                <button @click="applyPromo" class="px-5 py-3 bg-[#2b8659] text-white text-[13px] font-bold rounded-xl min-h-[44px] hover:bg-[#236e49] transition-colors">Apply</button>
-              </div>
-            </div>
-            <div v-else class="flex items-center gap-2 text-[#2b8659] text-[13px] font-semibold px-1">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-              Promo applied — 10% off
-            </div>
           </div>
           <div class="flex gap-2.5 mt-5">
             <button @click="requestRide" :disabled="!canRequest"

@@ -7,7 +7,7 @@ const props = defineProps({
   request: { type: Object, required: true },
 })
 
-const emit = defineEmits(['accepted'])
+const emit = defineEmits(['accepted', 'failed'])
 const { acceptRide, declineRide } = useDriver()
 
 const timeLeft = ref(15)
@@ -48,8 +48,8 @@ onUnmounted(() => {
 
 async function handleAccept() {
   if (timer) clearInterval(timer)
-  await acceptRide(props.request)
-  emit('accepted')
+  const ok = await acceptRide(props.request)
+  emit(ok ? 'accepted' : 'failed')
 }
 
 function handleDecline() {

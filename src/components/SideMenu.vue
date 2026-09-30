@@ -76,7 +76,7 @@ const menuItems = computed(() => {
       items.push({ label: 'Drive with RideUp', route: '/driver/apply', icon: 'car', requiresAuth: false })
     }
 
-    if (user.value?.user_metadata?.role === 'admin') {
+    if (user.value?.app_metadata?.role === 'admin') {
       items.push({ label: 'Admin Panel', route: '/admin', icon: 'admin', requiresAuth: true })
     }
   }

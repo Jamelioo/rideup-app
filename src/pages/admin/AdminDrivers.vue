@@ -107,6 +107,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
+import { apiPost } from '../../lib/api'
 
 const filterTabs = ['All', 'Pending', 'Approved', 'Rejected', 'Suspended']
 const activeFilter = ref('All')
@@ -147,11 +148,7 @@ async function approveDriver(driver) {
     const { error } = await supabase.from('drivers').update({ approved: true, status: 'approved' }).eq('id', driver.id)
     if (error) { console.error('Approve error:', error.message); return }
     // Send approval notification (fire-and-forget)
-    fetch('/api/notify-driver', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ driverId: driver.id, type: 'approved' }),
-    }).catch(() => {})
+    apiPost('/api/notify-driver', { driverId: driver.id, type: 'approved' }).catch(() => {})
   }
   driver.status = 'Approved'
 }
@@ -160,11 +157,7 @@ async function rejectDriver(driver) {
   if (supabaseConfigured) {
     const { error } = await supabase.from('drivers').update({ approved: false, status: 'rejected' }).eq('id', driver.id)
     if (error) { console.error('Reject error:', error.message); return }
-    fetch('/api/notify-driver', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ driverId: driver.id, type: 'rejected' }),
-    }).catch(() => {})
+    apiPost('/api/notify-driver', { driverId: driver.id, type: 'rejected' }).catch(() => {})
   }
   driver.status = 'Rejected'
 }
