@@ -193,7 +193,7 @@ function goBack() {
               </div>
               <div class="text-left">
                 <p class="text-[14px] font-semibold text-[var(--color-text-primary)]">Instant Cashout</p>
-                <p class="text-[11px] text-[var(--color-text-muted)]">Payouts are sent to you by RideUp — contact support to set up your bank details</p>
+                <p class="text-[11px] text-[var(--color-text-muted)]">Not available yet. Payouts are arranged with RideUp directly — contact support.</p>
               </div>
             </div>
             <span class="text-[11px] font-bold text-white bg-[#2b8659] px-2 py-1 rounded-full">COMING SOON</span>

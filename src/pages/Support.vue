@@ -22,12 +22,12 @@ const faqs = ref([
   },
   {
     question: 'Is RideUp safe?',
-    answer: 'Your safety is our top priority. All RideUp drivers are verified, licensed, and insured. You can view your driver\'s name, photo, and vehicle details before they arrive. Every trip is tracked in real time, and you can share your ride status with friends or family.',
+    answer: 'Every driver applies and is approved by RideUp before they can accept rides. You can see your driver\'s name, vehicle and plate once they accept, follow your trip live on the map, and share it with trusted contacts. In an emergency, call the local emergency number first.',
     open: false,
   },
   {
     question: 'How do I cancel a ride?',
-    answer: 'You can cancel a ride at any time before your driver arrives at no charge. Once matched, tap the ride details panel and select "Cancel Ride." If a driver is already en route and very close, a cancellation fee may apply.',
+    answer: 'You can cancel a ride at any time before the trip starts. Tap "Cancel ride" on your ride screen. Any hold on your card is released, and we don\'t currently charge a cancellation fee.',
     open: false,
   },
   {

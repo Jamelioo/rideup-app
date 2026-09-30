@@ -47,10 +47,10 @@ function goToDriverApply() {
       <div class="max-w-6xl mx-auto px-5 pt-10 pb-0 md:pt-14 md:grid md:grid-cols-2 md:gap-8 md:items-end">
         <div class="pb-10 md:pb-16">
           <h1 class="text-[35px] sm:text-[48px] lg:text-[60px] leading-[1.0] font-bold tracking-tight mb-5">
-            Get anywhere in Nassau in 5 minutes.
+            Get anywhere in Nassau.
           </h1>
           <p class="text-[var(--color-text-muted)] text-[16px] leading-[1.5] max-w-md mb-8">
-            Book a ride in 10 seconds. See the exact fare upfront — no surge, no surprises.
+            Book a ride in a few taps. See the exact fare upfront — no surge, no surprises.
           </p>
 
           <!-- Booking widget -->
@@ -144,7 +144,7 @@ function goToDriverApply() {
           </div>
           <div>
             <h3 class="text-[20px] font-bold mb-1.5 leading-[1.3]">Know your fare before you ride</h3>
-            <p class="text-[var(--color-text-muted)] text-[16px] leading-[1.5]">The price you see is the price you pay. Flat rates across all of Nassau — no surge pricing, no hidden fees, ever.</p>
+            <p class="text-[var(--color-text-muted)] text-[16px] leading-[1.5]">The price you see is the price you pay. Fares are worked out from distance and time and shown before you book — no surge pricing, no hidden fees.</p>
           </div>
         </div>
 
@@ -156,8 +156,8 @@ function goToDriverApply() {
             </svg>
           </div>
           <div>
-            <h3 class="text-[20px] font-bold mb-1.5 leading-[1.3]">Every driver verified</h3>
-            <p class="text-[var(--color-text-muted)] text-[16px] leading-[1.5]">Background-checked drivers, inspected vehicles. Track your ride live and share your trip with family — all built in.</p>
+            <h3 class="text-[20px] font-bold mb-1.5 leading-[1.3]">Every driver approved by RideUp</h3>
+            <p class="text-[var(--color-text-muted)] text-[16px] leading-[1.5]">Drivers apply with their license and vehicle details and are reviewed by our team before they can accept rides. Track your ride live and share your trip with family — all built in.</p>
           </div>
         </div>
 
@@ -171,7 +171,7 @@ function goToDriverApply() {
           </div>
           <div>
             <h3 class="text-[20px] font-bold mb-1.5 leading-[1.3]">Anywhere across Nassau</h3>
-            <p class="text-[var(--color-text-muted)] text-[16px] leading-[1.5]">LPIA Airport, Cable Beach, Paradise Island, Downtown — drivers across the whole island, available 24/7.</p>
+            <p class="text-[var(--color-text-muted)] text-[16px] leading-[1.5]">Request a ride to anywhere on New Providence — LPIA Airport, Cable Beach, Paradise Island, Downtown.</p>
           </div>
         </div>
 

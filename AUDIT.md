@@ -180,3 +180,27 @@ Deploy order now: run migrations 002 then 003, set `SUPABASE_SERVICE_ROLE_KEY` a
 - Added `npm test` (11 tests: fare rates incl. parity values with the DB trigger, payout, admin check, rate limiter).
 
 **Still open (your call, not code):** marketing claims on the landing pages ("200+ drivers", named testimonials with trip counts, "background check", "5 minutes", mock earnings figure); the referral code shown on the Referrals page is not redeemable; admin tables on phones; cancellation fee; anonymous sign-in limits in the Supabase dashboard; refund/dispute webhooks; the 3 e2e login-redirect tests fail in demo mode (the guards are intentionally off there) and need real keys or a test-mode flag.
+
+
+## Remediation status — Marketing claims
+
+Rule applied: a public claim stays only if the product or code backs it up; business facts only the owner can vouch for were removed rather than guessed.
+
+| Claim | Where | Now |
+|---|---|---|
+| "Get anywhere in Nassau in 5 minutes", "Book in 10 seconds" | rider landing | "Get anywhere in Nassau." / "a few taps" |
+| "Flat rates across Nassau … hidden fees, ever" | rider landing | fares are calculated from distance + time and shown upfront (that is what the code does) |
+| "Every driver verified", "background-checked", "inspected vehicles", "verified, licensed and insured" | rider landing, Support FAQ, meta tags | "approved by RideUp" after a document/vehicle review (true: admin approval is required) |
+| "Available 24/7" | landing pages, meta tags, footer | "request a ride any time" / removed |
+| "200+ active drivers" (twice), three named testimonials with trip counts | driver landing | removed (stat replaced with "Free to apply"; testimonials section deleted) |
+| "Commercial liability coverage — every trip is covered" | driver landing | removed (no evidence in the product) |
+| "Background check", "free vehicle inspection, 20 minutes", "on the road within 48 hours", "documents reviewed within 24 hours" | driver landing, documents page | "our team reviews your documents and vehicle details" |
+| "Weekly direct deposit", "paid weekly", "Instant cashout" | driver landing, earnings | removed; earnings page says payouts are arranged with RideUp (no payout system exists yet) |
+| "Real people, not a call center", "local support 24/7" | driver landing | "Phone support: (242) 452-9911" |
+| "Download the RideUp Driver app" | driver landing step 3 | "Open RideUp" (there is no native app) |
+| Earnings examples and "$200–400 / $550–900 per week" | driver landing | examples and weekly figures are computed from `src/lib/pricing.js` (assumes 3 min/mile); labelled as an illustration, not a guarantee |
+| "Your commission rate 80%" | driver landing | "You keep 80%" (the commission is 20%) |
+| Phone mock "$147.50 today…" | driver landing | labelled "Illustrative screen"; mock fare now matches the example route |
+| Cancellation FAQ ("fee may apply") | Support | matches Terms: cancel before the trip starts, no fee currently |
+
+**Still the owner's call (not changed):** the driver requirements list (Bahamian license, vehicle 2015 or newer, clean driving record) is stated policy but nothing in the app enforces it; the (242) 452-9911 number, `support@rideupnassau.com` and the Instagram/WhatsApp handles need to be real and monitored; if you do run background checks, carry insurance, or pay weekly, add those claims back with the exact terms.
