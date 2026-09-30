@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDriver } from '../../lib/useDriver'
 import { useAuth } from '../../lib/useAuth'
+import { supabase } from '../../lib/supabase'
 import { DEMO_MODE } from '../../lib/demoMode'
 import { formatFare } from '../../lib/pricing'
 import { generateFakeEarnings } from '../../lib/demoDriverMode'
@@ -23,13 +24,42 @@ const lastRide = ref(null)
 const onlineStartTime = ref(null)
 let hoursTimer = null
 
-function refreshStats() {
+async function refreshStats() {
   if (DEMO_MODE) {
     const { today } = generateFakeEarnings()
     todayEarnings.value = today.reduce((sum, t) => sum + t.fare_cents, 0)
     todayTrips.value = today.length
     hoursOnline.value = 5.8
     lastRide.value = today[0]
+    return
+  }
+
+  if (!driver.value?.id) return
+
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+
+  const { data, error } = await supabase
+    .from('rides')
+    .select('fare_cents, pickup_address, dropoff_address, distance_miles, completed_at')
+    .eq('driver_id', driver.value.id)
+    .eq('status', 'completed')
+    .gte('completed_at', todayStart.toISOString())
+    .order('completed_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching today stats:', error)
+    return
+  }
+
+  if (data && data.length > 0) {
+    todayEarnings.value = data.reduce((sum, r) => sum + (r.fare_cents || 0), 0)
+    todayTrips.value = data.length
+    lastRide.value = data[0]
+  } else {
+    todayEarnings.value = 0
+    todayTrips.value = 0
+    lastRide.value = null
   }
 }
 
@@ -62,7 +92,7 @@ onMounted(async () => {
   if (!DEMO_MODE && user.value) {
     await fetchDriver(user.value.id)
   }
-  refreshStats()
+  await refreshStats()
   if (isOnline.value) {
     startHoursTracking()
   }
@@ -94,6 +124,11 @@ async function toggleOnline() {
 function handleRideAccepted() {
   router.push('/driver/active-ride')
 }
+
+const displayRating = computed(() => {
+  if (driver.value?.rating != null) return driver.value.rating
+  return 'New'
+})
 
 const initials = computed(() => {
   if (!driver.value?.name) return 'DR'
@@ -186,7 +221,7 @@ const initials = computed(() => {
         <button @click="router.push('/driver/earnings')" class="w-full bg-[var(--color-surface-secondary)] rounded-2xl p-4 text-left active:bg-[var(--color-surface-secondary)] transition-colors mb-4 flex items-center justify-between">
           <div>
             <div class="text-[11px] text-[var(--color-text-muted)] font-medium">Rating</div>
-            <div class="text-[18px] font-bold mt-0.5">{{ driver?.rating || '5.0' }} <span class="text-[14px]">&#9733;</span></div>
+            <div class="text-[18px] font-bold mt-0.5">{{ displayRating }} <span class="text-[14px]">&#9733;</span></div>
           </div>
           <div class="text-[11px] text-[var(--color-text-muted)]">{{ driver?.total_trips || 0 }} total trips</div>
         </button>
@@ -272,7 +307,7 @@ const initials = computed(() => {
         <button @click="router.push('/driver/earnings')" class="w-full bg-[var(--color-surface-secondary)] rounded-2xl p-4 text-left hover:bg-[var(--color-surface-secondary)] transition-colors mb-5 flex items-center justify-between">
           <div>
             <div class="text-[11px] text-[var(--color-text-muted)] font-medium">Rating</div>
-            <div class="text-[22px] font-bold mt-0.5">{{ driver?.rating || '5.0' }} <span class="text-[16px]">&#9733;</span></div>
+            <div class="text-[22px] font-bold mt-0.5">{{ displayRating }} <span class="text-[16px]">&#9733;</span></div>
           </div>
           <div class="text-[11px] text-[var(--color-text-muted)]">{{ driver?.total_trips || 0 }} total trips</div>
         </button>

@@ -1,9 +1,9 @@
 <script setup>
 defineProps({
   name: { type: String, required: true },
-  rating: { type: Number, default: 4.9 },
-  vehicle: { type: String, default: 'White Toyota Camry' },
-  plate: { type: String, default: 'AB-1234' },
+  rating: { type: Number, default: null },
+  vehicle: { type: String, default: '' },
+  plate: { type: String, default: '' },
   photo: { type: String, default: null },
 })
 

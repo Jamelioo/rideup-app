@@ -64,10 +64,21 @@ onMounted(async () => {
   }
 
   try {
+    const { data: rider } = await supabase
+      .from('riders')
+      .select('id')
+      .eq('auth_user_id', user.value.id)
+      .maybeSingle()
+
+    if (!rider) {
+      loading.value = false
+      return
+    }
+
     const { data, error } = await supabase
       .from('rides')
       .select('*')
-      .eq('rider_id', user.value?.id)
+      .eq('rider_id', rider.id)
       .order('created_at', { ascending: false })
 
     if (error) throw error

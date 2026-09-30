@@ -40,7 +40,7 @@ onMounted(async () => {
   try {
     const { data, error } = await supabase
       .from('rides')
-      .select('*, driver:drivers(full_name, rating)')
+      .select('*, driver:drivers(name, rating)')
       .eq('id', rideId)
       .single()
 
@@ -64,8 +64,8 @@ onMounted(async () => {
         total: data.fare_cents || 0,
         paymentLast4: data.payment_last4 || '4242',
         paymentBrand: data.payment_brand || 'Visa',
-        driverName: data.driver?.full_name || 'Your driver',
-        driverRating: data.driver?.rating || 4.9,
+        driverName: data.driver?.name || 'Your driver',
+        driverRating: data.driver?.rating || null,
       }
     }
   } catch (err) {

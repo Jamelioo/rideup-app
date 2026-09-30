@@ -12,12 +12,12 @@ const rideId = route.params.rideId
 
 // Ride data
 const rideStatus = ref('driver_enroute')
-const driverName = ref('Marcus Rolle')
-const driverRating = ref(4.9)
-const driverPhone = ref('+12424529911')
-const vehicle = ref('Silver Toyota Corolla')
-const plate = ref('TX 4471')
-const etaMinutes = ref(4)
+const driverName = ref('Your Driver')
+const driverRating = ref(null)
+const driverPhone = ref('')
+const vehicle = ref('')
+const plate = ref('')
+const etaMinutes = ref(0)
 
 // Map locations (Nassau defaults)
 const pickup = ref({ lat: 25.0443, lng: -77.3504 })
@@ -69,6 +69,16 @@ onMounted(async () => {
     }
     if (data.driver_lat && data.driver_lng) {
       driverLocation.value = { lat: data.driver_lat, lng: data.driver_lng }
+    }
+    if (data.driver_id) {
+      const { data: driverData } = await supabase.from('drivers').select('name, vehicle, license_plate, rating, phone').eq('id', data.driver_id).single()
+      if (driverData) {
+        driverName.value = driverData.name || driverName.value
+        driverRating.value = driverData.rating || driverRating.value
+        vehicle.value = driverData.vehicle || vehicle.value
+        plate.value = driverData.license_plate || plate.value
+        driverPhone.value = driverData.phone || driverPhone.value
+      }
     }
   }
 

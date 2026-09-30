@@ -4,13 +4,13 @@ import DriverInfoCard from './DriverInfoCard.vue'
 
 const props = defineProps({
   rideStatus: { type: String, default: 'driver_enroute' }, // driver_enroute | driver_arrived | on_trip
-  driverName: { type: String, default: 'Marcus Rolle' },
-  driverRating: { type: Number, default: 4.9 },
-  driverPhone: { type: String, default: '+12424529911' },
+  driverName: { type: String, default: 'Your Driver' },
+  driverRating: { type: Number, default: null },
+  driverPhone: { type: String, default: '' },
   driverPhoto: { type: String, default: null },
-  vehicle: { type: String, default: 'White Toyota Camry' },
-  plate: { type: String, default: 'AB-1234' },
-  initialEta: { type: Number, default: 4 },
+  vehicle: { type: String, default: '' },
+  plate: { type: String, default: '' },
+  initialEta: { type: Number, default: 0 },
 })
 
 const emit = defineEmits(['cancel', 'message'])

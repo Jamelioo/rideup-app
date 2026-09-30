@@ -72,7 +72,7 @@ function sendMessage() {
           <button @click="showChat = true" class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#2b8659]/10 text-[#236e49] font-bold rounded-xl text-[13px]">
             💬 Message
           </button>
-          <a :href="'tel:' + (matchInfo.phone || '+12424529911')" class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#2b8659] text-white font-bold rounded-xl text-[13px]">
+          <a :href="'tel:' + (matchInfo.phone || '')" class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#2b8659] text-white font-bold rounded-xl text-[13px]">
             📞 Call
           </a>
         </div>
