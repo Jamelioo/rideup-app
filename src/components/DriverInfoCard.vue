@@ -8,7 +8,7 @@ defineProps({
 })
 
 function initials(name) {
-  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+  return name.split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2) || 'DR'
 }
 </script>
 
@@ -25,7 +25,7 @@ function initials(name) {
       <div class="font-bold text-[15px] text-[var(--color-text-primary)] truncate">{{ name }}</div>
       <div class="flex items-center gap-1 mt-0.5">
         <span class="text-amber-500 text-[13px] font-bold">&#9733;</span>
-        <span class="text-[13px] text-[var(--color-text-secondary)] font-medium">{{ rating.toFixed(1) }}</span>
+        <span class="text-[13px] text-[var(--color-text-secondary)] font-medium">{{ rating != null ? rating.toFixed(1) : 'New' }}</span>
       </div>
     </div>
 

@@ -186,8 +186,8 @@ const slideThumbStyle = computed(() => {
     <!-- Map -->
     <div class="absolute inset-0 md:left-[400px]">
       <GoogleMap v-if="!DEMO_MODE" class="absolute inset-0"
-                 :pickup="currentRide ? { lat: currentRide.pickup_lat, lng: currentRide.pickup_lng } : null"
-                 :dropoff="phase === 'in_progress' || phase === 'completed' ? { lat: currentRide.dropoff_lat, lng: currentRide.dropoff_lng } : null" />
+                 :pickup="currentRide && currentRide.pickup_lat ? { lat: currentRide.pickup_lat, lng: currentRide.pickup_lng } : null"
+                 :dropoff="(phase === 'in_progress' || phase === 'completed') && currentRide?.dropoff_lat ? { lat: currentRide.dropoff_lat, lng: currentRide.dropoff_lng } : null" />
       <HarborBackdrop v-else show-route />
     </div>
 
@@ -217,7 +217,7 @@ const slideThumbStyle = computed(() => {
           </div>
           <h2 class="text-2xl font-bold mb-1">Trip Complete</h2>
           <div class="text-[28px] font-bold text-[#2b8659] my-3">+{{ formatFare(currentRide?.fare_cents) }}</div>
-          <div class="text-[13px] text-[var(--color-text-muted)]">{{ currentRide?.distance_miles?.toFixed(1) }} mi · {{ Math.round(currentRide?.duration_minutes || 0) }} min</div>
+          <div class="text-[13px] text-[var(--color-text-muted)]">{{ currentRide?.distance_miles != null ? currentRide.distance_miles.toFixed(1) : '0.0' }} mi · {{ Math.round(currentRide?.duration_minutes || 0) }} min</div>
           <button @click="finish"
                   class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mt-6 transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(88,204,2,0.3)]">
             Done
@@ -331,7 +331,7 @@ const slideThumbStyle = computed(() => {
           </div>
           <h2 class="text-2xl font-bold mb-1">Trip Complete</h2>
           <div class="text-[28px] font-bold text-[#2b8659] my-3">+{{ formatFare(currentRide?.fare_cents) }}</div>
-          <div class="text-[13px] text-[var(--color-text-muted)] mb-6">{{ currentRide?.distance_miles?.toFixed(1) }} mi · {{ Math.round(currentRide?.duration_minutes || 0) }} min</div>
+          <div class="text-[13px] text-[var(--color-text-muted)] mb-6">{{ currentRide?.distance_miles != null ? currentRide.distance_miles.toFixed(1) : '0.0' }} mi · {{ Math.round(currentRide?.duration_minutes || 0) }} min</div>
           <button @click="finish"
                   class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] hover:bg-[#236e49] shadow-[0_4px_16px_rgba(88,204,2,0.3)]">
             Done

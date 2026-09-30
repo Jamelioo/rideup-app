@@ -34,7 +34,9 @@ function formatDate(isoString) {
 }
 
 function monthYearLabel(isoString) {
+  if (!isoString) return 'Unknown'
   const d = new Date(isoString)
+  if (isNaN(d.getTime())) return 'Unknown'
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
   return `${months[d.getMonth()]} ${d.getFullYear()}`
 }

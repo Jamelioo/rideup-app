@@ -161,7 +161,7 @@ onUnmounted(() => {
         </svg>
       </button>
       <div class="w-9 h-9 rounded-full bg-[var(--color-surface)]/25 flex items-center justify-center text-white text-xs font-bold">
-        {{ driverName.split(' ').map(w => w[0]).join('') }}
+        {{ driverName.split(' ').filter(Boolean).map(w => w[0]).join('') || 'DR' }}
       </div>
       <div class="text-white font-bold text-[15px]">{{ driverName }}</div>
     </div>

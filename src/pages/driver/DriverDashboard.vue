@@ -232,7 +232,7 @@ const initials = computed(() => {
           <div class="flex justify-between items-center">
             <div>
               <div class="text-[14px] font-semibold">{{ lastRide.rider_name || 'Rider' }}</div>
-              <div class="text-[11px] text-[var(--color-text-muted)] mt-0.5">{{ lastRide.distance_miles?.toFixed(1) }} mi</div>
+              <div class="text-[11px] text-[var(--color-text-muted)] mt-0.5">{{ lastRide.distance_miles != null ? lastRide.distance_miles.toFixed(1) : '0.0' }} mi</div>
             </div>
             <div class="text-[15px] font-bold text-[#2b8659]">+{{ formatFare(lastRide.fare_cents) }}</div>
           </div>
@@ -318,7 +318,7 @@ const initials = computed(() => {
           <div class="flex justify-between items-center">
             <div>
               <div class="text-[14px] font-semibold">{{ lastRide.rider_name || 'Rider' }}</div>
-              <div class="text-[11px] text-[var(--color-text-muted)] mt-0.5">{{ lastRide.distance_miles?.toFixed(1) }} mi</div>
+              <div class="text-[11px] text-[var(--color-text-muted)] mt-0.5">{{ lastRide.distance_miles != null ? lastRide.distance_miles.toFixed(1) : '0.0' }} mi</div>
             </div>
             <div class="text-[15px] font-bold text-[#2b8659]">+{{ formatFare(lastRide.fare_cents) }}</div>
           </div>

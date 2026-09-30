@@ -34,7 +34,7 @@ onMounted(async () => {
 
     const { data: rides } = await supabase
       .from('rides')
-      .select('fare_cents, completed_at, created_at')
+      .select('id, fare_cents, completed_at, created_at, rider_name, distance_miles')
       .eq('driver_id', driver.id)
       .eq('status', 'completed')
       .order('completed_at', { ascending: false })
@@ -46,7 +46,13 @@ onMounted(async () => {
 
     // Today's rides
     const todayRides = rides.filter(r => new Date(r.completed_at || r.created_at) >= todayStart)
-    earnings.value.today = todayRides.map(r => ({ fare_cents: r.fare_cents || 0 }))
+    earnings.value.today = todayRides.map(r => ({
+      id: r.id,
+      fare_cents: r.fare_cents || 0,
+      completed_at: r.completed_at || r.created_at,
+      rider_name: r.rider_name,
+      distance_miles: r.distance_miles,
+    }))
 
     // Weekly totals (Mon-Sun)
     const weekTotals = [0, 0, 0, 0, 0, 0, 0]
@@ -122,8 +128,8 @@ function goBack() {
           <div v-for="trip in earnings.today" :key="trip.id"
                class="bg-[var(--color-surface-secondary)] rounded-2xl px-4 py-3.5 flex items-center justify-between">
             <div>
-              <div class="text-[14px] font-semibold">{{ trip.pickup_address.split(',')[0] }} → {{ trip.dropoff_address.split(',')[0] }}</div>
-              <div class="text-[11px] text-[var(--color-text-muted)] mt-0.5">{{ timeAgo(trip.completed_at) }} · {{ trip.distance_miles.toFixed(1) }} mi</div>
+              <div class="text-[14px] font-semibold">{{ trip.rider_name || 'Rider' }}</div>
+              <div class="text-[11px] text-[var(--color-text-muted)] mt-0.5">{{ timeAgo(trip.completed_at) }} · {{ trip.distance_miles ? trip.distance_miles.toFixed(1) + ' mi' : '' }}</div>
             </div>
             <div class="text-[15px] font-bold text-[#2b8659]">+{{ formatFare(trip.fare_cents) }}</div>
           </div>

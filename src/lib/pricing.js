@@ -15,7 +15,7 @@ export function calculateFare(distanceMiles, durationMinutes, vehicleType = 'sta
 }
 
 export function formatFare(cents) {
-  return '$' + (cents / 100).toFixed(2)
+  return '$' + ((cents || 0) / 100).toFixed(2)
 }
 
 export const VEHICLE_TYPES = [

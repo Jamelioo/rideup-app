@@ -161,7 +161,7 @@ const steps = [
         <div class="bg-[var(--color-text-primary)] rounded-2xl p-5 flex items-center justify-between">
           <div>
             <p class="text-white/50 text-[12px] uppercase tracking-wider font-semibold">Total credits earned</p>
-            <p class="text-white text-3xl font-bold mt-1">${{ totalCredits.toFixed(2) }}</p>
+            <p class="text-white text-3xl font-bold mt-1">${{ (totalCredits || 0).toFixed(2) }}</p>
           </div>
           <div class="w-12 h-12 bg-[var(--color-surface)]/10 rounded-full flex items-center justify-center">
             <svg class="w-6 h-6 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

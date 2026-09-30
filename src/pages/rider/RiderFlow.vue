@@ -42,9 +42,9 @@ function sendMessage() {
 <template>
   <RiderBooking v-if="step === 'booking'" @requested="handleRequested" />
 
-  <SearchingForDriver v-else-if="step === 'searching'" :ride-id="activeRide.id" @matched="handleMatched" @cancelled="handleCancelled" />
+  <SearchingForDriver v-else-if="step === 'searching' && activeRide" :ride-id="activeRide.id" @matched="handleMatched" @cancelled="handleCancelled" />
 
-  <div v-else-if="step === 'matched' && !showChat" class="relative min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col overflow-hidden">
+  <div v-else-if="step === 'matched' && !showChat && matchInfo && activeRide" class="relative min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col overflow-hidden">
     <HarborBackdrop show-route />
 
     <div class="relative px-6 pt-8 pb-4 flex items-center justify-between">
@@ -94,7 +94,7 @@ function sendMessage() {
   </div>
 
   <!-- In-app chat -->
-  <div v-else-if="showChat" class="relative min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col">
+  <div v-else-if="showChat && matchInfo" class="relative min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col">
     <div class="bg-[#2b8659] px-6 pt-8 pb-5 flex items-center gap-3">
       <button @click="showChat = false" class="w-10 h-10 rounded-full bg-[var(--color-surface)]/20 flex items-center justify-center text-base text-white" aria-label="Back">←</button>
       <div class="w-9 h-9 rounded-full bg-[var(--color-surface)]/25"></div>

@@ -61,7 +61,7 @@
               </td>
               <td class="px-4 py-3 text-[var(--color-text-primary)]">{{ driver.rating > 0 ? driver.rating.toFixed(1) : '--' }}</td>
               <td class="px-4 py-3 text-[var(--color-text-primary)]">{{ driver.rides }}</td>
-              <td class="px-4 py-3 text-[var(--color-text-primary)] font-medium">${{ driver.earnings.toLocaleString() }}</td>
+              <td class="px-4 py-3 text-[var(--color-text-primary)] font-medium">${{ (driver.earnings || 0).toLocaleString() }}</td>
               <td class="px-4 py-3">
                 <div class="flex gap-2" v-if="driver.status === 'Pending'">
                   <button
