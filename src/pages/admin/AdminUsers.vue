@@ -30,7 +30,7 @@
     <!-- Table -->
     <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+        <table class="w-full text-sm stack-table">
           <thead>
             <tr class="text-left text-[var(--color-text-muted)] text-xs uppercase tracking-wider bg-[var(--color-surface-secondary)]">
               <th class="px-4 py-3 font-medium">Name</th>
@@ -49,18 +49,18 @@
               :key="user.id"
               class="border-t border-[var(--color-border)] hover:bg-[var(--color-surface-secondary)] transition-colors"
             >
-              <td class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ user.name }}</td>
-              <td class="px-4 py-3 text-[var(--color-text-muted)]">{{ user.email }}</td>
-              <td class="px-4 py-3 text-[var(--color-text-muted)]">{{ user.phone }}</td>
-              <td class="px-4 py-3 text-[var(--color-text-primary)]">{{ user.rides }}</td>
-              <td class="px-4 py-3 text-[var(--color-text-primary)]">{{ user.rating.toFixed(1) }}</td>
-              <td class="px-4 py-3 text-[var(--color-text-muted)] text-xs">{{ user.joined }}</td>
-              <td class="px-4 py-3">
+              <td data-label="Name" class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ user.name }}</td>
+              <td data-label="Email" class="px-4 py-3 text-[var(--color-text-muted)]">{{ user.email }}</td>
+              <td data-label="Phone" class="px-4 py-3 text-[var(--color-text-muted)]">{{ user.phone }}</td>
+              <td data-label="Rides" class="px-4 py-3 text-[var(--color-text-primary)]">{{ user.rides }}</td>
+              <td data-label="Rating" class="px-4 py-3 text-[var(--color-text-primary)]">{{ user.rating.toFixed(1) }}</td>
+              <td data-label="Joined" class="px-4 py-3 text-[var(--color-text-muted)] text-xs">{{ user.joined }}</td>
+              <td data-label="Status" class="px-4 py-3">
                 <span :class="user.status === 'Active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'" class="text-xs font-medium px-2 py-0.5 rounded-full">
                   {{ user.status }}
                 </span>
               </td>
-              <td class="px-4 py-3">
+              <td data-label="Action" class="px-4 py-3">
                 <button
                   @click="toggleUserStatus(user)"
                   :class="[

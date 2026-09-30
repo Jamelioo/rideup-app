@@ -33,7 +33,7 @@
     <!-- Table -->
     <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+        <table class="w-full text-sm stack-table">
           <thead>
             <tr class="text-left text-[var(--color-text-muted)] text-xs uppercase tracking-wider bg-[var(--color-surface-secondary)]">
               <th class="px-4 py-3 font-medium">Name</th>
@@ -54,15 +54,15 @@
                 driver.status === 'Pending' ? 'bg-yellow-50/40 hover:bg-yellow-50/70' : 'hover:bg-[var(--color-surface-secondary)]'
               ]"
             >
-              <td class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ driver.name }}</td>
-              <td class="px-4 py-3 text-[var(--color-text-muted)]">{{ driver.vehicle }}</td>
-              <td class="px-4 py-3">
+              <td data-label="Name" class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ driver.name }}</td>
+              <td data-label="Vehicle" class="px-4 py-3 text-[var(--color-text-muted)]">{{ driver.vehicle }}</td>
+              <td data-label="Status" class="px-4 py-3">
                 <span :class="driverStatusBadge(driver.status)">{{ driver.status }}</span>
               </td>
-              <td class="px-4 py-3 text-[var(--color-text-primary)]">{{ driver.rating > 0 ? driver.rating.toFixed(1) : '--' }}</td>
-              <td class="px-4 py-3 text-[var(--color-text-primary)]">{{ driver.rides }}</td>
-              <td class="px-4 py-3 text-[var(--color-text-primary)] font-medium">${{ (driver.earnings || 0).toLocaleString() }}</td>
-              <td class="px-4 py-3">
+              <td data-label="Rating" class="px-4 py-3 text-[var(--color-text-primary)]">{{ driver.rating > 0 ? driver.rating.toFixed(1) : '--' }}</td>
+              <td data-label="Rides" class="px-4 py-3 text-[var(--color-text-primary)]">{{ driver.rides }}</td>
+              <td data-label="Earnings" class="px-4 py-3 text-[var(--color-text-primary)] font-medium">${{ (driver.earnings || 0).toLocaleString() }}</td>
+              <td data-label="Actions" class="px-4 py-3">
                 <div class="flex gap-2" v-if="driver.status === 'Pending'">
                   <button
                     @click="approveDriver(driver)"

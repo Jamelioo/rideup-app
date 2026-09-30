@@ -22,9 +22,10 @@ Dashboard → Developers → Webhooks → add endpoint `https://rideupnassau.com
 
 - `checkout.session.completed` — saves a card added from the Payments page (Checkout setup mode)
 - `payment_intent.payment_failed` — marks the ride's payment as failed
+- `charge.refunded` — marks the ride `refunded` / `partially_refunded`
+- `charge.dispute.created` — marks the ride `disputed` and logs a warning; answer the dispute in the Stripe dashboard before the deadline
 
-Copy the signing secret into `STRIPE_WEBHOOK_SECRET`. **Not handled yet:** refunds and disputes
-(`charge.refunded`, `charge.dispute.created`).
+Copy the signing secret into `STRIPE_WEBHOOK_SECRET`. Refunds themselves are issued from the Stripe dashboard.
 
 ## How a ride is paid
 
@@ -36,7 +37,11 @@ Copy the signing secret into `STRIPE_WEBHOOK_SECRET`. **Not handled yet:** refun
    `POST /api/authorize-ride`, which creates a manual-capture PaymentIntent for the ride's fare. If it fails the
    ride is cancelled and the driver is told why.
 3. **Capture.** When the driver completes the trip, `POST /api/capture-payment` captures the hold.
-4. **Release.** `POST /api/cancel-payment` releases the hold if the ride is cancelled before the trip starts.
+4. **Cancellation fee (optional, off by default).** If `CANCEL_FEE_CENTS` is set (e.g. `300`), a rider who cancels after the
+   free `CANCEL_GRACE_SECONDS` (default 120) once a driver has accepted pays that flat fee, capped at the fare, captured
+   from the hold. Driver and admin cancellations are always free. The rider is shown the fee and must confirm first.
+   If you turn this on, update the Cancellations section of the Terms.
+5. **Release.** `POST /api/cancel-payment` releases the hold if the ride is cancelled before the trip starts.
 
 Every route requires a signed-in user (`Authorization: Bearer <Supabase access token>`), checks that the ride
 belongs to the caller, and takes the amount from the `rides` row, never from the request. Stripe calls use

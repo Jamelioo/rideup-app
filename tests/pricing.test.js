@@ -22,3 +22,10 @@ test('formatFare', () => {
   assert.equal(formatFare(1375), '$13.75')
   assert.equal(formatFare(undefined), '$0.00')
 })
+
+test('minimum fares: standard $12, xl $15, premium $20', () => {
+  assert.equal(RATES.standard.minimum, 1200)
+  assert.equal(RATES.xl.minimum, 1500)
+  assert.equal(RATES.premium.minimum, 2000)
+  assert.equal(calculateFare(0.5, 2, 'standard'), 1200)
+})

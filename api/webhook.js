@@ -64,6 +64,23 @@ export default async function handler(req, res) {
       }
       break
     }
+    case 'charge.refunded': {
+      const charge = event.data.object
+      if (charge.payment_intent) {
+        const status = charge.amount_refunded >= charge.amount ? 'refunded' : 'partially_refunded'
+        await supabase.from('rides').update({ payment_status: status }).eq('payment_intent_id', charge.payment_intent)
+      }
+      break
+    }
+    case 'charge.dispute.created': {
+      // Flag the ride so it shows up for follow-up; respond with evidence in the Stripe dashboard before the deadline.
+      const dispute = event.data.object
+      if (dispute.payment_intent) {
+        await supabase.from('rides').update({ payment_status: 'disputed' }).eq('payment_intent_id', dispute.payment_intent)
+      }
+      console.warn(`[DISPUTE] ride payment ${dispute.payment_intent} disputed (${dispute.reason}); respond in the Stripe dashboard before the evidence deadline`)
+      break
+    }
     case 'payment_intent.payment_failed': {
       const rideId = event.data.object.metadata?.ride_id
       if (rideId) {
