@@ -12,10 +12,12 @@ const ride = ref(null)
 const driverFound = ref(false)
 const timedOut = ref(false)
 const elapsedSeconds = ref(0)
+const paymentFailed = ref(false)
 let channel = null
 let demoTimer = null
 let timeoutTimer = null
 let elapsedTimer = null
+let pollTimer = null
 
 function navigateToActiveRide(matchData) {
   driverFound.value = true
@@ -68,14 +70,38 @@ onMounted(async () => {
 
   const { data } = await supabase.from('rides').select('*').eq('id', props.rideId).single()
   ride.value = data
+
+  // Handle ride status changes (from realtime or polling)
+  function handleRideUpdate(updatedRide) {
+    if (driverFound.value) return // already matched, ignore
+    ride.value = updatedRide
+    if (updatedRide.status === 'accepted') {
+      driverFound.value = true
+      if (pollTimer) clearInterval(pollTimer)
+      emit('matched', updatedRide)
+      navigateToActiveRide(updatedRide)
+    } else if (updatedRide.status === 'cancelled' && updatedRide.cancel_reason === 'payment_failed') {
+      if (elapsedTimer) clearInterval(elapsedTimer)
+      if (timeoutTimer) clearTimeout(timeoutTimer)
+      if (pollTimer) clearInterval(pollTimer)
+      paymentFailed.value = true
+    }
+  }
+
+  // Realtime subscription
   channel = supabase.channel(`ride-${props.rideId}`)
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rides', filter: `id=eq.${props.rideId}` }, (payload) => {
-      ride.value = payload.new
-      if (payload.new.status === 'accepted') {
-        emit('matched', payload.new)
-        navigateToActiveRide(payload.new)
-      }
+      handleRideUpdate(payload.new)
     }).subscribe()
+
+  // Polling fallback — checks every 5 seconds in case realtime misses the update
+  pollTimer = setInterval(async () => {
+    if (driverFound.value || timedOut.value || paymentFailed.value) return
+    const { data: polledRide } = await supabase.from('rides').select('*').eq('id', props.rideId).single()
+    if (polledRide && polledRide.status !== 'requested') {
+      handleRideUpdate(polledRide)
+    }
+  }, 5000)
 })
 
 onUnmounted(() => {
@@ -83,6 +109,7 @@ onUnmounted(() => {
   if (demoTimer) clearTimeout(demoTimer)
   if (timeoutTimer) clearTimeout(timeoutTimer)
   if (elapsedTimer) clearInterval(elapsedTimer)
+  if (pollTimer) clearInterval(pollTimer)
 })
 
 function retrySearch() {
@@ -110,7 +137,7 @@ async function cancelRequest() {
       <div class="text-lg font-semibold">Ride<span class="text-[#2b8659]">Up</span></div>
     </div>
     <div class="relative flex-1 flex flex-col items-center justify-center gap-6 px-6">
-      <template v-if="!timedOut">
+      <template v-if="!timedOut && !paymentFailed">
         <div class="relative w-28 h-28 rounded-full border border-[#2b8659]/35 flex items-center justify-center">
           <div class="absolute -inset-4 rounded-full border border-[#2b8659]/20"></div>
           <div class="absolute -inset-8 rounded-full border border-[#2b8659]/10"></div>
@@ -142,6 +169,18 @@ async function cancelRequest() {
         </button>
         <button @click="emit('cancelled')" class="w-full py-3 text-[var(--color-text-muted)] text-[14px] font-medium">
           Cancel ride
+        </button>
+      </div>
+      <div v-if="paymentFailed" class="text-center px-6">
+        <div class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+        </div>
+        <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-2">Payment issue</h2>
+        <p class="text-[var(--color-text-muted)] text-sm mb-6">We couldn't authorize payment on your card. Please check your card details and try again.</p>
+        <button @click="emit('cancelled')" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px]">
+          Try again
         </button>
       </div>
     </div>

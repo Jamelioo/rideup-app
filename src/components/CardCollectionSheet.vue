@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { getStripe } from '../lib/stripe'
 
 const props = defineProps({
@@ -8,8 +8,6 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'close'])
 
-const name = ref('')
-const phone = ref('')
 const submitting = ref(false)
 const error = ref(null)
 const cardError = ref(null)
@@ -19,12 +17,6 @@ let elements = null
 let cardElement = null
 const cardMountRef = ref(null)
 const cardComplete = ref(false)
-
-const isValid = computed(() =>
-  name.value.trim().length > 0 &&
-  phone.value.replace(/\D/g, '').length >= 7 &&
-  cardComplete.value
-)
 
 onMounted(async () => {
   stripe = await getStripe()
@@ -56,16 +48,11 @@ watch(() => props.show, async (open) => {
 })
 
 function handleSubmit() {
-  if (!isValid.value || submitting.value) return
+  if (!cardComplete.value || submitting.value) return
   error.value = null
   cardError.value = null
   submitting.value = true
-  emit('submit', {
-    name: name.value.trim(),
-    phone: phone.value.trim(),
-    cardElement,
-    stripe,
-  })
+  emit('submit', { cardElement, stripe })
 }
 
 function reset() {
@@ -91,44 +78,30 @@ defineExpose({ reset })
 
         <div class="px-6 pb-6">
           <div class="flex items-center justify-between mb-1">
-            <h2 class="text-[18px] font-bold">Enter your details</h2>
+            <h2 class="text-[18px] font-bold">Add payment method</h2>
             <button @click="emit('close')" class="w-8 h-8 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center text-[var(--color-text-muted)]">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>
-          <p class="text-[13px] text-[var(--color-text-muted)] mb-5">Name, phone, and payment to request a ride.</p>
+          <p class="text-[13px] text-[var(--color-text-muted)] mb-5">A card is required to request a ride. You'll only be charged after your trip.</p>
 
           <div v-if="error" class="bg-red-500/10 border border-red-500/20 text-red-400 text-[13px] px-4 py-2.5 rounded-xl mb-4">{{ error }}</div>
 
-          <label class="block mb-3">
-            <span class="text-[12px] font-medium text-[var(--color-text-muted)] mb-1 block">Your name</span>
-            <input v-model="name" type="text" placeholder="e.g. Marcus"
-                   class="w-full bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 text-[14px] font-medium outline-none focus:ring-2 focus:ring-[#2b8659] transition-all min-h-[44px]" />
-          </label>
-
-          <label class="block mb-3">
-            <span class="text-[12px] font-medium text-[var(--color-text-muted)] mb-1 block">Phone number</span>
-            <div class="flex items-center gap-2">
-              <span class="text-[14px] text-[var(--color-text-muted)] font-medium px-3 py-3 bg-[var(--color-surface-secondary)] rounded-xl min-h-[44px] flex items-center">+1</span>
-              <input v-model="phone" type="tel" placeholder="(242) 555-1234"
-                     class="flex-1 bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 text-[14px] font-medium outline-none focus:ring-2 focus:ring-[#2b8659] transition-all min-h-[44px]" />
-            </div>
-          </label>
-
           <label class="block mb-5">
-            <span class="text-[12px] font-medium text-[var(--color-text-muted)] mb-1 block">Card</span>
+            <span class="text-[12px] font-medium text-[var(--color-text-muted)] mb-1 block">Card details</span>
             <div ref="cardMountRef"
                  class="bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3.5 min-h-[44px]"></div>
             <p v-if="cardError" class="text-red-400 text-[12px] mt-1">{{ cardError }}</p>
           </label>
 
-          <button @click="handleSubmit" :disabled="!isValid || submitting"
+          <button @click="handleSubmit" :disabled="!cardComplete || submitting"
                   class="w-full py-4 bg-[#2b8659] disabled:bg-[var(--color-surface-secondary)] disabled:text-[var(--color-text-muted)] text-white font-bold rounded-2xl text-[15px] transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:shadow-none">
-            {{ submitting ? 'Requesting...' : 'Request Ride' }}
+            {{ submitting ? 'Saving...' : 'Save & Request Ride' }}
           </button>
 
-          <p class="text-[11px] text-[var(--color-text-muted)] text-center mt-3">
-            Already have an account? <router-link to="/login?redirect=/book" class="text-[#2b8659] font-semibold">Log in</router-link>
+          <p class="text-[11px] text-[var(--color-text-muted)] text-center mt-3 flex items-center justify-center gap-1">
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            Secured by Stripe
           </p>
         </div>
       </div>

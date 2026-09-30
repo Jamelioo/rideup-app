@@ -61,6 +61,19 @@ async function handleSlideComplete() {
   if (slideComplete.value) return
   slideComplete.value = true
   await updateRideStatus('completed')
+
+  // Capture the payment hold
+  if (!DEMO_MODE && currentRide.value?.id) {
+    try {
+      await fetch('/api/capture-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rideId: currentRide.value.id }),
+      })
+    } catch (err) {
+      console.error('Capture payment error:', err)
+    }
+  }
 }
 
 function onSlideStart(e) {
@@ -140,6 +153,17 @@ onUnmounted(() => {
 
 async function cancelRide() {
   if (!DEMO_MODE && currentRide.value) {
+    // Release payment hold if one exists
+    try {
+      await fetch('/api/cancel-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rideId: currentRide.value.id }),
+      })
+    } catch (err) {
+      console.error('Cancel payment error:', err)
+    }
+
     await supabase.from('rides').update({ status: 'cancelled' }).eq('id', currentRide.value.id)
     await supabase.from('drivers').update({ status: 'online' }).eq('id', driver.value.id)
   }

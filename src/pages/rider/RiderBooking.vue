@@ -14,6 +14,7 @@ import HarborBackdrop from '../../components/HarborBackdrop.vue'
 import SideMenu from '../../components/SideMenu.vue'
 import ScheduleRidePicker from '../../components/ScheduleRidePicker.vue'
 import GuestInfoSheet from '../../components/GuestInfoSheet.vue'
+import CardCollectionSheet from '../../components/CardCollectionSheet.vue'
 
 const router = useRouter()
 const menuOpen = ref(false)
@@ -40,6 +41,8 @@ const mapRef = ref(null)
 const isLocating = ref(false)
 const showGuestSheet = ref(false)
 const guestSheetRef = ref(null)
+const showCardSheet = ref(false)
+const cardSheetRef = ref(null)
 
 // Bottom sheet drag state
 const sheetRef = ref(null)
@@ -272,11 +275,10 @@ async function requestRide() {
   if (!canRequest.value) return
   isSubmitting.value = true
   error.value = null
-  const fare = fareEstimates.value[selectedVehicle.value]
-  const vehicleName = VEHICLE_TYPES.find(v => v.id === selectedVehicle.value)?.name || 'RideUp Ride'
-  const description = `${vehicleName}: ${pickupText.value} → ${dropoffText.value}`
 
   if (DEMO_MODE) {
+    const fare = fareEstimates.value[selectedVehicle.value]
+    const vehicleName = VEHICLE_TYPES.find(v => v.id === selectedVehicle.value)?.name || 'RideUp Ride'
     await new Promise((r) => setTimeout(r, 600))
     emit('requested', {
       id: 'demo-' + Date.now(),
@@ -291,16 +293,25 @@ async function requestRide() {
     return
   }
 
-  // Check if user is logged in
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    // Show guest info sheet instead of error
     isSubmitting.value = false
     showGuestSheet.value = true
     return
   }
 
-  // Logged-in user — proceed normally
+  const { data: rider } = await supabase
+    .from('riders')
+    .select('payment_method_id')
+    .eq('auth_user_id', user.id)
+    .maybeSingle()
+
+  if (!rider?.payment_method_id) {
+    isSubmitting.value = false
+    showCardSheet.value = true
+    return
+  }
+
   await createRideForUser(user)
 }
 
@@ -347,7 +358,36 @@ async function createRideForUser(user, guestInfo = null) {
   }
 }
 
-async function handleGuestSubmit({ name, phone }) {
+async function saveCardForUser(user, cardElement, stripe) {
+  const res = await fetch('/api/create-setup-intent', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId: user.id,
+      name: user.user_metadata?.name || user.email?.split('@')[0] || 'Rider',
+      email: user.email || null,
+    }),
+  })
+  const { client_secret, customer_id, error: apiError } = await res.json()
+  if (apiError) throw new Error(apiError)
+
+  const { setupIntent, error: stripeError } = await stripe.confirmCardSetup(client_secret, {
+    payment_method: { card: cardElement },
+  })
+  if (stripeError) throw new Error(stripeError.message)
+
+  await supabase
+    .from('riders')
+    .update({
+      stripe_customer_id: customer_id,
+      payment_method_id: setupIntent.payment_method,
+    })
+    .eq('auth_user_id', user.id)
+
+  return { customer_id, payment_method_id: setupIntent.payment_method }
+}
+
+async function handleGuestSubmit({ name, phone, cardElement, stripe }) {
   error.value = null
   try {
     const { data, error: authErr } = await supabase.auth.signInAnonymously()
@@ -356,11 +396,50 @@ async function handleGuestSubmit({ name, phone }) {
       error.value = 'Could not start your session. Please try again.'
       return
     }
+
+    let { data: rider } = await supabase.from('riders').select('id').eq('auth_user_id', data.user.id).maybeSingle()
+    if (!rider) {
+      const { data: newRider, error: createErr } = await supabase.from('riders').insert({
+        auth_user_id: data.user.id,
+        name,
+        phone,
+        is_guest: true,
+      }).select('id').single()
+      if (createErr || !newRider) {
+        if (guestSheetRef.value) guestSheetRef.value.reset()
+        error.value = 'Could not create your profile. Please try again.'
+        return
+      }
+      rider = newRider
+    }
+
+    await saveCardForUser(data.user, cardElement, stripe)
+
     await createRideForUser(data.user, { name, phone })
     if (error.value && guestSheetRef.value) guestSheetRef.value.reset()
   } catch (err) {
     if (guestSheetRef.value) guestSheetRef.value.reset()
-    error.value = 'Connection error. Please try again.'
+    error.value = err.message || 'Connection error. Please try again.'
+  }
+}
+
+async function handleCardSubmit({ cardElement, stripe }) {
+  error.value = null
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      if (cardSheetRef.value) cardSheetRef.value.reset()
+      error.value = 'Session expired. Please log in again.'
+      return
+    }
+
+    await saveCardForUser(user, cardElement, stripe)
+
+    showCardSheet.value = false
+    await createRideForUser(user)
+  } catch (err) {
+    if (cardSheetRef.value) cardSheetRef.value.reset()
+    error.value = err.message || 'Could not save card. Please try again.'
   }
 }
 
@@ -712,6 +791,7 @@ async function scheduleRide({ date, time, summary }) {
     <!-- Schedule Ride Picker -->
     <GuestInfoSheet ref="guestSheetRef" :show="showGuestSheet" @submit="handleGuestSubmit" @close="showGuestSheet = false" />
     <ScheduleRidePicker :show="showSchedulePicker" @close="showSchedulePicker = false" @confirm="scheduleRide" />
+    <CardCollectionSheet ref="cardSheetRef" :show="showCardSheet" @submit="handleCardSubmit" @close="showCardSheet = false" />
 
     <!-- Toast -->
     <Transition name="fade">

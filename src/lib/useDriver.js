@@ -13,6 +13,7 @@ const loading = ref(true)
 let initialized = false
 let rideSubscription = null
 let fakeRequestTimer = null
+let pollInterval = null
 let notificationPermission = 'default'
 
 // Request notification permission on init
@@ -77,8 +78,8 @@ async function fetchDriver(authUserId) {
     if (isOnline.value) {
       requestNotificationPermission()
       subscribeToRides()
-      // Also check for any existing ride requests we may have missed
       pollExistingRequests()
+      startPolling()
     }
   }
   loading.value = false
@@ -113,6 +114,7 @@ async function goOnline() {
   await supabase.from('drivers').update({ status: 'online' }).eq('id', driver.value.id)
   subscribeToRides()
   pollExistingRequests()
+  startPolling()
 }
 
 async function goOffline() {
@@ -145,7 +147,21 @@ function subscribeToRides() {
     .subscribe()
 }
 
+function startPolling() {
+  stopPolling()
+  pollInterval = setInterval(() => {
+    if (isOnline.value && !incomingRequest.value && !currentRide.value) {
+      pollExistingRequests()
+    }
+  }, 5000)
+}
+
+function stopPolling() {
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null }
+}
+
 function unsubscribeFromRides() {
+  stopPolling()
   if (rideSubscription) {
     supabase.removeChannel(rideSubscription)
     rideSubscription = null
@@ -174,11 +190,29 @@ function stopFakeRequests() {
 
 async function acceptRide(ride) {
   incomingRequest.value = null
-  currentRide.value = { ...ride, status: 'accepted', accepted_at: new Date().toISOString() }
 
-  if (DEMO_MODE) return
+  if (DEMO_MODE) {
+    currentRide.value = { ...ride, status: 'accepted', accepted_at: new Date().toISOString() }
+    return
+  }
 
   try {
+    // Pre-authorize payment on rider's card
+    const res = await fetch('/api/authorize-ride', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rideId: ride.id }),
+    })
+    const result = await res.json()
+
+    if (!result.success) {
+      // Payment failed — ride was cancelled server-side
+      console.error('Payment authorization failed:', result.error)
+      incomingRequest.value = null
+      return
+    }
+
+    // Payment authorized — now update ride status
     const { error: rideErr } = await supabase.from('rides').update({
       driver_id: driver.value.id,
       status: 'accepted',
@@ -188,6 +222,8 @@ async function acceptRide(ride) {
 
     const { error: driverErr } = await supabase.from('drivers').update({ status: 'on_trip' }).eq('id', driver.value.id)
     if (driverErr) console.error('Driver status update error:', driverErr.message)
+
+    currentRide.value = { ...ride, status: 'accepted', accepted_at: new Date().toISOString() }
   } catch (err) {
     console.error('Accept ride error:', err)
   }
