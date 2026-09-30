@@ -27,7 +27,7 @@ const faqs = ref([
   },
   {
     question: 'How do I cancel a ride?',
-    answer: 'You can cancel a ride at any time before the trip starts. Tap "Cancel ride" on your ride screen. Any hold on your card is released, and we don\'t currently charge a cancellation fee.',
+    answer: 'You can cancel a ride at any time before the trip starts. Tap "Cancel ride" on your ride screen. If you cancel within 2 minutes of a driver accepting, or before one accepts, it\'s free. After that a $5.00 cancellation fee applies, and we show it to you before you confirm. If your driver cancels, you\'re never charged.',
     open: false,
   },
   {

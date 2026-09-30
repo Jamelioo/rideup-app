@@ -45,7 +45,7 @@ function goBack() {
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Cancellations</h2>
-        <p>You can cancel a ride request at any time before the trip starts. We do not currently charge a cancellation fee. If that changes, we will tell you clearly before it applies to you.</p>
+        <p>You can cancel a ride request at any time before the trip starts. If you cancel more than 2 minutes after a driver has accepted your ride, a $5.00 cancellation fee applies (never more than the fare), and we show you the fee before you confirm. There is no fee if you cancel within those 2 minutes, before a driver accepts, or if your driver cancels.</p>
       </section>
 
       <section>

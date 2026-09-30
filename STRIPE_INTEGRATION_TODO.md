@@ -37,10 +37,9 @@ Copy the signing secret into `STRIPE_WEBHOOK_SECRET`. Refunds themselves are iss
    `POST /api/authorize-ride`, which creates a manual-capture PaymentIntent for the ride's fare. If it fails the
    ride is cancelled and the driver is told why.
 3. **Capture.** When the driver completes the trip, `POST /api/capture-payment` captures the hold.
-4. **Cancellation fee (optional, off by default).** If `CANCEL_FEE_CENTS` is set (e.g. `300`), a rider who cancels after the
-   free `CANCEL_GRACE_SECONDS` (default 120) once a driver has accepted pays that flat fee, capped at the fare, captured
-   from the hold. Driver and admin cancellations are always free. The rider is shown the fee and must confirm first.
-   If you turn this on, update the Cancellations section of the Terms.
+4. **Cancellation fee ($5.00 by default).** A rider who cancels after the free `CANCEL_GRACE_SECONDS` (default 120) once a driver
+   has accepted pays `CANCEL_FEE_CENTS` (default 500), capped at the fare, captured from the hold. Driver and admin
+   cancellations are always free. The rider is shown the fee and must confirm first. Set `CANCEL_FEE_CENTS=0` to disable.
 5. **Release.** `POST /api/cancel-payment` releases the hold if the ride is cancelled before the trip starts.
 
 Every route requires a signed-in user (`Authorization: Bearer <Supabase access token>`), checks that the ride
