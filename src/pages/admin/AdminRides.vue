@@ -30,7 +30,7 @@
     <!-- Table -->
     <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+        <table class="w-full text-sm stack-table">
           <thead>
             <tr class="text-left text-[var(--color-text-muted)] text-xs uppercase tracking-wider bg-[var(--color-surface-secondary)]">
               <th class="px-4 py-3 font-medium cursor-pointer hover:text-[var(--color-text-secondary)]" @click="toggleSort('id')">
@@ -55,16 +55,16 @@
               :key="ride.id"
               class="border-t border-[var(--color-border)] hover:bg-[var(--color-surface-secondary)] transition-colors"
             >
-              <td class="px-4 py-3 text-[var(--color-text-muted)] font-mono text-xs">#{{ ride.id }}</td>
-              <td class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ ride.rider }}</td>
-              <td class="px-4 py-3 text-[var(--color-text-secondary)]">{{ ride.driver }}</td>
-              <td class="px-4 py-3 text-[var(--color-text-muted)] truncate max-w-[140px]">{{ ride.pickup }}</td>
-              <td class="px-4 py-3 text-[var(--color-text-muted)] truncate max-w-[140px]">{{ ride.dropoff }}</td>
-              <td class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ ride.fare }}</td>
-              <td class="px-4 py-3">
+              <td data-label="ID"class="px-4 py-3 text-[var(--color-text-muted)] font-mono text-xs">#{{ ride.id }}</td>
+              <td data-label="Rider" class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ ride.rider }}</td>
+              <td data-label="Driver" class="px-4 py-3 text-[var(--color-text-secondary)]">{{ ride.driver }}</td>
+              <td data-label="Pickup" class="px-4 py-3 text-[var(--color-text-muted)] truncate max-w-[140px]">{{ ride.pickup }}</td>
+              <td data-label="Dropoff" class="px-4 py-3 text-[var(--color-text-muted)] truncate max-w-[140px]">{{ ride.dropoff }}</td>
+              <td data-label="Fare" class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ ride.fare }}</td>
+              <td data-label="Status" class="px-4 py-3">
                 <span :class="statusBadge(ride.status)">{{ ride.status }}</span>
               </td>
-              <td class="px-4 py-3 text-[var(--color-text-muted)] text-xs">{{ ride.date }}</td>
+              <td data-label="Date" class="px-4 py-3 text-[var(--color-text-muted)] text-xs">{{ ride.date }}</td>
             </tr>
             <tr v-if="paginatedRides.length === 0">
               <td colspan="8" class="px-4 py-8 text-center text-[var(--color-text-muted)]">No rides found.</td>

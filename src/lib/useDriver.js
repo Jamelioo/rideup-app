@@ -104,6 +104,41 @@ function acceptableRideTypes() {
   return driver.value?.vehicle_type === 'xl' ? ['standard', 'xl', 'premium'] : ['standard', 'premium']
 }
 
+// --- Nearby-only requests --------------------------------------------------------------
+// Drivers can see every open request (row-level security), so we only *show* ones near them.
+// If the driver's position isn't available (permission denied, no GPS), we show everything rather than nothing.
+const MAX_PICKUP_DISTANCE_MILES = 10
+let lastPosition = null // { lat, lng, at }
+
+function currentPosition() {
+  if (lastPosition && Date.now() - lastPosition.at < 60_000) return Promise.resolve(lastPosition)
+  if (!('geolocation' in navigator)) return Promise.resolve(null)
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        lastPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude, at: Date.now() }
+        resolve(lastPosition)
+      },
+      () => resolve(lastPosition),
+      { maximumAge: 60_000, timeout: 5000 }
+    )
+  })
+}
+
+function milesBetween(aLat, aLng, bLat, bLng) {
+  const rad = (d) => (d * Math.PI) / 180
+  const a = Math.sin(rad(bLat - aLat) / 2) ** 2 +
+    Math.cos(rad(aLat)) * Math.cos(rad(bLat)) * Math.sin(rad(bLng - aLng) / 2) ** 2
+  return 2 * 3958.8 * Math.asin(Math.min(1, Math.sqrt(a)))
+}
+
+async function isNearby(ride) {
+  if (ride.pickup_lat == null || ride.pickup_lng == null) return true
+  const pos = await currentPosition()
+  if (!pos) return true
+  return milesBetween(pos.lat, pos.lng, ride.pickup_lat, ride.pickup_lng) <= MAX_PICKUP_DISTANCE_MILES
+}
+
 async function pollExistingRequests() {
   if (!driver.value) return
   // Only show rides created within the last 90 seconds
@@ -115,13 +150,13 @@ async function pollExistingRequests() {
     .in('vehicle_type', acceptableRideTypes())
     .gte('created_at', cutoff)
     .order('created_at', { ascending: false })
-    .limit(1)
-  if (rides && rides.length > 0) {
-    const ride = rides[0]
-    if (!ride.declined_by || !ride.declined_by.includes(driver.value.id)) {
-      incomingRequest.value = ride
-      showRideNotification(ride)
-    }
+    .limit(10)
+  for (const ride of rides || []) {
+    if (ride.declined_by && ride.declined_by.includes(driver.value.id)) continue
+    if (!(await isNearby(ride))) continue
+    incomingRequest.value = ride
+    showRideNotification(ride)
+    break
   }
 }
 
@@ -166,10 +201,11 @@ function subscribeToRides() {
       schema: 'public',
       table: 'rides',
       filter: `status=eq.requested`,
-    }, (payload) => {
+    }, async (payload) => {
       const ride = payload.new
       if (ride.declined_by && ride.declined_by.includes(driver.value.id)) return
       if (!acceptableRideTypes().includes(ride.vehicle_type)) return
+      if (!(await isNearby(ride))) return
       incomingRequest.value = ride
       showRideNotification(ride)
     })

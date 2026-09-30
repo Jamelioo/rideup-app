@@ -6,6 +6,7 @@ import RideTracker from '../../components/RideTracker.vue'
 import { supabase } from '../../lib/supabase'
 import { DEMO_MODE } from '../../lib/demoMode'
 import { apiPost } from '../../lib/api'
+import { formatFare } from '../../lib/pricing'
 
 const route = useRoute()
 const router = useRouter()
@@ -143,7 +144,27 @@ function startDemoSimulation() {
   statusTimers = [arriveTimer, tripTimer, completeTimer]
 }
 
+const cancelFeeCents = ref(0)
+const confirmingCancel = ref(false)
+
+// Ask the server whether cancelling now costs anything; only then do we cancel (or ask the rider to confirm).
 async function cancelRide() {
+  if (!DEMO_MODE) {
+    try {
+      const res = await apiPost('/api/cancel-payment', { rideId, preview: true })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.fee_cents > 0) {
+        cancelFeeCents.value = data.fee_cents
+        confirmingCancel.value = true
+        return
+      }
+    } catch { /* fall through: cancel without a fee preview */ }
+  }
+  await doCancel()
+}
+
+async function doCancel() {
+  confirmingCancel.value = false
   statusTimers.forEach(clearTimeout)
   if (!DEMO_MODE) {
     // Release the card hold first (it's refused once the trip has started), then cancel the ride.
@@ -238,6 +259,19 @@ onUnmounted(() => {
         <h2 id="ride-cancelled-title" class="text-xl font-bold mb-2">Ride cancelled</h2>
         <p class="text-[var(--color-text-secondary)] text-sm mb-6">This ride was cancelled. Any hold on your card has been released.</p>
         <button @click="router.push({ name: 'book' })" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px]">Book another ride</button>
+      </div>
+    </div>
+
+    <!-- Cancellation fee confirmation -->
+    <div v-if="confirmingCancel" role="alertdialog" aria-modal="true" aria-labelledby="cancel-fee-title"
+         class="fixed inset-0 z-[200] bg-black/60 flex items-end sm:items-center justify-center px-4 pb-6">
+      <div class="bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-3xl p-6 max-w-sm w-full text-center">
+        <h2 id="cancel-fee-title" class="text-xl font-bold mb-2">Cancel this ride?</h2>
+        <p class="text-[var(--color-text-secondary)] text-sm mb-6">
+          Your driver has already accepted, so a {{ formatFare(cancelFeeCents) }} cancellation fee applies.
+        </p>
+        <button @click="confirmingCancel = false" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mb-2">Keep my ride</button>
+        <button @click="doCancel" class="w-full py-3 text-[var(--color-text-secondary)] font-semibold text-[14px]">Cancel and pay {{ formatFare(cancelFeeCents) }}</button>
       </div>
     </div>
 

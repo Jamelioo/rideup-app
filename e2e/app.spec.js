@@ -157,18 +157,27 @@ test('404 page for unknown routes', async ({ page }) => {
 })
 
 // ─── Auth Guards ───
+// Demo mode (no Supabase configured) intentionally disables the route guards, so these only apply to a real backend.
+async function skipInDemoMode(page, test) {
+  await page.goto('/')
+  test.skip(await page.getByText('Demo mode', { exact: false }).first().isVisible().catch(() => false), 'route guards are off in demo mode')
+}
+
 
 test('profile redirects to login when not authenticated', async ({ page }) => {
+  await skipInDemoMode(page, test)
   await page.goto('/profile')
   await expect(page).toHaveURL(/\/login/)
 })
 
 test('payments redirects to login when not authenticated', async ({ page }) => {
+  await skipInDemoMode(page, test)
   await page.goto('/payments')
   await expect(page).toHaveURL(/\/login/)
 })
 
 test('my-rides redirects to login when not authenticated', async ({ page }) => {
+  await skipInDemoMode(page, test)
   await page.goto('/my-rides')
   await expect(page).toHaveURL(/\/login/)
 })

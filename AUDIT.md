@@ -204,3 +204,14 @@ Rule applied: a public claim stays only if the product or code backs it up; busi
 | Cancellation FAQ ("fee may apply") | Support | matches Terms: cancel before the trip starts, no fee currently |
 
 **Still the owner's call (not changed):** the driver requirements list (Bahamian license, vehicle 2015 or newer, clean driving record) is stated policy but nothing in the app enforces it; the (242) 452-9911 number, `support@rideupnassau.com` and the Instagram/WhatsApp handles need to be real and monitored; if you do run background checks, carry insurance, or pay weekly, add those claims back with the exact terms.
+
+
+## Follow-up work (code)
+
+- **Minimum fares raised** — standard $12, XL $15, premium $20 (`src/lib/pricing.js` + `005_minimum_fares.sql`, tested on Postgres). Run `005` and deploy together, or the database and the app will quote different minimums.
+- **Cancellation fee** — implemented but **off** until `CANCEL_FEE_CENTS` is set (industry norm: ~2 min free after a driver accepts, then a flat fee of roughly $3–5 here; driver cancels always free). Riders see the amount and confirm before being charged; capped at the fare; 6 unit tests. Update the Terms if you enable it.
+- **Webhook** now handles `charge.refunded` and `charge.dispute.created`.
+- **Driver requests** are shown only within 10 miles of the driver's position (falls back to showing all if location isn't available).
+- **Admin tables** (drivers, rides, users) become stacked cards on phones.
+- **CSP**: the report-only policy now reports to `/api/csp-report`, which logs violations to Vercel logs so you can see what to allow before enforcing it.
+- **e2e**: the 3 login-redirect tests skip automatically in demo mode.

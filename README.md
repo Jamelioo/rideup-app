@@ -57,7 +57,7 @@ npm install
 2. Create a new project (e.g. "rideup-nassau")
 3. Once it's ready, go to the **SQL Editor** and run these files **in order**:
    `supabase-schema.sql`, then `supabase/migrations/001_create_leads_table.sql`,
-   `002_security_hardening.sql`, `003_high_priority_fixes.sql`.
+   `002_security_hardening.sql`, `003_high_priority_fixes.sql`, `004_leads_hardening.sql`, `005_minimum_fares.sql`.
    (`002` explains how to grant your admin account the `app_metadata` admin role.)
 4. Go to **Project Settings → API** — copy the **Project URL** and
    **anon public key**
@@ -104,6 +104,7 @@ dashboard settings.
 | `SUPABASE_SERVICE_ROLE_KEY` | every protected `/api/*` route (they refuse to run without it) |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | payments + webhook (listen for `checkout.session.completed` and `payment_intent.payment_failed`) |
 | `CRON_SECRET` | `/api/dispatch-scheduled` |
+| `CANCEL_FEE_CENTS`, `CANCEL_GRACE_SECONDS` | optional rider cancellation fee (off when `CANCEL_FEE_CENTS` is 0/unset) |
 | `RESEND_API_KEY`, `EMAIL_FROM` | driver approval emails |
 
 ### Scheduled rides and stale requests

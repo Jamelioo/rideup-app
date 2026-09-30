@@ -3,9 +3,9 @@
 // Stripe/WordPress setup separately.
 
 export const RATES = {
-  standard: { base: 250, perMile: 165, perMinute: 20, minimum: 600 },
-  xl:       { base: 450, perMile: 230, perMinute: 30, minimum: 1000 },
-  premium:  { base: 700, perMile: 320, perMinute: 40, minimum: 1500 },
+  standard: { base: 250, perMile: 165, perMinute: 20, minimum: 1200 },
+  xl:       { base: 450, perMile: 230, perMinute: 30, minimum: 1500 },
+  premium:  { base: 700, perMile: 320, perMinute: 40, minimum: 2000 },
 }
 
 export function calculateFare(distanceMiles, durationMinutes, vehicleType = 'standard') {
