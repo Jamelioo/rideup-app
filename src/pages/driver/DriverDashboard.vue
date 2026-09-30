@@ -73,7 +73,10 @@ onUnmounted(() => {
 })
 
 watch(currentRide, (newVal, oldVal) => {
-  if (!newVal && oldVal) {
+  if (newVal && !oldVal) {
+    // Ride was accepted — navigate to active ride
+    router.push('/driver/active-ride')
+  } else if (!newVal && oldVal) {
     refreshStats()
   }
 })
