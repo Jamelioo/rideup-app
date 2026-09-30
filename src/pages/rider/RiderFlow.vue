@@ -12,9 +12,7 @@ const step = ref('booking')
 const activeRide = ref(null)
 const matchInfo = ref(null)
 const showChat = ref(false)
-const messages = ref([
-  { from: 'driver', text: "I'll be there in a few mins" },
-])
+const messages = ref([])
 const draft = ref('')
 const isGuest = ref(false)
 
@@ -38,7 +36,6 @@ function sendMessage() {
   if (!draft.value.trim()) return
   messages.value.push({ from: 'me', text: draft.value.trim() })
   draft.value = ''
-  setTimeout(() => messages.value.push({ from: 'driver', text: 'Got it, see you soon!' }), 1200)
 }
 </script>
 

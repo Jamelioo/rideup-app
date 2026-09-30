@@ -19,30 +19,59 @@ let timeoutTimer = null
 let elapsedTimer = null
 let pollTimer = null
 
-function navigateToActiveRide(matchData) {
+async function navigateToActiveRide(matchData) {
   driverFound.value = true
-  // Parse vehicle string like "Silver Toyota Corolla · TX 4471"
-  const parts = (matchData.vehicle || '').split(' \u00b7 ')
-  const vehicleName = parts[0] || 'Silver Toyota Corolla'
-  const plateNum = parts[1] || 'TX 4471'
+
+  // Fetch actual driver details from DB
+  let driverName = matchData.driver_name || 'Your driver'
+  let vehicle = matchData.vehicle || ''
+  let plate = matchData.plate || ''
+  let rating = matchData.rating || 5.0
+  let etaMinutes = matchData.eta_minutes || null
+
+  if (matchData.driver_id && !matchData.demo) {
+    const { data: driverData } = await supabase
+      .from('drivers')
+      .select('name, vehicle, license_plate, rating')
+      .eq('id', matchData.driver_id)
+      .single()
+    if (driverData) {
+      driverName = driverData.name || driverName
+      vehicle = driverData.vehicle || vehicle
+      plate = driverData.license_plate || plate
+      rating = driverData.rating || rating
+    }
+  }
+
+  // Estimate ETA from ride duration if available
+  const rideData = ride.value || matchData
+  if (!etaMinutes && rideData.duration_minutes) {
+    etaMinutes = Math.max(2, Math.round(rideData.duration_minutes * 0.3))
+  }
+  etaMinutes = etaMinutes || 5
+
+  // Parse vehicle string if it contains " · " separator
+  const parts = vehicle.split(' \u00b7 ')
+  const vehicleName = parts[0] || vehicle || 'Vehicle'
+  const plateNum = parts[1] || plate || ''
 
   setTimeout(() => {
     router.push({
       name: 'active-ride',
       params: { rideId: matchData.id || props.rideId },
       query: {
-        driverName: matchData.driver_name || 'Marcus Rolle',
-        rating: matchData.rating || 4.9,
+        driverName,
+        rating,
         vehicle: vehicleName,
         plate: plateNum,
-        eta: matchData.eta_minutes || 4,
+        eta: etaMinutes,
         pickupLat: matchData.pickup_lat || ride.value?.pickup_lat || '',
         pickupLng: matchData.pickup_lng || ride.value?.pickup_lng || '',
         dropoffLat: matchData.dropoff_lat || ride.value?.dropoff_lat || '',
         dropoffLng: matchData.dropoff_lng || ride.value?.dropoff_lng || '',
       },
     })
-  }, 1500) // Brief pause to show "Driver found" before navigating
+  }, 1500)
 }
 
 onMounted(async () => {
@@ -68,14 +97,11 @@ onMounted(async () => {
     if (elapsedTimer) clearInterval(elapsedTimer)
   }, 90000)
 
-  console.log('[SearchingForDriver] rideId prop:', props.rideId)
-  const { data, error: fetchErr } = await supabase.from('rides').select('*').eq('id', props.rideId).single()
-  console.log('[SearchingForDriver] initial fetch:', data ? `status=${data.status}` : 'null', fetchErr?.message || '')
+  const { data } = await supabase.from('rides').select('*').eq('id', props.rideId).single()
   ride.value = data
 
   // Handle ride status changes (from realtime or polling)
   function handleRideUpdate(updatedRide) {
-    console.log('[SearchingForDriver] ride update:', updatedRide.status, updatedRide.driver_id)
     if (driverFound.value) return // already matched, ignore
     ride.value = updatedRide
     if (updatedRide.status === 'accepted') {
@@ -94,17 +120,13 @@ onMounted(async () => {
   // Realtime subscription
   channel = supabase.channel(`ride-${props.rideId}`)
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rides', filter: `id=eq.${props.rideId}` }, (payload) => {
-      console.log('[SearchingForDriver] realtime update:', payload.new?.status)
       handleRideUpdate(payload.new)
-    }).subscribe((status) => {
-      console.log('[SearchingForDriver] realtime subscription:', status)
-    })
+    }).subscribe()
 
   // Polling fallback — checks every 5 seconds in case realtime misses the update
   pollTimer = setInterval(async () => {
     if (driverFound.value || timedOut.value || paymentFailed.value) return
-    const { data: polledRide, error: pollErr } = await supabase.from('rides').select('*').eq('id', props.rideId).single()
-    console.log('[SearchingForDriver] poll:', polledRide ? `status=${polledRide.status}` : 'null', pollErr?.message || '')
+    const { data: polledRide } = await supabase.from('rides').select('*').eq('id', props.rideId).single()
     if (polledRide && polledRide.status !== 'requested') {
       handleRideUpdate(polledRide)
     }

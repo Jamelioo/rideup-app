@@ -25,9 +25,7 @@ const dropoff = ref({ lat: 25.0781, lng: -77.3383 })
 const driverLocation = ref({ lat: 25.0380, lng: -77.3550 })
 
 const showChat = ref(false)
-const messages = ref([
-  { from: 'driver', text: "I'll be there in a few mins" },
-])
+const messages = ref([])
 const draft = ref('')
 
 // Driver location tracking
@@ -135,7 +133,6 @@ function sendMessage() {
   if (!draft.value.trim()) return
   messages.value.push({ from: 'me', text: draft.value.trim() })
   draft.value = ''
-  setTimeout(() => messages.value.push({ from: 'driver', text: 'Got it, see you soon!' }), 1200)
 }
 
 onUnmounted(() => {
