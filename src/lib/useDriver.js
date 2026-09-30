@@ -177,13 +177,19 @@ async function acceptRide(ride) {
 
   if (DEMO_MODE) return
 
-  await supabase.from('rides').update({
-    driver_id: driver.value.id,
-    status: 'accepted',
-    accepted_at: new Date().toISOString(),
-  }).eq('id', ride.id)
+  try {
+    const { error: rideErr } = await supabase.from('rides').update({
+      driver_id: driver.value.id,
+      status: 'accepted',
+      accepted_at: new Date().toISOString(),
+    }).eq('id', ride.id)
+    if (rideErr) console.error('Accept ride DB error:', rideErr.message)
 
-  await supabase.from('drivers').update({ status: 'on_trip' }).eq('id', driver.value.id)
+    const { error: driverErr } = await supabase.from('drivers').update({ status: 'on_trip' }).eq('id', driver.value.id)
+    if (driverErr) console.error('Driver status update error:', driverErr.message)
+  } catch (err) {
+    console.error('Accept ride error:', err)
+  }
 }
 
 function declineRide(ride) {
