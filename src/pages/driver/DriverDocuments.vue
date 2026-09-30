@@ -148,7 +148,7 @@ function goBack() {
     </div>
 
     <div class="max-w-lg mx-auto px-5 pb-8">
-      <p class="text-[14px] text-[var(--color-text-muted)] mb-6">Upload your documents to get approved for driving. All documents are securely stored and reviewed within 24 hours.</p>
+      <p class="text-[14px] text-[var(--color-text-muted)] mb-6">Upload your documents to get approved for driving. Our team reviews your documents before you can start driving.</p>
 
       <!-- Document list -->
       <div class="space-y-3">
@@ -204,7 +204,7 @@ function goBack() {
       <!-- Info note -->
       <div class="mt-6 bg-[var(--color-surface-secondary)] rounded-2xl p-4">
         <p class="text-[13px] text-[var(--color-brand)] font-medium mb-1">Required for approval</p>
-        <p class="text-[12px] text-[var(--color-brand)]/70 leading-relaxed">All four documents must be uploaded and approved before you can start accepting rides. Documents are typically reviewed within 24 hours.</p>
+        <p class="text-[12px] text-[var(--color-brand)]/70 leading-relaxed">All four documents must be uploaded and approved before you can start accepting rides. Check your application status page for updates.</p>
       </div>
 
       <!-- Back to profile -->

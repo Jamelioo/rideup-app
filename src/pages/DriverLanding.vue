@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
 import { DEMO_MODE } from '../lib/demoMode'
+import { calculateFare, driverPayout, formatFare } from '../lib/pricing'
 
 const router = useRouter()
 const whatsappLink = 'https://wa.me/12424529911?text=' + encodeURIComponent("Hi! I'd like to apply to drive for RideUp Nassau.")
@@ -35,35 +36,19 @@ const requirements = [
   'Smartphone with data plan',
 ]
 
-const earningsExamples = [
-  { route: 'Cable Beach → Downtown', distance: '4.2 mi', fare: '$12.50', yourCut: '$10.00' },
-  { route: 'LPIA Airport → Bahamar', distance: '7.8 mi', fare: '$22.00', yourCut: '$17.60' },
-  { route: 'Paradise Island → Bay St', distance: '5.1 mi', fare: '$15.00', yourCut: '$12.00' },
-]
-
-const testimonials = [
-  {
-    name: 'Marcus T.',
-    area: 'Cable Beach area',
-    months: 4,
-    quote: 'The 80% payout makes a real difference. I switched from driving informally and my weekly take-home went up immediately.',
-    trips: '320+ trips',
-  },
-  {
-    name: 'Keisha R.',
-    area: 'Downtown Nassau',
-    months: 2,
-    quote: 'I drive evenings after my day job. The flexibility is what sold me — no shifts, no minimums, just open the app.',
-    trips: '150+ trips',
-  },
-  {
-    name: 'Darnell W.',
-    area: 'Paradise Island',
-    months: 3,
-    quote: 'Getting approved took two days. The app is straightforward and the support team actually picks up the phone.',
-    trips: '280+ trips',
-  },
-]
+// Illustrative routes priced with the real standard-car rates (src/lib/pricing.js).
+// Trip time is assumed at 3 minutes per mile; real trips vary with traffic.
+const routeExamples = [
+  { route: 'Cable Beach → Downtown', miles: 4.2 },
+  { route: 'LPIA Airport → Bahamar', miles: 7.8 },
+  { route: 'Paradise Island → Bay St', miles: 5.1 },
+].map((r) => {
+  const fare = calculateFare(r.miles, r.miles * 3, 'standard')
+  return { route: r.route, distance: `${r.miles} mi`, fare: formatFare(fare), yourCut: formatFare(driverPayout({ fare_cents: fare })), cents: driverPayout({ fare_cents: fare }) }
+})
+const earningsExamples = routeExamples
+const avgCut = routeExamples.reduce((sum, r) => sum + r.cents, 0) / routeExamples.length
+const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
 </script>
 
 <template>
@@ -132,7 +117,7 @@ const testimonials = [
               </svg>
             </button>
             <div class="flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-white/40">
-              <span>5-minute application</span>
+              <span>Simple online application</span>
               <span class="text-white/15">|</span>
               <span>Use your own car</span>
               <span class="text-white/15">|</span>
@@ -193,7 +178,7 @@ const testimonials = [
                     <div class="bg-[#2b8659]/10 rounded-xl p-2.5 border border-[#2b8659]/15">
                       <div class="flex items-center justify-between mb-1.5">
                         <span class="text-[11px] font-semibold text-[#236e49] uppercase tracking-wide">New request</span>
-                        <span class="text-[12px] font-bold text-[var(--color-text-primary)]">$14.50</span>
+                        <span class="text-[12px] font-bold text-[var(--color-text-primary)]">$11.95</span>
                       </div>
                       <div class="flex items-center gap-1.5 mb-2">
                         <div class="w-1.5 h-1.5 rounded-full bg-[#2b8659]"></div>
@@ -204,6 +189,7 @@ const testimonials = [
                   </div>
                 </div>
               </div>
+              <p class="mt-4 text-center text-[11px] text-white/40">Illustrative screen</p>
               <!-- Glow -->
               <div class="absolute -inset-8 -z-10 rounded-full opacity-30" style="background: radial-gradient(circle, rgba(43,134,89,0.25), transparent 70%);"></div>
             </div>
@@ -217,16 +203,16 @@ const testimonials = [
             <div class="text-white/50 text-[12px]">Driver payout</div>
           </div>
           <div>
-            <div class="text-[22px] font-semibold text-white">200+</div>
-            <div class="text-white/50 text-[12px]">Active drivers</div>
+            <div class="text-[22px] font-semibold text-white">Free</div>
+            <div class="text-white/50 text-[12px]">To apply</div>
           </div>
           <div>
-            <div class="text-[22px] font-semibold text-white">Weekly</div>
-            <div class="text-white/50 text-[12px]">Direct deposit</div>
+            <div class="text-[22px] font-semibold text-white">Your</div>
+            <div class="text-white/50 text-[12px]">Own hours</div>
           </div>
           <div>
-            <div class="text-[22px] font-semibold text-white">24/7</div>
-            <div class="text-white/50 text-[12px]">Local support</div>
+            <div class="text-[22px] font-semibold text-white">Phone</div>
+            <div class="text-white/50 text-[12px]">Support line</div>
           </div>
         </div>
       </div>
@@ -272,8 +258,8 @@ const testimonials = [
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
               </svg>
             </div>
-            <h3 class="text-[16px] font-bold mb-1.5">Weekly payouts</h3>
-            <p class="text-[var(--color-text-secondary)] text-[14px] leading-relaxed">Get paid consistently, every week by direct deposit.</p>
+            <h3 class="text-[16px] font-bold mb-1.5">Clear payouts</h3>
+            <p class="text-[var(--color-text-secondary)] text-[14px] leading-relaxed">Your earnings show up in the app for every trip, with your 80% share calculated for you.</p>
           </div>
 
           <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] text-center hover:border-[#2b8659]/20 transition-colors">
@@ -283,8 +269,8 @@ const testimonials = [
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
-            <h3 class="text-[16px] font-bold mb-1.5">Local support</h3>
-            <p class="text-[var(--color-text-secondary)] text-[14px] leading-relaxed">Built for Nassau drivers. Real people, real help.</p>
+            <h3 class="text-[16px] font-bold mb-1.5">Support by phone</h3>
+            <p class="text-[var(--color-text-secondary)] text-[14px] leading-relaxed">Questions about an account or a ride? Call us on (242) 452-9911.</p>
           </div>
         </div>
       </div>
@@ -295,14 +281,14 @@ const testimonials = [
       <div class="absolute inset-0 pointer-events-none opacity-[0.03]" style="background-image: linear-gradient(#191f1c 1px, transparent 1px), linear-gradient(90deg, #191f1c 1px, transparent 1px); background-size: 60px 60px;"></div>
       <div class="relative max-w-6xl mx-auto px-6 py-20 md:py-24">
         <h2 class="text-[28px] sm:text-[36px] font-medium mb-4">Start driving in 3 steps</h2>
-        <p class="text-[var(--color-text-muted)] text-[15px] mb-12">From application to your first ride — most drivers are on the road within 48 hours.</p>
+        <p class="text-[var(--color-text-muted)] text-[15px] mb-12">From application to your first ride.</p>
 
         <!-- Steps as connected cards -->
         <div class="grid md:grid-cols-3 gap-0 md:gap-0">
           <div class="relative bg-[#2b8659]/[0.06] rounded-2xl md:rounded-r-none p-7 border border-[#2b8659]/10">
             <div class="w-12 h-12 rounded-2xl bg-[#2b8659] text-white font-bold text-[18px] flex items-center justify-center mb-5 shadow-lg shadow-[#2b8659]/20">1</div>
             <h3 class="text-[17px] font-bold mb-2">Apply</h3>
-            <p class="text-[var(--color-text-muted)] text-[14px] leading-relaxed">Submit your license, vehicle info, and phone number. The whole form takes about 5 minutes.</p>
+            <p class="text-[var(--color-text-muted)] text-[14px] leading-relaxed">Submit your license, vehicle info, and phone number.</p>
             <!-- Connector arrow (desktop) -->
             <div class="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 w-8 h-8 bg-[var(--color-surface)] rounded-full border border-[#2b8659]/15 flex items-center justify-center">
               <svg class="w-4 h-4 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
@@ -311,7 +297,7 @@ const testimonials = [
           <div class="relative bg-[#2b8659]/[0.06] rounded-2xl md:rounded-none p-7 border border-[#2b8659]/10 md:border-l-0">
             <div class="w-12 h-12 rounded-2xl bg-[#2b8659] text-white font-bold text-[18px] flex items-center justify-center mb-5 shadow-lg shadow-[#2b8659]/20">2</div>
             <h3 class="text-[17px] font-bold mb-2">Get approved</h3>
-            <p class="text-[var(--color-text-muted)] text-[14px] leading-relaxed">We verify your documents and run a background check. Vehicle inspection is free and takes 20 minutes.</p>
+            <p class="text-[var(--color-text-muted)] text-[14px] leading-relaxed">Our team reviews your documents and vehicle details. Once you're approved, you can go online.</p>
             <div class="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 w-8 h-8 bg-[var(--color-surface)] rounded-full border border-[#2b8659]/15 flex items-center justify-center">
               <svg class="w-4 h-4 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
             </div>
@@ -319,7 +305,7 @@ const testimonials = [
           <div class="bg-[#2b8659]/[0.06] rounded-2xl md:rounded-l-none p-7 border border-[#2b8659]/10 md:border-l-0">
             <div class="w-12 h-12 rounded-2xl bg-[#2b8659] text-white font-bold text-[18px] flex items-center justify-center mb-5 shadow-lg shadow-[#2b8659]/20">3</div>
             <h3 class="text-[17px] font-bold mb-2">Start earning</h3>
-            <p class="text-[var(--color-text-muted)] text-[14px] leading-relaxed">Download the RideUp Driver app, go online, and accept your first ride. You get paid weekly by direct deposit.</p>
+            <p class="text-[var(--color-text-muted)] text-[14px] leading-relaxed">Open RideUp, go online, and accept your first ride. Payouts are arranged directly with RideUp.</p>
           </div>
         </div>
       </div>
@@ -342,13 +328,13 @@ const testimonials = [
 
       <div class="relative max-w-6xl mx-auto px-6 py-20 md:py-28">
         <h2 class="text-[28px] sm:text-[36px] font-medium mb-3">What you actually earn</h2>
-        <p class="text-[var(--color-text-muted)] text-[15px] mb-10 max-w-lg">Real route examples across Nassau. You keep 80% of every fare — here's what that looks like.</p>
+        <p class="text-[var(--color-text-muted)] text-[15px] mb-10 max-w-lg">Example routes priced with our standard-car rates. You keep 80% of every fare — here's what that looks like.</p>
 
         <!-- Earnings table -->
         <div class="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] overflow-x-auto shadow-sm mb-8">
-          <div class="min-w-[480px]">
+          <div>
             <!-- Header -->
-            <div class="grid grid-cols-[1fr_auto_auto_auto] gap-4 px-6 py-3 bg-[var(--color-surface-secondary)] text-[12px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
+            <div class="grid grid-cols-[1fr_auto_auto_auto] gap-3 sm:gap-4 px-4 sm:px-6 py-3 bg-[var(--color-surface-secondary)] text-[12px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
               <span>Route</span>
               <span class="text-right">Distance</span>
               <span class="text-right">Fare</span>
@@ -358,7 +344,7 @@ const testimonials = [
             <div
               v-for="(ex, i) in earningsExamples"
               :key="i"
-              class="grid grid-cols-[1fr_auto_auto_auto] gap-4 px-6 py-4 items-center"
+              class="grid grid-cols-[1fr_auto_auto_auto] gap-3 sm:gap-4 px-4 sm:px-6 py-4 items-center"
               :class="i < earningsExamples.length - 1 ? 'border-b border-[var(--color-border)]' : ''"
             >
               <div class="flex items-center gap-3">
@@ -367,7 +353,7 @@ const testimonials = [
                   <div class="w-px h-3 bg-[var(--color-text-primary)]/12"></div>
                   <div class="w-2 h-2 rounded bg-[var(--color-surface-secondary)]"></div>
                 </div>
-                <span class="text-[14px] font-medium">{{ ex.route }}</span>
+                <span class="text-[13px] sm:text-[14px] font-medium leading-tight">{{ ex.route }}</span>
               </div>
               <span class="text-[14px] text-[var(--color-text-secondary)] text-right">{{ ex.distance }}</span>
               <span class="text-[14px] text-[var(--color-text-secondary)] text-right">{{ ex.fare }}</span>
@@ -380,61 +366,21 @@ const testimonials = [
         <div class="grid sm:grid-cols-3 gap-4">
           <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] shadow-sm">
             <div class="text-[var(--color-text-muted)] text-[13px] font-medium mb-1">Part-time (15 trips/week)</div>
-            <div class="text-[30px] font-semibold">$200–400</div>
-            <div class="text-[12px] text-[var(--color-text-muted)] mt-1">per week after commission</div>
+            <div class="text-[30px] font-semibold">≈ {{ weeklyExample(15) }}</div>
+            <div class="text-[12px] text-[var(--color-text-muted)] mt-1">per week, for illustration</div>
           </div>
           <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] shadow-sm">
             <div class="text-[var(--color-text-muted)] text-[13px] font-medium mb-1">Full-time (40 trips/week)</div>
-            <div class="text-[30px] font-semibold">$550–900</div>
-            <div class="text-[12px] text-[var(--color-text-muted)] mt-1">per week after commission</div>
+            <div class="text-[30px] font-semibold">≈ {{ weeklyExample(40) }}</div>
+            <div class="text-[12px] text-[var(--color-text-muted)] mt-1">per week, for illustration</div>
           </div>
           <div class="bg-[#2b8659] rounded-2xl p-6 text-white shadow-lg shadow-[#2b8659]/15">
-            <div class="text-white/70 text-[13px] font-medium mb-1">Your commission rate</div>
+            <div class="text-white/70 text-[13px] font-medium mb-1">You keep</div>
             <div class="text-[30px] font-semibold">80%</div>
-            <div class="text-[12px] text-white/50 mt-1">of every fare, every time</div>
+            <div class="text-[12px] text-white/50 mt-1">of every fare</div>
           </div>
         </div>
-        <p class="text-[12px] text-[var(--color-text-muted)] mt-4">Earnings vary based on time, demand, and trips completed. Figures shown are estimates based on Nassau route averages.</p>
-      </div>
-    </section>
-
-    <!-- ==================== DRIVER TESTIMONIALS ==================== -->
-    <section class="relative overflow-hidden">
-      <div class="absolute top-16 right-[6%] w-48 h-48 rounded-full border-2 border-[#2b8659]/6 hidden lg:block"></div>
-      <div class="absolute bottom-12 left-[4%] w-24 h-24 rounded-full border border-[#2b8659]/8 hidden lg:block"></div>
-
-      <div class="relative max-w-6xl mx-auto px-6 py-20 md:py-24">
-        <h2 class="text-[28px] sm:text-[36px] font-medium mb-4">Hear from RideUp drivers</h2>
-        <p class="text-[var(--color-text-muted)] text-[15px] mb-12">Real drivers, real feedback from across New Providence.</p>
-        <div class="grid md:grid-cols-3 gap-5">
-          <div
-            v-for="t in testimonials"
-            :key="t.name"
-            class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] hover:border-[#2b8659]/15 transition-colors"
-          >
-            <!-- Avatar + name -->
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-11 h-11 rounded-full bg-[#2b8659]/15 flex items-center justify-center text-[#236e49] font-bold text-[16px]">
-                {{ t.name.charAt(0) }}
-              </div>
-              <div>
-                <div class="text-[15px] font-bold">{{ t.name }}</div>
-                <div class="text-[12px] text-[var(--color-text-muted)]">{{ t.area }} · {{ t.months }} months</div>
-              </div>
-            </div>
-            <!-- Quote -->
-            <p class="text-[14px] text-[var(--color-text-secondary)] leading-relaxed mb-4">"{{ t.quote }}"</p>
-            <!-- Trip count -->
-            <div class="flex items-center gap-2">
-              <div class="w-5 h-5 rounded bg-[#2b8659]/10 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <span class="text-[13px] font-semibold text-[#236e49]">{{ t.trips }}</span>
-            </div>
-          </div>
-        </div>
+        <p class="text-[12px] text-[var(--color-text-muted)] mt-4">Illustration only, not a guarantee: the weekly figures multiply the average of the example routes above by the number of trips. Actual earnings depend on when you drive, demand and trip length.</p>
       </div>
     </section>
 
@@ -485,29 +431,18 @@ const testimonials = [
                   </svg>
                 </div>
                 <div>
-                  <div class="text-white text-[15px] font-semibold mb-1">Local phone support</div>
-                  <div class="text-white/45 text-[14px]">Call <a href="tel:+12424529911" class="text-[var(--color-brand)] hover:underline">(242) 452-9911</a> — real people in Nassau, not a call center</div>
+                  <div class="text-white text-[15px] font-semibold mb-1">Phone support</div>
+                  <div class="text-white/45 text-[14px]">Call <a href="tel:+12424529911" class="text-[var(--color-brand)] hover:underline">(242) 452-9911</a> for help with your account or a ride</div>
                 </div>
               </div>
-              <div class="flex items-start gap-4">
-                <div class="w-10 h-10 rounded-xl bg-[var(--color-surface)]/[0.06] flex items-center justify-center shrink-0 mt-0.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                </div>
-                <div>
-                  <div class="text-white text-[15px] font-semibold mb-1">Commercial liability coverage</div>
-                  <div class="text-white/45 text-[14px]">Every trip is covered while you have a rider in the vehicle</div>
-                </div>
-              </div>
-              <div class="flex items-start gap-4">
+                            <div class="flex items-start gap-4">
                 <div class="w-10 h-10 rounded-xl bg-[var(--color-surface)]/[0.06] flex items-center justify-center shrink-0 mt-0.5">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
                 <div>
-                  <div class="text-white text-[15px] font-semibold mb-1">Verified riders only</div>
+                  <div class="text-white text-[15px] font-semibold mb-1">Riders pay by card</div>
                   <div class="text-white/45 text-[14px]">Every rider has a payment card on file before they can request a ride</div>
                 </div>
               </div>
@@ -532,7 +467,7 @@ const testimonials = [
 
       <div class="relative max-w-6xl mx-auto px-6 py-20 md:py-24 text-center">
         <h2 class="text-[28px] sm:text-[36px] font-medium mb-3">Ready to start earning?</h2>
-        <p class="text-[var(--color-text-muted)] text-[15px] mb-8 max-w-lg mx-auto">Join 200+ drivers already earning with RideUp across New Providence. No lease, no upfront fees.</p>
+        <p class="text-[var(--color-text-muted)] text-[15px] mb-8 max-w-lg mx-auto">Apply to drive with RideUp across New Providence and earn on your own schedule. No lease, no upfront fees.</p>
         <button
           @click="goToApply"
           class="inline-flex items-center gap-2 px-8 py-4 bg-[#2b8659] hover:bg-[#236e49] text-white font-bold rounded-xl text-[16px] transition-colors active:scale-[0.98] shadow-lg shadow-[#2b8659]/20 mb-4"
@@ -543,7 +478,7 @@ const testimonials = [
           </svg>
         </button>
         <div class="flex flex-wrap justify-center gap-x-5 gap-y-1 text-[13px] text-[var(--color-text-muted)]">
-          <span>5-minute application</span>
+          <span>Simple online application</span>
           <span class="text-[var(--color-text-muted)]">|</span>
           <span>Use your own car</span>
           <span class="text-[var(--color-text-muted)]">|</span>
@@ -558,7 +493,7 @@ const testimonials = [
       <div class="max-w-6xl mx-auto px-6 py-14 grid sm:grid-cols-4 gap-8">
         <div>
           <div class="text-lg font-semibold mb-3">Ride<span class="text-[var(--color-brand)]">Up</span></div>
-          <p class="text-white/40 text-[13px] leading-relaxed">Nassau's on-demand ride service. Available 24/7 across New Providence.</p>
+          <p class="text-white/40 text-[13px] leading-relaxed">Nassau's on-demand ride service across New Providence.</p>
         </div>
         <div>
           <div class="text-[12px] font-bold text-white/30 uppercase tracking-wider mb-3">For riders</div>
