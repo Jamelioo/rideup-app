@@ -303,11 +303,15 @@ async function requestRide() {
       if (createErr || !newRider) { error.value = 'Could not create your rider profile. Please try again.'; isSubmitting.value = false; return }
       rider = newRider
     }
+    const riderName = user.user_metadata?.name || user.email?.split('@')[0] || 'Rider'
     const { data: ride, error: rideErr } = await supabase.from('rides').insert({
       rider_id: rider.id, status: 'requested',
+      rider_name: riderName,
       pickup_address: pickup.value.address, pickup_lat: pickup.value.lat, pickup_lng: pickup.value.lng,
       dropoff_address: dropoff.value.address, dropoff_lat: dropoff.value.lat, dropoff_lng: dropoff.value.lng,
-      vehicle_type: selectedVehicle.value, distance_miles: distanceMiles.value, fare_cents: fare,
+      vehicle_type: selectedVehicle.value, distance_miles: distanceMiles.value,
+      duration_minutes: durationMinutes.value || Math.round((distanceMiles.value || 1) * 3),
+      fare_cents: fare,
     }).select().single()
     if (rideErr) { error.value = 'Something went wrong requesting your ride. Please try again.'; isSubmitting.value = false; return }
 
