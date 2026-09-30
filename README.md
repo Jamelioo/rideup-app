@@ -104,7 +104,7 @@ dashboard settings.
 | `SUPABASE_SERVICE_ROLE_KEY` | every protected `/api/*` route (they refuse to run without it) |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | payments + webhook (listen for `checkout.session.completed` and `payment_intent.payment_failed`) |
 | `CRON_SECRET` | `/api/dispatch-scheduled` |
-| `CANCEL_FEE_CENTS`, `CANCEL_GRACE_SECONDS` | optional rider cancellation fee (off when `CANCEL_FEE_CENTS` is 0/unset) |
+| `CANCEL_FEE_CENTS`, `CANCEL_GRACE_SECONDS` | rider cancellation fee (default $5.00 = 500; set 0 to disable) |
 | `RESEND_API_KEY`, `EMAIL_FROM` | driver approval emails |
 
 ### Scheduled rides and stale requests

@@ -6,11 +6,11 @@ import { cancellationFeeCents } from './_fees.js'
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
 
-// Cancellation fee (off by default). A rider who cancels after the free grace period, once a driver has
+// Cancellation fee ($5.00 by default; set CANCEL_FEE_CENTS=0 to turn it off). A rider who cancels after the free grace period, once a driver has
 // accepted, pays a flat fee (never more than the fare) taken from the card hold. Driver/admin cancels are free.
-//   CANCEL_FEE_CENTS      e.g. 300 for $3.00 (0 or unset = no fee)
+//   CANCEL_FEE_CENTS      default 500 ($5.00); 0 = no fee
 //   CANCEL_GRACE_SECONDS  free window after the driver accepts (default 120)
-const FEE_CENTS = Math.max(0, parseInt(process.env.CANCEL_FEE_CENTS || '0', 10) || 0)
+const FEE_CENTS = Math.max(0, parseInt(process.env.CANCEL_FEE_CENTS || '500', 10) || 0)
 const GRACE_SECONDS = Math.max(0, parseInt(process.env.CANCEL_GRACE_SECONDS || '120', 10) || 0)
 
 // Releases a payment hold. Only the ride's rider, its driver, or an admin may call it,

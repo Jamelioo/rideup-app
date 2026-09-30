@@ -215,3 +215,5 @@ Rule applied: a public claim stays only if the product or code backs it up; busi
 - **Admin tables** (drivers, rides, users) become stacked cards on phones.
 - **CSP**: the report-only policy now reports to `/api/csp-report`, which logs violations to Vercel logs so you can see what to allow before enforcing it.
 - **e2e**: the 3 login-redirect tests skip automatically in demo mode.
+
+**Update:** cancellation fee is now **on at $5.00** (2-minute free window after a driver accepts; capped at the fare; driver cancels free). Terms and Support FAQ updated to match. Override with `CANCEL_FEE_CENTS` / `CANCEL_GRACE_SECONDS`; `CANCEL_FEE_CENTS=0` disables it.
