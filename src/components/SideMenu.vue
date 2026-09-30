@@ -11,14 +11,17 @@ const isDriverRoute = computed(() => route.path.startsWith('/driver'))
 const drawerRef = ref(null)
 const isDriver = ref(false)
 
+const isApprovedDriver = ref(false)
+
 onMounted(async () => {
   if (!user.value || !supabaseConfigured) return
   const { data } = await supabase
     .from('drivers')
-    .select('id')
+    .select('id, approved')
     .eq('auth_user_id', user.value.id)
     .maybeSingle()
   isDriver.value = !!data
+  isApprovedDriver.value = !!data?.approved
 })
 
 const props = defineProps({
@@ -67,7 +70,9 @@ const menuItems = computed(() => {
       { label: 'Scheduled Rides', route: '/scheduled-rides', icon: 'calendar', requiresAuth: true },
     )
 
-    if (!isDriver.value) {
+    if (isApprovedDriver.value) {
+      items.push({ label: 'Switch to Driver', route: '/driver/dashboard', icon: 'swap', requiresAuth: true })
+    } else if (!isDriver.value) {
       items.push({ label: 'Drive with RideUp', route: '/driver/apply', icon: 'car', requiresAuth: false })
     }
 
