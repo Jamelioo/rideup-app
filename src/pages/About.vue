@@ -9,12 +9,6 @@ function goBack() {
 
 const menuItems = [
   {
-    label: 'Rate the app',
-    icon: 'star',
-    hasChevron: true,
-    href: 'https://apps.apple.com',
-  },
-  {
     label: 'Follow us on social media',
     icon: 'share',
     hasChevron: true,

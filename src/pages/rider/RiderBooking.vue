@@ -308,27 +308,47 @@ async function requestRide() {
   await createRideForUser(user)
 }
 
+// One place that finds (or creates) the signed-in user's rider row.
+// Sign-up creates a bare row via a database trigger, so guest details are written onto it when given.
+async function ensureRider(user, guestInfo = null) {
+  const { data: existing } = await supabase
+    .from('riders')
+    .select('id, name, phone, payment_method_id')
+    .eq('auth_user_id', user.id)
+    .maybeSingle()
+
+  if (existing) {
+    if (guestInfo && (existing.name !== guestInfo.name || existing.phone !== guestInfo.phone)) {
+      await supabase
+        .from('riders')
+        .update({ name: guestInfo.name, phone: guestInfo.phone, is_guest: true })
+        .eq('id', existing.id)
+    }
+    return existing
+  }
+
+  const { data: created, error: createErr } = await supabase
+    .from('riders')
+    .insert({
+      auth_user_id: user.id,
+      name: guestInfo?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Rider',
+      email: user.email || '',
+      phone: guestInfo?.phone || user.phone || '',
+      is_guest: !!guestInfo,
+    })
+    .select('id, name, phone, payment_method_id')
+    .single()
+  return createErr ? null : created
+}
+
 async function createRideForUser(user, guestInfo = null) {
   isSubmitting.value = true
   error.value = null
   const fare = fareEstimates.value[selectedVehicle.value]
 
   try {
-    let { data: rider } = await supabase.from('riders').select('id, payment_method_id').eq('auth_user_id', user.id).maybeSingle()
-    if (!rider) {
-      const riderName = guestInfo?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Rider'
-      const riderPhone = guestInfo?.phone || user.phone || ''
-      const riderEmail = user.email || ''
-      const { data: newRider, error: createErr } = await supabase.from('riders').insert({
-        auth_user_id: user.id,
-        name: riderName,
-        email: riderEmail,
-        phone: riderPhone,
-        is_guest: !!guestInfo,
-      }).select('id, payment_method_id').single()
-      if (createErr || !newRider) { error.value = 'Could not create your rider profile. Please try again.'; isSubmitting.value = false; return }
-      rider = newRider
-    }
+    const rider = await ensureRider(user, guestInfo)
+    if (!rider) { error.value = 'Could not create your rider profile. Please try again.'; isSubmitting.value = false; return }
 
     // Enforce: no ride without a payment method on file
     if (!rider.payment_method_id) {
@@ -388,20 +408,11 @@ async function handleGuestSubmit({ name, phone, cardElement, stripe }) {
       return
     }
 
-    let { data: rider } = await supabase.from('riders').select('id').eq('auth_user_id', data.user.id).maybeSingle()
-    if (!rider) {
-      const { data: newRider, error: createErr } = await supabase.from('riders').insert({
-        auth_user_id: data.user.id,
-        name,
-        phone,
-        is_guest: true,
-      }).select('id').single()
-      if (createErr || !newRider) {
-        if (guestSheetRef.value) guestSheetRef.value.reset()
-        error.value = 'Could not create your profile. Please try again.'
-        return
-      }
-      rider = newRider
+    const guestRider = await ensureRider(data.user, { name, phone })
+    if (!guestRider) {
+      if (guestSheetRef.value) guestSheetRef.value.reset()
+      error.value = 'Could not create your profile. Please try again.'
+      return
     }
 
     await saveCardForUser(data.user, cardElement, stripe)
@@ -451,17 +462,8 @@ async function scheduleRide({ date, time, summary }) {
   try {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { error.value = 'Please log in to schedule a ride.'; isScheduling.value = false; return }
-    let { data: rider } = await supabase.from('riders').select('id').eq('auth_user_id', user.id).maybeSingle()
-    if (!rider) {
-      const { data: newRider, error: createErr } = await supabase.from('riders').insert({
-        auth_user_id: user.id,
-        name: user.user_metadata?.name || user.email?.split('@')[0] || 'Rider',
-        email: user.email,
-        phone: user.phone || '',
-      }).select('id').single()
-      if (createErr || !newRider) { error.value = 'Could not create your rider profile.'; isScheduling.value = false; return }
-      rider = newRider
-    }
+    const rider = await ensureRider(user)
+    if (!rider) { error.value = 'Could not create your rider profile.'; isScheduling.value = false; return }
     const { error: insertErr } = await supabase.from('scheduled_rides').insert({
       rider_id: rider.id,
       pickup_address: pickup.value.address,

@@ -12,6 +12,8 @@ const promos = ref([])
 const loading = ref(true)
 const successBanner = ref('')
 
+const PROMOS_ENABLED = false
+
 // Sample valid promo codes for demonstration
 const validCodes = {
   RIDEUP10: { discount: '$10 off', amount: 10, type: 'fixed', expiry: '2027-01-31' },
@@ -31,6 +33,12 @@ function loadPromos() {
 }
 
 async function handleApplyCode(code) {
+  // Promo codes need a server-side table and validation at booking before they can change a fare.
+  // Until then, don't pretend a code was applied.
+  if (!PROMOS_ENABLED) {
+    return { success: false, message: 'Promo codes are not available yet. Check back soon.' }
+  }
+
   // Check if already applied
   if (promos.value.some((p) => p.code === code)) {
     return { success: false, message: 'This code has already been applied' }

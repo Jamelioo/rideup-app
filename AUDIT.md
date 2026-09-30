@@ -154,3 +154,29 @@ Screenshots were taken with Playwright/Chromium in demo mode at 390px (light + d
 | 23 | Committed test-results | **Fixed** — removed and gitignored. |
 
 Deploy order now: run migrations 002 then 003, set `SUPABASE_SERVICE_ROLE_KEY` and `CRON_SECRET`, add the Stripe webhook events above, then deploy.
+
+
+## Remediation status — Medium items
+
+| # | Item | Status |
+|---|------|--------|
+| 24 | HTML injection in driver emails | **Fixed** (earlier) — names are escaped. |
+| 25 | `v-html` in `AdminLayout` | **Fixed** — sidebar icons render as real SVG elements. |
+| 26 | Rate limiter | **Improved** — keys on Vercel's edge-set client IP, not the spoofable `x-forwarded-for`; now on every user-facing endpoint. Still in-memory and per-instance, so best-effort (documented in code); use Vercel WAF rules for hard limits. |
+| 27 | Raw error messages returned | **Fixed** — no endpoint returns `err.message`. |
+| 28 | No CSP / security headers | **Fixed** — `vercel.json` sets HSTS, nosniff, X-Frame-Options, Referrer-Policy, Permissions-Policy, and an **enforced** CSP limited to `frame-ancestors/object-src/base-uri/form-action`. A full allow-list CSP (Stripe, Maps, Supabase, Vercel) ships as **Report-Only** on purpose: check the browser console on a real deploy, fix any violations, then promote it to enforced. |
+| 29 | Open `leads` table | **Fixed** — migration 004: one row per number per source, DB-side format check, strict insert policy (tested). A script rotating random numbers is still possible; add Turnstile/WAF if it happens. |
+| 30 | Dead `_redirects`, redundant rewrite | **Fixed.** |
+| 31 | Maps key exposure | **Documented** — `.env.example` and README say to restrict it by referrer/API and set a quota alert. Must be done in Google Cloud. |
+| 32 | Outdated Stripe doc | **Rewritten** for the real card-on-file flow. |
+| — | `verify-session` unauthenticated | **Fixed** — sign-in required and the session must belong to the caller's ride. |
+
+**Copy / legal / code quality**
+- Terms and Privacy rewritten to describe what the app actually does (guest booking, hold-then-capture payments, driver fee, location and trip sharing, providers, retention, children), dated today. **Have a lawyer review before launch**: governing law, your actual retention periods and the exact cancellation terms are not specified.
+- Referrals no longer promise $5 credits, and Promotions no longer claims to apply codes (there is no server-side promo system); both say "coming soon". "Rate the app" (no native app) removed.
+- `DEMO_MODE` now needs `VITE_DEMO_MODE=true` or no Supabase URL; a missing Maps key alone no longer flips a real deploy into fake-data mode (and demo mode disables the route guards).
+- Rider-profile creation de-duplicated into one `ensureRider()`; this also fixes guest name/phone not being saved onto the trigger-created rider row.
+- Driver state, ride and realtime subscriptions are reset on sign-out.
+- Added `npm test` (11 tests: fare rates incl. parity values with the DB trigger, payout, admin check, rate limiter).
+
+**Still open (your call, not code):** marketing claims on the landing pages ("200+ drivers", named testimonials with trip counts, "background check", "5 minutes", mock earnings figure); the referral code shown on the Referrals page is not redeemable; admin tables on phones; cancellation fee; anonymous sign-in limits in the Supabase dashboard; refund/dispute webhooks; the 3 e2e login-redirect tests fail in demo mode (the guards are intentionally off there) and need real keys or a test-mode flag.

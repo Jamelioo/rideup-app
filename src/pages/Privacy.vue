@@ -21,36 +21,56 @@ function goBack() {
     </div>
 
     <div class="max-w-2xl mx-auto px-5 py-8 space-y-6 text-[15px] leading-relaxed text-[var(--color-text-secondary)]">
-      <p class="text-[13px] text-[var(--color-text-muted)]">Last updated: September 1, 2025</p>
+      <p class="text-[13px] text-[var(--color-text-muted)]">Last updated: September 30, 2026</p>
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Information We Collect</h2>
-        <p>When you use RideUp, we collect information you provide directly, including your name, email address, phone number, and payment information. We also collect location data when you request or take a ride.</p>
+        <p>Information you give us: your name, email address, phone number, and (for drivers) license, vehicle and document details. Ride information: pickup and drop-off locations, trip times, fares, ratings and in-app messages. Location: your device location while you request or take a ride, and drivers' location while they are online or on a trip. Payment: your card is entered directly with Stripe. We store Stripe customer and payment-method identifiers, plus the card brand and last four digits so we can show them on receipts. Guest bookings create a temporary account so your ride and receipt can be linked to you.</p>
       </section>
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">How We Use Your Information</h2>
-        <p>We use your information to provide and improve our ride services, process payments, communicate with you about your rides, and ensure the safety of our platform.</p>
+        <p>To provide and improve rides, match riders with drivers, process payments, send receipts and service messages, provide support, keep the platform safe and prevent fraud, and meet legal obligations.</p>
       </section>
 
       <section>
-        <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Data Sharing</h2>
-        <p>We share your pickup location and name with drivers when you request a ride. We do not sell your personal information to third parties.</p>
+        <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Who We Share It With</h2>
+        <p>Drivers see your name, pickup and drop-off locations, and the messages you send them for your ride; you see your driver's name, vehicle, plate, rating and phone number. If you use trip sharing, the trusted contacts you choose can see your trip details. We do not sell your personal information.</p>
       </section>
 
       <section>
-        <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Data Security</h2>
-        <p>We use industry-standard encryption and security measures to protect your personal information. Your payment data is processed securely and never stored on our servers.</p>
+        <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Service Providers</h2>
+        <p>We use Supabase (database and sign-in), Stripe (payments), Google Maps (maps, address search and routing), Vercel (hosting and privacy-friendly usage analytics), and Resend (service emails to drivers). These providers process data for us under their own terms and privacy policies.</p>
+      </section>
+
+      <section>
+        <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Retention</h2>
+        <p>We keep account, ride and payment records for as long as your account is active and as needed for accounting, safety, dispute resolution and legal requirements. You can ask us to delete your account and personal data; some records may be kept where the law requires it.</p>
+      </section>
+
+      <section>
+        <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Security</h2>
+        <p>We use encryption in transit and access controls to protect your information. No system is perfectly secure, so please use a strong, unique password.</p>
       </section>
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Your Rights</h2>
-        <p>You can request access to, correction of, or deletion of your personal data at any time by contacting us at <a href="tel:+12424529911" class="text-[var(--color-brand)] font-semibold">(242) 452-9911</a>.</p>
+        <p>You can ask to access, correct or delete your personal data at any time by contacting us at <a href="tel:+12424529911" class="text-[#2b8659] font-semibold">(242) 452-9911</a> or <a href="mailto:support@rideupnassau.com" class="text-[#2b8659] font-semibold">support@rideupnassau.com</a>.</p>
+      </section>
+
+      <section>
+        <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Children</h2>
+        <p>RideUp is not intended for people under 18 and we do not knowingly collect their information.</p>
+      </section>
+
+      <section>
+        <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Changes</h2>
+        <p>If we change this policy in a meaningful way we will update the date above and, where appropriate, tell you in the app.</p>
       </section>
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Contact Us</h2>
-        <p>If you have questions about this privacy policy, contact us at <a href="tel:+12424529911" class="text-[var(--color-brand)] font-semibold">(242) 452-9911</a> or email <a href="mailto:support@rideupnassau.com" class="text-[var(--color-brand)] font-semibold">support@rideupnassau.com</a>.</p>
+        <p>Questions about this policy? Contact us at <a href="tel:+12424529911" class="text-[#2b8659] font-semibold">(242) 452-9911</a> or <a href="mailto:support@rideupnassau.com" class="text-[#2b8659] font-semibold">support@rideupnassau.com</a>.</p>
       </section>
     </div>
   </div>
