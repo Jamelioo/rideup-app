@@ -382,10 +382,13 @@ async function saveCardForUser(user, cardElement, stripe) {
   const res = await apiPost('/api/create-setup-intent', {
     name: user.user_metadata?.name || user.email?.split('@')[0] || 'Rider',
   })
-  const { client_secret, customer_id, error: apiError } = await res.json()
-  if (apiError) throw new Error(apiError)
+  const setup = await res.json().catch(() => ({}))
+  if (!res.ok || !setup.client_secret) {
+    console.error('create-setup-intent failed', res.status, setup)
+    throw new Error(setup.error || `Couldn't start card setup (error ${res.status}). Please try again.`)
+  }
 
-  const { setupIntent, error: stripeError } = await stripe.confirmCardSetup(client_secret, {
+  const { setupIntent, error: stripeError } = await stripe.confirmCardSetup(setup.client_secret, {
     payment_method: { card: cardElement },
   })
   if (stripeError) throw new Error(stripeError.message)
@@ -393,9 +396,12 @@ async function saveCardForUser(user, cardElement, stripe) {
   // The server re-verifies the SetupIntent with Stripe and stores the card (clients can't write it).
   const saveRes = await apiPost('/api/save-payment-method', { setupIntentId: setupIntent.id })
   const saved = await saveRes.json().catch(() => ({}))
-  if (!saveRes.ok || !saved.success) throw new Error('Could not save your card. Please try again.')
+  if (!saveRes.ok || !saved.success) {
+    console.error('save-payment-method failed', saveRes.status, saved)
+    throw new Error(saved.error || `Your card was verified but couldn't be saved (error ${saveRes.status}). Please try again.`)
+  }
 
-  return { customer_id, payment_method_id: setupIntent.payment_method }
+  return { customer_id: setup.customer_id, payment_method_id: setupIntent.payment_method }
 }
 
 async function handleGuestSubmit({ name, phone, cardElement, stripe }) {
@@ -440,8 +446,9 @@ async function handleCardSubmit({ cardElement, stripe }) {
     showCardSheet.value = false
     await createRideForUser(user)
   } catch (err) {
-    if (cardSheetRef.value) cardSheetRef.value.reset()
-    error.value = err.message || 'Could not save card. Please try again.'
+    const message = err.message || 'Could not save card. Please try again.'
+    if (cardSheetRef.value) { cardSheetRef.value.reset(); cardSheetRef.value.setError(message) }
+    error.value = message
   }
 }
 

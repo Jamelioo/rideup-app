@@ -36,14 +36,20 @@ async function mountCardElement() {
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
   if (!cardMountRef.value) return
 
+  // Stripe's iframe can't read CSS variables, so resolve the theme colours to real values first.
+  const css = getComputedStyle(document.documentElement)
+  const textColor = css.getPropertyValue('--color-text-primary').trim() || '#191f1c'
+  const isDark = document.documentElement.classList.contains('dark')
+
   elements = stripe.elements()
   cardElement = elements.create('card', {
     style: {
       base: {
-        color: 'var(--color-text-primary, #fff)',
-        fontFamily: 'inherit',
-        fontSize: '14px',
-        '::placeholder': { color: 'var(--color-text-muted, #888)' },
+        color: textColor,
+        iconColor: textColor,
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '16px', // 16px also stops iOS Safari zooming into the field
+        '::placeholder': { color: isDark ? '#9aa0a6' : '#6b7280' },
       },
       invalid: { color: '#ef4444' },
     },
@@ -75,7 +81,11 @@ function reset() {
   cardError.value = null
 }
 
-defineExpose({ reset })
+function setError(message) {
+  error.value = message
+}
+
+defineExpose({ reset, setError })
 </script>
 
 <template>
