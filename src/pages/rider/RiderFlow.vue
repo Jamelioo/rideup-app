@@ -3,8 +3,10 @@ import { ref } from 'vue'
 import RiderBooking from './RiderBooking.vue'
 import SearchingForDriver from './SearchingForDriver.vue'
 import HarborBackdrop from '../../components/HarborBackdrop.vue'
+import AccountConversionCard from '../../components/AccountConversionCard.vue'
 import { DEMO_MODE } from '../../lib/demoMode'
 import { formatFare } from '../../lib/pricing'
+import { supabase } from '../../lib/supabase'
 
 const step = ref('booking')
 const activeRide = ref(null)
@@ -14,9 +16,21 @@ const messages = ref([
   { from: 'driver', text: "I'll be there in a few mins" },
 ])
 const draft = ref('')
+const isGuest = ref(false)
+
+async function checkIfGuest() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  const { data: rider } = await supabase.from('riders').select('is_guest').eq('auth_user_id', user.id).maybeSingle()
+  isGuest.value = rider?.is_guest === true
+}
 
 function handleRequested(ride) { activeRide.value = ride; step.value = 'searching' }
-function handleMatched(rideOrMatch) { matchInfo.value = rideOrMatch; step.value = 'matched' }
+function handleMatched(rideOrMatch) {
+  matchInfo.value = rideOrMatch
+  step.value = 'matched'
+  checkIfGuest()
+}
 function handleCancelled() { activeRide.value = null; matchInfo.value = null; step.value = 'booking' }
 function startOver() { activeRide.value = null; matchInfo.value = null; step.value = 'booking'; showChat.value = false }
 
@@ -72,6 +86,9 @@ function sendMessage() {
         </div>
       </div>
 
+
+        <!-- Guest account conversion -->
+        <AccountConversionCard v-if="isGuest" @converted="isGuest = false" @skipped="isGuest = false" class="mt-4 !mx-0" />
 
       <button @click="startOver" class="text-[var(--color-text-muted)] text-[13px] underline underline-offset-2 mt-5 text-center py-2">
         {{ DEMO_MODE ? 'Start another demo request' : 'Back' }}
