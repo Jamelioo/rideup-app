@@ -161,7 +161,7 @@ watch(() => props.isOpen, async (open) => {
                 {{ displayName }}
               </p>
               <button
-                class="text-sm font-medium text-[#2b8659] mt-0.5 hover:text-[#236e49] transition-colors"
+                class="text-sm font-medium text-[var(--color-brand)] mt-0.5 hover:text-[#236e49] transition-colors"
                 @click="handleNavigate('/profile')"
               >
                 Edit profile

@@ -51,7 +51,7 @@ async function handleConvert() {
 <template>
   <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-5 mx-6 mb-4">
     <div v-if="success" class="text-center py-2">
-      <div class="text-[#2b8659] text-[15px] font-bold">Account created!</div>
+      <div class="text-[var(--color-brand)] text-[15px] font-bold">Account created!</div>
       <div class="text-[12px] text-[var(--color-text-muted)] mt-1">You can now log in anytime.</div>
     </div>
     <template v-else>

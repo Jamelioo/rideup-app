@@ -53,7 +53,7 @@ function statusColor(status) {
   return {
     pending: 'text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)]',
     uploaded: 'text-amber-600 bg-amber-50',
-    approved: 'text-[#2b8659] bg-[#2b8659]/10',
+    approved: 'text-[var(--color-brand)] bg-[#2b8659]/10',
     rejected: 'text-red-500 bg-red-50',
   }[status] || 'text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)]'
 }
@@ -135,10 +135,10 @@ function goBack() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)]">
+  <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)]">
     <!-- Top bar -->
     <div class="flex items-center justify-between px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]">
+      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -203,8 +203,8 @@ function goBack() {
 
       <!-- Info note -->
       <div class="mt-6 bg-[var(--color-surface-secondary)] rounded-2xl p-4">
-        <p class="text-[13px] text-[#2b8659] font-medium mb-1">Required for approval</p>
-        <p class="text-[12px] text-[#2b8659]/70 leading-relaxed">All four documents must be uploaded and approved before you can start accepting rides. Documents are typically reviewed within 24 hours.</p>
+        <p class="text-[13px] text-[var(--color-brand)] font-medium mb-1">Required for approval</p>
+        <p class="text-[12px] text-[var(--color-brand)]/70 leading-relaxed">All four documents must be uploaded and approved before you can start accepting rides. Documents are typically reviewed within 24 hours.</p>
       </div>
 
       <!-- Back to profile -->
@@ -216,7 +216,7 @@ function goBack() {
 
     <!-- Toast -->
     <Transition name="fade">
-      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[var(--color-text-primary)] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
+      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#191f1c] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
         {{ toast }}
       </div>
     </Transition>

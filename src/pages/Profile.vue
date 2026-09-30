@@ -71,15 +71,15 @@ async function handleLogout() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
+  <div class="min-h-dvh bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top Bar -->
     <div class="flex items-center justify-between px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center">
+      <button @click="goBack" class="w-10 h-10 flex items-center justify-center" aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
-      <button @click="router.push('/edit-profile')" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]">
+      <button @click="router.push('/edit-profile')" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Edit profile">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
         </svg>
@@ -95,7 +95,7 @@ async function handleLogout() {
 
       <!-- Rating display -->
       <div class="flex items-center gap-1.5 mt-2">
-        <svg class="w-4 h-4 text-[#2b8659]" viewBox="0 0 24 24" fill="currentColor">
+        <svg class="w-4 h-4 text-[var(--color-brand)]" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
         </svg>
         <span class="text-[15px] font-bold">{{ riderRating !== null ? Number(riderRating).toFixed(1) : '--' }}</span>
@@ -119,7 +119,7 @@ async function handleLogout() {
           </svg>
           <span class="text-base">Home</span>
         </div>
-        <button @click="goToSavedPlaces" class="text-[#2b8659] text-sm font-bold uppercase tracking-wide">Add</button>
+        <button @click="goToSavedPlaces" class="text-[var(--color-brand)] text-sm font-bold uppercase tracking-wide">Add</button>
       </div>
 
       <div class="flex items-center justify-between py-4 border-b border-[var(--color-border)]">
@@ -129,7 +129,7 @@ async function handleLogout() {
           </svg>
           <span class="text-base">Work</span>
         </div>
-        <button @click="goToSavedPlaces" class="text-[#2b8659] text-sm font-bold uppercase tracking-wide">Add</button>
+        <button @click="goToSavedPlaces" class="text-[var(--color-brand)] text-sm font-bold uppercase tracking-wide">Add</button>
       </div>
     </div>
 
@@ -137,7 +137,7 @@ async function handleLogout() {
     <div class="px-5 mt-2">
       <button @click="router.push('/trusted-contacts')" class="w-full flex items-center justify-between py-4 border-b border-[var(--color-border)]">
         <div class="flex items-center gap-3">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
           <span class="text-base">Safety</span>
@@ -152,7 +152,7 @@ async function handleLogout() {
     <div class="px-5">
       <button @click="router.push('/promotions')" class="w-full flex items-center justify-between py-4 border-b border-[var(--color-border)]">
         <div class="flex items-center gap-3">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
           </svg>
           <span class="text-base">Promotions</span>
@@ -167,7 +167,7 @@ async function handleLogout() {
     <div class="px-5">
       <button @click="router.push('/referrals')" class="w-full flex items-center justify-between py-4 border-b border-[var(--color-border)]">
         <div class="flex items-center gap-3">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
           </svg>
           <span class="text-base">Invite Friends</span>
@@ -226,7 +226,7 @@ async function handleLogout() {
 
     <!-- Toast -->
     <Transition name="fade">
-      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[var(--color-text-primary)] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
+      <div v-if="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#191f1c] text-white text-[13px] font-medium px-5 py-3 rounded-full shadow-lg">
         {{ toast }}
       </div>
     </Transition>

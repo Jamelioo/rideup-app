@@ -19,70 +19,76 @@ let timeoutTimer = null
 let elapsedTimer = null
 let pollTimer = null
 
-async function navigateToActiveRide(matchData) {
-  driverFound.value = true
+// Everything the "matched" screen and the live ride screen need about the driver.
+// Drivers' rows are private, so riders read them through the get_ride_driver RPC (own rides only).
+async function buildMatch(rideRow) {
+  let match = {
+    driver_name: rideRow.driver_name || 'Your driver',
+    vehicle: rideRow.vehicle || '',
+    plate: rideRow.plate || '',
+    rating: rideRow.rating ?? null,
+    phone: rideRow.phone || '',
+    eta_minutes: rideRow.eta_minutes || null,
+  }
 
-  // Fetch actual driver details from DB
-  let driverName = matchData.driver_name || 'Your driver'
-  let vehicle = matchData.vehicle || ''
-  let plate = matchData.plate || ''
-  let rating = matchData.rating || 5.0
-  let etaMinutes = matchData.eta_minutes || null
-
-  if (matchData.driver_id && !matchData.demo) {
-    const { data: driverData } = await supabase
-      .from('drivers')
-      .select('name, vehicle, license_plate, rating')
-      .eq('id', matchData.driver_id)
-      .single()
-    if (driverData) {
-      driverName = driverData.name || driverName
-      vehicle = driverData.vehicle || vehicle
-      plate = driverData.license_plate || plate
-      rating = driverData.rating || rating
+  if (rideRow.driver_id && !rideRow.demo) {
+    const { data } = await supabase.rpc('get_ride_driver', { p_ride_id: rideRow.id })
+    const d = Array.isArray(data) ? data[0] : data
+    if (d) {
+      match = {
+        driver_name: d.name || match.driver_name,
+        vehicle: [d.vehicle_color, d.vehicle_make, d.vehicle_model].filter(Boolean).join(' '),
+        plate: d.license_plate || '',
+        rating: d.rating ?? null,
+        phone: d.phone || '',
+        eta_minutes: match.eta_minutes,
+      }
     }
   }
 
-  // Estimate ETA from ride duration if available
-  const rideData = ride.value || matchData
-  if (!etaMinutes && rideData.duration_minutes) {
-    etaMinutes = Math.max(2, Math.round(rideData.duration_minutes * 0.3))
+  // Rough pickup ETA from trip duration when we don't have a real one
+  if (!match.eta_minutes) {
+    const duration = (ride.value || rideRow).duration_minutes
+    match.eta_minutes = duration ? Math.max(2, Math.round(duration * 0.3)) : 5
   }
-  etaMinutes = etaMinutes || 5
+  return match
+}
 
-  // Parse vehicle string if it contains " · " separator
-  const parts = vehicle.split(' \u00b7 ')
-  const vehicleName = parts[0] || vehicle || 'Vehicle'
-  const plateNum = parts[1] || plate || ''
-
+function navigateToActiveRide(rideRow, match) {
   setTimeout(() => {
     router.push({
       name: 'active-ride',
-      params: { rideId: matchData.id || props.rideId },
+      params: { rideId: rideRow.id || props.rideId },
       query: {
-        driverName,
-        rating,
-        vehicle: vehicleName,
-        plate: plateNum,
-        eta: etaMinutes,
-        pickupLat: matchData.pickup_lat || ride.value?.pickup_lat || '',
-        pickupLng: matchData.pickup_lng || ride.value?.pickup_lng || '',
-        dropoffLat: matchData.dropoff_lat || ride.value?.dropoff_lat || '',
-        dropoffLng: matchData.dropoff_lng || ride.value?.dropoff_lng || '',
+        driverName: match.driver_name,
+        rating: match.rating ?? '',
+        vehicle: match.vehicle,
+        plate: match.plate,
+        phone: match.phone,
+        eta: match.eta_minutes,
+        pickupLat: rideRow.pickup_lat || ride.value?.pickup_lat || '',
+        pickupLng: rideRow.pickup_lng || ride.value?.pickup_lng || '',
+        dropoffLat: rideRow.dropoff_lat || ride.value?.dropoff_lat || '',
+        dropoffLng: rideRow.dropoff_lng || ride.value?.dropoff_lng || '',
       },
     })
   }, 1500)
 }
 
+async function onMatched(rideRow) {
+  driverFound.value = true
+  const match = await buildMatch(rideRow)
+  emit('matched', { ...rideRow, ...match })
+  navigateToActiveRide(rideRow, match)
+}
+
 onMounted(async () => {
   if (DEMO_MODE) {
     demoTimer = setTimeout(() => {
-      const matchData = {
+      onMatched({
         id: props.rideId, status: 'accepted', driver_name: 'Marcus Rolle',
-        vehicle: 'Silver Toyota Corolla \u00b7 TX 4471', rating: 4.9, eta_minutes: 4, demo: true,
-      }
-      emit('matched', matchData)
-      navigateToActiveRide(matchData)
+        vehicle: 'Silver Toyota Corolla', plate: 'TX 4471', rating: 4.9, eta_minutes: 4, demo: true,
+      })
     }, 3500)
     return
   }
@@ -92,10 +98,7 @@ onMounted(async () => {
   }, 1000)
 
   // 90-second timeout
-  timeoutTimer = setTimeout(() => {
-    timedOut.value = true
-    if (elapsedTimer) clearInterval(elapsedTimer)
-  }, 90000)
+  timeoutTimer = setTimeout(expireRequest, 90000)
 
   const { data } = await supabase.from('rides').select('*').eq('id', props.rideId).single()
   ride.value = data
@@ -107,8 +110,9 @@ onMounted(async () => {
     if (updatedRide.status === 'accepted') {
       driverFound.value = true
       if (pollTimer) clearInterval(pollTimer)
-      emit('matched', updatedRide)
-      navigateToActiveRide(updatedRide)
+      if (timeoutTimer) clearTimeout(timeoutTimer)
+      if (elapsedTimer) clearInterval(elapsedTimer)
+      onMatched(updatedRide)
     } else if (updatedRide.status === 'cancelled' && updatedRide.cancel_reason === 'payment_failed') {
       if (elapsedTimer) clearInterval(elapsedTimer)
       if (timeoutTimer) clearTimeout(timeoutTimer)
@@ -141,14 +145,23 @@ onUnmounted(() => {
   if (pollTimer) clearInterval(pollTimer)
 })
 
+// Nobody answered: withdraw the request so it doesn't sit in drivers' queues.
+async function expireRequest() {
+  if (driverFound.value) return
+  timedOut.value = true
+  if (elapsedTimer) clearInterval(elapsedTimer)
+  if (pollTimer) clearInterval(pollTimer)
+  if (!DEMO_MODE) {
+    await supabase.from('rides')
+      .update({ status: 'cancelled', cancel_reason: 'no_drivers', cancelled_at: new Date().toISOString() })
+      .eq('id', props.rideId)
+      .eq('status', 'requested')
+  }
+}
+
+// A cancelled request can't be revived, so "Try again" returns to the booking screen (same trip, fresh request).
 function retrySearch() {
-  timedOut.value = false
-  elapsedSeconds.value = 0
-  elapsedTimer = setInterval(() => { elapsedSeconds.value++ }, 1000)
-  timeoutTimer = setTimeout(() => {
-    timedOut.value = true
-    if (elapsedTimer) clearInterval(elapsedTimer)
-  }, 90000)
+  emit('cancelled')
 }
 
 async function cancelRequest() {
@@ -159,18 +172,18 @@ async function cancelRequest() {
 </script>
 
 <template>
-  <div class="relative min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col overflow-hidden">
+  <div class="relative min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col overflow-hidden">
     <HarborBackdrop />
     <div class="relative px-6 pt-[max(2rem,env(safe-area-inset-top))] pb-4 flex items-center gap-3">
       <button @click="cancelRequest" class="w-10 h-10 rounded-full bg-[var(--color-surface-secondary)] border border-[var(--color-border)] flex items-center justify-center text-base" aria-label="Cancel">←</button>
-      <div class="text-lg font-semibold">Ride<span class="text-[#2b8659]">Up</span></div>
+      <div class="text-lg font-semibold">Ride<span class="text-[var(--color-brand)]">Up</span></div>
     </div>
     <div class="relative flex-1 flex flex-col items-center justify-center gap-6 px-6">
       <template v-if="!timedOut && !paymentFailed">
         <div class="relative w-28 h-28 rounded-full border border-[#2b8659]/35 flex items-center justify-center">
           <div class="absolute -inset-4 rounded-full border border-[#2b8659]/20"></div>
           <div class="absolute -inset-8 rounded-full border border-[#2b8659]/10"></div>
-          <div class="w-12 h-12 bg-[#2b8659] rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(88,204,2,0.35)] animate-pulse">
+          <div class="w-12 h-12 bg-[#2b8659] rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(43,134,89,0.35)] animate-pulse">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 17h.01M16 17h.01M3 11l1.5-5A2 2 0 016.4 4h11.2a2 2 0 011.9 1.38L21 11M3 11v5a1 1 0 001 1h1m16-6v5a1 1 0 01-1 1h-1M3 11h18" />
             </svg>

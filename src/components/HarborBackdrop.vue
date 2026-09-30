@@ -6,7 +6,7 @@ defineProps({ showRoute: { type: Boolean, default: false } })
 <template>
   <div class="absolute inset-0 overflow-hidden pointer-events-none">
     <div class="absolute inset-0"
-         style="background: radial-gradient(ellipse 110% 55% at 15% 0%, rgba(88,204,2,0.10), transparent 55%), radial-gradient(ellipse 90% 45% at 90% 100%, rgba(88,204,2,0.08), transparent 60%), linear-gradient(180deg, var(--color-surface) 0%, var(--color-surface-secondary) 100%);">
+         style="background: radial-gradient(ellipse 110% 55% at 15% 0%, rgba(43,134,89,0.10), transparent 55%), radial-gradient(ellipse 90% 45% at 90% 100%, rgba(43,134,89,0.08), transparent 60%), linear-gradient(180deg, var(--color-surface) 0%, var(--color-surface-secondary) 100%);">
     </div>
     <svg v-if="showRoute" class="absolute inset-0 w-full h-full opacity-60" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice">
       <path d="M 60 180 C 140 220 180 260 220 340 S 320 480 300 600"

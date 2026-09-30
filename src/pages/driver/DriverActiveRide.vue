@@ -117,6 +117,9 @@ function finish() {
 // --- Real-time GPS broadcasting ---
 let gpsWatchId = null
 let locationChannel = null
+let statusChannel = null
+let lastDbLocationWrite = 0
+const DB_LOCATION_INTERVAL_MS = 10_000 // live position goes over the realtime channel; the DB row is only a fallback
 
 onMounted(() => {
   if (DEMO_MODE || !supabaseConfigured || !currentRide.value) return
@@ -124,6 +127,17 @@ onMounted(() => {
   // Subscribe to a Supabase Realtime channel for this ride
   locationChannel = supabase.channel(`ride-location-${currentRide.value.id}`)
   locationChannel.subscribe()
+
+  // If the rider cancels, get the driver out of the ride and back online.
+  statusChannel = supabase.channel(`driver-ride-status-${currentRide.value.id}`)
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rides', filter: `id=eq.${currentRide.value.id}` }, async (payload) => {
+      if (payload.new?.status === 'cancelled' && currentRide.value) {
+        await supabase.from('drivers').update({ status: 'online' }).eq('id', driver.value.id)
+        completeRide()
+        router.push('/driver/dashboard')
+      }
+    })
+    .subscribe()
 
   // Watch driver's GPS and broadcast every update
   if (navigator.geolocation) {
@@ -137,11 +151,15 @@ onMounted(() => {
             payload: { lat: latitude, lng: longitude },
           })
         }
-        // Also update the ride record periodically
-        supabase.from('rides').update({
-          driver_lat: latitude,
-          driver_lng: longitude,
-        }).eq('id', currentRide.value.id).then(() => {})
+        // Also update the ride record, at most every 10s
+        const now = Date.now()
+        if (now - lastDbLocationWrite >= DB_LOCATION_INTERVAL_MS && currentRide.value) {
+          lastDbLocationWrite = now
+          supabase.from('rides').update({
+            driver_lat: latitude,
+            driver_lng: longitude,
+          }).eq('id', currentRide.value.id).then(() => {})
+        }
       },
       () => {},
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
@@ -152,6 +170,7 @@ onMounted(() => {
 onUnmounted(() => {
   if (gpsWatchId !== null) navigator.geolocation.clearWatch(gpsWatchId)
   if (locationChannel) supabase.removeChannel(locationChannel)
+  if (statusChannel) supabase.removeChannel(statusChannel)
 })
 
 async function cancelRide() {
@@ -179,7 +198,7 @@ const slideThumbStyle = computed(() => {
 </script>
 
 <template>
-  <div class="relative h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] overflow-hidden"
+  <div class="relative h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)] overflow-hidden"
        @mousemove="onSlideMove" @mouseup="onSlideEnd"
        @touchmove.passive="onSlideMove" @touchend="onSlideEnd">
     <!-- Map -->
@@ -194,7 +213,7 @@ const slideThumbStyle = computed(() => {
     <div v-if="currentRide && phase !== 'completed'" class="md:hidden absolute top-0 right-0 z-10 pr-5 pt-[max(2rem,env(safe-area-inset-top))]">
       <a :href="getNavUrl()" target="_blank" rel="noopener"
          class="flex items-center gap-2 bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.12)] rounded-full px-4 py-2.5 active:scale-95 transition-transform">
-        <svg class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg class="w-5 h-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
         </svg>
         <span class="text-[13px] font-semibold text-[var(--color-text-primary)]">Navigate</span>
@@ -215,10 +234,10 @@ const slideThumbStyle = computed(() => {
             </svg>
           </div>
           <h2 class="text-2xl font-bold mb-1">Trip Complete</h2>
-          <div class="text-[28px] font-bold text-[#2b8659] my-3">+{{ formatFare(currentRide?.fare_cents) }}</div>
+          <div class="text-[28px] font-bold text-[var(--color-brand)] my-3">+{{ formatFare(currentRide?.fare_cents) }}</div>
           <div class="text-[13px] text-[var(--color-text-muted)]">{{ currentRide?.distance_miles != null ? currentRide.distance_miles.toFixed(1) : '0.0' }} mi · {{ Math.round(currentRide?.duration_minutes || 0) }} min</div>
           <button @click="finish"
-                  class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mt-6 transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(88,204,2,0.3)]">
+                  class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mt-6 transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(43,134,89,0.3)]">
             Done
           </button>
         </div>
@@ -234,21 +253,21 @@ const slideThumbStyle = computed(() => {
 
           <div class="flex items-center gap-2 mb-3">
             <span class="w-2.5 h-2.5 rounded-full bg-[#2b8659] animate-pulse"></span>
-            <span class="text-[13px] font-semibold text-[#2b8659]">{{ phaseLabel }}</span>
+            <span class="text-[13px] font-semibold text-[var(--color-brand)]">{{ phaseLabel }}</span>
           </div>
 
           <!-- Rider info card -->
           <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-4 mb-4">
             <div class="flex items-center gap-3 mb-3">
               <div class="w-10 h-10 rounded-full bg-[#2b8659]/15 flex items-center justify-center flex-shrink-0">
-                <svg class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <svg class="w-5 h-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                 </svg>
               </div>
               <div class="flex-1">
                 <div class="text-[15px] font-bold">{{ currentRide.rider_name || 'Rider' }}</div>
               </div>
-              <div class="text-[15px] font-bold text-[#2b8659]">{{ formatFare(currentRide.fare_cents) }}</div>
+              <div class="text-[15px] font-bold text-[var(--color-brand)]">{{ formatFare(currentRide.fare_cents) }}</div>
             </div>
 
             <!-- Pickup -->
@@ -285,6 +304,8 @@ const slideThumbStyle = computed(() => {
             <div v-if="!slideComplete"
                  class="absolute top-[4px] left-[4px] w-[48px] h-[48px] bg-[var(--color-surface)] rounded-xl flex items-center justify-center cursor-grab active:cursor-grabbing shadow-sm"
                  :style="{ transform: `translateX(${slideProgress * (slideContainer ? slideContainer.offsetWidth - 56 : 200)}px)` }"
+                 role="button" tabindex="0" aria-label="Complete trip"
+                 @keydown.enter.prevent="handleSlideComplete" @keydown.space.prevent="handleSlideComplete"
                  @mousedown.prevent="onSlideStart"
                  @touchstart.prevent="onSlideStart">
               <svg class="w-5 h-5 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -292,10 +313,14 @@ const slideThumbStyle = computed(() => {
               </svg>
             </div>
           </div>
+          <button v-if="phase === 'in_progress' && !slideComplete" @click="handleSlideComplete"
+                  class="w-full mb-3 -mt-1 py-2 text-[13px] font-medium text-[var(--color-text-secondary)] underline underline-offset-2">
+            Can't slide? Tap to complete trip
+          </button>
 
           <!-- Regular action button (not in_progress) -->
           <button v-if="phaseAction" @click="advancePhase"
-                  class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(88,204,2,0.3)]">
+                  class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(43,134,89,0.3)]">
             {{ phaseAction }}
           </button>
 
@@ -319,7 +344,7 @@ const slideThumbStyle = computed(() => {
     <!-- DESKTOP: Side panel -->
     <div class="hidden md:flex absolute inset-y-0 left-0 z-10 w-[400px] bg-[var(--color-surface)] shadow-[4px_0_24px_rgba(0,0,0,0.08)] flex-col">
       <div class="px-6 pt-8 pb-4">
-        <div class="text-[22px] font-bold tracking-tight">Ride<span class="text-[#2b8659]">Up</span> <span class="text-[12px] font-sans font-normal text-[var(--color-text-muted)] ml-0.5">Driver</span></div>
+        <div class="text-[22px] font-bold tracking-tight">Ride<span class="text-[var(--color-brand)]">Up</span> <span class="text-[12px] font-sans font-normal text-[var(--color-text-muted)] ml-0.5">Driver</span></div>
       </div>
       <div class="flex-1 overflow-y-auto px-6 pb-8">
         <div v-if="phase === 'completed'" class="text-center py-8">
@@ -329,10 +354,10 @@ const slideThumbStyle = computed(() => {
             </svg>
           </div>
           <h2 class="text-2xl font-bold mb-1">Trip Complete</h2>
-          <div class="text-[28px] font-bold text-[#2b8659] my-3">+{{ formatFare(currentRide?.fare_cents) }}</div>
+          <div class="text-[28px] font-bold text-[var(--color-brand)] my-3">+{{ formatFare(currentRide?.fare_cents) }}</div>
           <div class="text-[13px] text-[var(--color-text-muted)] mb-6">{{ currentRide?.distance_miles != null ? currentRide.distance_miles.toFixed(1) : '0.0' }} mi · {{ Math.round(currentRide?.duration_minutes || 0) }} min</div>
           <button @click="finish"
-                  class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] hover:bg-[#236e49] shadow-[0_4px_16px_rgba(88,204,2,0.3)]">
+                  class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] hover:bg-[#236e49] shadow-[0_4px_16px_rgba(43,134,89,0.3)]">
             Done
           </button>
         </div>
@@ -343,28 +368,28 @@ const slideThumbStyle = computed(() => {
             <template v-for="(step, idx) in phaseSteps" :key="step.key">
               <div class="flex-1">
                 <div class="h-1 rounded-full" :class="step.done || step.active ? 'bg-[#2b8659]' : 'bg-[var(--color-border)]'"></div>
-                <div class="text-[10px] text-center mt-1" :class="step.active ? 'text-[#2b8659] font-semibold' : 'text-[var(--color-text-muted)]'">{{ step.label }}</div>
+                <div class="text-[11px] text-center mt-1" :class="step.active ? 'text-[var(--color-brand)] font-semibold' : 'text-[var(--color-text-muted)]'">{{ step.label }}</div>
               </div>
             </template>
           </div>
 
           <div class="flex items-center gap-2 mb-5">
             <span class="w-2.5 h-2.5 rounded-full bg-[#2b8659] animate-pulse"></span>
-            <span class="text-[14px] font-semibold text-[#2b8659]">{{ phaseLabel }}</span>
+            <span class="text-[14px] font-semibold text-[var(--color-brand)]">{{ phaseLabel }}</span>
           </div>
 
           <!-- Rider info card -->
           <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-5 mb-5">
             <div class="flex items-center gap-3 mb-4">
               <div class="w-11 h-11 rounded-full bg-[#2b8659]/15 flex items-center justify-center flex-shrink-0">
-                <svg class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <svg class="w-5 h-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                 </svg>
               </div>
               <div class="flex-1">
                 <div class="text-[16px] font-bold">{{ currentRide.rider_name || 'Rider' }}</div>
               </div>
-              <div class="text-[17px] font-bold text-[#2b8659]">{{ formatFare(currentRide.fare_cents) }}</div>
+              <div class="text-[17px] font-bold text-[var(--color-brand)]">{{ formatFare(currentRide.fare_cents) }}</div>
             </div>
 
             <!-- Route -->
@@ -407,6 +432,8 @@ const slideThumbStyle = computed(() => {
             <div v-if="!slideComplete"
                  class="absolute top-[4px] left-[4px] w-[48px] h-[48px] bg-[var(--color-surface)] rounded-xl flex items-center justify-center cursor-grab active:cursor-grabbing shadow-sm"
                  :style="{ transform: `translateX(${slideProgress * (340 - 56)}px)` }"
+                 role="button" tabindex="0" aria-label="Complete trip"
+                 @keydown.enter.prevent="handleSlideComplete" @keydown.space.prevent="handleSlideComplete"
                  @mousedown.prevent="onSlideStart"
                  @touchstart.prevent="onSlideStart">
               <svg class="w-5 h-5 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -414,10 +441,14 @@ const slideThumbStyle = computed(() => {
               </svg>
             </div>
           </div>
+          <button v-if="phase === 'in_progress' && !slideComplete" @click="handleSlideComplete"
+                  class="w-full mb-3 -mt-1 py-2 text-[13px] font-medium text-[var(--color-text-secondary)] underline underline-offset-2">
+            Can't slide? Tap to complete trip
+          </button>
 
           <!-- Regular action button -->
           <button v-if="phaseAction" @click="advancePhase"
-                  class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] hover:bg-[#236e49] shadow-[0_4px_16px_rgba(88,204,2,0.3)]">
+                  class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] hover:bg-[#236e49] shadow-[0_4px_16px_rgba(43,134,89,0.3)]">
             {{ phaseAction }}
           </button>
           <button v-if="phase === 'accepted'" @click="cancelRide"

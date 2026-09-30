@@ -7,7 +7,7 @@
       <div v-for="card in metricCards" :key="card.label" class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5 hover:shadow-md transition-shadow">
         <p class="text-sm text-[var(--color-text-muted)] mb-1">{{ card.label }}</p>
         <p class="text-2xl font-bold text-[var(--color-text-primary)]">{{ card.value }}</p>
-        <p :class="['text-xs mt-1', card.changePositive ? 'text-[#2b8659]' : 'text-red-500']">
+        <p :class="['text-xs mt-1', card.changePositive ? 'text-[var(--color-brand)]' : 'text-red-500']">
           {{ card.change }} vs yesterday
         </p>
       </div>
@@ -75,7 +75,7 @@ import { supabase, supabaseConfigured } from '../../lib/supabase'
 const metricCards = ref([
   { label: 'Rides Today', value: '142', change: '+12%', changePositive: true },
   { label: 'Active Drivers', value: '38', change: '+3', changePositive: true },
-  { label: 'Revenue Today', value: '$4,280.50', change: '+8.2%', changePositive: true },
+  { label: 'Gross Bookings Today', value: '$4,280.50', change: '+8.2%', changePositive: true },
   { label: 'New Signups', value: '23', change: '-2', changePositive: false },
 ])
 
@@ -135,7 +135,7 @@ onMounted(async () => {
     metricCards.value = [
       { label: 'Total Rides', value: String(ridesRes.count || 0), change: '', changePositive: true },
       { label: 'Active Drivers', value: String(driversRes.count || 0), change: '', changePositive: true },
-      { label: 'Total Revenue', value: `$${(totalRevenue / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, change: '', changePositive: true },
+      { label: 'Gross Bookings', value: `$${(totalRevenue / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, change: '', changePositive: true },
       { label: 'Total Users', value: String(ridersRes.count || 0), change: '', changePositive: true },
     ]
 

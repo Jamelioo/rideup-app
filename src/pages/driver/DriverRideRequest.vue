@@ -85,7 +85,7 @@ function handleDecline() {
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
               <div class="w-12 h-12 rounded-full bg-[#2b8659]/15 flex items-center justify-center">
-                <svg class="w-6 h-6 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <svg class="w-6 h-6 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                 </svg>
               </div>
@@ -95,7 +95,7 @@ function handleDecline() {
               </div>
             </div>
             <div class="text-right">
-              <div class="text-[22px] font-bold text-[#2b8659]">{{ formatFare(request.fare_cents) }}</div>
+              <div class="text-[22px] font-bold text-[var(--color-brand)]">{{ formatFare(request.fare_cents) }}</div>
               <div class="text-[11px] text-[var(--color-text-muted)]">est. fare</div>
             </div>
           </div>
@@ -135,7 +135,7 @@ function handleDecline() {
         <!-- Actions -->
         <div class="mt-auto pb-6 max-w-md mx-auto w-full" style="padding-bottom: max(1.5rem, env(safe-area-inset-bottom));">
           <button @click="handleAccept"
-                  class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[16px] transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(88,204,2,0.3)]">
+                  class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[16px] transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(43,134,89,0.3)]">
             Accept Ride
           </button>
           <button @click="handleDecline"

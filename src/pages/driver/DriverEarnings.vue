@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { formatFare } from '../../lib/pricing'
+import { formatFare, driverPayout } from '../../lib/pricing'
 import { generateFakeEarnings } from '../../lib/demoDriverMode'
 import { DEMO_MODE } from '../../lib/demoMode'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
@@ -12,7 +12,7 @@ const activeTab = ref('today')
 
 const earnings = ref(DEMO_MODE ? generateFakeEarnings() : { today: [], weeklyTotals: [0,0,0,0,0,0,0], weeklyTrips: [0,0,0,0,0,0,0] })
 
-const todayTotal = computed(() => earnings.value.today.reduce((s, t) => s + t.fare_cents, 0))
+const todayTotal = computed(() => earnings.value.today.reduce((s, t) => s + driverPayout(t), 0))
 const weeklyTotal = computed(() => earnings.value.weeklyTotals.reduce((s, v) => s + v, 0))
 const weeklyTripsTotal = computed(() => earnings.value.weeklyTrips.reduce((s, v) => s + v, 0))
 const maxDailyEarning = computed(() => Math.max(...earnings.value.weeklyTotals, 1))
@@ -34,7 +34,7 @@ onMounted(async () => {
 
     const { data: rides } = await supabase
       .from('rides')
-      .select('id, fare_cents, completed_at, created_at, rider_name, distance_miles')
+      .select('id, fare_cents, driver_payout_cents, completed_at, created_at, rider_name, distance_miles')
       .eq('driver_id', driver.id)
       .eq('status', 'completed')
       .order('completed_at', { ascending: false })
@@ -49,6 +49,7 @@ onMounted(async () => {
     earnings.value.today = todayRides.map(r => ({
       id: r.id,
       fare_cents: r.fare_cents || 0,
+      driver_payout_cents: r.driver_payout_cents,
       completed_at: r.completed_at || r.created_at,
       rider_name: r.rider_name,
       distance_miles: r.distance_miles,
@@ -64,7 +65,7 @@ onMounted(async () => {
       const d = new Date(r.completed_at || r.created_at)
       if (d >= weekStart) {
         const dayIdx = (d.getDay() + 6) % 7 // Mon=0, Sun=6
-        weekTotals[dayIdx] += r.fare_cents || 0
+        weekTotals[dayIdx] += driverPayout(r)
         weekTrips[dayIdx]++
       }
     })
@@ -89,10 +90,10 @@ function goBack() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)]">
+  <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)]">
     <!-- Top bar -->
     <div class="flex items-center justify-between px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]">
+      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -131,7 +132,7 @@ function goBack() {
               <div class="text-[14px] font-semibold">{{ trip.rider_name || 'Rider' }}</div>
               <div class="text-[11px] text-[var(--color-text-muted)] mt-0.5">{{ timeAgo(trip.completed_at) }} · {{ trip.distance_miles ? trip.distance_miles.toFixed(1) + ' mi' : '' }}</div>
             </div>
-            <div class="text-[15px] font-bold text-[#2b8659]">+{{ formatFare(trip.fare_cents) }}</div>
+            <div class="text-[15px] font-bold text-[var(--color-brand)]">+{{ formatFare(driverPayout(trip)) }}</div>
           </div>
         </div>
 
@@ -158,7 +159,7 @@ function goBack() {
             </div>
           </div>
           <div class="flex justify-between mt-2">
-            <div v-for="(label, i) in dayLabels" :key="label" class="flex-1 text-center text-[10px] font-medium"
+            <div v-for="(label, i) in dayLabels" :key="label" class="flex-1 text-center text-[11px] font-medium"
                  :class="earnings.weeklyTotals[i] > 0 ? 'text-[var(--color-text-secondary)]' : 'text-[var(--color-text-muted)]'">
               {{ label }}
             </div>
@@ -186,21 +187,21 @@ function goBack() {
           <button class="w-full flex items-center justify-between bg-[var(--color-surface-secondary)] rounded-2xl px-4 py-4 opacity-60" disabled>
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-full bg-[#2b8659]/10 flex items-center justify-center">
-                <svg class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <svg class="w-5 h-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
               <div class="text-left">
                 <p class="text-[14px] font-semibold text-[var(--color-text-primary)]">Instant Cashout</p>
-                <p class="text-[11px] text-[var(--color-text-muted)]">Transfer earnings to your bank instantly</p>
+                <p class="text-[11px] text-[var(--color-text-muted)]">Payouts are sent to you by RideUp — contact support to set up your bank details</p>
               </div>
             </div>
-            <span class="text-[10px] font-bold text-white bg-[#2b8659] px-2 py-1 rounded-full">COMING SOON</span>
+            <span class="text-[11px] font-bold text-white bg-[#2b8659] px-2 py-1 rounded-full">COMING SOON</span>
           </button>
           <button class="w-full flex items-center justify-between bg-[var(--color-surface-secondary)] rounded-2xl px-4 py-4 opacity-60" disabled>
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-full bg-[#2b8659]/10 flex items-center justify-center">
-                <svg class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <svg class="w-5 h-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
               </div>
@@ -209,7 +210,7 @@ function goBack() {
                 <p class="text-[11px] text-[var(--color-text-muted)]">Weekly automatic deposits to your account</p>
               </div>
             </div>
-            <span class="text-[10px] font-bold text-white bg-[#2b8659] px-2 py-1 rounded-full">COMING SOON</span>
+            <span class="text-[11px] font-bold text-white bg-[#2b8659] px-2 py-1 rounded-full">COMING SOON</span>
           </button>
         </div>
       </div>

@@ -60,7 +60,7 @@ function callEmergency() {
         <div v-if="activePanel === 'main'" class="px-5 pt-2 pb-8">
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-lg font-bold text-[var(--color-text-primary)]">Safety</h2>
-            <button @click="close" class="w-8 h-8 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]">
+            <button @click="close" class="w-8 h-8 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Close">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -73,7 +73,7 @@ function callEmergency() {
             class="w-full flex items-center gap-4 py-4 border-b border-[var(--color-border)] active:bg-[var(--color-surface-secondary)] transition-colors"
           >
             <div class="w-11 h-11 rounded-full bg-[#2b8659]/10 flex items-center justify-center shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#2b8659]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
               </svg>
             </div>

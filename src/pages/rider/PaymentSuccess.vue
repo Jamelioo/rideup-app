@@ -72,7 +72,8 @@ onMounted(async () => {
         if (!fareAmount.value) fareAmount.value = formatFare(ride.fare_cents)
         pickup.value = ride.pickup_address || 'Pickup'
         dropoff.value = ride.dropoff_address || 'Dropoff'
-        verified.value = true
+        // Only call it verified if the payment actually went through on the server.
+        if (['authorized', 'captured', 'paid'].includes(ride.payment_status)) verified.value = true
       }
     }
   } catch (e) {
@@ -103,7 +104,7 @@ function goHome() {
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col items-center justify-center bg-[var(--color-surface-secondary)] px-6 pt-[max(1.5rem,env(safe-area-inset-top))]">
+  <div class="flex min-h-dvh flex-col items-center justify-center bg-[var(--color-surface-secondary)] px-6 pt-[max(1.5rem,env(safe-area-inset-top))]">
     <!-- Animated Checkmark -->
     <div class="relative mb-8 flex h-24 w-24 items-center justify-center">
       <svg

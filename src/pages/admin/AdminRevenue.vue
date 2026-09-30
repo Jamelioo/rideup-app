@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6">Revenue</h1>
+    <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6">Gross Bookings</h1>
 
     <!-- Big number cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
@@ -12,7 +12,7 @@
 
     <!-- 30-day bar chart -->
     <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5 mb-8">
-      <h2 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Daily Revenue — Last 30 Days</h2>
+      <h2 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Daily Gross Bookings — Last 30 Days</h2>
       <div class="flex items-end gap-[3px] h-44 overflow-x-auto pb-2">
         <div
           v-for="(day, i) in dailyRevenue"

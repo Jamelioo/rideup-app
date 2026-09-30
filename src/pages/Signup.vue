@@ -53,10 +53,10 @@ async function handleSignup() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col">
+  <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top bar -->
     <div class="flex items-center px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]">
+      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -137,7 +137,7 @@ async function handleSignup() {
 
         <div class="text-center mt-6 text-[14px] text-[var(--color-text-muted)]">
           Already have an account?
-          <router-link to="/login" class="text-[#2b8659] font-semibold">Log in</router-link>
+          <router-link to="/login" class="text-[var(--color-brand)] font-semibold">Log in</router-link>
         </div>
       </template>
     </div>

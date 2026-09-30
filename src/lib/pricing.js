@@ -2,7 +2,7 @@
 // distance + time. Airport transfer flat rates stay on the existing
 // Stripe/WordPress setup separately.
 
-const RATES = {
+export const RATES = {
   standard: { base: 250, perMile: 165, perMinute: 20, minimum: 600 },
   xl:       { base: 450, perMile: 230, perMinute: 30, minimum: 1000 },
   premium:  { base: 700, perMile: 320, perMinute: 40, minimum: 1500 },
@@ -12,6 +12,12 @@ export function calculateFare(distanceMiles, durationMinutes, vehicleType = 'sta
   const rate = RATES[vehicleType] || RATES.standard
   const raw = rate.base + distanceMiles * rate.perMile + durationMinutes * rate.perMinute
   return Math.max(Math.round(raw), rate.minimum)
+}
+
+// What the driver keeps (fare minus the 20% platform fee). Rides created after migration 003 store it;
+// older rows fall back to the same 80% split.
+export function driverPayout(ride) {
+  return ride?.driver_payout_cents ?? Math.round((ride?.fare_cents || 0) * 0.8)
 }
 
 export function formatFare(cents) {

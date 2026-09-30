@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { supabase } from '../../lib/supabase'
+import { RATES } from '../../lib/pricing'
 
 const router = useRouter()
 const route = useRoute()
@@ -10,67 +11,57 @@ const rideId = route.params.rideId
 const loading = ref(true)
 const shareLabel = ref('Share receipt')
 
-// Placeholder receipt data — replaced by Supabase query when available
-const receipt = ref({
-  date: 'Sep 27, 2026',
-  time: '2:45 PM',
-  pickup: 'Bahamar Resort',
-  dropoff: 'Downtown Nassau',
-  baseFare: 250,
-  distanceMiles: 4.2,
-  ratePerMile: 165,
-  distanceCharge: 693,
-  durationMinutes: 12,
-  ratePerMinute: 20,
-  timeCharge: 240,
-  subtotal: 1183,
-  promoDiscount: 0,
-  total: 1183,
-  paymentLast4: '4242',
-  paymentBrand: 'Visa',
-  driverName: 'Marcus Thompson',
-  driverRating: 4.92,
-})
+const receipt = ref(null)   // stays null until a real ride is loaded — never show made-up data
+const notFound = ref(false)
 
 function formatCents(cents) {
-  return '$' + (cents / 100).toFixed(2)
+  return '$' + ((cents || 0) / 100).toFixed(2)
 }
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 onMounted(async () => {
   try {
-    const { data, error } = await supabase
-      .from('rides')
-      .select('*, driver:drivers(name, rating)')
-      .eq('id', rideId)
-      .single()
+    const { data, error } = await supabase.from('rides').select('*').eq('id', rideId).single()
+    if (error || !data) { notFound.value = true; return }
 
-    if (!error && data) {
-      const d = new Date(data.created_at)
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-      receipt.value = {
-        date: `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`,
-        time: d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-        pickup: data.pickup_address || 'Pickup',
-        dropoff: data.dropoff_address || 'Dropoff',
-        baseFare: data.base_fare || 250,
-        distanceMiles: data.distance_miles || 0,
-        ratePerMile: data.rate_per_mile || 165,
-        distanceCharge: data.distance_charge || 0,
-        durationMinutes: data.duration_minutes || 0,
-        ratePerMinute: data.rate_per_minute || 20,
-        timeCharge: data.time_charge || 0,
-        subtotal: data.subtotal || data.fare_cents || 0,
-        promoDiscount: data.promo_discount || 0,
-        total: data.fare_cents || 0,
-        paymentLast4: data.payment_last4 || '4242',
-        paymentBrand: data.payment_brand || 'Visa',
-        driverName: data.driver?.name || 'Your driver',
-        driverRating: data.driver?.rating || null,
-      }
+    // Drivers' rows are private; the RPC returns them for this ride's participants only.
+    const { data: rpc } = await supabase.rpc('get_ride_driver', { p_ride_id: rideId })
+    const driver = Array.isArray(rpc) ? rpc[0] : rpc
+
+    // Rebuild the line items from the same rates the fare was computed with.
+    const rate = RATES[data.vehicle_type] || RATES.standard
+    const miles = Number(data.distance_miles) || 0
+    const minutes = Number(data.duration_minutes) || 0
+    const total = data.fare_cents || 0
+    const distanceCharge = Math.round(miles * rate.perMile)
+    const timeCharge = Math.round(minutes * rate.perMinute)
+    const adjustment = total - (rate.base + distanceCharge + timeCharge)
+
+    const d = new Date(data.completed_at || data.created_at)
+    receipt.value = {
+      date: `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`,
+      time: d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+      pickup: data.pickup_address || 'Pickup',
+      dropoff: data.dropoff_address || 'Dropoff',
+      baseFare: rate.base,
+      distanceMiles: miles,
+      ratePerMile: rate.perMile,
+      distanceCharge,
+      durationMinutes: minutes,
+      ratePerMinute: rate.perMinute,
+      timeCharge,
+      minimumAdjustment: adjustment > 1 ? adjustment : 0, // minimum fare kicked in
+      total,
+      paymentLast4: data.payment_last4 || '',
+      paymentBrand: data.payment_brand || '',
+      paid: ['captured', 'paid'].includes(data.payment_status),
+      driverName: driver?.name || 'Your driver',
+      driverRating: driver?.rating ?? null,
     }
   } catch (err) {
     console.error('Failed to load receipt:', err)
-    // Keep placeholder data
+    notFound.value = true
   } finally {
     loading.value = false
   }
@@ -98,13 +89,13 @@ async function shareReceipt() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-surface-secondary)] px-4 pt-[max(1.5rem,env(safe-area-inset-top))] pb-6">
+  <div class="min-h-dvh bg-[var(--color-surface-secondary)] px-4 pt-[max(1.5rem,env(safe-area-inset-top))] pb-6">
     <!-- Top Bar -->
     <div class="mb-4 flex items-center">
       <button
         class="flex h-10 w-10 items-center justify-center rounded-full transition-colors active:bg-[var(--color-surface-secondary)]"
         @click="router.back()"
-      >
+       aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -113,18 +104,24 @@ async function shareReceipt() {
 
     <!-- Loading -->
     <div v-if="loading" class="flex items-center justify-center py-20">
-      <svg class="h-8 w-8 animate-spin text-[#2b8659]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <svg class="h-8 w-8 animate-spin text-[var(--color-brand)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
       </svg>
     </div>
 
     <!-- Receipt Card -->
+    <div v-else-if="notFound || !receipt" class="mx-auto max-w-md text-center py-20">
+      <p class="text-lg font-bold text-[var(--color-text-primary)] mb-2">Receipt not found</p>
+      <p class="text-sm text-[var(--color-text-secondary)] mb-6">We couldn't load this receipt. It may belong to another account.</p>
+      <button @click="router.push('/my-rides')" class="px-6 py-3 bg-[#2b8659] text-white font-bold rounded-xl text-sm">Back to my rides</button>
+    </div>
+
     <div v-else class="mx-auto max-w-md">
       <div class="rounded-2xl bg-[var(--color-surface)] px-6 py-8 shadow-sm">
         <!-- Logo -->
         <div class="mb-6 text-center">
-          <span class="text-xl font-bold text-[#2b8659]">RideUp</span>
+          <span class="text-xl font-bold text-[var(--color-brand)]">RideUp</span>
           <p class="mt-1 text-xs text-[var(--color-text-muted)]">Nassau, Bahamas</p>
         </div>
 
@@ -168,16 +165,9 @@ async function shareReceipt() {
             <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.timeCharge) }}</span>
           </div>
 
-          <div class="border-b border-[var(--color-border)]"></div>
-
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-[var(--color-text-secondary)]">Subtotal</span>
-            <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.subtotal) }}</span>
-          </div>
-
-          <div v-if="receipt.promoDiscount > 0" class="flex items-center justify-between">
-            <span class="text-sm text-[#2b8659]">Promo discount</span>
-            <span class="text-sm font-medium text-[#2b8659]">-{{ formatCents(receipt.promoDiscount) }}</span>
+          <div v-if="receipt.minimumAdjustment > 0" class="flex items-center justify-between">
+            <span class="text-sm text-[var(--color-text-secondary)]">Minimum fare adjustment</span>
+            <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.minimumAdjustment) }}</span>
           </div>
 
           <div class="border-b border-[var(--color-border)]"></div>
@@ -199,7 +189,7 @@ async function shareReceipt() {
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
             </svg>
-            <span class="text-sm font-medium text-[var(--color-text-primary)]">{{ receipt.paymentBrand }} ---- {{ receipt.paymentLast4 }}</span>
+            <span class="text-sm font-medium text-[var(--color-text-primary)]">{{ receipt.paymentLast4 ? `${receipt.paymentBrand ? receipt.paymentBrand.charAt(0).toUpperCase() + receipt.paymentBrand.slice(1) : 'Card'} •••• ${receipt.paymentLast4}` : 'Card' }}</span>
           </div>
         </div>
 

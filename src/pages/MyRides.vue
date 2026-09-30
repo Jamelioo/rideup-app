@@ -95,13 +95,13 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-surface)] text-[var(--color-text-primary)]">
+  <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)]">
     <!-- Top Bar -->
     <div class="sticky top-0 z-10 flex items-center bg-[var(--color-surface)] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
       <button
         class="flex h-10 w-10 items-center justify-center rounded-full transition-colors active:bg-[var(--color-surface-secondary)]"
         @click="router.back()"
-      >
+       aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -112,7 +112,7 @@ onMounted(async () => {
 
     <!-- Loading Spinner -->
     <div v-if="loading" class="flex items-center justify-center py-20">
-      <svg class="h-8 w-8 animate-spin text-[#2b8659]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <svg class="h-8 w-8 animate-spin text-[var(--color-brand)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
       </svg>
@@ -157,7 +157,7 @@ onMounted(async () => {
           <div v-if="ride.status === 'completed'" class="mt-3 pl-6">
             <button
               @click="router.push(`/receipt/${ride.id}`)"
-              class="rounded-lg bg-[var(--color-surface-secondary)] px-4 py-2 text-sm font-medium text-[#2b8659] transition-colors active:bg-[#2b8659]/10"
+              class="rounded-lg bg-[var(--color-surface-secondary)] px-4 py-2 text-sm font-medium text-[var(--color-brand)] transition-colors active:bg-[#2b8659]/10"
             >
               View receipt
             </button>

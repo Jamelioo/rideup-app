@@ -96,10 +96,10 @@ function formatExpiry(dateStr) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
+  <div class="min-h-dvh bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top Bar -->
     <div class="flex items-center gap-3 px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
-      <button @click="router.back()" class="w-10 h-10 flex items-center justify-center">
+      <button @click="router.back()" class="w-10 h-10 flex items-center justify-center" aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -111,10 +111,10 @@ function formatExpiry(dateStr) {
     <Transition name="fade">
       <div v-if="successBanner" class="mx-5 mb-4 max-w-lg mx-auto w-full">
         <div class="bg-[var(--color-surface-secondary)] border border-[#2b8659]/20 rounded-xl px-4 py-3 flex items-center gap-3">
-          <svg class="w-5 h-5 text-[#2b8659] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg class="w-5 h-5 text-[var(--color-brand)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
           </svg>
-          <span class="text-[14px] font-medium text-[#2b8659]">{{ successBanner }}</span>
+          <span class="text-[14px] font-medium text-[var(--color-brand)]">{{ successBanner }}</span>
         </div>
       </div>
     </Transition>
@@ -131,7 +131,7 @@ function formatExpiry(dateStr) {
         <h2 class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Your promotions</h2>
 
         <div v-if="loading" class="py-12 text-center">
-          <svg class="w-6 h-6 animate-spin text-[#2b8659] mx-auto" viewBox="0 0 24 24" fill="none">
+          <svg class="w-6 h-6 animate-spin text-[var(--color-brand)] mx-auto" viewBox="0 0 24 24" fill="none">
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.4 31.4" stroke-linecap="round" />
           </svg>
         </div>
@@ -153,11 +153,11 @@ function formatExpiry(dateStr) {
             <div>
               <div class="flex items-center gap-2 mb-1">
                 <span class="text-[15px] font-bold tracking-wider">{{ promo.code }}</span>
-                <span class="bg-[var(--color-surface-secondary)] text-[#2b8659] text-[12px] font-bold px-2 py-0.5 rounded-md">{{ promo.discount }}</span>
+                <span class="bg-[var(--color-surface-secondary)] text-[var(--color-brand)] text-[12px] font-bold px-2 py-0.5 rounded-md">{{ promo.discount }}</span>
               </div>
               <p class="text-[12px] text-[var(--color-text-muted)]">Expires {{ formatExpiry(promo.expiry) }}</p>
             </div>
-            <button @click="removePromo(promo.code)" class="text-[var(--color-text-muted)] hover:text-red-500 transition-colors p-1">
+            <button @click="removePromo(promo.code)" class="text-[var(--color-text-muted)] hover:text-red-500 transition-colors p-1" aria-label="Remove promo code">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>

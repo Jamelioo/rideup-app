@@ -62,7 +62,7 @@ async function handleApply() {
         <p
           :class="[
             'text-[13px] font-medium px-3 py-2 rounded-lg',
-            feedback.type === 'success' ? 'bg-[var(--color-surface-secondary)] text-[#2b8659]' : 'bg-red-50 text-red-600',
+            feedback.type === 'success' ? 'bg-[var(--color-surface-secondary)] text-[var(--color-brand)]' : 'bg-red-50 text-red-600',
           ]"
         >
           {{ feedback.message }}
