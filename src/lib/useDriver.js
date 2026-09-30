@@ -87,10 +87,13 @@ async function fetchDriver(authUserId) {
 
 async function pollExistingRequests() {
   if (!driver.value) return
+  // Only show rides created within the last 90 seconds
+  const cutoff = new Date(Date.now() - 90000).toISOString()
   const { data: rides } = await supabase
     .from('rides')
     .select('*')
     .eq('status', 'requested')
+    .gte('created_at', cutoff)
     .order('created_at', { ascending: false })
     .limit(1)
   if (rides && rides.length > 0) {
