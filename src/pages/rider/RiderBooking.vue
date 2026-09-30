@@ -13,6 +13,7 @@ import GoogleMap from '../../components/GoogleMap.vue'
 import HarborBackdrop from '../../components/HarborBackdrop.vue'
 import SideMenu from '../../components/SideMenu.vue'
 import ScheduleRidePicker from '../../components/ScheduleRidePicker.vue'
+import GuestInfoSheet from '../../components/GuestInfoSheet.vue'
 
 const router = useRouter()
 const menuOpen = ref(false)
@@ -37,6 +38,8 @@ const promoApplied = ref(false)
 const activeInput = ref('pickup')
 const mapRef = ref(null)
 const isLocating = ref(false)
+const showGuestSheet = ref(false)
+const guestSheetRef = ref(null)
 
 // Bottom sheet drag state
 const sheetRef = ref(null)
@@ -288,22 +291,42 @@ async function requestRide() {
     return
   }
 
-  // 1. Save ride to Supabase first
+  // Check if user is logged in
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    // Show guest info sheet instead of error
+    isSubmitting.value = false
+    showGuestSheet.value = true
+    return
+  }
+
+  // Logged-in user — proceed normally
+  await createRideForUser(user)
+}
+
+async function createRideForUser(user, guestInfo = null) {
+  isSubmitting.value = true
+  error.value = null
+  const fare = fareEstimates.value[selectedVehicle.value]
+
   try {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { error.value = 'Please log in to request a ride.'; isSubmitting.value = false; return }
     let { data: rider } = await supabase.from('riders').select('id').eq('auth_user_id', user.id).maybeSingle()
     if (!rider) {
+      const riderName = guestInfo?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Rider'
+      const riderPhone = guestInfo?.phone || user.phone || ''
+      const riderEmail = user.email || ''
       const { data: newRider, error: createErr } = await supabase.from('riders').insert({
         auth_user_id: user.id,
-        name: user.user_metadata?.name || user.email?.split('@')[0] || 'Rider',
-        email: user.email,
-        phone: user.phone || '',
+        name: riderName,
+        email: riderEmail,
+        phone: riderPhone,
+        is_guest: !!guestInfo,
       }).select('id').single()
       if (createErr || !newRider) { error.value = 'Could not create your rider profile. Please try again.'; isSubmitting.value = false; return }
       rider = newRider
     }
-    const riderName = user.user_metadata?.name || user.email?.split('@')[0] || 'Rider'
+
+    const riderName = guestInfo?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Rider'
     const { data: ride, error: rideErr } = await supabase.from('rides').insert({
       rider_id: rider.id, status: 'requested',
       rider_name: riderName,
@@ -315,13 +338,29 @@ async function requestRide() {
     }).select().single()
     if (rideErr) { error.value = 'Something went wrong requesting your ride. Please try again.'; isSubmitting.value = false; return }
 
-    // 2. Go straight to searching for driver — payment happens after ride
+    showGuestSheet.value = false
     emit('requested', ride)
     isSubmitting.value = false
   } catch (err) {
     error.value = 'Connection error. Please try again.'
-  } finally {
     isSubmitting.value = false
+  }
+}
+
+async function handleGuestSubmit({ name, phone }) {
+  error.value = null
+  try {
+    const { data, error: authErr } = await supabase.auth.signInAnonymously()
+    if (authErr || !data.user) {
+      if (guestSheetRef.value) guestSheetRef.value.reset()
+      error.value = 'Could not start your session. Please try again.'
+      return
+    }
+    await createRideForUser(data.user, { name, phone })
+    if (error.value && guestSheetRef.value) guestSheetRef.value.reset()
+  } catch (err) {
+    if (guestSheetRef.value) guestSheetRef.value.reset()
+    error.value = 'Connection error. Please try again.'
   }
 }
 
@@ -671,6 +710,7 @@ async function scheduleRide({ date, time, summary }) {
     </div>
 
     <!-- Schedule Ride Picker -->
+    <GuestInfoSheet ref="guestSheetRef" :show="showGuestSheet" @submit="handleGuestSubmit" @close="showGuestSheet = false" />
     <ScheduleRidePicker :show="showSchedulePicker" @close="showSchedulePicker = false" @confirm="scheduleRide" />
 
     <!-- Toast -->
