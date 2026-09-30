@@ -321,7 +321,7 @@ async function createRideForUser(user, guestInfo = null) {
   const fare = fareEstimates.value[selectedVehicle.value]
 
   try {
-    let { data: rider } = await supabase.from('riders').select('id').eq('auth_user_id', user.id).maybeSingle()
+    let { data: rider } = await supabase.from('riders').select('id, payment_method_id').eq('auth_user_id', user.id).maybeSingle()
     if (!rider) {
       const riderName = guestInfo?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Rider'
       const riderPhone = guestInfo?.phone || user.phone || ''
@@ -332,9 +332,16 @@ async function createRideForUser(user, guestInfo = null) {
         email: riderEmail,
         phone: riderPhone,
         is_guest: !!guestInfo,
-      }).select('id').single()
+      }).select('id, payment_method_id').single()
       if (createErr || !newRider) { error.value = 'Could not create your rider profile. Please try again.'; isSubmitting.value = false; return }
       rider = newRider
+    }
+
+    // Enforce: no ride without a payment method on file
+    if (!rider.payment_method_id) {
+      isSubmitting.value = false
+      showCardSheet.value = true
+      return
     }
 
     const riderName = guestInfo?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Rider'

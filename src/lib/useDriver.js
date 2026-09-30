@@ -131,6 +131,11 @@ async function goOffline() {
 
 function subscribeToRides() {
   if (!supabaseConfigured || !driver.value) return
+  // Clean up any existing subscription before creating a new one
+  if (rideSubscription) {
+    supabase.removeChannel(rideSubscription)
+    rideSubscription = null
+  }
   rideSubscription = supabase
     .channel('driver-rides')
     .on('postgres_changes', {

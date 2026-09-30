@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { getStripe } from '../lib/stripe'
 
 const props = defineProps({
@@ -13,6 +13,7 @@ const phone = ref('')
 const submitting = ref(false)
 const error = ref(null)
 const cardError = ref(null)
+const stripeLoading = ref(false)
 
 let stripe = null
 let elements = null
@@ -26,32 +27,45 @@ const isValid = computed(() =>
   cardComplete.value
 )
 
-onMounted(async () => {
-  stripe = await getStripe()
-})
+async function mountCardElement() {
+  if (cardElement) return // already mounted
+  if (!stripe) {
+    stripeLoading.value = true
+    stripe = await getStripe()
+    stripeLoading.value = false
+  }
+  if (!stripe) {
+    error.value = 'Payment system unavailable. Please try again later.'
+    return
+  }
+  // Wait for the DOM to render the card mount div (Teleport + Transition)
+  await nextTick()
+  // Additional frame wait for Transition to complete
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+  if (!cardMountRef.value) return
+
+  elements = stripe.elements()
+  cardElement = elements.create('card', {
+    style: {
+      base: {
+        color: 'var(--color-text-primary, #fff)',
+        fontFamily: 'inherit',
+        fontSize: '14px',
+        '::placeholder': { color: 'var(--color-text-muted, #888)' },
+      },
+      invalid: { color: '#ef4444' },
+    },
+  })
+  cardElement.mount(cardMountRef.value)
+  cardElement.on('change', (event) => {
+    cardComplete.value = event.complete
+    cardError.value = event.error ? event.error.message : null
+  })
+}
 
 watch(() => props.show, async (open) => {
-  if (open && stripe && !cardElement) {
-    await new Promise(r => setTimeout(r, 50))
-    if (!cardMountRef.value) return
-
-    elements = stripe.elements()
-    cardElement = elements.create('card', {
-      style: {
-        base: {
-          color: 'var(--color-text-primary, #fff)',
-          fontFamily: 'inherit',
-          fontSize: '14px',
-          '::placeholder': { color: 'var(--color-text-muted, #888)' },
-        },
-        invalid: { color: '#ef4444' },
-      },
-    })
-    cardElement.mount(cardMountRef.value)
-    cardElement.on('change', (event) => {
-      cardComplete.value = event.complete
-      cardError.value = event.error ? event.error.message : null
-    })
+  if (open) {
+    await mountCardElement()
   }
 })
 
@@ -118,7 +132,9 @@ defineExpose({ reset })
           <label class="block mb-5">
             <span class="text-[12px] font-medium text-[var(--color-text-muted)] mb-1 block">Card</span>
             <div ref="cardMountRef"
-                 class="bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3.5 min-h-[44px]"></div>
+                 class="bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3.5 min-h-[44px]">
+              <span v-if="stripeLoading" class="text-[13px] text-[var(--color-text-muted)]">Loading payment...</span>
+            </div>
             <p v-if="cardError" class="text-red-400 text-[12px] mt-1">{{ cardError }}</p>
           </label>
 
