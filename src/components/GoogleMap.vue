@@ -6,9 +6,11 @@ const props = defineProps({
   pickup: { type: Object, default: null },
   dropoff: { type: Object, default: null },
   driverLocation: { type: Object, default: null },
+  showTraffic: { type: Boolean, default: false }, // Google's live traffic colours (green / orange / red)
 })
 
 const emit = defineEmits(['map-tap', 'marker-drag', 'error'])
+watch(() => props.showTraffic, (on) => trafficLayer?.setMap(on ? map : null))
 const failed = ref(false)
 
 const mapRef = ref(null)
@@ -17,6 +19,7 @@ let maps = null
 let pickupMarker = null
 let dropoffMarker = null
 let driverMarker = null
+let trafficLayer = null
 let directionsService = null
 let directionsRenderer = null
 let useAdvanced = false
@@ -308,6 +311,8 @@ onMounted(async () => {
   }
 
   map = new maps.Map(mapRef.value, mapOptions)
+  trafficLayer = new maps.TrafficLayer()
+  if (props.showTraffic) trafficLayer.setMap(map)
 
   map.addListener('click', (e) => {
     emit('map-tap', { lat: e.latLng.lat(), lng: e.latLng.lng() })
