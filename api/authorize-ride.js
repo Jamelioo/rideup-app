@@ -1,6 +1,7 @@
 import Stripe from 'stripe'
 import { admin, requireUser, getDriverForUser, fail } from './_auth.js'
 import { rateLimit } from './_rateLimit.js'
+import { pushToUser, rideParticipants } from './_push.js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
@@ -111,6 +112,14 @@ export default async function handler(req, res) {
       await admin.from('rides').update({ payment_status: 'cancelled' }).eq('id', rideId)
       return res.status(409).json({ success: false, error: 'ride_unavailable' })
     }
+
+    const people = await rideParticipants(rideId)
+    await pushToUser(people.riderUserId, {
+      title: 'Driver on the way',
+      body: `${(people.driverName || 'Your driver').split(' ')[0]} accepted your ride.`,
+      url: `/ride/${rideId}`,
+      tag: `ride-${rideId}`,
+    })
 
     return res.status(200).json({ success: true, payment_intent_id: paymentIntent.id })
   } catch (err) {

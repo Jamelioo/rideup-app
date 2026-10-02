@@ -7,6 +7,8 @@ import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { apiPost } from '../../lib/api'
+import { loadSettings } from '../../lib/settings'
+import { enablePushNotifications } from '../../lib/push'
 import { loadGoogleMaps, reverseGeocode } from '../../lib/useGoogleMaps'
 import { calculateFare, formatFare, VEHICLE_TYPES } from '../../lib/pricing'
 import { DEMO_MODE, DEMO_LOCATIONS, fakeRoute } from '../../lib/demoMode'
@@ -262,7 +264,23 @@ function showToast(msg) {
 const canRequest = computed(() => pickup.value && dropoff.value && fareEstimates.value[selectedVehicle.value] && !isSubmitting.value)
 const hasRoute = computed(() => distanceMiles.value && !isCalculating.value)
 
-const emit = defineEmits(['requested'])
+const emit = defineEmits(['requested', 'existing-ride'])
+
+// Card on file, shown above the request button (Uber: "Visa •••• 4242").
+const paymentLabel = ref('')
+const hasCardOnFile = ref(false)
+const capitalize = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Card')
+async function loadPaymentMethod() {
+  if (DEMO_MODE) { paymentLabel.value = 'Visa •••• 4242'; hasCardOnFile.value = true; return }
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) { paymentLabel.value = 'Pay by card · added at the next step'; return }
+  const { data } = await supabase.from('riders').select('payment_method_id, card_brand, card_last4').eq('auth_user_id', session.user.id).maybeSingle()
+  hasCardOnFile.value = !!data?.payment_method_id
+  paymentLabel.value = hasCardOnFile.value
+    ? `${capitalize(data.card_brand)}${data.card_last4 ? ' •••• ' + data.card_last4 : ''}`
+    : 'Add a card at the next step'
+}
+onMounted(loadPaymentMethod)
 
 async function requestRide() {
   if (!canRequest.value) return
@@ -290,6 +308,13 @@ async function requestRide() {
   if (!user) {
     isSubmitting.value = false
     showGuestSheet.value = true
+    return
+  }
+
+  const settings = await loadSettings()
+  if (settings.require_verified_phone && !user.phone_confirmed_at) {
+    isSubmitting.value = false
+    router.push({ path: '/verify-phone', query: { redirect: '/book' } })
     return
   }
 
@@ -367,11 +392,30 @@ async function createRideForUser(user, guestInfo = null) {
       duration_minutes: durationMinutes.value || Math.round((distanceMiles.value || 1) * 3),
       fare_cents: fare,
     }).select().single()
-    if (rideErr) { error.value = 'Something went wrong requesting your ride. Please try again.'; isSubmitting.value = false; return }
+    if (rideErr) {
+      isSubmitting.value = false
+      if (rideErr.code === '23505') {
+        // Already has a ride in progress: take them to it instead of booking a second one.
+        showGuestSheet.value = false
+        emit('existing-ride')
+        return
+      }
+      if (/verify your phone/i.test(rideErr.message)) {
+        router.push({ path: '/verify-phone', query: { redirect: '/book' } })
+        return
+      }
+      error.value = /suspended/i.test(rideErr.message)
+        ? 'Your account is suspended. Please contact support.'
+        : 'Something went wrong requesting your ride. Please try again.'
+      return
+    }
 
     showGuestSheet.value = false
     emit('requested', ride)
     isSubmitting.value = false
+    // Wake up nearby drivers, and offer trip alerts to the rider ("driver arrived" while the app is closed).
+    apiPost('/api/trip-event', { rideId: ride.id, event: 'requested' }).catch(() => {})
+    enablePushNotifications()
   } catch (err) {
     error.value = 'Connection error. Please try again.'
     isSubmitting.value = false
@@ -442,6 +486,7 @@ async function handleCardSubmit({ cardElement, stripe }) {
     }
 
     await saveCardForUser(user, cardElement, stripe)
+    loadPaymentMethod()
 
     showCardSheet.value = false
     await createRideForUser(user)
@@ -620,10 +665,17 @@ async function scheduleRide({ date, time, summary }) {
               </div>
             </button>
           </div>
-          <div class="flex gap-2.5 mt-4">
+          <div class="sticky bottom-0 z-10 -mx-5 px-5 pt-3 pb-1 mt-3 bg-[var(--color-surface)] border-t border-[var(--color-border)]">
+            <component :is="hasCardOnFile && !DEMO_MODE ? 'router-link' : 'div'" :to="hasCardOnFile && !DEMO_MODE ? '/payments' : undefined"
+                       class="flex items-center gap-2 text-[13px] text-[var(--color-text-secondary)] mb-2.5 px-1">
+              <svg class="w-4 h-4 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+              <span class="flex-1 truncate">{{ paymentLabel || 'Card' }}</span>
+              <span v-if="hasCardOnFile && !DEMO_MODE" class="text-[var(--color-brand)] font-semibold">Change</span>
+            </component>
+          <div class="flex gap-2.5">
             <button @click="requestRide" :disabled="!canRequest"
                     class="flex-1 py-4 bg-[#2b8659] disabled:bg-[var(--color-surface-secondary)] disabled:text-[var(--color-text-muted)] text-white font-bold rounded-2xl text-[15px] transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:shadow-none">
-              {{ isSubmitting ? 'Requesting...' : 'Request Ride' }}
+              {{ isSubmitting ? 'Requesting…' : `Choose ${VEHICLE_TYPES.find(v => v.id === selectedVehicle)?.name || 'ride'}` }}
             </button>
             <button @click="showSchedulePicker = true" :disabled="!canRequest"
                     class="w-[52px] flex-shrink-0 flex items-center justify-center bg-[var(--color-surface-secondary)] disabled:bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] disabled:text-[var(--color-text-muted)] rounded-2xl transition-all active:scale-[0.97] border border-[var(--color-border)]"
@@ -632,6 +684,7 @@ async function scheduleRide({ date, time, summary }) {
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </button>
+          </div>
           </div>
         </div>
       </div>
@@ -735,10 +788,17 @@ async function scheduleRide({ date, time, summary }) {
               </div>
             </button>
           </div>
-          <div class="flex gap-2.5 mt-5">
+          <div class="sticky bottom-0 z-10 -mx-6 px-6 pt-3 pb-4 mt-4 bg-[var(--color-surface)] border-t border-[var(--color-border)]">
+            <component :is="hasCardOnFile && !DEMO_MODE ? 'router-link' : 'div'" :to="hasCardOnFile && !DEMO_MODE ? '/payments' : undefined"
+                       class="flex items-center gap-2 text-[13px] text-[var(--color-text-secondary)] mb-2.5 px-1">
+              <svg class="w-4 h-4 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+              <span class="flex-1 truncate">{{ paymentLabel || 'Card' }}</span>
+              <span v-if="hasCardOnFile && !DEMO_MODE" class="text-[var(--color-brand)] font-semibold">Change</span>
+            </component>
+          <div class="flex gap-2.5">
             <button @click="requestRide" :disabled="!canRequest"
                     class="flex-1 py-4 bg-[#2b8659] disabled:bg-[var(--color-surface-secondary)] disabled:text-[var(--color-text-muted)] text-white font-bold rounded-2xl text-[15px] transition-all hover:bg-[#236e49] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:shadow-none">
-              {{ isSubmitting ? 'Requesting...' : 'Request Ride' }}
+              {{ isSubmitting ? 'Requesting…' : `Choose ${VEHICLE_TYPES.find(v => v.id === selectedVehicle)?.name || 'ride'}` }}
             </button>
             <button @click="showSchedulePicker = true" :disabled="!canRequest"
                     class="w-[52px] flex-shrink-0 flex items-center justify-center bg-[var(--color-surface-secondary)] disabled:bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] disabled:text-[var(--color-text-muted)] rounded-2xl transition-all hover:opacity-90 active:scale-[0.97] border border-[var(--color-border)]"
@@ -747,6 +807,7 @@ async function scheduleRide({ date, time, summary }) {
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </button>
+          </div>
           </div>
         </div>
       </div>

@@ -10,7 +10,8 @@ export default async function handler(req, res) {
   if (checkRate(req)) return res.status(429).end()
 
   try {
-    const raw = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
+    const body = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : req.body
+    const raw = typeof body === 'string' ? JSON.parse(body) : body
     const reports = Array.isArray(raw) ? raw : [raw]
     for (const r of reports.slice(0, 5)) {
       const v = r?.['csp-report'] || r?.body || r || {}

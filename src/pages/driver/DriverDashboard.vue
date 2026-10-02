@@ -14,7 +14,7 @@ import DriverRideRequest from './DriverRideRequest.vue'
 
 const router = useRouter()
 const { user } = useAuth()
-const { driver, isOnline, incomingRequest, currentRide, loading: driverLoading, acceptError, fetchDriver, goOnline, goOffline } = useDriver()
+const { driver, isOnline, incomingRequest, currentRide, loading: driverLoading, acceptError, onlineError, fetchDriver, goOnline, goOffline } = useDriver()
 
 const menuOpen = ref(false)
 const todayEarnings = ref(0)
@@ -92,6 +92,11 @@ onMounted(async () => {
   if (!DEMO_MODE && user.value) {
     await fetchDriver(user.value.id)
   }
+  // A trip in progress always takes priority (e.g. after a reload or a dropped connection).
+  if (currentRide.value) {
+    router.replace('/driver/active-ride')
+    return
+  }
   await refreshStats()
   if (isOnline.value) {
     startHoursTracking()
@@ -115,8 +120,7 @@ async function toggleOnline() {
   if (isOnline.value) {
     await goOffline()
     stopHoursTracking()
-  } else {
-    await goOnline()
+  } else if (await goOnline()) {
     startHoursTracking()
   }
 }
@@ -147,9 +151,9 @@ const initials = computed(() => {
       @accepted="handleRideAccepted"
     />
 
-    <div v-if="acceptError" role="alert" class="absolute top-[max(1rem,env(safe-area-inset-top))] left-4 right-4 z-50 bg-red-600 text-white text-[14px] font-medium rounded-xl px-4 py-3 shadow-lg flex items-start gap-3">
-      <span class="flex-1">{{ acceptError }}</span>
-      <button @click="acceptError = ''" class="font-bold" aria-label="Dismiss">✕</button>
+    <div v-if="acceptError || onlineError" role="alert" class="absolute top-[max(1rem,env(safe-area-inset-top))] left-4 right-4 z-50 bg-red-600 text-white text-[14px] font-medium rounded-xl px-4 py-3 shadow-lg flex items-start gap-3">
+      <span class="flex-1">{{ acceptError || onlineError }}</span>
+      <button @click="acceptError = ''; onlineError = ''" class="font-bold min-w-[32px] min-h-[32px]" aria-label="Dismiss">✕</button>
     </div>
 
     <!-- Map fills right side on desktop, top on mobile -->

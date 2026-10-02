@@ -1,13 +1,18 @@
 <template>
   <div>
     <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6">Dashboard</h1>
+    <p v-if="loadError" class="mb-4 text-sm text-red-600" role="alert">{{ loadError }}</p>
+    <router-link v-if="openSafetyReports > 0" to="/admin/safety" class="mb-6 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">
+      <span>{{ openSafetyReports }} open safety report{{ openSafetyReports === 1 ? '' : 's' }} need review</span>
+      <span aria-hidden="true">→</span>
+    </router-link>
 
     <!-- Metric cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
       <div v-for="card in metricCards" :key="card.label" class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5 hover:shadow-md transition-shadow">
         <p class="text-sm text-[var(--color-text-muted)] mb-1">{{ card.label }}</p>
         <p class="text-2xl font-bold text-[var(--color-text-primary)]">{{ card.value }}</p>
-        <p :class="['text-xs mt-1', card.changePositive ? 'text-[var(--color-brand)]' : 'text-red-500']">
+        <p v-if="card.change" :class="['text-xs mt-1', card.changePositive ? 'text-[var(--color-brand)]' : 'text-red-500']">
           {{ card.change }} vs yesterday
         </p>
       </div>
@@ -60,6 +65,7 @@
                   <span :class="statusBadge(ride.status)">{{ ride.status }}</span>
                 </td>
               </tr>
+              <tr v-if="recentRides.length === 0"><td colspan="4" class="py-6 text-center text-[var(--color-text-muted)]">No rides today yet.</td></tr>
             </tbody>
           </table>
         </div>
@@ -71,15 +77,22 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
+import { DEMO_MODE } from '../../lib/demoMode'
 
-const metricCards = ref([
+const SAMPLE_METRICS = [
   { label: 'Rides Today', value: '142', change: '+12%', changePositive: true },
   { label: 'Active Drivers', value: '38', change: '+3', changePositive: true },
   { label: 'Gross Bookings Today', value: '$4,280.50', change: '+8.2%', changePositive: true },
   { label: 'New Signups', value: '23', change: '-2', changePositive: false },
+]
+const metricCards = ref(DEMO_MODE ? SAMPLE_METRICS : [
+  { label: 'Total Rides', value: '—', change: '' },
+  { label: 'Approved Drivers', value: '—', change: '' },
+  { label: 'Gross Bookings', value: '—', change: '' },
+  { label: 'Total Riders', value: '—', change: '' },
 ])
 
-const weeklyRides = ref([
+const SAMPLE_WEEK = [
   { label: 'Mon', count: 98 },
   { label: 'Tue', count: 132 },
   { label: 'Wed', count: 115 },
@@ -87,11 +100,12 @@ const weeklyRides = ref([
   { label: 'Fri', count: 178 },
   { label: 'Sat', count: 195 },
   { label: 'Sun', count: 142 },
-])
+]
+const weeklyRides = ref(DEMO_MODE ? SAMPLE_WEEK : [])
 
-const maxRides = computed(() => Math.max(...weeklyRides.value.map(d => d.count)))
+const maxRides = computed(() => Math.max(1, ...weeklyRides.value.map(d => d.count)))
 
-const recentRides = ref([
+const SAMPLE_RECENT = [
   { id: 1, rider: 'Marcus Thompson', pickup: 'Atlantis Resort', dropoff: 'Downtown Nassau', fare: 28.50, status: 'Completed' },
   { id: 2, rider: 'Shania Williams', pickup: 'Cable Beach', dropoff: 'PI Airport', fare: 35.00, status: 'Active' },
   { id: 3, rider: 'Devon Clarke', pickup: 'Bay Street', dropoff: 'Paradise Island', fare: 22.00, status: 'Completed' },
@@ -102,7 +116,10 @@ const recentRides = ref([
   { id: 8, rider: 'Lisa Ferguson', pickup: 'Junkanoo Beach', dropoff: 'Cable Beach', fare: 19.00, status: 'Completed' },
   { id: 9, rider: 'Robert Sands', pickup: 'Fort Charlotte', dropoff: 'PI Airport', fare: 32.00, status: 'Active' },
   { id: 10, rider: 'Keisha Brown', pickup: 'Potter\'s Cay', dropoff: 'Atlantis Resort', fare: 16.50, status: 'Completed' },
-])
+]
+const recentRides = ref(DEMO_MODE ? SAMPLE_RECENT : [])
+const openSafetyReports = ref(0)
+const loadError = ref('')
 
 function statusBadge(status) {
   const base = 'text-xs font-medium px-2 py-0.5 rounded-full'
@@ -122,33 +139,56 @@ onMounted(async () => {
     today.setHours(0, 0, 0, 0)
     const todayISO = today.toISOString()
 
-    const [ridesRes, driversRes, ridersRes, revenueRes, todayRidesRes] = await Promise.all([
+    const weekStart = new Date(today)
+    weekStart.setDate(weekStart.getDate() - 6)
+
+    const [ridesRes, driversRes, ridersRes, revenueRes, todayRidesRes, weekRes, safetyRes] = await Promise.all([
       supabase.from('rides').select('id', { count: 'exact', head: true }),
       supabase.from('drivers').select('id', { count: 'exact', head: true }).eq('approved', true),
       supabase.from('riders').select('id', { count: 'exact', head: true }),
       supabase.from('rides').select('fare_cents').eq('status', 'completed'),
       supabase.from('rides').select('*').gte('created_at', todayISO).order('created_at', { ascending: false }).limit(10),
+      supabase.from('rides').select('created_at').gte('created_at', weekStart.toISOString()),
+      supabase.from('safety_reports').select('id', { count: 'exact', head: true }).eq('status', 'open'),
     ])
+    if (ridesRes.error) throw ridesRes.error
+
+    // Last 7 days, oldest first
+    const days = []
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today)
+      d.setDate(d.getDate() - i)
+      days.push({ key: d.toDateString(), label: d.toLocaleDateString('en-US', { weekday: 'short' }), count: 0 })
+    }
+    for (const r of weekRes.data || []) {
+      const day = days.find((x) => x.key === new Date(r.created_at).toDateString())
+      if (day) day.count++
+    }
+    weeklyRides.value = days
+    openSafetyReports.value = safetyRes.count || 0
 
     const totalRevenue = (revenueRes.data || []).reduce((sum, r) => sum + (r.fare_cents || 0), 0)
 
     metricCards.value = [
       { label: 'Total Rides', value: String(ridesRes.count || 0), change: '', changePositive: true },
-      { label: 'Active Drivers', value: String(driversRes.count || 0), change: '', changePositive: true },
+      { label: 'Approved Drivers', value: String(driversRes.count || 0), change: '', changePositive: true },
       { label: 'Gross Bookings', value: `$${(totalRevenue / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, change: '', changePositive: true },
-      { label: 'Total Users', value: String(ridersRes.count || 0), change: '', changePositive: true },
+      { label: 'Total Riders', value: String(ridersRes.count || 0), change: '', changePositive: true },
     ]
 
-    if (todayRidesRes.data && todayRidesRes.data.length > 0) {
-      recentRides.value = todayRidesRes.data.map(r => ({
+    const STATUS_LABELS = { completed: 'Completed', cancelled: 'Cancelled', requested: 'Requested', pending_driver_response: 'Requested', accepted: 'Active', driver_arrived: 'Active', in_progress: 'Active' }
+    {
+      recentRides.value = (todayRidesRes.data || []).map(r => ({
         id: r.id,
         rider: r.rider_name || 'Rider',
         pickup: r.pickup_address || 'N/A',
         dropoff: r.dropoff_address || 'N/A',
         fare: r.fare_cents ? (r.fare_cents / 100).toFixed(2) : '0.00',
-        status: r.status || 'Unknown',
+        status: STATUS_LABELS[r.status] || r.status || 'Unknown',
       }))
     }
-  } catch (e) { /* keep placeholder data on error */ }
+  } catch (e) {
+    loadError.value = 'Could not load dashboard data. Check that your account has the admin role.'
+  }
 })
 </script>

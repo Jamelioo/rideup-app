@@ -20,6 +20,7 @@ const Support = () => import('../pages/Support.vue')
 const About = () => import('../pages/About.vue')
 const DriverLanding = () => import('../pages/DriverLanding.vue')
 const NotFound = () => import('../pages/NotFound.vue')
+const TrackTrip = () => import('../pages/TrackTrip.vue')
 const TrustedContacts = () => import('../pages/TrustedContacts.vue')
 const Promotions = () => import('../pages/Promotions.vue')
 const Referrals = () => import('../pages/Referrals.vue')
@@ -46,6 +47,9 @@ const AdminUsers = () => import('../pages/admin/AdminUsers.vue')
 const AdminDrivers = () => import('../pages/admin/AdminDrivers.vue')
 const AdminRevenue = () => import('../pages/admin/AdminRevenue.vue')
 const AdminSupport = () => import('../pages/admin/AdminSupport.vue')
+const AdminSafety = () => import('../pages/admin/AdminSafety.vue')
+const AdminPayouts = () => import('../pages/admin/AdminPayouts.vue')
+const AdminSettings = () => import('../pages/admin/AdminSettings.vue')
 
 const routes = [
   { path: '/', name: 'home', component: RiderLanding, meta: { title: 'RideUp — Ride in Nassau' } },
@@ -65,6 +69,7 @@ const routes = [
   { path: '/promotions', name: 'promotions', component: Promotions, meta: { requiresAuth: true, title: 'Promotions — RideUp' } },
   { path: '/referrals', name: 'referrals', component: Referrals, meta: { requiresAuth: true, title: 'Invite Friends — RideUp' } },
   { path: '/about', name: 'about', component: About, meta: { title: 'About — RideUp' } },
+  { path: '/track/:token', name: 'track-trip', component: TrackTrip, meta: { title: 'Live trip — RideUp', public: true } },
   { path: '/welcome', redirect: '/' },
   { path: '/drive', name: 'driver-landing', component: DriverLanding, meta: { title: 'Drive with RideUp Nassau' } },
   { path: '/privacy', name: 'privacy', component: Privacy, meta: { title: 'Privacy Policy — RideUp' } },
@@ -91,6 +96,9 @@ const routes = [
       { path: 'drivers', name: 'admin-drivers', component: AdminDrivers, meta: { title: 'Manage Drivers — RideUp' } },
       { path: 'revenue', name: 'admin-revenue', component: AdminRevenue, meta: { title: 'Revenue — RideUp' } },
       { path: 'support', name: 'admin-support', component: AdminSupport, meta: { title: 'Support Tickets — RideUp' } },
+      { path: 'safety', name: 'admin-safety', component: AdminSafety, meta: { title: 'Safety Reports — RideUp' } },
+      { path: 'payouts', name: 'admin-payouts', component: AdminPayouts, meta: { title: 'Driver Payouts — RideUp' } },
+      { path: 'settings', name: 'admin-settings', component: AdminSettings, meta: { title: 'Settings — RideUp' } },
     ],
   },
   { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFound, meta: { title: 'Page Not Found — RideUp' } },
@@ -144,12 +152,16 @@ router.beforeEach(async (to) => {
         return { path: '/driver/apply' }
       }
 
-      if (!driver.value.approved) {
+      // A driver sent back to review mid-trip can still finish that trip.
+      if (!driver.value.approved && !(to.path === '/driver/active-ride' && currentRide.value)) {
         return { path: '/driver/pending' }
       }
 
       if (to.path === '/driver/active-ride' && !currentRide.value) {
         return { path: '/driver/dashboard' }
+      }
+      if (to.path === '/driver/dashboard' && currentRide.value) {
+        return { path: '/driver/active-ride' }
       }
     }
   }

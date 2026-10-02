@@ -3,6 +3,7 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { DEMO_MODE } from '../../lib/demoMode'
+import { apiPost } from '../../lib/api'
 import HarborBackdrop from '../../components/HarborBackdrop.vue'
 
 const props = defineProps({ rideId: { type: String, required: true } })
@@ -13,6 +14,8 @@ const driverFound = ref(false)
 const timedOut = ref(false)
 const elapsedSeconds = ref(0)
 const paymentFailed = ref(false)
+const cancelling = ref(false)
+const cancelError = ref('')
 let channel = null
 let demoTimer = null
 let timeoutTimer = null
@@ -56,7 +59,7 @@ async function buildMatch(rideRow) {
 
 function navigateToActiveRide(rideRow, match) {
   setTimeout(() => {
-    router.push({
+    router.replace({
       name: 'active-ride',
       params: { rideId: rideRow.id || props.rideId },
       query: {
@@ -72,7 +75,7 @@ function navigateToActiveRide(rideRow, match) {
         dropoffLng: rideRow.dropoff_lng || ride.value?.dropoff_lng || '',
       },
     })
-  }, 1500)
+  }, 900)
 }
 
 async function onMatched(rideRow) {
@@ -166,8 +169,25 @@ function retrySearch() {
 
 async function cancelRequest() {
   if (demoTimer) clearTimeout(demoTimer)
-  if (!DEMO_MODE) await supabase.from('rides').update({ status: 'cancelled', cancelled_at: new Date().toISOString() }).eq('id', props.rideId)
-  emit('cancelled')
+  if (DEMO_MODE) { emit('cancelled'); return }
+  if (cancelling.value) return
+  cancelling.value = true
+  cancelError.value = ''
+  try {
+    const res = await apiPost('/api/cancel-ride', { rideId: props.rideId })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok && res.status !== 409) throw new Error(data.error || 'Could not cancel. Please try again.')
+    if (res.status === 409) {
+      // A driver accepted at the same moment: take the rider to the trip instead of silently cancelling.
+      const { data: latest } = await supabase.from('rides').select('*').eq('id', props.rideId).maybeSingle()
+      if (latest && ['accepted', 'driver_arrived', 'in_progress'].includes(latest.status)) { onMatched(latest); return }
+    }
+    emit('cancelled')
+  } catch (err) {
+    cancelError.value = err.message
+  } finally {
+    cancelling.value = false
+  }
 }
 </script>
 
@@ -196,7 +216,8 @@ async function cancelRequest() {
             Searching... {{ elapsedSeconds }}s
           </p>
         </div>
-        <button @click="cancelRequest" class="text-[var(--color-text-secondary)] text-[13px] underline underline-offset-2 mt-2 py-2 px-4">Cancel request</button>
+        <button @click="cancelRequest" :disabled="cancelling" class="text-[var(--color-text-secondary)] text-[13px] underline underline-offset-2 mt-2 py-2 px-4 min-h-[44px] disabled:opacity-50">{{ cancelling ? 'Cancelling…' : 'Cancel request' }}</button>
+        <p v-if="cancelError" class="text-[13px] text-red-500" role="alert">{{ cancelError }}</p>
       </template>
       <div v-if="timedOut" class="text-center px-6">
         <div class="w-16 h-16 rounded-full bg-[var(--color-surface-secondary)] flex items-center justify-center mx-auto mb-4">

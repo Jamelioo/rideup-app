@@ -8,7 +8,8 @@ const props = defineProps({
   driverLocation: { type: Object, default: null },
 })
 
-const emit = defineEmits(['map-tap', 'marker-drag'])
+const emit = defineEmits(['map-tap', 'marker-drag', 'error'])
+const failed = ref(false)
 
 const mapRef = ref(null)
 let map = null
@@ -284,7 +285,15 @@ function watchThemeChanges() {
 
 // --- Init ---
 onMounted(async () => {
-  maps = await loadGoogleMaps()
+  try {
+    maps = await loadGoogleMaps()
+  } catch (err) {
+    // No key / blocked script / offline: tell the parent so it can show a fallback instead of a blank map.
+    console.warn('Map unavailable:', err.message)
+    failed.value = true
+    emit('error', err)
+    return
+  }
 
   useAdvanced = false // Use regular markers so JSON styles work
 
@@ -357,5 +366,5 @@ defineExpose({ panTo, fitBounds })
 </script>
 
 <template>
-  <div ref="mapRef" class="absolute inset-0 w-full h-full"></div>
+  <div ref="mapRef" class="absolute inset-0 w-full h-full" :class="failed && 'hidden'"></div>
 </template>
