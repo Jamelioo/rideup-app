@@ -98,3 +98,14 @@ export function splitReceiptEmail({ ride, inviter, shareCents, card }) {
       </table>`),
   }
 }
+
+export function refundEmail({ ride, amountCents, method, target }) {
+  return {
+    subject: `RideUp refund — ${money(amountCents)}`,
+    html: layout('Your refund', `
+      <p style="font-size:14px;color:#555">${money(amountCents)} ${target === 'tip' ? 'of your tip ' : ''}was ${method === 'card'
+        ? 'refunded to your card. It usually shows on your statement within 5–10 business days.'
+        : 'added to your RideUp credit. It’s used automatically on your next rides.'}</p>
+      <p style="font-size:14px"><strong>Trip:</strong> ${escapeHtml(ride.pickup_address)} → ${escapeHtml(ride.dropoff_address)}</p>`),
+  }
+}

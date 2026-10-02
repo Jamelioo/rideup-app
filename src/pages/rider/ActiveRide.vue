@@ -6,6 +6,7 @@ import HarborBackdrop from '../../components/HarborBackdrop.vue'
 import RideTracker from '../../components/RideTracker.vue'
 import RideChat from '../../components/RideChat.vue'
 import SafetyToolkit from '../../components/SafetyToolkit.vue'
+import TripCheckin from '../../components/TripCheckin.vue'
 import SplitFareSheet from '../../components/SplitFareSheet.vue'
 import { supabase } from '../../lib/supabase'
 import { DEMO_MODE } from '../../lib/demoMode'
@@ -315,6 +316,7 @@ const endedMessage = computed(() => {
       @unread="unread = $event"
     />
 
+    <TripCheckin v-if="!DEMO_MODE" :ride="ride" @help="safetyOpen = true" />
     <SafetyToolkit :is-open="safetyOpen" :ride="shareRide" role="rider" @close="safetyOpen = false" />
 
     <!-- Cancel confirmation (Uber always confirms) -->

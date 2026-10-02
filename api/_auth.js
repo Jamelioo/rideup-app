@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { captureServerError } from './_monitor.js'
 
 const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -62,8 +63,9 @@ export async function rideRoles(ride, user) {
   }
 }
 
-// Stripe/Supabase messages can leak internals; log them, return something generic.
-export function fail(res, label, err, status = 500) {
+// Stripe/Supabase messages can leak internals; log them (and report to Sentry), return something generic.
+export async function fail(res, label, err, status = 500) {
   console.error(`${label}:`, err?.message || err)
+  await captureServerError(label, err)
   return res.status(status).json({ error: 'Something went wrong. Please try again.' })
 }

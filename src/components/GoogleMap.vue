@@ -6,6 +6,7 @@ const props = defineProps({
   pickup: { type: Object, default: null },
   dropoff: { type: Object, default: null },
   stop: { type: Object, default: null }, // one extra stop on the way
+  hotspots: { type: Array, default: () => [] }, // drivers' busy-area map: [{ lat, lng, weight, surge }]
   driverLocation: { type: Object, default: null },
   showTraffic: { type: Boolean, default: false }, // Google's live traffic colours (green / orange / red)
 })
@@ -20,6 +21,7 @@ let maps = null
 let pickupMarker = null
 let dropoffMarker = null
 let stopMarker = null
+let hotspotCircles = []
 let driverMarker = null
 let trafficLayer = null
 let directionsService = null
@@ -214,6 +216,22 @@ function updateStopMarker() {
   }
 }
 
+// Busy areas for drivers: soft circles, stronger where more riders are waiting; orange where prices are higher.
+function updateHotspots() {
+  if (!map || !maps) return
+  hotspotCircles.forEach((c) => c.setMap(null))
+  const max = Math.max(1, ...props.hotspots.map((h) => h.weight))
+  hotspotCircles = props.hotspots.map((h) => new maps.Circle({
+    map,
+    center: { lat: h.lat, lng: h.lng },
+    radius: 550,
+    clickable: false,
+    strokeWeight: 0,
+    fillColor: Number(h.surge) > 1 ? '#e8710a' : '#2b8659',
+    fillOpacity: 0.15 + 0.35 * (h.weight / max),
+  }))
+}
+
 // --- Driver marker ---
 function createDriverMarkerContent() {
   const div = document.createElement('div')
@@ -349,6 +367,7 @@ onMounted(async () => {
 
   updateMarkers()
   updateStopMarker()
+  updateHotspots()
   updateDriverMarker()
   drawRoute()
   if (props.pickup && props.dropoff) {
@@ -388,6 +407,8 @@ watch(
   { deep: true }
 )
 
+watch(() => props.hotspots, updateHotspots, { deep: true })
+
 watch(
   () => props.driverLocation,
   () => { updateDriverMarker() },
@@ -402,6 +423,8 @@ onUnmounted(() => {
   dropoffMarker = null
   clearMarker(stopMarker)
   stopMarker = null
+  hotspotCircles.forEach((c) => c.setMap(null))
+  hotspotCircles = []
   clearMarker(driverMarker)
   driverMarker = null
   if (themeObserver) { themeObserver.disconnect(); themeObserver = null }

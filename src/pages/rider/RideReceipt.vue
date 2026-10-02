@@ -31,6 +31,7 @@ onMounted(async () => {
     // Split fare: what friends paid comes off this rider's total.
     const { data: splits } = await supabase.from('fare_splits').select('share_cents').eq('ride_id', rideId).eq('status', 'paid')
     const splitPaid = (splits || []).reduce((sum, x) => sum + (x.share_cents || 0), 0)
+    const { data: refunds } = await supabase.from('ride_refunds').select('amount_cents, method, target, created_at').eq('ride_id', rideId).order('created_at')
 
     // Rebuild the line items from the same rates the fare was computed with.
     const rate = RATES[data.vehicle_type] || RATES.standard
@@ -58,6 +59,7 @@ onMounted(async () => {
       tip,
       grandTotal: cancelled ? (data.cancel_fee_cents || 0) : total - (data.promo_discount_cents || 0) - (data.credit_applied_cents || 0) - splitPaid + tip,
       splitPaid,
+      refunds: refunds || [],
       splitFriends: (splits || []).length,
       date: `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`,
       time: d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
@@ -191,6 +193,10 @@ async function shareReceipt() {
             <span class="text-base font-bold text-[var(--color-text-primary)]">Total</span>
             <span class="text-base font-bold text-[var(--color-text-primary)]">{{ formatCents(receipt.grandTotal) }}</span>
           </div>
+          <div v-for="(r, i) in receipt.refunds" :key="i" class="flex items-center justify-between">
+            <span class="text-sm text-[var(--color-text-secondary)]">{{ r.method === 'card' ? 'Refunded to your card' : 'Refunded as RideUp credit' }}{{ r.target === 'tip' ? ' (tip)' : '' }}</span>
+            <span class="text-sm text-[var(--color-brand)]">−{{ formatCents(r.amount_cents) }}</span>
+          </div>
         </div>
 
         <!-- Fare Breakdown -->
@@ -250,6 +256,10 @@ async function shareReceipt() {
           <div class="flex items-center justify-between">
             <span class="text-base font-bold text-[var(--color-text-primary)]">Total</span>
             <span class="text-base font-bold text-[var(--color-text-primary)]">{{ formatCents(receipt.grandTotal) }}</span>
+          </div>
+          <div v-for="(r, i) in receipt.refunds" :key="i" class="flex items-center justify-between">
+            <span class="text-sm text-[var(--color-text-secondary)]">{{ r.method === 'card' ? 'Refunded to your card' : 'Refunded as RideUp credit' }}{{ r.target === 'tip' ? ' (tip)' : '' }}</span>
+            <span class="text-sm text-[var(--color-brand)]">−{{ formatCents(r.amount_cents) }}</span>
           </div>
         </div>
 

@@ -7,6 +7,7 @@ import BottomNav from './components/BottomNav.vue'
 import InstallPrompt from './components/InstallPrompt.vue'
 import { getPendingReferral, setPendingReferral, redeemReferral } from './lib/rewards'
 import { isNativeApp, initNativePush, refreshNativePush } from './lib/nativePush'
+import { setMonitoringUser } from './lib/monitoring'
 
 const router = useRouter()
 const route = useRoute()
@@ -24,6 +25,8 @@ watch(pendingRoute, async (path) => {
   clearPendingRoute()
   if (route.path !== path) router.replace(path)
 }, { immediate: true })
+
+watch(() => user.value?.id, (id) => setMonitoringUser(id), { immediate: true })
 
 // Store app: trip alerts follow whoever is signed in on this phone.
 watch(() => user.value?.id, (id) => { if (id && isNativeApp()) refreshNativePush().catch(() => {}) })

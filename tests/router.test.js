@@ -46,11 +46,19 @@ test('every /api route the app calls is handled', async () => {
 
 test('router sends each action to its handler and rejects unknown ones', async () => {
   const { default: handler, ACTIONS } = await import('../api/[action].js')
-  for (const action of ACTIONS) {
+  for (const action of ACTIONS.filter((a) => a !== 'health')) {
     const res = mockRes()
     await handler({ method: 'GET', query: { action }, headers: {}, url: `/api/${action}` }, res)
     assert.equal(res.statusCode, 405, `${action} should reach its handler (POST only)`)
   }
+  // The uptime check is GET-only, and reports 503 (not 200) when the server isn't configured.
+  const health = mockRes()
+  await handler({ method: 'GET', query: { action: 'health' }, headers: {}, url: '/api/health' }, health)
+  assert.equal(health.statusCode, 503)
+  assert.equal(health.body.ok, false)
+  const postHealth = mockRes()
+  await handler({ method: 'POST', query: { action: 'health' }, headers: {}, url: '/api/health' }, postHealth)
+  assert.equal(postHealth.statusCode, 405)
   for (const bad of ['nope', '_auth', '__proto__', 'constructor', '']) {
     const res = mockRes()
     await handler({ method: 'POST', query: { action: bad }, headers: {}, url: `/api/${bad}` }, res)

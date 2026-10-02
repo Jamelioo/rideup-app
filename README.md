@@ -46,7 +46,7 @@ npm install
 
 1. Create a project at [supabase.com/dashboard](https://supabase.com/dashboard).
 2. In **SQL Editor**, run these files **in order**: `supabase-schema.sql`, then everything in
-   `supabase/migrations/` (`001` … `010`). Each migration can be re-run safely.
+   `supabase/migrations/` (`001` … `011`). Each migration can be re-run safely.
 3. Make yourself an admin (SQL Editor, use your account's email):
    ```sql
    update auth.users set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb
@@ -91,6 +91,7 @@ cp .env.example .env
 | `APNS_KEY`, `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_BUNDLE_ID`, `APNS_PRODUCTION` | optional: push in the App Store app (see MOBILE_APP.md) |
 | `FCM_SERVICE_ACCOUNT` | optional: push in the Google Play app (Firebase service-account JSON; see MOBILE_APP.md) |
 | `APP_URL` | optional: link base for emails (default `https://rideupnassau.com`) |
+| `VITE_SENTRY_DSN`, `SENTRY_DSN` | optional: error reports to Sentry (see Monitoring) |
 
 Optional features stay switched off until their keys are set; nothing breaks without them.
 
@@ -102,9 +103,23 @@ Pro plan sends it automatically; Supabase `pg_cron` + `pg_net` or any external p
 - turns due scheduled rides into live requests and alerts nearby drivers,
 - cancels requests nobody accepted within 5 minutes,
 - sets drivers offline whose app hasn't checked in for 3 minutes,
-- charges completed trips whose payment capture didn't arrive from the driver's phone.
+- charges completed trips whose payment capture didn't arrive from the driver's phone,
+- cancels trips stuck on "confirming payment",
+- sends trip check-ins ("Everything OK?") when a trip stops moving for 8 minutes or runs far longer than
+  expected, and opens a safety report if nobody answers within 5 minutes,
+- records a heartbeat, which `/api/health` and the admin pages check.
 
-Without it, scheduled rides never dispatch and stale requests and online statuses linger.
+Without it, scheduled rides never dispatch and stale requests and online statuses linger. The admin pages show a red
+warning when it hasn't run for 5 minutes.
+
+### Monitoring
+
+- **Uptime:** point an uptime monitor (UptimeRobot, Better Stack, … free plans are enough) at
+  `https://rideupnassau.com/api/health`. It returns 200 when the database answers and the every-minute job ran in the
+  last 5 minutes, and 503 with the reason otherwise. Set it to check every minute and alert you by SMS/email.
+- **Errors:** create a free Sentry project (platform: JavaScript) and set `VITE_SENTRY_DSN` (app crashes on riders' and
+  drivers' phones) and `SENTRY_DSN` (server errors) in Vercel, using the same DSN for both. Reports carry the user id and page,
+  never names, phone numbers or card details.
 
 ### 6. Stripe webhook
 
@@ -112,6 +127,12 @@ Add `https://YOUR_DOMAIN/api/webhook` in Stripe → Developers → Webhooks. Eve
 `STRIPE_INTEGRATION_TODO.md`.
 
 ## Develop and test
+
+Every pull request runs **CI** (`.github/workflows/ci.yml`): unit tests and the build, the browser tests in demo
+mode, and a Postgres job that applies the schema and every migration to a fresh database, re-runs the newest
+migration, and checks the money and safety rules in `supabase/tests/money_rules.sql` (fares, busy pricing, stops,
+promos and abuse checks, referrals, incentives, refunds, check-ins, who can see what, account deletion).
+
 
 ```bash
 npm run dev          # http://localhost:5173 (demo mode without .env)

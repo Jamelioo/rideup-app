@@ -45,6 +45,7 @@ function goBack() {
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Retention</h2>
+        <p>To prevent fraud, such as one person claiming new-rider promotions or referral rewards with several accounts, we compare the anonymous card identifier Stripe gives us and phone numbers across accounts. During a trip, the driver’s app shares its position with RideUp so riders can follow the car and so we can check in with both of you if a trip stops for a long time or runs much longer than expected; a check-in nobody answers is reviewed by our safety team. If something goes wrong in the app, an error report (the page, the error and your account id, but not your name, phone or card) is sent to our error-monitoring provider so we can fix it.</p>
         <p>We keep account, ride and payment records for as long as your account is active and as needed for accounting, safety, dispute resolution and legal requirements. You can delete your account yourself in the app (Profile › Delete account). That erases your login, name, contact details, photo, saved cards and driver documents; trip and payment records are kept without your name where accounting, safety or the law require it.</p>
       </section>
 

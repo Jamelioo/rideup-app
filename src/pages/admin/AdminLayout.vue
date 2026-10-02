@@ -75,6 +75,10 @@
 
       <!-- Page content -->
       <main class="flex-1 overflow-y-auto p-4 lg:p-8">
+        <div v-if="jobWarning" role="alert" class="mb-4 rounded-xl border border-red-300 bg-red-50 text-red-800 px-4 py-3 text-sm">
+          <strong>Background job {{ jobWarning }}.</strong> Scheduled rides, missed card charges, stuck-payment clean-up and trip check-ins
+          are paused until it runs again. It must call <code>/api/dispatch-scheduled</code> every minute (see README › Background job).
+        </div>
         <router-view />
       </main>
     </div>
@@ -82,11 +86,25 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { supabase, supabaseConfigured } from '../../lib/supabase'
+import { DEMO_MODE } from '../../lib/demoMode'
 
 const route = useRoute()
 const sidebarOpen = ref(false)
+
+// Warn the admin when the every-minute job has stopped (Uber-style ops: problems should be visible, not silent).
+const jobWarning = ref('')
+onMounted(async () => {
+  if (DEMO_MODE || !supabaseConfigured) return
+  const { data, error } = await supabase.from('system_heartbeats').select('last_run_at, last_ok').eq('name', 'dispatch').maybeSingle()
+  if (error) return // migration 011 not run yet
+  if (!data) { jobWarning.value = 'has never run'; return }
+  const minutes = Math.round((Date.now() - new Date(data.last_run_at).getTime()) / 60000)
+  if (minutes > 5) jobWarning.value = `hasn’t run for ${minutes} minutes`
+  else if (!data.last_ok) jobWarning.value = 'is failing'
+})
 
 const navItems = [
   {
