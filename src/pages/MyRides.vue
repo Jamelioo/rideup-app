@@ -81,6 +81,9 @@ onMounted(async () => {
       .from('rides')
       .select('*')
       .eq('rider_id', rider.id)
+      // Trip history = trips that happened, plus cancellations that actually charged a fee (like Uber).
+      // Searching, failed-payment and free cancellations aren't trips.
+      .or('status.eq.completed,and(status.eq.cancelled,cancel_fee_cents.gt.0,payment_status.eq.captured)')
       .order('created_at', { ascending: false })
 
     if (error) throw error
@@ -142,19 +145,19 @@ onMounted(async () => {
           <div class="flex items-center justify-between">
             <!-- Left: dot + info -->
             <div class="flex items-start gap-3">
-              <div class="mt-1.5 h-3 w-3 shrink-0 rounded-full bg-[#2b8659]"></div>
+              <div class="mt-1.5 h-3 w-3 shrink-0 rounded-full" :class="ride.status === 'cancelled' ? 'bg-[var(--color-text-muted)]' : 'bg-[#2b8659]'"></div>
               <div>
-                <p class="text-base font-semibold text-[var(--color-text-primary)]">{{ ride.pickup_address }}</p>
-                <p class="mt-0.5 text-sm text-[var(--color-text-muted)]">{{ formatDate(ride.created_at) }}</p>
+                <p class="text-base font-semibold text-[var(--color-text-primary)]">{{ ride.dropoff_address || ride.pickup_address }}</p>
+                <p class="mt-0.5 text-sm text-[var(--color-text-muted)]">{{ formatDate(ride.created_at) }}<span v-if="ride.status === 'cancelled'"> · {{ ride.cancel_reason === 'rider_no_show' ? 'No-show fee' : 'Cancellation fee' }}</span></p>
               </div>
             </div>
 
             <!-- Right: fare -->
-            <span class="text-base font-semibold text-[var(--color-text-primary)]">{{ formatFare(ride.fare_cents) }}</span>
+            <span class="text-base font-semibold text-[var(--color-text-primary)]">{{ formatFare(ride.status === 'cancelled' ? ride.cancel_fee_cents : ride.fare_cents + (ride.tip_payment_intent_id ? ride.tip_cents || 0 : 0)) }}</span>
           </div>
 
           <!-- View receipt button for completed rides -->
-          <div v-if="ride.status === 'completed'" class="mt-3 pl-6">
+          <div class="mt-3 pl-6">
             <button
               @click="router.push(`/receipt/${ride.id}`)"
               class="rounded-lg bg-[var(--color-surface-secondary)] px-4 py-2 text-sm font-medium text-[var(--color-brand)] transition-colors active:bg-[#2b8659]/10"
