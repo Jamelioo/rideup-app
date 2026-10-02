@@ -1,6 +1,6 @@
 import { Resend } from 'resend'
-import { admin as supabase, requireUser, isAdmin } from './_auth.js'
-import { rateLimit } from './_rateLimit.js'
+import { admin as supabase, requireUser, isAdmin } from '../_auth.js'
+import { rateLimit } from '../_rateLimit.js'
 
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))

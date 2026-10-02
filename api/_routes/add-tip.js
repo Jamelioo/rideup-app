@@ -1,8 +1,8 @@
 import Stripe from 'stripe'
-import { admin, requireUser, getRiderForUser, fail } from './_auth.js'
-import { rateLimit } from './_rateLimit.js'
-import { sendEmail, tipReceiptEmail } from './_email.js'
-import { pushToUser, rideParticipants } from './_push.js'
+import { admin, requireUser, getRiderForUser, fail } from '../_auth.js'
+import { rateLimit } from '../_rateLimit.js'
+import { sendEmail, tipReceiptEmail } from '../_email.js'
+import { pushToUser, rideParticipants } from '../_push.js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const checkRate = rateLimit({ maxRequests: 10, windowMs: 60_000 })
