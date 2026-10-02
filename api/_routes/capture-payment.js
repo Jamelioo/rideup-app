@@ -1,6 +1,6 @@
-import { admin, requireUser, rideRoles, fail } from './_auth.js'
-import { rateLimit } from './_rateLimit.js'
-import { captureRide } from './_capture.js'
+import { admin, requireUser, rideRoles, fail } from '../_auth.js'
+import { rateLimit } from '../_rateLimit.js'
+import { captureRide } from '../_capture.js'
 
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
 

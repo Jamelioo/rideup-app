@@ -124,8 +124,13 @@ Fares are computed in two places that must agree: `src/lib/pricing.js` (shown to
 
 - `src/pages/rider`, `src/pages/driver`, `src/pages/admin`: the three apps; `src/components`: shared pieces.
 - `src/lib`: auth (`useAuth`), driver session (`useDriver`), pricing, policy, push, settings, helpers.
-- `api/`: serverless routes. Payments (`authorize-ride`, `capture-payment`, `cancel-ride`, `add-tip`, setup/save
-  card, `webhook`), notifications (`trip-event`, `notify-driver`), the cron (`dispatch-scheduled`).
+- `api/`: serverless functions. To stay within Vercel's 12-function Hobby limit, every endpoint the app calls runs
+  in one function, `api/[action].js`, which hands `/api/<action>` to `api/_routes/<action>.js` (payments:
+  `authorize-ride`, `capture-payment`, `cancel-ride`, `add-tip`, card setup; notifications: `trip-event`,
+  `notify-driver`). Stripe's `webhook`, the cron (`dispatch-scheduled`) and `csp-report` are separate functions.
+  Files and folders starting with `_` are shared code, not functions. Add new endpoints to `api/_routes/` and
+  register them in `api/[action].js`; `tests/router.test.js` fails if the app calls an unregistered route or the
+  function count goes over 12.
 - `supabase/migrations/`: database rules (row-level security, guard triggers, RPCs). Clients can't change fares,
   payments, ratings they don't own, driver approval or protected ride fields.
 - `AUDIT.md`, `AUDIT_V2.md`: audits and what was fixed.

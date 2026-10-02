@@ -61,8 +61,9 @@ Every route requires a signed-in user (`Authorization: Bearer <Supabase access t
 belongs to the caller, and takes the amount from the `rides` row, never from the request. Stripe calls use
 idempotency keys so retries can't double-charge.
 
-`api/create-checkout-session.js` (hosted Checkout payment) is kept for a possible pay-after-ride flow; the app does
-not call it today.
+The app's endpoints all run in one serverless function (`api/[action].js`, with each handler in `api/_routes/`) to
+stay within Vercel's 12-function Hobby limit; their URLs are unchanged. `api/webhook.js` stays separate because it
+needs the raw request body to verify Stripe's signature.
 
 ## Currency
 
