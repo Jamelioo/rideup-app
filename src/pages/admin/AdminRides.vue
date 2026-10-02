@@ -53,7 +53,8 @@
             <tr
               v-for="ride in paginatedRides"
               :key="ride.id"
-              class="border-t border-[var(--color-border)] hover:bg-[var(--color-surface-secondary)] transition-colors"
+              class="border-t border-[var(--color-border)] hover:bg-[var(--color-surface-secondary)] transition-colors cursor-pointer"
+              tabindex="0" @click="selected = ride.raw" @keydown.enter="selected = ride.raw"
             >
               <td data-label="ID"class="px-4 py-3 text-[var(--color-text-muted)] font-mono text-xs">#{{ ride.id }}</td>
               <td data-label="Rider" class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ ride.rider }}</td>
@@ -95,10 +96,12 @@
         </div>
       </div>
     </div>
+    <AdminRideSheet :ride="selected" @close="selected = null" />
   </div>
 </template>
 
 <script setup>
+import AdminRideSheet from '../../components/AdminRideSheet.vue'
 import { ref, computed, onMounted } from 'vue'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
 
@@ -111,6 +114,7 @@ const sortKey = ref('id')
 const sortDir = ref('desc')
 
 const allRides = ref([])
+const selected = ref(null) // ride open in the details / refund panel
 
 function toggleSort(key) {
   if (sortKey.value === key) {
@@ -180,6 +184,7 @@ onMounted(async () => {
         dropoff: r.dropoff_address || 'N/A',
         fare: r.fare_cents ? `$${(r.fare_cents / 100).toFixed(2)}` : '$0.00',
         status: r.status || 'unknown',
+        raw: r,
         date: r.created_at ? new Date(r.created_at).toLocaleDateString() : '-',
       }))
     }

@@ -13,6 +13,7 @@ import GoogleMap from '../../components/GoogleMap.vue'
 import HarborBackdrop from '../../components/HarborBackdrop.vue'
 import RideChat from '../../components/RideChat.vue'
 import SafetyToolkit from '../../components/SafetyToolkit.vue'
+import TripCheckin from '../../components/TripCheckin.vue'
 
 const router = useRouter()
 const { user } = useAuth()
@@ -192,6 +193,21 @@ let locationChannel = null
 let statusChannel = null
 let pollTimer = null
 let lastDbWrite = 0
+let lastPosition = null
+let pingTimer = null
+
+// Position for the rider's map fallback and for trip check-ins. Also sent while standing still (every 20 s),
+// so the server can tell "stopped" from "app closed".
+function sendPing() {
+  if (!lastPosition || !currentRide.value) return
+  lastDbWrite = Date.now()
+  supabase.rpc('driver_ping', { p_ride_id: currentRide.value.id, p_lat: lastPosition.lat, p_lng: lastPosition.lng }).then(({ error }) => {
+    // Before migration 011: fall back to the plain location update.
+    if (error && /driver_ping/.test(error.message || '')) {
+      supabase.from('rides').update({ driver_lat: lastPosition.lat, driver_lng: lastPosition.lng }).eq('id', currentRide.value.id).then(() => {})
+    }
+  })
+}
 
 function startLive() {
   if (DEMO_MODE || !supabaseConfigured || !currentRide.value) return
@@ -204,14 +220,13 @@ function startLive() {
       (pos) => {
         const { latitude, longitude } = pos.coords
         locationChannel?.send({ type: 'broadcast', event: 'driver-location', payload: { lat: latitude, lng: longitude } })
-        if (Date.now() - lastDbWrite >= 10_000 && currentRide.value) {
-          lastDbWrite = Date.now()
-          supabase.from('rides').update({ driver_lat: latitude, driver_lng: longitude }).eq('id', currentRide.value.id).then(() => {})
-        }
+        lastPosition = { lat: latitude, lng: longitude }
+        if (Date.now() - lastDbWrite >= 10_000) sendPing()
       },
       () => {},
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
     )
+    pingTimer = setInterval(() => { if (Date.now() - lastDbWrite >= 20_000) sendPing() }, 20_000)
   }
 
   statusChannel = supabase.channel(`driver-ride-status-${id}`)
@@ -245,6 +260,7 @@ function handleRemoteUpdate(row) {
 
 function stopLive() {
   if (gpsWatchId !== null) { navigator.geolocation.clearWatch(gpsWatchId); gpsWatchId = null }
+  clearInterval(pingTimer)
   if (locationChannel) { supabase.removeChannel(locationChannel); locationChannel = null }
   if (statusChannel) { supabase.removeChannel(statusChannel); statusChannel = null }
   if (pollTimer) { clearInterval(pollTimer); pollTimer = null }
@@ -441,6 +457,7 @@ onUnmounted(() => {
               :other-user-name="riderName" partner-role="rider"
               :quick-replies="['I’m here', 'On my way', 'Running a few minutes late', 'Where are you?', 'I’m outside']"
               @unread="unread = $event" />
+    <TripCheckin v-if="!DEMO_MODE" :ride="currentRide" @help="safetyOpen = true" />
     <SafetyToolkit :is-open="safetyOpen" :ride="safetyRide" role="driver" @close="safetyOpen = false" />
 
     <!-- PIN entry -->

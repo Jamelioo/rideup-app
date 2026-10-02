@@ -43,6 +43,7 @@ export default async function handler(req, res) {
               payment_method_id: pm.id,
               card_brand: pm.card?.brand || null,
               card_last4: pm.card?.last4 || null,
+              card_fingerprint: pm.card?.fingerprint || null, // same card on another account → promo/referral abuse checks
             })
             .eq('stripe_customer_id', session.customer)
         }

@@ -66,6 +66,7 @@
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">− Ride credit used</dt><dd>−{{ money(sum.credit_cents) }}</dd></div>
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">− Driver incentives</dt><dd>−{{ money(sum.quest_reward_cents) }}</dd></div>
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">− Card fees (estimate)</dt><dd>−{{ money(sum.est_card_fee_cents) }}</dd></div>
+          <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">− Card refunds (RideUp part)</dt><dd>−{{ money(sum.refund_cents - sum.refund_driver_cents) }}</dd></div>
           <div class="flex justify-between font-bold text-base border-t border-[var(--color-border)] pt-2"><dt>RideUp net</dt><dd :class="totalNet < 0 && 'text-red-600'">{{ money(totalNet) }}</dd></div>
         </dl>
         <p class="text-xs text-[var(--color-text-muted)] mt-3">Card fees are estimated at 2.9% + 30¢ per charge; check Stripe for exact amounts. Tips go 100% to drivers.</p>
@@ -76,7 +77,7 @@
         <h2 class="text-sm font-semibold text-[var(--color-text-primary)] mb-3">Owed right now</h2>
         <dl class="text-sm space-y-3">
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">Driver earnings waiting for payout <span class="text-xs text-[var(--color-text-muted)]">({{ owed.drivers_owed }} drivers)</span></dt><dd class="font-semibold">{{ money(owed.driver_balances_cents) }}</dd></div>
-          <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">Unspent rider credit</dt><dd class="font-semibold">{{ money(owed.credit_outstanding_cents) }}</dd></div>
+          <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">Unspent rider credit <span class="text-xs text-[var(--color-text-muted)]">({{ money(sum.credit_issued_cents) }} given by support in this period)</span></dt><dd class="font-semibold">{{ money(owed.credit_outstanding_cents) }}</dd></div>
         </dl>
         <router-link to="/admin/payouts" class="inline-block mt-4 text-sm font-semibold text-[var(--color-brand)]">Record payouts →</router-link>
         <h2 class="text-sm font-semibold text-[var(--color-text-primary)] mt-6 mb-3">Drivers earned, last {{ days }} days</h2>
@@ -85,6 +86,7 @@
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">Tips</dt><dd>{{ money(sum.tips_cents) }}</dd></div>
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">Cancellation fees</dt><dd>{{ money(sum.cancel_fee_cents - sum.cancel_platform_cents) }}</dd></div>
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">Incentives</dt><dd>{{ money(sum.quest_reward_cents) }}</dd></div>
+          <div v-if="sum.refund_driver_cents" class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">Refund deductions</dt><dd>−{{ money(sum.refund_driver_cents) }}</dd></div>
           <div class="flex justify-between font-semibold border-t border-[var(--color-border)] pt-2"><dt>Total</dt><dd>{{ money(driverTotal) }}</dd></div>
         </dl>
       </div>
@@ -128,7 +130,8 @@ import { DEMO_MODE } from '../../lib/demoMode'
 const RANGES = [{ days: 7, label: '7 days' }, { days: 30, label: '30 days' }, { days: 90, label: '90 days' }]
 const FIELDS = ['trips', 'gross_fare_cents', 'platform_fee_cents', 'driver_fare_cents', 'booking_fee_cents', 'airport_fee_cents',
   'busy_extra_cents', 'promo_cents', 'credit_cents', 'tips_cents', 'cancel_fee_cents', 'cancel_platform_cents',
-  'quest_reward_cents', 'rider_paid_cents', 'est_card_fee_cents', 'cancelled_trips']
+  'quest_reward_cents', 'rider_paid_cents', 'est_card_fee_cents', 'cancelled_trips',
+  'refund_cents', 'refund_driver_cents', 'credit_issued_cents']
 
 const days = ref(30)
 const rows = ref([])
@@ -139,15 +142,17 @@ const hover = ref(null)
 
 const money = (c) => `${c < 0 ? '−' : ''}$${(Math.abs(c || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const fmtDay = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+// Card refunds cost RideUp whatever part didn't come out of the driver's earnings.
 const net = (d) => d.platform_fee_cents + d.cancel_platform_cents - d.promo_cents - d.credit_cents - d.quest_reward_cents - d.est_card_fee_cents
+  - (d.refund_cents - d.refund_driver_cents)
 
 const sum = computed(() => Object.fromEntries(FIELDS.map((f) => [f, rows.value.reduce((s, d) => s + d[f], 0)])))
 const totalNet = computed(() => net(sum.value))
-const driverTotal = computed(() => sum.value.driver_fare_cents + sum.value.tips_cents + sum.value.cancel_fee_cents - sum.value.cancel_platform_cents + sum.value.quest_reward_cents)
+const driverTotal = computed(() => sum.value.driver_fare_cents + sum.value.tips_cents + sum.value.cancel_fee_cents - sum.value.cancel_platform_cents + sum.value.quest_reward_cents - sum.value.refund_driver_cents)
 const maxPaid = computed(() => Math.max(1, ...rows.value.map((d) => d.rider_paid_cents)))
 const tableRows = computed(() => rows.value.filter((d) => d.trips || d.rider_paid_cents || d.quest_reward_cents).slice().reverse())
 const tiles = computed(() => [
-  { label: 'Rider payments', value: money(sum.value.rider_paid_cents), note: `${sum.value.trips} trips` },
+  { label: 'Rider payments', value: money(sum.value.rider_paid_cents - sum.value.refund_cents), note: `${sum.value.trips} trips${sum.value.refund_cents ? ` · after ${money(sum.value.refund_cents)} refunds` : ''}` },
   { label: 'RideUp net', value: money(totalNet.value), note: 'after discounts, incentives and card fees' },
   { label: 'Drivers earned', value: money(driverTotal.value) },
   { label: 'Average trip fare', value: money(sum.value.trips ? Math.round(sum.value.gross_fare_cents / sum.value.trips) : 0), note: `${sum.value.cancelled_trips} cancellation fees` },
