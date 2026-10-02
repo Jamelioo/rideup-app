@@ -1,0 +1,25 @@
+{
+  "appId": "com.rideupnassau.app",
+  "appName": "RideUp",
+  "webDir": "dist",
+  "server": {
+    "url": "https://rideupnassau.com",
+    "cleartext": false,
+    "allowNavigation": [
+      "rideupnassau.com",
+      "*.rideupnassau.com",
+      "*.supabase.co",
+      "*.stripe.com",
+      "*.stripe.network"
+    ]
+  },
+  "appendUserAgent": "RideUpApp",
+  "backgroundColor": "#ffffff",
+  "ios": {
+    "contentInset": "never",
+    "limitsNavigationsToAppBoundDomains": false
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
