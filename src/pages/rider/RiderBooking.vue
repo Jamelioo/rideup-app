@@ -3,7 +3,7 @@ export default { name: 'RiderBooking' }
 </script>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue'
+import { ref, onMounted, onUnmounted, onActivated, computed, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { apiPost } from '../../lib/api'
@@ -23,6 +23,9 @@ const router = useRouter()
 const menuOpen = ref(false)
 const pickupInput = ref(null)
 const dropoffInput = ref(null)
+// The phone sheet and the desktop panel each have their own pair of address fields.
+const pickupInputDesktop = ref(null)
+const dropoffInputDesktop = ref(null)
 
 const pickup = ref(null)
 const dropoff = ref(null)
@@ -148,34 +151,58 @@ onMounted(async () => {
 
 function setupAutocomplete(maps) {
   const bounds = new maps.LatLngBounds({ lat: 24.95, lng: -77.55 }, { lat: 25.15, lng: -77.25 })
-  placesAutocompletePickup = new maps.places.Autocomplete(pickupInput.value, { bounds, strictBounds: true, fields: ['formatted_address', 'geometry'] })
-  placesAutocompletePickup.addListener('place_changed', () => {
-    const place = placesAutocompletePickup.getPlace()
-    if (!place.geometry) return
-    pickup.value = { address: place.formatted_address, lat: place.geometry.location.lat(), lng: place.geometry.location.lng() }
-    activeInput.value = 'dropoff'
-    dropoffInput.value?.focus()
-    maybeCalculateRoute()
-  })
-  placesAutocompleteDropoff = new maps.places.Autocomplete(dropoffInput.value, { bounds, strictBounds: true, fields: ['formatted_address', 'geometry'] })
-  placesAutocompleteDropoff.addListener('place_changed', () => {
-    const place = placesAutocompleteDropoff.getPlace()
-    if (!place.geometry) return
-    dropoff.value = { address: place.formatted_address, lat: place.geometry.location.lat(), lng: place.geometry.location.lng() }
-    maybeCalculateRoute()
-  })
+  const attach = (input, kind) => {
+    if (!input) return
+    const ac = new maps.places.Autocomplete(input, { bounds, strictBounds: true, fields: ['formatted_address', 'geometry'] })
+    ac.addListener('place_changed', () => {
+      const place = ac.getPlace()
+      if (!place.geometry) return
+      const location = { address: place.formatted_address, lat: place.geometry.location.lat(), lng: place.geometry.location.lng() }
+      if (kind === 'pickup') {
+        pickup.value = location
+        activeInput.value = 'dropoff'
+        visibleInput('dropoff')?.focus()
+      } else {
+        dropoff.value = location
+      }
+      maybeCalculateRoute()
+    })
+  }
+  attach(pickupInput.value, 'pickup')
+  attach(pickupInputDesktop.value, 'pickup')
+  attach(dropoffInput.value, 'dropoff')
+  attach(dropoffInputDesktop.value, 'dropoff')
+  syncAddressFields()
 }
+
+// Whichever copy of the field is on screen (phone sheet or desktop panel).
+function visibleInput(kind) {
+  const pair = kind === 'pickup' ? [pickupInput.value, pickupInputDesktop.value] : [dropoffInput.value, dropoffInputDesktop.value]
+  return pair.find((el) => el && el.offsetParent !== null) || pair[0]
+}
+
+// Keep every address field showing the chosen pickup/destination, however it was set
+// (suggestion, map tap, dragged pin, current location, or coming back to this screen).
+function syncAddressFields() {
+  const fields = [
+    [pickupInput.value, pickup.value], [pickupInputDesktop.value, pickup.value],
+    [dropoffInput.value, dropoff.value], [dropoffInputDesktop.value, dropoff.value],
+  ]
+  for (const [el, loc] of fields) {
+    if (el && document.activeElement !== el && loc?.address) el.value = loc.address
+  }
+}
+watch([pickup, dropoff], () => nextTick(syncAddressFields), { deep: true })
+onActivated(() => nextTick(syncAddressFields))
 
 async function handleMapTap(latlng) {
   const address = await reverseGeocode(latlng.lat, latlng.lng)
   const location = { address, lat: latlng.lat, lng: latlng.lng }
   if (activeInput.value === 'pickup') {
     pickup.value = location
-    pickupInput.value.value = address
     activeInput.value = 'dropoff'
   } else {
     dropoff.value = location
-    dropoffInput.value.value = address
   }
   maybeCalculateRoute()
 }
@@ -185,10 +212,8 @@ async function handleMarkerDrag(type, latlng) {
   const location = { address, lat: latlng.lat, lng: latlng.lng }
   if (type === 'pickup') {
     pickup.value = location
-    pickupInput.value.value = address
   } else {
     dropoff.value = location
-    dropoffInput.value.value = address
   }
   maybeCalculateRoute()
 }
@@ -210,7 +235,6 @@ async function useCurrentLocation() {
     const address = await reverseGeocode(latitude, longitude)
     pickup.value = { lat: latitude, lng: longitude, address }
     pickupText.value = address
-    if (pickupInput.value) pickupInput.value.value = address
     isLocating.value = false
   } catch (err) {
     isLocating.value = false
@@ -723,7 +747,7 @@ async function scheduleRide({ date, time, summary }) {
           <div class="flex-1 space-y-2">
             <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3.5 border-2 transition-all duration-200"
                  :class="activeInput === 'pickup' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
-              <input v-if="!DEMO_MODE" ref="pickupInput" type="text" placeholder="Pickup location"
+              <input v-if="!DEMO_MODE" ref="pickupInputDesktop" type="text" placeholder="Pickup location"
                      @focus="activeInput = 'pickup'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
               <input v-else v-model="pickupText" list="demo-locations-desktop" type="text" placeholder="Pickup — try Cable Beach"
@@ -747,7 +771,7 @@ async function scheduleRide({ date, time, summary }) {
             </button>
             <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3.5 border-2 transition-all duration-200"
                  :class="activeInput === 'dropoff' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
-              <input v-if="!DEMO_MODE" ref="dropoffInput" type="text" placeholder="Where to?"
+              <input v-if="!DEMO_MODE" ref="dropoffInputDesktop" type="text" placeholder="Where to?"
                      @focus="activeInput = 'dropoff'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
               <input v-else v-model="dropoffText" list="demo-locations-desktop" type="text" placeholder="Destination — try Airport"
