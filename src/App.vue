@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { DEMO_MODE } from './lib/demoMode'
 import { useAuth } from './lib/useAuth'
 import BottomNav from './components/BottomNav.vue'
+import InstallPrompt from './components/InstallPrompt.vue'
 import { getPendingReferral, setPendingReferral, redeemReferral } from './lib/rewards'
 
 const router = useRouter()
@@ -40,4 +41,5 @@ watch(user, async (u) => {
     </KeepAlive>
   </router-view>
   <BottomNav />
+  <InstallPrompt v-if="!DEMO_MODE" />
 </template>
