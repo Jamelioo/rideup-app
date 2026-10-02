@@ -33,9 +33,10 @@ const pickupText = ref('')
 const dropoffText = ref('')
 
 const selectedVehicle = ref('standard')
-// Premium is only offered once an admin has approved Premium vehicles and switched it on.
+// XL and Premium are only offered once an admin switches them on (Admin → Settings); Go is always offered.
 const appSettings = useSettings()
-const availableVehicles = computed(() => VEHICLE_TYPES.filter((v) => v.id !== 'premium' || appSettings.value.offer_premium))
+const availableVehicles = computed(() => VEHICLE_TYPES.filter((v) =>
+  v.id === 'standard' || (v.id === 'xl' && appSettings.value.offer_xl) || (v.id === 'premium' && appSettings.value.offer_premium)))
 watch(availableVehicles, (list) => {
   if (!list.some((v) => v.id === selectedVehicle.value)) selectedVehicle.value = 'standard'
 })

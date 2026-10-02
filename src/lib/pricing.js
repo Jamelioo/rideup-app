@@ -3,7 +3,7 @@
 // Stripe/WordPress setup separately.
 
 export const RATES = {
-  standard: { base: 250, perMile: 165, perMinute: 20, minimum: 1200 },
+  standard: { base: 200, perMile: 125, perMinute: 35, minimum: 1000 }, // small cars (Fit, March…): $2 + $1.25/mi + $0.35/min, $10 min
   xl:       { base: 450, perMile: 230, perMinute: 30, minimum: 1500 },
   premium:  { base: 700, perMile: 320, perMinute: 40, minimum: 2000 },
 }
