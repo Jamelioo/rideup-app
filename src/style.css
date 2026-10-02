@@ -27,6 +27,25 @@ body {
   transition: background-color 0.3s, color 0.3s;
 }
 
+/* Nothing may ever push the page sideways on a phone. */
+html, body { overflow-x: clip; }
+
+/* iPhones zoom the whole page when you tap a field with text under 16px, which shoves the layout off-screen. */
+@media (max-width: 767px) {
+  input, select, textarea { font-size: 16px !important; }
+}
+
+/* App screens (booking, live trip, driver) behave like a native app: the page itself never scrolls or
+   rubber-bands; only panels inside it scroll. Set by the router (see APP_SHELL_ROUTES). */
+html.app-shell, html.app-shell body {
+  position: fixed;
+  inset: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+html.app-shell .overflow-y-auto { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+
 /* Dark mode */
 html.dark {
   --color-surface: #111318;
