@@ -243,25 +243,43 @@ async function authorize(rideId) {
     const res = await apiPost('/api/authorize-ride', { rideId })
     const result = await res.json().catch(() => ({}))
     if (res.ok && result.success) return true
-    acceptError.value = ACCEPT_ERRORS[result.error] || 'Couldn’t confirm payment for this ride. Please try another.'
-  } catch {
-    acceptError.value = 'Connection problem. Please try again.'
+    if (res.status === 500 && /not configured/i.test(result.error || '')) {
+      // SUPABASE_SERVICE_ROLE_KEY or STRIPE_SECRET_KEY is missing in Vercel.
+      acceptError.value = 'Payments aren’t set up on the server yet (missing Stripe or Supabase keys). Contact RideUp support.'
+    } else {
+      acceptError.value = ACCEPT_ERRORS[result.error] || result.error || `Couldn’t confirm payment for this ride (error ${res.status}). Please try another.`
+    }
+  } catch (err) {
+    acceptError.value = err?.message || 'Connection problem. Please try again.'
   }
   return false
 }
 
 // Returns true only when the ride is claimed AND the rider's card is held.
+// The request card stays on screen ("Confirming the rider's payment…") until this finishes,
+// so polling is paused meanwhile (otherwise it would close the card once the ride leaves the open list).
 async function acceptRide(ride) {
-  incomingRequest.value = null
   acceptError.value = ''
   dismissedRequests.add(ride.id)
 
   if (DEMO_MODE) {
+    incomingRequest.value = null
     currentRide.value = { ...ride, status: 'accepted', accepted_at: new Date().toISOString() }
     return true
   }
-  if (!driver.value) return false
+  if (!driver.value) {
+    incomingRequest.value = null
+    acceptError.value = 'Your driver profile didn’t load. Refresh the page and try again.'
+    return false
+  }
+  stopPolling()
+  const ok = await claimAndAuthorize(ride)
+  incomingRequest.value = null
+  if (!ok && isOnline.value && !currentRide.value) startPolling()
+  return ok
+}
 
+async function claimAndAuthorize(ride) {
   // 1. Atomically claim the ride (server rejects it if another driver got there first).
   const { data: claimed, error: claimErr } = await supabase.rpc('accept_ride', { p_ride_id: ride.id })
   const claimedRide = Array.isArray(claimed) ? claimed[0] : claimed
@@ -270,6 +288,8 @@ async function acceptRide(ride) {
       // We already have a trip (e.g. after a reload): take the driver back to it.
       if (await restoreActiveRide()) return true
       acceptError.value = 'You already have an active ride.'
+    } else if (claimErr && claimErr.code !== 'P0002' && !/taken|available|not found/i.test(claimErr.message || '')) {
+      acceptError.value = `Couldn’t accept this ride: ${claimErr.message}`
     } else {
       acceptError.value = 'Another driver already took this ride.'
     }
