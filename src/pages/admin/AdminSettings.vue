@@ -43,6 +43,12 @@ const toggles = [
     note: 'Adds a step for every rider. Uber offers this as an option.',
   },
   {
+    key: 'offer_xl',
+    title: 'Offer RideUp XL',
+    description: 'Shows the XL ride option (6+ seats) to riders. XL trips only go to drivers approved for XL.',
+    note: 'Turn on once you have XL drivers, or riders will wait and get “no drivers available”.',
+  },
+  {
     key: 'offer_premium',
     title: 'Offer RideUp Premium',
     description: 'Shows the Premium ride option to riders. Premium trips only go to drivers whose vehicle you’ve approved as Premium (set it in Drivers → Review).',
@@ -55,7 +61,7 @@ const toggles = [
     note: 'Needs an SMS provider (e.g. Twilio) set up in Supabase → Authentication → Phone. Turn this on only after testing a code arrives.',
   },
 ]
-const values = reactive({ require_pickup_pin: false, offer_premium: false, require_verified_phone: false })
+const values = reactive({ require_pickup_pin: false, offer_xl: false, offer_premium: false, require_verified_phone: false })
 const saving = ref('')
 const error = ref('')
 

@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import { supabase, supabaseConfigured } from './supabase'
 
 // Admin-controlled feature flags (app_settings table). Loaded once and cached.
-const settings = ref({ require_pickup_pin: false, require_verified_phone: false, offer_premium: false })
+const settings = ref({ require_pickup_pin: false, require_verified_phone: false, offer_premium: false, offer_xl: false })
 let loaded = null
 
 export function loadSettings() {
