@@ -21,26 +21,26 @@ function goBack() {
     </div>
 
     <div class="max-w-2xl mx-auto px-5 py-8 space-y-6 text-[15px] leading-relaxed text-[var(--color-text-secondary)]">
-      <p class="text-[13px] text-[var(--color-text-muted)]">Last updated: September 30, 2026</p>
+      <p class="text-[13px] text-[var(--color-text-muted)]">Last updated: October 2, 2026</p>
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Information We Collect</h2>
-        <p>Information you give us: your name, email address, phone number, and (for drivers) license, vehicle and document details. Ride information: pickup and drop-off locations, trip times, fares, ratings and in-app messages. Location: your device location while you request or take a ride, and drivers' location while they are online or on a trip. Payment: your card is entered directly with Stripe. We store Stripe customer and payment-method identifiers, plus the card brand and last four digits so we can show them on receipts. Guest bookings create a temporary account so your ride and receipt can be linked to you.</p>
+        <p>Information you give us: your name, email address, phone number, and (for drivers) a profile photo, licence, vehicle and document details. Ride information: pickup and drop-off locations, trip times, fares, tips, ratings, feedback and in-app messages. Location: your device location while you request or take a ride, and drivers' location while they are online or on a trip (while online we keep an approximate position, to about 100 metres, so we can alert nearby drivers to new requests). Payment: your card is entered directly with Stripe. We store Stripe customer and payment-method identifiers, plus the card brand and last four digits so we can show them on receipts. Guest bookings create a temporary account so your ride and receipt can be linked to you. If phone verification is turned on, we confirm your number with a one-time text-message code. If you turn on notifications, we store a technical address for your device so we can send trip alerts to it; it is removed when you log out.</p>
       </section>
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">How We Use Your Information</h2>
-        <p>To provide and improve rides, match riders with drivers, process payments, send receipts and service messages, provide support, keep the platform safe and prevent fraud, and meet legal obligations.</p>
+        <p>To provide and improve rides, match riders with drivers (including automatically finding you a new driver if yours cancels), process payments and tips, send receipts, trip notifications and service messages, provide support, investigate safety reports, keep the platform safe and prevent fraud, and meet legal obligations.</p>
       </section>
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Who We Share It With</h2>
-        <p>Drivers see your name, pickup and drop-off locations, and the messages you send them for your ride; you see your driver's name, vehicle, plate, rating and phone number. If you use trip sharing, the trusted contacts you choose can see your trip details. We do not sell your personal information.</p>
+        <p>Before accepting, a driver sees your first name, your rating, an approximate pickup area and the trip length. After accepting, your driver sees your first name, exact pickup and drop-off, and the messages you send; you see your driver's first name, photo, vehicle, plate and rating. Phone numbers are shared only while a trip is active, and in-app chat closes 30 minutes after drop-off. If you share your trip, anyone with the link can see your first name, your driver's first name and vehicle, the route and the car's live location until an hour after the trip ends. Our safety team can see trip details, messages and reports when investigating a safety concern. We do not sell your personal information.</p>
       </section>
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Service Providers</h2>
-        <p>We use Supabase (database and sign-in), Stripe (payments), Google Maps (maps, address search and routing), Vercel (hosting and privacy-friendly usage analytics), and Resend (service emails to drivers). These providers process data for us under their own terms and privacy policies.</p>
+        <p>We use Supabase (database, sign-in and, if phone verification is on, text-message codes through its SMS provider), Stripe (payments), Google Maps (maps, address search and routing), Vercel (hosting and privacy-friendly usage analytics), Resend (receipts and service emails) and your browser's push service (trip notifications). These providers process data for us under their own terms and privacy policies.</p>
       </section>
 
       <section>

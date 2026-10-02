@@ -100,7 +100,7 @@ const inputClass = 'w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] round
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
-        <h1 class="text-[26px] font-bold leading-tight mb-2" role="status">Check your email</h1>
+        <h1 class="text-[26px] font-bold leading-tight mb-2" aria-live="polite">Check your email</h1>
         <p class="text-[14px] text-[var(--color-text-secondary)] mb-6">We sent a link to <strong class="text-[var(--color-text-primary)]">{{ email }}</strong>. Tap it to activate your account; you’ll be logged in automatically.</p>
         <p v-if="notice" class="text-[13px] text-[var(--color-brand)] mb-3" role="status">{{ notice }}</p>
         <p v-if="error" class="text-[13px] text-[var(--color-danger)] mb-3" role="alert">{{ error }}</p>

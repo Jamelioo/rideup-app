@@ -66,8 +66,8 @@ test('signup page renders with all form fields', async ({ page }) => {
   await page.goto('/signup')
   await expect(page.getByPlaceholder('Full name')).toBeVisible()
   await expect(page.getByPlaceholder('Email address')).toBeVisible()
-  await expect(page.getByPlaceholder('Password (min 6 characters)')).toBeVisible()
-  await expect(page.getByPlaceholder('Confirm password')).toBeVisible()
+  await expect(page.getByPlaceholder('Password (at least 8 characters)')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Sign up' })).toBeVisible()
 })
 
 test('signup validates empty name', async ({ page }) => {
@@ -76,31 +76,81 @@ test('signup validates empty name', async ({ page }) => {
   await expect(page.getByText('Please enter your name')).toBeVisible()
 })
 
-test('signup validates empty email', async ({ page }) => {
+test('signup validates email', async ({ page }) => {
   await page.goto('/signup')
   await page.getByPlaceholder('Full name').fill('Test User')
+  await page.getByPlaceholder('Email address').fill('not-an-email')
   await page.getByRole('button', { name: 'Sign up' }).click()
-  await expect(page.getByText('Please enter your email')).toBeVisible()
+  await expect(page.getByText('Please enter a valid email address')).toBeVisible()
 })
 
 test('signup validates short password', async ({ page }) => {
   await page.goto('/signup')
   await page.getByPlaceholder('Full name').fill('Test User')
   await page.getByPlaceholder('Email address').fill('test@test.com')
-  await page.getByPlaceholder('Password (min 6 characters)').fill('123')
-  await page.getByPlaceholder('Confirm password').fill('123')
+  await page.getByPlaceholder('Password (at least 8 characters)').fill('1234567')
   await page.getByRole('button', { name: 'Sign up' }).click()
-  await expect(page.getByText('at least 6 characters')).toBeVisible()
+  await expect(page.getByText('at least 8 characters.')).toBeVisible()
 })
 
-test('signup validates password mismatch', async ({ page }) => {
+test('signup password can be shown', async ({ page }) => {
   await page.goto('/signup')
-  await page.getByPlaceholder('Full name').fill('Test User')
-  await page.getByPlaceholder('Email address').fill('test@test.com')
-  await page.getByPlaceholder('Password (min 6 characters)').fill('password123')
-  await page.getByPlaceholder('Confirm password').fill('different')
-  await page.getByRole('button', { name: 'Sign up' }).click()
-  await expect(page.getByText('Passwords do not match')).toBeVisible()
+  const field = page.getByPlaceholder('Password (at least 8 characters)')
+  await expect(field).toHaveAttribute('type', 'password')
+  await page.getByRole('button', { name: 'Show password' }).click()
+  await expect(field).toHaveAttribute('type', 'text')
+})
+
+// ─── Password reset ───
+
+test('forgot password asks for the email first', async ({ page }) => {
+  await page.goto('/login')
+  await page.getByRole('button', { name: 'Forgot password?' }).click()
+  await expect(page.getByText('Enter your email address above')).toBeVisible()
+})
+
+test('reset password page lets you choose a new password', async ({ page }) => {
+  await page.goto('/reset-password')
+  await expect(page.getByRole('heading', { name: 'Set a new password' })).toBeVisible()
+  await page.getByLabel('New password').fill('short')
+  await page.getByRole('button', { name: 'Update password' }).click()
+  await expect(page.getByText('Use at least 8 characters.')).toBeVisible()
+  await page.getByLabel('New password').fill('a-much-better-pass1')
+  await page.getByLabel('Confirm password').fill('a-much-better-pass2')
+  await page.getByRole('button', { name: 'Update password' }).click()
+  await expect(page.getByText('The two passwords don’t match.')).toBeVisible()
+  await page.getByLabel('Confirm password').fill('a-much-better-pass1')
+  await page.getByRole('button', { name: 'Update password' }).click()
+  await expect(page.getByRole('heading', { name: 'Password updated' })).toBeVisible()
+})
+
+test('login redirect ignores off-site targets', async ({ page }) => {
+  await page.goto('/login?redirect=//evil.example')
+  await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible()
+})
+
+// ─── After the trip ───
+
+test('rating screen shows the driver, trip and tip options', async ({ page }) => {
+  await page.goto('/rate/demo')
+  await expect(page.getByRole('heading', { name: /How was your trip with Marcus/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'View receipt' })).toHaveCount(0) // demo trip has no receipt
+  await expect(page.getByRole('button', { name: '$5' })).toBeVisible()
+  await page.getByRole('button', { name: '$5' }).click()
+  await expect(page.getByRole('button', { name: 'Add $5.00 tip' })).toBeVisible()
+})
+
+test('low rating asks what went wrong and offers a safety report', async ({ page }) => {
+  await page.goto('/rate/demo')
+  await page.getByRole('button', { name: '2 stars' }).click()
+  await expect(page.getByText('What went wrong?')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Report a safety issue' })).toBeVisible()
+})
+
+test('shared trip page works without logging in', async ({ page }) => {
+  await page.goto('/track/demo')
+  await expect(page.getByText('Ann is on the way')).toBeVisible()
+  await expect(page.getByText('TX 4471')).toBeVisible()
 })
 
 // ─── Booking Page ───

@@ -20,7 +20,7 @@ const actions = [
     const buttons = page.getByRole('button')
     const count = await buttons.count()
     for (let i = 0; i < count; i++) {
-      await buttons.nth(i).click().catch(() => {})
+      await buttons.nth(i).click({ timeout: 2000 }).catch(() => {})
       await page.waitForTimeout(50)
     }
   },
@@ -31,7 +31,7 @@ const actions = [
     const links = page.getByRole('link')
     const count = await links.count()
     for (let i = 0; i < count; i++) {
-      await links.nth(i).click().catch(() => {})
+      await links.nth(i).click({ timeout: 2000 }).catch(() => {})
       await page.waitForTimeout(50)
       await page.goto('/')
     }
@@ -54,8 +54,7 @@ const actions = [
     for (let i = 0; i < 5; i++) {
       await page.getByPlaceholder('Full name').fill(`Bot ${Math.random().toString(36).slice(2)}`)
       await page.getByPlaceholder('Email address').fill(`bot${Math.random()}@fake.xxx`)
-      await page.getByPlaceholder('Password (min 6 characters)').fill('ab')
-      await page.getByPlaceholder('Confirm password').fill('cd')
+      await page.getByPlaceholder('Password (at least 8 characters)').fill('ab')
       await page.getByRole('button', { name: 'Sign up' }).click()
       await page.waitForTimeout(100)
     }
@@ -127,8 +126,8 @@ const actions = [
   // Double/triple click elements
   async (page) => {
     await page.goto('/')
-    await page.locator('h1').dblclick().catch(() => {})
-    await page.getByRole('button', { name: 'See prices' }).dblclick().catch(() => {})
+    await page.locator('h1').dblclick({ timeout: 2000 }).catch(() => {})
+    await page.getByRole('button', { name: 'See prices' }).dblclick({ timeout: 2000 }).catch(() => {})
     await page.waitForLoadState('domcontentloaded')
   },
 
@@ -140,7 +139,7 @@ const actions = [
     const buttons = page.getByRole('button')
     const count = await buttons.count()
     for (let i = 0; i < Math.min(count, 8); i++) {
-      await buttons.nth(i).click().catch(() => {})
+      await buttons.nth(i).click({ timeout: 2000 }).catch(() => {})
       await page.waitForTimeout(50)
     }
   },

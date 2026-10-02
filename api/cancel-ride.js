@@ -4,6 +4,7 @@ import { rateLimit } from './_rateLimit.js'
 import { cancellationFeeCents, noShowFeeCents, noShowAllowed, splitFee } from './_fees.js'
 import { sendEmail, cancellationFeeEmail } from './_email.js'
 import { pushToUser, rideParticipants } from './_push.js'
+import { notifyNearbyDrivers } from './_notifyDrivers.js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
@@ -161,6 +162,7 @@ async function rebook(rideId, cancellingDriverId) {
       return null
     }
     await admin.from('rides').update({ replaced_by_ride_id: fresh.id }).eq('id', rideId)
+    await notifyNearbyDrivers(fresh.id)
     return fresh.id
   } catch (err) {
     console.error('Rebook after driver cancel failed:', err.message)

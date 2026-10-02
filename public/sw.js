@@ -22,7 +22,14 @@ self.addEventListener('notificationclick', (event) => {
   event.waitUntil((async () => {
     const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
     const existing = all.find((c) => new URL(c.url).origin === self.location.origin)
-    if (existing) { await existing.focus(); return existing.navigate(url) }
+    if (existing) {
+      try {
+        await existing.focus()
+        return await existing.navigate(url)
+      } catch {
+        // A tab this worker doesn't control can't be navigated; open the page instead.
+      }
+    }
     return self.clients.openWindow(url)
   })())
 })

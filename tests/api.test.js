@@ -33,3 +33,10 @@ test('different real clients get separate counters', () => {
   assert.equal(check({ headers: { 'x-vercel-forwarded-for': '192.0.2.1' }, socket: {} }), null)
   assert.equal(check({ headers: { 'x-vercel-forwarded-for': '192.0.2.2' }, socket: {} }), null)
 })
+
+test('distance helper used for nearby-driver alerts', async () => {
+  const { milesBetween } = await import('../api/_notifyDrivers.js')
+  assert.equal(Math.round(milesBetween(25.04, -77.35, 25.04, -77.35) * 100), 0)
+  const cableBeachToAirport = milesBetween(25.0750, -77.4040, 25.0389, -77.4659)
+  assert.ok(cableBeachToAirport > 4 && cableBeachToAirport < 5, String(cableBeachToAirport))
+})

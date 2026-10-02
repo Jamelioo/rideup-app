@@ -5,83 +5,95 @@ import { formatFare, driverPayout } from '../../lib/pricing'
 import { generateFakeEarnings } from '../../lib/demoDriverMode'
 import { DEMO_MODE } from '../../lib/demoMode'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
-import { useAuth } from '../../lib/useAuth'
+import { useDriver } from '../../lib/useDriver'
 
 const router = useRouter()
+const { driver } = useDriver()
 const activeTab = ref('today')
+const loading = ref(!DEMO_MODE)
+const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const METHODS = { bank_transfer: 'Bank transfer', cash: 'Cash', mobile_money: 'Mobile money', other: 'Payout' }
+const PAID = ['captured', 'paid', 'partially_refunded']
 
-const earnings = ref(DEMO_MODE ? generateFakeEarnings() : { today: [], weeklyTotals: [0,0,0,0,0,0,0], weeklyTrips: [0,0,0,0,0,0,0] })
+// Every earning line: completed trips (your 80% + 100% of tips) and your share of cancellation/no-show fees.
+const items = ref([])
+const summary = ref(null) // driver_earnings_summary: balance, paid out, tips
+const payouts = ref([])
 
-const todayTotal = computed(() => earnings.value.today.reduce((s, t) => s + driverPayout(t), 0))
-const weeklyTotal = computed(() => earnings.value.weeklyTotals.reduce((s, v) => s + v, 0))
-const weeklyTripsTotal = computed(() => earnings.value.weeklyTrips.reduce((s, v) => s + v, 0))
-const maxDailyEarning = computed(() => Math.max(...earnings.value.weeklyTotals, 1))
+if (DEMO_MODE) {
+  const fake = generateFakeEarnings()
+  items.value = fake.today.map((t, i) => ({ id: t.id, kind: 'trip', at: t.completed_at, label: t.dropoff_address, miles: t.distance_miles, amount: driverPayout(t), tip: i % 3 === 0 ? 300 : 0, processing: false }))
+  summary.value = { balance_cents: 4820, paid_out_cents: 9600, tips_cents: 900 }
+  payouts.value = [{ id: 'p1', amount_cents: 9600, method: 'bank_transfer', created_at: new Date(Date.now() - 6 * 86_400_000).toISOString(), reference: 'TX-1042' }]
+}
+
+const now = new Date()
+const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+const weekStart = new Date(todayStart)
+weekStart.setDate(todayStart.getDate() - ((todayStart.getDay() + 6) % 7)) // Monday, also on Sundays
+
+const total = (list) => list.reduce((s, i) => s + i.amount + i.tip, 0)
+const todayItems = computed(() => items.value.filter((i) => new Date(i.at) >= todayStart))
+const weekItems = computed(() => items.value.filter((i) => new Date(i.at) >= weekStart))
+const todayTotal = computed(() => total(todayItems.value))
+const weeklyTotal = computed(() => total(weekItems.value))
+const tripsCount = (list) => list.filter((i) => i.kind === 'trip').length
+const weekly = computed(() => {
+  const totals = [0, 0, 0, 0, 0, 0, 0]
+  const trips = [0, 0, 0, 0, 0, 0, 0]
+  for (const i of weekItems.value) {
+    const day = (new Date(i.at).getDay() + 6) % 7
+    totals[day] += i.amount + i.tip
+    if (i.kind === 'trip') trips[day]++
+  }
+  return { totals, trips }
+})
+const maxDailyEarning = computed(() => Math.max(...weekly.value.totals, 1))
 
 onMounted(async () => {
-  if (DEMO_MODE || !supabaseConfigured) return
-
-  const { user } = useAuth()
-  if (!user.value) return
-
-  try {
-    const { data: driver } = await supabase
-      .from('drivers')
-      .select('id')
-      .eq('auth_user_id', user.value.id)
-      .single()
-
-    if (!driver) return
-
-    const { data: rides } = await supabase
+  if (DEMO_MODE || !supabaseConfigured || !driver.value) {
+    loading.value = false
+    return
+  }
+  const since = new Date(weekStart.getTime() - 7 * 86_400_000).toISOString()
+  const [{ data: rides }, { data: sum }, { data: paid }] = await Promise.all([
+    supabase
       .from('rides')
-      .select('id, fare_cents, driver_payout_cents, completed_at, created_at, rider_name, distance_miles')
-      .eq('driver_id', driver.id)
-      .eq('status', 'completed')
-      .order('completed_at', { ascending: false })
+      .select('id, status, fare_cents, driver_payout_cents, tip_cents, tip_payment_intent_id, payment_status, completed_at, cancelled_at, created_at, dropoff_address, distance_miles, cancel_reason')
+      .eq('driver_id', driver.value.id)
+      .in('status', ['completed', 'cancelled'])
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(500),
+    supabase.rpc('driver_earnings_summary'),
+    supabase.from('driver_payouts').select('id, amount_cents, method, reference, created_at, status').eq('status', 'paid').order('created_at', { ascending: false }).limit(20),
+  ])
 
-    if (!rides || rides.length === 0) return
-
-    const now = new Date()
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-
-    // Today's rides
-    const todayRides = rides.filter(r => new Date(r.completed_at || r.created_at) >= todayStart)
-    earnings.value.today = todayRides.map(r => ({
-      id: r.id,
-      fare_cents: r.fare_cents || 0,
-      driver_payout_cents: r.driver_payout_cents,
-      completed_at: r.completed_at || r.created_at,
-      rider_name: r.rider_name,
-      distance_miles: r.distance_miles,
-    }))
-
-    // Weekly totals (Mon-Sun)
-    const weekTotals = [0, 0, 0, 0, 0, 0, 0]
-    const weekTrips = [0, 0, 0, 0, 0, 0, 0]
-    const weekStart = new Date(todayStart)
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1) // Monday
-
-    rides.forEach(r => {
-      const d = new Date(r.completed_at || r.created_at)
-      if (d >= weekStart) {
-        const dayIdx = (d.getDay() + 6) % 7 // Mon=0, Sun=6
-        weekTotals[dayIdx] += driverPayout(r)
-        weekTrips[dayIdx]++
-      }
-    })
-
-    earnings.value.weeklyTotals = weekTotals
-    earnings.value.weeklyTrips = weekTrips
-  } catch (e) { /* keep defaults */ }
+  items.value = (rides || []).flatMap((r) => {
+    if (r.status === 'completed' && !['failed', 'refunded'].includes(r.payment_status)) {
+      return [{
+        id: r.id, kind: 'trip', at: r.completed_at || r.created_at, label: r.dropoff_address,
+        miles: Number(r.distance_miles) || null, amount: driverPayout(r),
+        tip: r.tip_payment_intent_id ? (r.tip_cents || 0) : 0,
+        processing: !PAID.includes(r.payment_status),
+      }]
+    }
+    if (r.status === 'cancelled' && (r.driver_payout_cents || 0) > 0 && PAID.includes(r.payment_status)) {
+      return [{ id: r.id, kind: 'fee', at: r.cancelled_at || r.created_at, label: r.cancel_reason === 'rider_no_show' ? 'No-show fee' : 'Cancellation fee', miles: null, amount: r.driver_payout_cents, tip: 0, processing: false }]
+    }
+    return []
+  })
+  summary.value = Array.isArray(sum) ? sum[0] : sum
+  payouts.value = paid || []
+  loading.value = false
 })
-const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
-function timeAgo(isoString) {
+function timeLabel(isoString) {
   const diff = Date.now() - new Date(isoString).getTime()
-  const mins = Math.round(diff / 60000)
+  const mins = Math.max(0, Math.round(diff / 60000))
   if (mins < 60) return `${mins} min ago`
-  const hrs = Math.round(mins / 60)
-  return `${hrs}h ago`
+  if (mins < 24 * 60) return `${Math.round(mins / 60)}h ago`
+  return new Date(isoString).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
 function goBack() {
@@ -103,6 +115,14 @@ function goBack() {
     </div>
 
     <div class="max-w-lg mx-auto px-5 pb-8">
+      <!-- Balance -->
+      <div class="rounded-2xl bg-[#191f1c] text-white p-5 mb-6">
+        <p class="text-[12px] font-semibold uppercase tracking-wide text-white/70">Balance</p>
+        <p class="text-[34px] font-bold leading-tight">{{ summary ? formatFare(Math.max(0, summary.balance_cents || 0)) : (loading ? '…' : '$0.00') }}</p>
+        <p class="text-[12px] text-white/70 mt-1" v-if="summary">Paid out so far {{ formatFare(summary.paid_out_cents || 0) }} · Tips {{ formatFare(summary.tips_cents || 0) }}</p>
+        <p class="text-[12px] text-white/80 mt-3 leading-relaxed">RideUp pays your balance by bank transfer, cash or mobile money. Each payout you receive is listed below.</p>
+      </div>
+
       <!-- Tab toggle -->
       <div class="flex bg-[var(--color-surface-secondary)] rounded-xl p-1 mb-6">
         <button @click="activeTab = 'today'"
@@ -121,22 +141,24 @@ function goBack() {
       <div v-if="activeTab === 'today'">
         <div class="text-center mb-6">
           <div class="text-[36px] font-bold font-serif">{{ formatFare(todayTotal) }}</div>
-          <div class="text-[13px] text-[var(--color-text-muted)] mt-1">{{ earnings.today.length }} trips</div>
+          <div class="text-[13px] text-[var(--color-text-muted)] mt-1">{{ tripsCount(todayItems) }} trips</div>
         </div>
 
-        <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3 px-1">Completed trips</p>
+        <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3 px-1">Today’s activity</p>
         <div class="space-y-2">
-          <div v-for="trip in earnings.today" :key="trip.id"
-               class="bg-[var(--color-surface-secondary)] rounded-2xl px-4 py-3.5 flex items-center justify-between">
-            <div>
-              <div class="text-[14px] font-semibold">{{ trip.rider_name || 'Rider' }}</div>
-              <div class="text-[11px] text-[var(--color-text-muted)] mt-0.5">{{ timeAgo(trip.completed_at) }} · {{ trip.distance_miles ? trip.distance_miles.toFixed(1) + ' mi' : '' }}</div>
+          <div v-for="item in todayItems" :key="item.id"
+               class="bg-[var(--color-surface-secondary)] rounded-2xl px-4 py-3.5 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <div class="text-[14px] font-semibold truncate">{{ item.kind === 'trip' ? `Trip to ${item.label || 'drop-off'}` : item.label }}</div>
+              <div class="text-[11px] text-[var(--color-text-muted)] mt-0.5">
+                {{ timeLabel(item.at) }}<span v-if="item.miles"> · {{ item.miles.toFixed(1) }} mi</span><span v-if="item.tip"> · includes {{ formatFare(item.tip) }} tip</span><span v-if="item.processing"> · processing</span>
+              </div>
             </div>
-            <div class="text-[15px] font-bold text-[var(--color-brand)]">+{{ formatFare(driverPayout(trip)) }}</div>
+            <div class="text-[15px] font-bold text-[var(--color-brand)] flex-shrink-0">+{{ formatFare(item.amount + item.tip) }}</div>
           </div>
         </div>
 
-        <div v-if="earnings.today.length === 0" class="text-center text-[13px] text-[var(--color-text-muted)] py-10">
+        <div v-if="!loading && todayItems.length === 0" class="text-center text-[13px] text-[var(--color-text-muted)] py-10">
           No trips today yet
         </div>
       </div>
@@ -145,13 +167,13 @@ function goBack() {
       <div v-else>
         <div class="text-center mb-6">
           <div class="text-[36px] font-bold font-serif">{{ formatFare(weeklyTotal) }}</div>
-          <div class="text-[13px] text-[var(--color-text-muted)] mt-1">{{ weeklyTripsTotal }} trips this week</div>
+          <div class="text-[13px] text-[var(--color-text-muted)] mt-1">{{ tripsCount(weekItems) }} trips this week</div>
         </div>
 
         <!-- Bar chart -->
         <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-5 mb-6">
           <div class="flex items-end justify-between gap-2 h-[120px]">
-            <div v-for="(total, i) in earnings.weeklyTotals" :key="i" class="flex-1 flex flex-col items-center gap-1">
+            <div v-for="(total, i) in weekly.totals" :key="i" class="flex-1 flex flex-col items-center gap-1">
               <div class="w-full rounded-lg transition-all"
                    :style="{ height: (total / maxDailyEarning * 100) + '%', minHeight: total > 0 ? '8px' : '2px' }"
                    :class="total > 0 ? 'bg-[#2b8659]' : 'bg-[var(--color-surface-secondary)]'">
@@ -160,7 +182,7 @@ function goBack() {
           </div>
           <div class="flex justify-between mt-2">
             <div v-for="(label, i) in dayLabels" :key="label" class="flex-1 text-center text-[11px] font-medium"
-                 :class="earnings.weeklyTotals[i] > 0 ? 'text-[var(--color-text-secondary)]' : 'text-[var(--color-text-muted)]'">
+                 :class="weekly.totals[i] > 0 ? 'text-[var(--color-text-secondary)]' : 'text-[var(--color-text-muted)]'">
               {{ label }}
             </div>
           </div>
@@ -169,50 +191,30 @@ function goBack() {
         <!-- Daily breakdown -->
         <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3 px-1">Daily breakdown</p>
         <div class="space-y-2">
-          <div v-for="(total, i) in earnings.weeklyTotals" :key="i"
+          <div v-for="(total, i) in weekly.totals" :key="i"
                class="flex items-center justify-between px-4 py-3 bg-[var(--color-surface-secondary)] rounded-xl">
             <div class="flex items-center gap-3">
               <span class="text-[13px] font-semibold w-8">{{ dayLabels[i] }}</span>
-              <span class="text-[12px] text-[var(--color-text-muted)]">{{ earnings.weeklyTrips[i] }} trips</span>
+              <span class="text-[12px] text-[var(--color-text-muted)]">{{ weekly.trips[i] }} trips</span>
             </div>
             <span class="text-[14px] font-bold font-serif" :class="total > 0 ? '' : 'text-[var(--color-text-muted)]'">{{ formatFare(total) }}</span>
           </div>
         </div>
       </div>
 
-      <!-- Payout Actions -->
+      <!-- Payout history -->
       <div class="mt-8">
-        <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3 px-1">Payouts</p>
-        <div class="space-y-2">
-          <button class="w-full flex items-center justify-between bg-[var(--color-surface-secondary)] rounded-2xl px-4 py-4 opacity-60" disabled>
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-[#2b8659]/10 flex items-center justify-center">
-                <svg class="w-5 h-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <div class="text-left">
-                <p class="text-[14px] font-semibold text-[var(--color-text-primary)]">Instant Cashout</p>
-                <p class="text-[11px] text-[var(--color-text-muted)]">Not available yet. Payouts are arranged with RideUp directly — contact support.</p>
-              </div>
+        <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3 px-1">Payouts received</p>
+        <div v-if="payouts.length" class="space-y-2">
+          <div v-for="p in payouts" :key="p.id" class="flex items-center justify-between bg-[var(--color-surface-secondary)] rounded-2xl px-4 py-3.5">
+            <div>
+              <div class="text-[14px] font-semibold">{{ METHODS[p.method] || 'Payout' }}</div>
+              <div class="text-[11px] text-[var(--color-text-muted)] mt-0.5">{{ new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}<span v-if="p.reference"> · Ref {{ p.reference }}</span></div>
             </div>
-            <span class="text-[11px] font-bold text-white bg-[#2b8659] px-2 py-1 rounded-full">COMING SOON</span>
-          </button>
-          <button class="w-full flex items-center justify-between bg-[var(--color-surface-secondary)] rounded-2xl px-4 py-4 opacity-60" disabled>
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-[#2b8659]/10 flex items-center justify-center">
-                <svg class="w-5 h-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
-              </div>
-              <div class="text-left">
-                <p class="text-[14px] font-semibold text-[var(--color-text-primary)]">Bank Withdrawal</p>
-                <p class="text-[11px] text-[var(--color-text-muted)]">Weekly automatic deposits to your account</p>
-              </div>
-            </div>
-            <span class="text-[11px] font-bold text-white bg-[#2b8659] px-2 py-1 rounded-full">COMING SOON</span>
-          </button>
+            <div class="text-[15px] font-bold">{{ formatFare(p.amount_cents) }}</div>
+          </div>
         </div>
+        <p v-else-if="!loading" class="text-[13px] text-[var(--color-text-muted)] px-1">No payouts yet. Questions about a payout? <router-link to="/support" class="text-[var(--color-brand)] font-semibold">Contact support</router-link>.</p>
       </div>
     </div>
   </div>

@@ -2,6 +2,7 @@ import { admin } from './_auth.js'
 import { calculateFare } from '../src/lib/pricing.js'
 import { pushToUser } from './_push.js'
 import { captureRide } from './_capture.js'
+import { notifyNearbyDrivers } from './_notifyDrivers.js'
 
 // Turns due scheduled rides into live ride requests and clears stale unanswered requests.
 // Call every minute (Vercel Cron on Pro, Supabase pg_cron + pg_net, or any external pinger) with
@@ -93,6 +94,7 @@ export default async function handler(req, res) {
       if (error || !ride) { console.error('Dispatch insert error:', error?.message); await fail('failed'); continue }
 
       await admin.from('scheduled_rides').update({ status: 'dispatched', dispatched_ride_id: ride.id }).eq('id', sr.id)
+      await notifyNearbyDrivers(ride.id)
       await pushToUser(rider.auth_user_id, {
         title: 'Finding your scheduled ride',
         body: `We're matching you with a driver for ${sr.pickup_address}.`,

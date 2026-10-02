@@ -13,6 +13,48 @@
 
 **Overall:** the security and money foundations from the last rounds hold up: server-side fares, atomic accept, card holds, locked-down tables and authenticated APIs. What's missing is mostly the **trip experience around them**. Riders and drivers can't actually talk to each other, a refresh mid-trip strands both sides, the safety toolkit is built but never shown, and two account flows are broken. None of these is visible in demo mode, but every one would surface in the first week of real rides.
 
+## Fix status (2026-10-02)
+
+Everything below has been fixed in code. Items marked **config** work as soon as you add the key or flip the setting;
+until then they stay off and nothing breaks. Verified with 28 unit tests, 31 browser tests (3 skipped in demo mode),
+a 100-bot chaos run, and the migration's rules exercised on Postgres 16 (fares, one active ride, ratings, PIN,
+share links, suspension, payouts, realtime policies, Premium gating, heartbeat, re-match).
+
+| Item | Status |
+|---|---|
+| C1 Chat and calls | Fixed: real chat and call on both trip screens; phone and chat only while active (+30 min chat for lost items). |
+| C2 Trip recovery | Fixed: rider and driver return to any active trip; the driver is never locked out. |
+| C3 Safety | Fixed: shield on both trip screens (919, live share link, report), public `/track/<token>`, admin safety queue with reporter, trip and phone numbers. Reports were also being silently dropped (wrong column); fixed. |
+| C4 Accounts | Fixed: set-new-password page, driver applications survive email confirmation (saved with the account, submitted automatically, any device). |
+| H1 Cancellation | Fixed: one server cancel endpoint, wait timer, $5 no-show after 5 minutes, fee preview. |
+| H2 Driver earnings | Fixed: earnings shown everywhere, balance, tips and payouts on the earnings page. |
+| H3 ETA | Fixed: live ETA from the driver's real position, ETA to destination during the trip. |
+| H4 Ratings | Fixed: written once by the right person after completion, rolling averages, honest errors, issue tags, low-rating review flag. |
+| H5 Admin | Fixed: no fake data in live mode, correct statuses, rider suspension that blocks booking, document viewer and checklist, payouts ledger. |
+| H6 Multiple rides | Fixed in the database for everyone, including the scheduler. |
+| H7 Guest conversion | Fixed: confirm email first, then choose a password (Supabase's required order). |
+| H8 Hidden main action | Fixed: sticky request bar showing the card on file. |
+| M1 Phone exposure | Fixed for the short term (active trips only). Masked numbers need Twilio Proxy. |
+| M2–M9 | Fixed. M3 now also hides the house number and destination street before accepting. |
+| M10 Phone verification | **config**: verify-phone page built; needs an SMS provider in Supabase, then the admin setting. |
+| U1–U6, U8 | Fixed (U2 pickup PIN is an admin setting). |
+| U7, U10 Push alerts | **config**: needs VAPID keys. Wait timer done. |
+| U9 Email receipts | **config**: needs `RESEND_API_KEY`. |
+| Low items | Fixed (CSP buffers, request cards close on cancel, drivers go offline when the app is closed). Promotions/Referrals remain "coming soon". |
+
+**Also fixed while doing this (found during the work):**
+- A dropped connection at drop-off could leave a trip uncharged; capture is now retried and swept up by the cron.
+- A double tap on a tip could charge twice; the tip is claimed before charging.
+- "RideUp Premium" was sold at Premium prices but dispatched to any car. Premium is now hidden until an admin turns
+  it on, and only goes to vehicles an admin has approved as Premium.
+- When a driver cancels, the rider is re-matched automatically at the same price (Uber behaviour).
+- New-request push alerts went to every online driver island-wide with the exact pickup address; they now go to
+  the closest matching drivers and show only distance and earnings.
+- Riders saw the driver's full name; both sides now see first names only.
+
+**Still open (needs a service or a decision):** masked calling (Twilio Proxy), automatic driver payouts (Stripe
+Connect), background-check vendor, promotions/referrals.
+
 ---
 
 ## CRITICAL: breaks a real trip or a safety promise

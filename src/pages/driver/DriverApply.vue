@@ -191,7 +191,7 @@ function goBack() {
 
       <!-- Waiting for email confirmation -->
       <div v-else-if="awaitingConfirmation" class="pt-10">
-        <h2 class="text-2xl font-bold mb-2" role="status">Confirm your email to finish</h2>
+        <h2 class="text-2xl font-bold mb-2" aria-live="polite">Confirm your email to finish</h2>
         <p class="text-[var(--color-text-secondary)] text-[14px] mb-6">
           We sent a link to <strong class="text-[var(--color-text-primary)]">{{ form.email }}</strong>. Tap it and your application is submitted automatically. We saved everything you entered.
         </p>

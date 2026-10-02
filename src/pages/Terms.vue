@@ -21,7 +21,7 @@ function goBack() {
     </div>
 
     <div class="max-w-2xl mx-auto px-5 py-8 space-y-6 text-[15px] leading-relaxed text-[var(--color-text-secondary)]">
-      <p class="text-[13px] text-[var(--color-text-muted)]">Last updated: September 30, 2026</p>
+      <p class="text-[13px] text-[var(--color-text-muted)]">Last updated: October 2, 2026</p>
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Acceptance of Terms</h2>
@@ -35,27 +35,27 @@ function goBack() {
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Accounts and Guest Booking</h2>
-        <p>You must be at least 18 to use RideUp and must give accurate information. You can book as a guest with a name, phone number and payment card, or create a full account. You are responsible for keeping your login details secure and for activity on your account.</p>
+        <p>You must be at least 18 to use RideUp and must give accurate information. You can book as a guest with a name, phone number and payment card, or create a full account; a guest account can be saved by confirming an email address and choosing a password. We may ask you to confirm your phone number with a text-message code before you ride. You are responsible for keeping your login details secure and for activity on your account.</p>
       </section>
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Fares and Payment</h2>
-        <p>Your fare is calculated from distance and time and shown before you request a ride. A valid payment card is required to request a ride. When a driver accepts, we place a temporary hold for the fare on your card. When the trip is completed the hold is converted into the charge for that fare. If the ride is cancelled before the trip starts, the hold is released. Payments are processed by Stripe; RideUp does not store your full card number.</p>
+        <p>Your fare is calculated from distance and time and shown before you request a ride; that is the price you pay. A valid payment card is required to request a ride. When a driver accepts, we place a temporary hold for the fare on your card. When the trip is completed the hold is converted into the charge for that fare and we email you a receipt. If the ride is cancelled before the trip starts, the hold is released (less any fee described below). If your driver cancels, we automatically look for another driver at the same price. You can add an optional tip of $1 to $100 for up to 3 days after a trip; tips are charged separately to your card and 100% goes to your driver. Payments are processed by Stripe; RideUp does not store your full card number.</p>
       </section>
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Cancellations</h2>
-        <p>You can cancel a ride request at any time before the trip starts. If you cancel more than 2 minutes after a driver has accepted your ride, a $5.00 cancellation fee applies (never more than the fare), and we show you the fee before you confirm. There is no fee if you cancel within those 2 minutes, before a driver accepts, or if your driver cancels.</p>
+        <p>You can cancel a ride request at any time before the trip starts. If you cancel more than 2 minutes after a driver has accepted your ride, a $5.00 cancellation fee applies (never more than the fare), and we show you the fee before you confirm. There is no fee if you cancel within those 2 minutes, before a driver accepts, or if your driver cancels. Once your driver arrives, the first 5 minutes of waiting are free; if you still haven't arrived after that, the driver may cancel the ride as a no-show and the same $5.00 fee applies. Most of any cancellation or no-show fee goes to the driver. If you think a fee was charged in error, contact support and we'll review it.</p>
       </section>
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Drivers</h2>
-        <p>Drivers must apply and be approved before accepting rides, and must keep their documents and vehicle information accurate. Drivers keep 80% of each fare; RideUp retains a 20% platform fee. RideUp may suspend or remove drivers who break these terms or the law.</p>
+        <p>Drivers must apply and be approved before accepting rides, and must keep their photo, documents and vehicle information accurate; changing these sends the profile back for review, and expired licence or insurance documents must be renewed before going online. Drivers keep 80% of each fare and of any cancellation or no-show fee, and 100% of tips; RideUp retains a 20% platform fee. Ratings are averaged over recent trips, and a sustained low rating may lead to a quality review. RideUp may suspend or remove drivers who break these terms or the law.</p>
       </section>
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Safety</h2>
-        <p>Features such as sharing your trip with trusted contacts and reporting a problem are provided to help, but they are not a substitute for emergency services. In an emergency, call the local emergency number first.</p>
+        <p>Features such as sharing your live trip, the optional pickup PIN, and reporting a problem are provided to help, but they are not a substitute for emergency services. Before you get in, check that the car's plate and the driver match the app. In an emergency, call 919 first.</p>
       </section>
 
       <section>

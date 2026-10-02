@@ -171,7 +171,7 @@ const inputClass = 'w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] round
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h1 class="text-2xl font-bold mb-2" role="status">Phone verified</h1>
+        <h1 class="text-2xl font-bold mb-2" aria-live="polite">Phone verified</h1>
         <p class="text-[14px] text-[var(--color-text-muted)] mb-8">{{ formatPhone(e164) }} is confirmed.</p>
         <button @click="router.replace(next)" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-xl text-[15px]">Continue</button>
       </div>

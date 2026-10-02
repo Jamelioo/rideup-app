@@ -17,6 +17,8 @@ alter table public.rides add column if not exists arrived_at timestamptz;
 alter table public.rides add column if not exists driver_location_at timestamptz;
 alter table public.rides add column if not exists share_token uuid;
 alter table public.drivers add column if not exists last_seen_at timestamptz;
+alter table public.drivers add column if not exists last_lat double precision; -- approximate (3 decimals), while online
+alter table public.drivers add column if not exists last_lng double precision;
 alter table public.rides add column if not exists tip_cents integer default 0;
 alter table public.rides add column if not exists tip_payment_intent_id text;
 alter table public.rides add column if not exists cancelled_by text;
@@ -506,6 +508,19 @@ create policy "Ride participants can send messages" on public.ride_messages
 -- ─────────────────────────────────────────
 drop policy if exists "Drivers can view open requests" on public.rides;
 
+-- Before accepting, drivers see the pickup street without the house number and only the area of the
+-- destination ("12 Sunrise Ln, Nassau" → "Sunrise Ln, Nassau" / "Nassau"). Exact addresses after accepting.
+create or replace function public.approx_address(p_address text, p_mode text default 'street')
+returns text language sql immutable as $$
+  select case
+    when p_address is null or btrim(p_address) = '' then null
+    when p_mode = 'area' and position(',' in p_address) > 0
+      then nullif(btrim(substring(p_address from position(',' in p_address) + 1)), '')
+    when p_mode = 'area' then btrim(p_address)
+    else btrim(regexp_replace(p_address, '^\s*(#|no\.?\s*)?\d+[a-z]?(-\d+)?\s*,?\s+', '', 'i'))
+  end
+$$;
+
 create or replace function public.open_ride_requests(
   p_lat double precision default null,
   p_lng double precision default null,
@@ -531,17 +546,21 @@ begin
   if d.status not in ('online', 'on_trip') then
     raise exception 'You are offline' using errcode = 'P0001', hint = 'offline';
   end if;
-  -- Heartbeat: polling means the app is open. Written at most every 30 seconds.
-  update drivers set last_seen_at = now()
+  -- Heartbeat: polling means the app is open. Written at most every 30 seconds, with an approximate
+  -- position so new requests can be pushed to nearby drivers only.
+  update drivers
+     set last_seen_at = now(),
+         last_lat = coalesce(round(p_lat::numeric, 3)::double precision, last_lat),
+         last_lng = coalesce(round(p_lng::numeric, 3)::double precision, last_lng)
    where id = d.id and (last_seen_at is null or last_seen_at < now() - interval '30 seconds');
 
   return query
   select * from (
     select r.id as id, r.created_at as created_at, r.vehicle_type as vehicle_type,
-           r.pickup_address as pickup_address,
+           public.approx_address(r.pickup_address, 'street') as pickup_address,
            round(r.pickup_lat::numeric, 3)::double precision as pickup_lat,
            round(r.pickup_lng::numeric, 3)::double precision as pickup_lng,
-           r.dropoff_address as dropoff_address, r.distance_miles as distance_miles, r.duration_minutes as duration_minutes,
+           public.approx_address(r.dropoff_address, 'area') as dropoff_address, r.distance_miles as distance_miles, r.duration_minutes as duration_minutes,
            r.fare_cents as fare_cents, r.driver_payout_cents as driver_payout_cents,
            split_part(coalesce(nullif(r.rider_name, ''), 'Rider'), ' ', 1) as rider_first_name,
            ri.rating as rider_rating,
