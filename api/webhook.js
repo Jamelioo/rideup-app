@@ -67,7 +67,8 @@ export default async function handler(req, res) {
     case 'charge.refunded': {
       const charge = event.data.object
       if (charge.payment_intent) {
-        const status = charge.amount_refunded >= charge.amount ? 'refunded' : 'partially_refunded'
+        // Partial captures (cancellation fees, split fares) charge less than was held: compare with what was captured.
+        const status = charge.amount_refunded >= (charge.amount_captured || charge.amount) ? 'refunded' : 'partially_refunded'
         await supabase.from('rides').update({ payment_status: status }).eq('payment_intent_id', charge.payment_intent)
       }
       break
@@ -83,7 +84,9 @@ export default async function handler(req, res) {
     }
     case 'payment_intent.payment_failed': {
       const rideId = event.data.object.metadata?.ride_id
-      if (rideId) {
+      // Only the trip's own payment: a failed tip, or a friend's split-fare share (which falls back to the
+      // rider at capture), doesn't make the trip unpaid.
+      if (rideId && !['tip', 'split'].includes(event.data.object.metadata?.type)) {
         await supabase.from('rides').update({ payment_status: 'failed' }).eq('id', rideId)
       }
       break

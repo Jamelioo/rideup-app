@@ -5,6 +5,7 @@ import { loadGoogleMaps } from '../lib/useGoogleMaps'
 const props = defineProps({
   pickup: { type: Object, default: null },
   dropoff: { type: Object, default: null },
+  stop: { type: Object, default: null }, // one extra stop on the way
   driverLocation: { type: Object, default: null },
   showTraffic: { type: Boolean, default: false }, // Google's live traffic colours (green / orange / red)
 })
@@ -18,6 +19,7 @@ let map = null
 let maps = null
 let pickupMarker = null
 let dropoffMarker = null
+let stopMarker = null
 let driverMarker = null
 let trafficLayer = null
 let directionsService = null
@@ -187,6 +189,31 @@ function updateMarkers() {
   }
 }
 
+// Extra stop: a small hollow square between pickup and drop-off (not draggable; edited in the address list).
+function updateStopMarker() {
+  if (!map || !maps) return
+  if (!props.stop) {
+    if (stopMarker) { clearMarker(stopMarker); stopMarker = null }
+    return
+  }
+  const pos = { lat: props.stop.lat, lng: props.stop.lng }
+  if (stopMarker) {
+    if (useAdvanced) stopMarker.position = pos
+    else stopMarker.setPosition(pos)
+    return
+  }
+  if (useAdvanced) {
+    const div = document.createElement('div')
+    div.style.cssText = 'width:14px;height:14px;background:#fff;border:4px solid #191f1c;box-sizing:content-box;'
+    stopMarker = new maps.marker.AdvancedMarkerElement({ map, position: pos, content: div, title: 'Stop' })
+  } else {
+    stopMarker = new maps.Marker({
+      map, position: pos, title: 'Stop',
+      icon: { path: 'M -6,-6 L 6,-6 L 6,6 L -6,6 Z', scale: 1, fillColor: '#fff', fillOpacity: 1, strokeColor: '#191f1c', strokeWeight: 4 },
+    })
+  }
+}
+
 // --- Driver marker ---
 function createDriverMarkerContent() {
   const div = document.createElement('div')
@@ -252,6 +279,7 @@ function drawRoute() {
     {
       origin: { lat: props.pickup.lat, lng: props.pickup.lng },
       destination: { lat: props.dropoff.lat, lng: props.dropoff.lng },
+      waypoints: props.stop ? [{ location: { lat: props.stop.lat, lng: props.stop.lng }, stopover: true }] : [],
       travelMode: maps.TravelMode.DRIVING,
     },
     (result, status) => {
@@ -268,6 +296,7 @@ function fitBounds() {
   const bounds = new maps.LatLngBounds()
   bounds.extend({ lat: props.pickup.lat, lng: props.pickup.lng })
   bounds.extend({ lat: props.dropoff.lat, lng: props.dropoff.lng })
+  if (props.stop) bounds.extend({ lat: props.stop.lat, lng: props.stop.lng })
   map.fitBounds(bounds, { top: 60, bottom: 380, left: 40, right: 40 })
 }
 
@@ -319,6 +348,7 @@ onMounted(async () => {
   })
 
   updateMarkers()
+  updateStopMarker()
   updateDriverMarker()
   drawRoute()
   if (props.pickup && props.dropoff) {
@@ -349,6 +379,16 @@ watch(
 )
 
 watch(
+  () => props.stop,
+  () => {
+    updateStopMarker()
+    drawRoute()
+    if (props.pickup && props.dropoff) fitBounds()
+  },
+  { deep: true }
+)
+
+watch(
   () => props.driverLocation,
   () => { updateDriverMarker() },
   { deep: true }
@@ -360,6 +400,8 @@ onUnmounted(() => {
   pickupMarker = null
   clearMarker(dropoffMarker)
   dropoffMarker = null
+  clearMarker(stopMarker)
+  stopMarker = null
   clearMarker(driverMarker)
   driverMarker = null
   if (themeObserver) { themeObserver.disconnect(); themeObserver = null }

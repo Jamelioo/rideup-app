@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import AccountConversionCard from '../components/AccountConversionCard.vue'
+import DeleteAccountSheet from '../components/DeleteAccountSheet.vue'
 import { supabase } from '../lib/supabase'
 import { formatPhone } from '../lib/phone'
 import { useSettings } from '../lib/settings'
@@ -265,22 +266,7 @@ async function handleLogout() {
       <button @click="handleDeleteAccount" class="text-[var(--color-text-muted)] text-sm">Delete account</button>
     </div>
 
-    <!-- Delete Account Confirmation -->
-    <Transition name="fade">
-      <div v-if="showDeleteConfirm" class="fixed inset-0 z-50 flex items-end justify-center bg-[var(--color-overlay)]" @click.self="showDeleteConfirm = false">
-        <div class="w-full max-w-md bg-[var(--color-surface)] rounded-t-3xl px-6 pt-8 pb-10 shadow-xl">
-          <h3 class="text-lg font-bold mb-2">Delete your account?</h3>
-          <p class="text-[14px] text-[var(--color-text-muted)] mb-6">To delete your account, please contact our support team. They'll process your request and remove all your data.</p>
-          <a href="tel:+12424529911" class="block w-full py-3.5 bg-red-500 text-white font-bold rounded-xl text-[14px] text-center mb-3">
-            Call Support (242) 452-9911
-          </a>
-          <a href="https://wa.me/12424529911?text=I%20would%20like%20to%20delete%20my%20RideUp%20account" target="_blank" class="block w-full py-3.5 bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] font-bold rounded-xl text-[14px] text-center mb-3">
-            WhatsApp Support
-          </a>
-          <button @click="showDeleteConfirm = false" class="w-full py-3 text-[14px] text-[var(--color-text-muted)] font-medium">Cancel</button>
-        </div>
-      </div>
-    </Transition>
+    <DeleteAccountSheet :open="showDeleteConfirm" role="rider" @close="showDeleteConfirm = false" />
 
     <!-- Toast -->
     <Transition name="fade">

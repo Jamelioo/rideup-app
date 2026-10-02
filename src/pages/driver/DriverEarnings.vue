@@ -1,4 +1,5 @@
 <script setup>
+import DriverQuests from '../../components/DriverQuests.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { formatFare, driverPayout } from '../../lib/pricing'
@@ -120,8 +121,9 @@ function goBack() {
         <p class="text-[12px] font-semibold uppercase tracking-wide text-white/70">Balance</p>
         <p class="text-[34px] font-bold leading-tight">{{ summary ? formatFare(Math.max(0, summary.balance_cents || 0)) : (loading ? '…' : '$0.00') }}</p>
         <p class="text-[12px] text-white/70 mt-1" v-if="summary">Paid out so far {{ formatFare(summary.paid_out_cents || 0) }} · Tips {{ formatFare(summary.tips_cents || 0) }}</p>
-        <p class="text-[12px] text-white/80 mt-3 leading-relaxed">RideUp pays your balance by bank transfer, cash or mobile money. Each payout you receive is listed below.</p>
+        <p class="text-[12px] text-white/80 mt-3 leading-relaxed">Your balance includes incentive rewards. RideUp pays it by bank transfer, cash or mobile money. Each payout you receive is listed below.</p>
       </div>
+      <DriverQuests />
 
       <!-- Tab toggle -->
       <div class="flex bg-[var(--color-surface-secondary)] rounded-xl p-1 mb-6">

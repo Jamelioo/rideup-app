@@ -6,6 +6,7 @@ import HarborBackdrop from '../../components/HarborBackdrop.vue'
 import RideTracker from '../../components/RideTracker.vue'
 import RideChat from '../../components/RideChat.vue'
 import SafetyToolkit from '../../components/SafetyToolkit.vue'
+import SplitFareSheet from '../../components/SplitFareSheet.vue'
 import { supabase } from '../../lib/supabase'
 import { DEMO_MODE } from '../../lib/demoMode'
 import { apiPost } from '../../lib/api'
@@ -42,6 +43,11 @@ const mapFailed = ref(DEMO_MODE)
 const chatOpen = ref(false)
 const unread = ref(0)
 const safetyOpen = ref(false)
+const splitOpen = ref(false)
+const stopPoint = computed(() => (ride.value?.stop_lat != null ? { lat: ride.value.stop_lat, lng: ride.value.stop_lng } : null))
+// Split fare is offered once the card is held (driver accepted) until drop-off.
+const canSplit = computed(() => !DEMO_MODE && ride.value?.payment_status === 'authorized' &&
+  ['accepted', 'driver_arrived', 'in_progress'].includes(ride.value?.status))
 const confirmingCancel = ref(false)
 const cancelFeeCents = ref(0)
 const cancelling = ref(false)
@@ -273,7 +279,7 @@ const endedMessage = computed(() => {
     </div>
 
     <!-- Map (falls back to an illustrated backdrop if maps aren't available) -->
-    <GoogleMap v-if="!mapFailed" :pickup="pickup" :dropoff="dropoff" :driver-location="driverLocation" @error="mapFailed = true" />
+    <GoogleMap v-if="!mapFailed" :pickup="pickup" :dropoff="dropoff" :stop="stopPoint" :driver-location="driverLocation" @error="mapFailed = true" />
     <HarborBackdrop v-else show-route />
 
     <RideTracker
@@ -288,9 +294,15 @@ const endedMessage = computed(() => {
       :arrived-at="ride?.arrived_at || null"
       :pin="pin"
       :unread="unread"
+      :stop-address="ride?.stop_address || ''"
+      :stop-reached="!!ride?.stop_reached_at"
+      :can-split="canSplit"
       @cancel="askCancel"
       @message="chatOpen = true"
+      @split="splitOpen = true"
     />
+
+    <SplitFareSheet v-if="canSplit || splitOpen" :open="splitOpen" :ride-id="rideId" @close="splitOpen = false" />
 
     <RideChat
       v-if="!DEMO_MODE && user"

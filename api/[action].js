@@ -10,8 +10,10 @@ const routes = {
   'capture-payment': () => import('./_routes/capture-payment.js'),
   'create-setup-intent': () => import('./_routes/create-setup-intent.js'),
   'create-setup-session': () => import('./_routes/create-setup-session.js'),
+  'delete-account': () => import('./_routes/delete-account.js'),
   'notify-driver': () => import('./_routes/notify-driver.js'),
   'save-payment-method': () => import('./_routes/save-payment-method.js'),
+  'split-fare': () => import('./_routes/split-fare.js'),
   'trip-event': () => import('./_routes/trip-event.js'),
   'verify-session': () => import('./_routes/verify-session.js'),
 }

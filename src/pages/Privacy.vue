@@ -45,7 +45,7 @@ function goBack() {
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Retention</h2>
-        <p>We keep account, ride and payment records for as long as your account is active and as needed for accounting, safety, dispute resolution and legal requirements. You can ask us to delete your account and personal data; some records may be kept where the law requires it.</p>
+        <p>We keep account, ride and payment records for as long as your account is active and as needed for accounting, safety, dispute resolution and legal requirements. You can delete your account yourself in the app (Profile › Delete account). That erases your login, name, contact details, photo, saved cards and driver documents; trip and payment records are kept without your name where accounting, safety or the law require it.</p>
       </section>
 
       <section>

@@ -17,6 +17,7 @@ const VerifyPhone = () => import('../pages/VerifyPhone.vue')
 const Profile = () => import('../pages/Profile.vue')
 const EditProfile = () => import('../pages/EditProfile.vue')
 const MyRides = () => import('../pages/MyRides.vue')
+const SplitInvite = () => import('../pages/rider/SplitInvite.vue')
 const Payments = () => import('../pages/Payments.vue')
 const SavedPlaces = () => import('../pages/SavedPlaces.vue')
 const Support = () => import('../pages/Support.vue')
@@ -53,6 +54,7 @@ const AdminSupport = () => import('../pages/admin/AdminSupport.vue')
 const AdminSafety = () => import('../pages/admin/AdminSafety.vue')
 const AdminPayouts = () => import('../pages/admin/AdminPayouts.vue')
 const AdminPromos = () => import('../pages/admin/AdminPromos.vue')
+const AdminIncentives = () => import('../pages/admin/AdminIncentives.vue')
 const AdminSettings = () => import('../pages/admin/AdminSettings.vue')
 
 const routes = [
@@ -65,6 +67,7 @@ const routes = [
   { path: '/verify-phone', name: 'verify-phone', component: VerifyPhone, meta: { requiresAuth: true, title: 'Verify Your Phone — RideUp' } },
   { path: '/profile', name: 'profile', component: Profile, meta: { requiresAuth: true, title: 'Profile — RideUp' } },
   { path: '/edit-profile', name: 'edit-profile', component: EditProfile, meta: { requiresAuth: true, title: 'Edit Profile — RideUp' } },
+  { path: '/split/:splitId', name: 'split-invite', component: SplitInvite, meta: { requiresAuth: true, title: 'Split Fare — RideUp' } },
   { path: '/my-rides', name: 'my-rides', component: MyRides, meta: { requiresAuth: true, title: 'My Rides — RideUp' } },
   { path: '/scheduled-rides', name: 'scheduled-rides', component: ScheduledRides, meta: { requiresAuth: true, title: 'Scheduled Rides — RideUp' } },
   { path: '/payments', name: 'payments', component: Payments, meta: { requiresAuth: true, title: 'Payments — RideUp' } },
@@ -111,11 +114,12 @@ const routes = [
       { path: 'rides', name: 'admin-rides', component: AdminRides, meta: { title: 'Manage Rides — RideUp' } },
       { path: 'users', name: 'admin-users', component: AdminUsers, meta: { title: 'Manage Users — RideUp' } },
       { path: 'drivers', name: 'admin-drivers', component: AdminDrivers, meta: { title: 'Manage Drivers — RideUp' } },
-      { path: 'revenue', name: 'admin-revenue', component: AdminRevenue, meta: { title: 'Revenue — RideUp' } },
+      { path: 'revenue', name: 'admin-revenue', component: AdminRevenue, meta: { title: 'Money — RideUp' } },
       { path: 'support', name: 'admin-support', component: AdminSupport, meta: { title: 'Support Tickets — RideUp' } },
       { path: 'safety', name: 'admin-safety', component: AdminSafety, meta: { title: 'Safety Reports — RideUp' } },
       { path: 'payouts', name: 'admin-payouts', component: AdminPayouts, meta: { title: 'Driver Payouts — RideUp' } },
       { path: 'promos', name: 'admin-promos', component: AdminPromos, meta: { title: 'Promo Codes — RideUp' } },
+      { path: 'incentives', name: 'admin-incentives', component: AdminIncentives, meta: { title: 'Driver Incentives — RideUp' } },
       { path: 'settings', name: 'admin-settings', component: AdminSettings, meta: { title: 'Settings — RideUp' } },
     ],
   },

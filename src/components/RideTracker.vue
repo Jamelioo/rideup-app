@@ -17,9 +17,12 @@ const props = defineProps({
   arrivedAt: { type: String, default: null },
   pin: { type: String, default: '' },
   unread: { type: Number, default: 0 },
+  stopAddress: { type: String, default: '' },
+  stopReached: { type: Boolean, default: false },
+  canSplit: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['cancel', 'message'])
+const emit = defineEmits(['cancel', 'message', 'split'])
 
 const now = ref(Date.now())
 let ticker = null
@@ -73,6 +76,9 @@ const showPin = computed(() => props.pin && ['driver_enroute', 'driver_arrived']
       <div class="text-center mb-4">
         <div class="text-[34px] leading-tight font-bold text-[var(--color-text-primary)] tracking-tight">{{ headline }}</div>
         <div class="text-[13px] text-[var(--color-text-secondary)] mt-1">{{ subline }}</div>
+        <div v-if="stopAddress" class="text-[12px] text-[var(--color-text-muted)] mt-1">
+          {{ stopReached ? '✓ Stop done' : 'Stop on the way' }}: {{ stopAddress.split(',')[0] }}
+        </div>
       </div>
 
       <!-- Wait timer -->
@@ -114,13 +120,22 @@ const showPin = computed(() => props.pin && ['driver_enroute', 'driver_arrived']
         </button>
       </div>
 
-      <button
-        v-if="showCancel"
-        @click="emit('cancel')"
-        class="w-full mt-3 py-3 min-h-[44px] text-[13px] text-[var(--color-text-secondary)] underline underline-offset-2 active:opacity-60"
-      >
-        Cancel ride
-      </button>
+      <div v-if="showCancel || canSplit" class="flex justify-center gap-6 mt-3">
+        <button
+          v-if="canSplit"
+          @click="emit('split')"
+          class="py-3 min-h-[44px] text-[13px] font-semibold text-[var(--color-brand)] active:opacity-60"
+        >
+          Split fare
+        </button>
+        <button
+          v-if="showCancel"
+          @click="emit('cancel')"
+          class="py-3 min-h-[44px] text-[13px] text-[var(--color-text-secondary)] underline underline-offset-2 active:opacity-60"
+        >
+          Cancel ride
+        </button>
+      </div>
     </div>
   </div>
 </template>

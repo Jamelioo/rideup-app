@@ -1,9 +1,11 @@
 <script setup>
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
 
 const router = useRouter()
+const route = useRoute()
+const accountDeleted = computed(() => route.query.deleted === '1')
 const { user } = useAuth()
 
 const isLoggedIn = computed(() => !!user.value)
@@ -21,6 +23,8 @@ function goToDriverApply() {
 
 <template>
   <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)] font-sans">
+
+    <p v-if="accountDeleted" role="status" class="bg-[var(--color-surface-secondary)] text-center text-[14px] px-4 py-3">Your RideUp account has been deleted.</p>
 
     <!-- NAV -->
     <nav class="sticky top-0 z-40 bg-[var(--color-surface)]/95 backdrop-blur-md border-b border-[var(--color-border)]">

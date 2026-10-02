@@ -121,6 +121,10 @@ function handleDecline() {
                 <div class="text-[11px] text-[var(--color-text-muted)] font-semibold uppercase tracking-wide">Pickup</div>
                 <div class="text-[14px] font-semibold">{{ request.pickup_address }}</div>
               </div>
+              <div v-if="request.stop_address">
+                <div class="text-[11px] text-[var(--color-text-muted)] font-semibold uppercase tracking-wide">Stop</div>
+                <div class="text-[14px] font-semibold">{{ request.stop_address }}</div>
+              </div>
               <div>
                 <div class="text-[11px] text-[var(--color-text-muted)] font-semibold uppercase tracking-wide">Drop-off</div>
                 <div class="text-[14px] font-semibold">{{ request.dropoff_address }}</div>

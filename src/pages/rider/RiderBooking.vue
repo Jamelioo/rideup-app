@@ -10,7 +10,7 @@ import { apiPost } from '../../lib/api'
 import { loadSettings, useSettings } from '../../lib/settings'
 import { enablePushNotifications } from '../../lib/push'
 import { loadGoogleMaps, reverseGeocode } from '../../lib/useGoogleMaps'
-import { calculateFare, formatFare, VEHICLE_TYPES, isAirportPickup, AIRPORT_FEE_CENTS } from '../../lib/pricing'
+import { calculateFare, formatFare, VEHICLE_TYPES, isAirportPickup, AIRPORT_FEE_CENTS, STOP_MINUTES, normalizeSurge } from '../../lib/pricing'
 import { getSavedPromo, savePromo, clearSavedPromo, checkPromo, loadRewards, previewDiscounts } from '../../lib/rewards'
 import { DEMO_MODE, DEMO_LOCATIONS, fakeRoute } from '../../lib/demoMode'
 import GoogleMap from '../../components/GoogleMap.vue'
@@ -27,10 +27,15 @@ const dropoffInput = ref(null)
 // The phone sheet and the desktop panel each have their own pair of address fields.
 const pickupInputDesktop = ref(null)
 const dropoffInputDesktop = ref(null)
+const stopInput = ref(null)
+const stopInputDesktop = ref(null)
 
 const pickup = ref(null)
 const dropoff = ref(null)
 const pickupText = ref('')
+// One extra stop on the way (Uber-style "Add stop").
+const stop = ref(null)
+const stopOpen = ref(false)
 const dropoffText = ref('')
 
 const selectedVehicle = ref('standard')
@@ -167,6 +172,8 @@ function setupAutocomplete(maps) {
         pickup.value = location
         activeInput.value = 'dropoff'
         visibleInput('dropoff')?.focus()
+      } else if (kind === 'stop') {
+        stop.value = location
       } else {
         dropoff.value = location
       }
@@ -177,12 +184,16 @@ function setupAutocomplete(maps) {
   attach(pickupInputDesktop.value, 'pickup')
   attach(dropoffInput.value, 'dropoff')
   attach(dropoffInputDesktop.value, 'dropoff')
+  attach(stopInput.value, 'stop')
+  attach(stopInputDesktop.value, 'stop')
   syncAddressFields()
 }
 
 // Whichever copy of the field is on screen (phone sheet or desktop panel).
 function visibleInput(kind) {
-  const pair = kind === 'pickup' ? [pickupInput.value, pickupInputDesktop.value] : [dropoffInput.value, dropoffInputDesktop.value]
+  const pair = kind === 'pickup' ? [pickupInput.value, pickupInputDesktop.value]
+    : kind === 'stop' ? [stopInput.value, stopInputDesktop.value]
+    : [dropoffInput.value, dropoffInputDesktop.value]
   return pair.find((el) => el && el.offsetParent !== null) || pair[0]
 }
 
@@ -192,12 +203,27 @@ function syncAddressFields() {
   const fields = [
     [pickupInput.value, pickup.value], [pickupInputDesktop.value, pickup.value],
     [dropoffInput.value, dropoff.value], [dropoffInputDesktop.value, dropoff.value],
+    [stopInput.value, stop.value], [stopInputDesktop.value, stop.value],
   ]
   for (const [el, loc] of fields) {
     if (el && document.activeElement !== el && loc?.address) el.value = loc.address
   }
 }
-watch([pickup, dropoff], () => nextTick(syncAddressFields), { deep: true })
+watch([pickup, dropoff, stop], () => nextTick(syncAddressFields), { deep: true })
+
+function openStop() {
+  stopOpen.value = true
+  activeInput.value = 'stop'
+  nextTick(() => visibleInput('stop')?.focus())
+}
+
+function removeStop() {
+  stop.value = null
+  stopOpen.value = false
+  for (const el of [stopInput.value, stopInputDesktop.value]) if (el) el.value = ''
+  if (activeInput.value === 'stop') activeInput.value = 'dropoff'
+  maybeCalculateRoute()
+}
 onActivated(() => nextTick(syncAddressFields))
 
 async function handleMapTap(latlng) {
@@ -205,6 +231,9 @@ async function handleMapTap(latlng) {
   const location = { address, lat: latlng.lat, lng: latlng.lng }
   if (activeInput.value === 'pickup') {
     pickup.value = location
+    activeInput.value = 'dropoff'
+  } else if (activeInput.value === 'stop') {
+    stop.value = location
     activeInput.value = 'dropoff'
   } else {
     dropoff.value = location
@@ -255,6 +284,7 @@ function maybeCalculateRoute() {
     {
       origin: { lat: pickup.value.lat, lng: pickup.value.lng },
       destination: { lat: dropoff.value.lat, lng: dropoff.value.lng },
+      waypoints: stop.value ? [{ location: { lat: stop.value.lat, lng: stop.value.lng }, stopover: true }] : [],
       travelMode: window.google.maps.TravelMode.DRIVING,
       // Live traffic, like Uber's upfront price: rush hour costs more, quiet hours never less than normal.
       drivingOptions: { departureTime: new Date(), trafficModel: 'bestguess' },
@@ -262,11 +292,12 @@ function maybeCalculateRoute() {
     (result, status) => {
       isCalculating.value = false
       if (status !== 'OK') { error.value = "Couldn't calculate a route between these locations."; return }
-      const leg = result.routes[0].legs[0]
-      distanceMiles.value = leg.distance.value / 1609.34
-      const normal = leg.duration.value
-      const withTraffic = leg.duration_in_traffic?.value || 0
-      durationMinutes.value = Math.max(normal, withTraffic) / 60
+      const legs = result.routes[0].legs
+      distanceMiles.value = legs.reduce((sum, l) => sum + l.distance.value, 0) / 1609.34
+      const normal = legs.reduce((sum, l) => sum + l.duration.value, 0)
+      // Google only gives live-traffic times for trips without stops.
+      const withTraffic = legs.length === 1 ? legs[0].duration_in_traffic?.value || 0 : 0
+      durationMinutes.value = Math.max(normal, withTraffic) / 60 + (stop.value ? STOP_MINUTES : 0)
       trafficDelayMinutes.value = Math.max(0, (withTraffic - normal) / 60)
     }
   )
@@ -287,11 +318,24 @@ watch([pickupText, dropoffText], ([p, d]) => {
   }, 500)
 })
 
+// ── Busy-time pricing: the database says how busy it is around the pickup; refreshed every minute ──
+const surge = ref(1)
+const busy = computed(() => surge.value > 1)
+async function refreshSurge() {
+  if (DEMO_MODE || !pickup.value) { surge.value = 1; return }
+  const { data, error: surgeErr } = await supabase.rpc('surge_multiplier_at', { p_lat: pickup.value.lat, p_lng: pickup.value.lng })
+  if (!surgeErr && data != null) surge.value = normalizeSurge(data)
+}
+watch(() => pickup.value && `${pickup.value.lat},${pickup.value.lng}`, refreshSurge)
+const surgeTimer = setInterval(() => { if (pickup.value && dropoff.value) refreshSurge() }, 60_000)
+onUnmounted(() => clearInterval(surgeTimer))
+onActivated(refreshSurge)
+
 const fareEstimates = computed(() => {
   if (!distanceMiles.value || !durationMinutes.value) return {}
   const estimates = {}
   for (const v of VEHICLE_TYPES) {
-    let fare = calculateFare(distanceMiles.value, durationMinutes.value, v.id, { pickup: pickup.value })
+    let fare = calculateFare(distanceMiles.value, durationMinutes.value, v.id, { pickup: pickup.value, surge: surge.value, stop: !!stop.value })
     estimates[v.id] = fare
   }
   return estimates
@@ -484,6 +528,8 @@ async function createRideForUser(user, guestInfo = null) {
       duration_minutes: durationMinutes.value || Math.round((distanceMiles.value || 1) * 3),
       fare_cents: fare,
       promo_code: promo.value?.code || null,
+      surge_multiplier: surge.value,
+      stop_address: stop.value?.address || null, stop_lat: stop.value?.lat ?? null, stop_lng: stop.value?.lng ?? null,
     }).select().single()
     if (rideErr) {
       isSubmitting.value = false
@@ -491,6 +537,12 @@ async function createRideForUser(user, guestInfo = null) {
         // Already has a ride in progress: take them to it instead of booking a second one.
         showGuestSheet.value = false
         emit('existing-ride')
+        return
+      }
+      if (rideErr.hint === 'surge') {
+        // It got busier between seeing the price and booking: show the new price and let them confirm.
+        await refreshSurge()
+        error.value = rideErr.message
         return
       }
       if (rideErr.hint === 'promo') {
@@ -650,6 +702,7 @@ async function scheduleRide({ date, time, summary }) {
         ref="mapRef"
         :pickup="pickup"
         :dropoff="dropoff"
+        :stop="stop"
         show-traffic
         class="absolute inset-0 z-0"
         @map-tap="handleMapTap"
@@ -716,6 +769,13 @@ async function scheduleRide({ date, time, summary }) {
               </svg>
               {{ isLocating ? 'Locating...' : 'Use current location' }}
             </button>
+            <div v-if="!DEMO_MODE" v-show="stopOpen" class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 border-2 transition-all duration-200"
+                 :class="activeInput === 'stop' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
+              <input ref="stopInput" type="text" placeholder="Add a stop" aria-label="Stop on the way"
+                     @focus="activeInput = 'stop'"
+                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
+              <button type="button" @click="removeStop" class="ml-2 w-8 h-8 -mr-2 flex items-center justify-center text-[var(--color-text-muted)]" aria-label="Remove stop">✕</button>
+            </div>
             <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 border-2 transition-all duration-200"
                  :class="activeInput === 'dropoff' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
               <input v-if="!DEMO_MODE" ref="dropoffInput" type="text" placeholder="Where to?"
@@ -725,6 +785,10 @@ async function scheduleRide({ date, time, summary }) {
                      @focus="activeInput = 'dropoff'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
+            <button v-if="!DEMO_MODE && !stopOpen" type="button" @click="openStop"
+                    class="flex items-center gap-2 px-3 py-2 text-[13px] font-medium text-[var(--color-brand)] rounded-lg min-h-[44px]">
+              <span aria-hidden="true" class="text-[16px] leading-none">+</span> Add stop
+            </button>
             <datalist id="demo-locations"><option v-for="loc in DEMO_LOCATIONS" :key="loc" :value="loc" /></datalist>
           </div>
         </div>
@@ -751,6 +815,10 @@ async function scheduleRide({ date, time, summary }) {
               <span class="w-2 h-2 rounded-full bg-[#e8710a]" aria-hidden="true"></span>
               <span class="text-[12px] font-semibold text-[var(--color-text-primary)]">Heavy traffic · +{{ Math.round(trafficDelayMinutes) }} min</span>
             </div>
+            <div v-if="busy" class="inline-flex items-center gap-1.5 bg-[#2b8659]/12 rounded-full px-3 py-1.5" title="More people are requesting rides than there are drivers nearby, so fares are higher for now.">
+              <span aria-hidden="true">⚡</span>
+              <span class="text-[12px] font-semibold text-[var(--color-text-primary)]">Busy</span>
+            </div>
           </div>
           <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2.5 px-1">Choose your ride</p>
           <div class="space-y-2">
@@ -773,6 +841,8 @@ async function scheduleRide({ date, time, summary }) {
             <!-- Airport fee, promo / referral discount and credit, shown before booking -->
             <div v-if="hasRoute" class="px-1 mb-2 space-y-1 text-[13px]">
               <p v-if="airportPickup" class="text-[var(--color-text-secondary)]">Includes {{ formatFare(AIRPORT_FEE_CENTS) }} airport pickup fee</p>
+              <p v-if="busy" class="text-[var(--color-text-secondary)]">Fares are higher right now because it’s busy. Drivers earn more too.</p>
+              <p v-if="stop" class="text-[var(--color-text-secondary)]">Includes your stop at {{ stop.address.split(',')[0] }}. Please keep the stop to about 3 minutes.</p>
               <div v-if="discounts.discount || discounts.credit" class="flex items-center justify-between gap-2 rounded-xl bg-[#2b8659]/10 px-3 py-2">
                 <span class="text-[var(--color-text-primary)]">
                   <span v-if="discounts.discount">{{ discounts.label }} −{{ formatFare(discounts.discount) }}</span>
@@ -867,6 +937,13 @@ async function scheduleRide({ date, time, summary }) {
               </svg>
               {{ isLocating ? 'Locating...' : 'Use current location' }}
             </button>
+            <div v-if="!DEMO_MODE" v-show="stopOpen" class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3.5 border-2 transition-all duration-200"
+                 :class="activeInput === 'stop' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
+              <input ref="stopInputDesktop" type="text" placeholder="Add a stop" aria-label="Stop on the way"
+                     @focus="activeInput = 'stop'"
+                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
+              <button type="button" @click="removeStop" class="ml-2 w-8 h-8 -mr-2 flex items-center justify-center text-[var(--color-text-muted)]" aria-label="Remove stop">✕</button>
+            </div>
             <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3.5 border-2 transition-all duration-200"
                  :class="activeInput === 'dropoff' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
               <input v-if="!DEMO_MODE" ref="dropoffInputDesktop" type="text" placeholder="Where to?"
@@ -876,6 +953,10 @@ async function scheduleRide({ date, time, summary }) {
                      @focus="activeInput = 'dropoff'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
+            <button v-if="!DEMO_MODE && !stopOpen" type="button" @click="openStop"
+                    class="flex items-center gap-2 px-3 py-2 text-[13px] font-medium text-[var(--color-brand)] rounded-lg min-h-[44px]">
+              <span aria-hidden="true" class="text-[16px] leading-none">+</span> Add stop
+            </button>
             <datalist id="demo-locations-desktop"><option v-for="loc in DEMO_LOCATIONS" :key="loc" :value="loc" /></datalist>
           </div>
         </div>
@@ -902,6 +983,10 @@ async function scheduleRide({ date, time, summary }) {
               <span class="w-2 h-2 rounded-full bg-[#e8710a]" aria-hidden="true"></span>
               <span class="text-[12px] font-semibold text-[var(--color-text-primary)]">Heavy traffic · +{{ Math.round(trafficDelayMinutes) }} min</span>
             </div>
+            <div v-if="busy" class="inline-flex items-center gap-1.5 bg-[#2b8659]/12 rounded-full px-3 py-1.5" title="More people are requesting rides than there are drivers nearby, so fares are higher for now.">
+              <span aria-hidden="true">⚡</span>
+              <span class="text-[12px] font-semibold text-[var(--color-text-primary)]">Busy</span>
+            </div>
           </div>
           <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3 px-1">Choose your ride</p>
           <div class="space-y-2">
@@ -924,6 +1009,8 @@ async function scheduleRide({ date, time, summary }) {
             <!-- Airport fee, promo / referral discount and credit, shown before booking -->
             <div v-if="hasRoute" class="px-1 mb-2 space-y-1 text-[13px]">
               <p v-if="airportPickup" class="text-[var(--color-text-secondary)]">Includes {{ formatFare(AIRPORT_FEE_CENTS) }} airport pickup fee</p>
+              <p v-if="busy" class="text-[var(--color-text-secondary)]">Fares are higher right now because it’s busy. Drivers earn more too.</p>
+              <p v-if="stop" class="text-[var(--color-text-secondary)]">Includes your stop at {{ stop.address.split(',')[0] }}. Please keep the stop to about 3 minutes.</p>
               <div v-if="discounts.discount || discounts.credit" class="flex items-center justify-between gap-2 rounded-xl bg-[#2b8659]/10 px-3 py-2">
                 <span class="text-[var(--color-text-primary)]">
                   <span v-if="discounts.discount">{{ discounts.label }} −{{ formatFare(discounts.discount) }}</span>

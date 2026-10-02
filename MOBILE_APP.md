@@ -49,6 +49,27 @@ In Xcode, open `ios/App/App/Info.plist` and add:
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 ```
 
+## Push notifications (trip alerts)
+
+The app already registers for push and the server sends to both platforms; you only add the keys.
+
+**iPhone (APNs)**
+1. Apple Developer › Certificates, IDs & Profiles › Keys › **+** › enable *Apple Push Notifications service* › download the `.p8` file.
+2. In Xcode: App target › Signing & Capabilities › **+ Capability** › *Push Notifications* (and *Background Modes › Remote notifications*).
+3. In `ios/App/App/AppDelegate.swift` add the two methods from the Capacitor push guide
+   (https://capacitorjs.com/docs/apis/push-notifications#ios) that forward the device token.
+4. Vercel env vars: `APNS_KEY` (paste the whole `.p8` contents), `APNS_KEY_ID`, `APNS_TEAM_ID`,
+   `APNS_BUNDLE_ID=com.rideupnassau.app`, and `APNS_PRODUCTION=1` for TestFlight / App Store builds.
+
+**Android (FCM)**
+1. Firebase console › Add project › Add Android app with package `com.rideupnassau.app` › download `google-services.json`
+   into `android/app/`.
+2. Firebase › Project settings › Service accounts › *Generate new private key*.
+3. Vercel env var: `FCM_SERVICE_ACCOUNT` = the whole JSON file contents.
+
+Riders and drivers are asked for permission at the same moments as on the website (after booking, when going online).
+Tapping a notification opens the right screen.
+
 ## Build and upload
 
 ```bash
@@ -64,13 +85,12 @@ App Store Connect, then use TestFlight before submitting for review.
 - **Privacy policy URL:** https://rideupnassau.com/privacy
 - **Terms:** https://rideupnassau.com/terms
 - **Support URL / email:** required by both stores
-- **Account deletion:** Apple requires that people can delete their account from inside the app. Profile › Delete account
-  currently sends them to support by phone/WhatsApp; that needs to become a real in-app deletion before the iOS submission.
+- **Account deletion:** done in the app (Profile › Delete account, and in the driver profile). Mention it in the review notes.
 - **Demo accounts for reviewers:** create one rider account (with Stripe test card) and one approved driver account, and put both logins in the review notes.
 - **Payments:** rides are real-world services, so Stripe is allowed (no Apple/Google in-app purchase needed).
 - **Data safety / privacy labels:** declare location (precise), name, email, phone, payment info (handled by Stripe), and usage analytics.
-- **Native value:** Apple rejects "just a website" apps (guideline 4.2). Location, trip alerts and the full booking flow
-  are what get it approved; adding native push (`@capacitor/push-notifications`) makes approval much more likely.
+- **Native value:** Apple rejects "just a website" apps (guideline 4.2). Native push notifications, location and the full
+  booking flow are what get it approved.
 
 ## Notes
 

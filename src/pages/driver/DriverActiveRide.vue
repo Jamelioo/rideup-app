@@ -49,6 +49,12 @@ const phaseLabel = computed(() => ({
 const steps = ['accepted', 'driver_arrived', 'in_progress', 'completed']
 const stepIndex = computed(() => steps.indexOf(phase.value))
 
+// One extra stop: on the trip the driver goes to the stop first, taps "Stop done", then heads to drop-off.
+const hasStop = computed(() => currentRide.value?.stop_lat != null)
+const stopPending = computed(() => phase.value === 'in_progress' && hasStop.value && !currentRide.value?.stop_reached_at)
+const stopPoint = computed(() => (hasStop.value && ['in_progress', 'completed'].includes(phase.value)
+  ? { lat: currentRide.value.stop_lat, lng: currentRide.value.stop_lng } : null))
+
 const target = computed(() => {
   const r = currentRide.value
   if (!r) return null
@@ -56,9 +62,23 @@ const target = computed(() => {
     ? { lat: r.dropoff_lat, lng: r.dropoff_lng, label: r.dropoff_address }
     : { lat: r.pickup_lat, lng: r.pickup_lng, label: r.pickup_address }
 })
-const navUrl = computed(() => target.value?.lat != null
-  ? `https://www.google.com/maps/dir/?api=1&destination=${target.value.lat},${target.value.lng}&travelmode=driving`
-  : '#')
+const navUrl = computed(() => {
+  if (target.value?.lat == null) return '#'
+  const via = stopPending.value ? `&waypoints=${currentRide.value.stop_lat},${currentRide.value.stop_lng}` : ''
+  return `https://www.google.com/maps/dir/?api=1&destination=${target.value.lat},${target.value.lng}${via}&travelmode=driving`
+})
+
+async function markStopDone() {
+  if (busy.value || !stopPending.value) return
+  actionError.value = ''
+  if (DEMO_MODE) { currentRide.value = { ...currentRide.value, stop_reached_at: new Date().toISOString() }; return }
+  busy.value = true
+  const { data, error } = await supabase.from('rides').update({ stop_reached_at: new Date().toISOString() })
+    .eq('id', currentRide.value.id).select('stop_reached_at').maybeSingle()
+  busy.value = false
+  if (error) { actionError.value = 'Couldn’t update the stop. Try again.'; return }
+  currentRide.value = { ...currentRide.value, stop_reached_at: data?.stop_reached_at || new Date().toISOString() }
+}
 
 // ── Wait timer + no-show (Uber: after 5 minutes at pickup the driver can cancel and the rider pays a fee) ──
 const now = ref(Date.now())
@@ -262,6 +282,7 @@ onUnmounted(() => {
       <GoogleMap v-if="!mapFailed" class="absolute inset-0"
                  :pickup="currentRide?.pickup_lat != null ? { lat: currentRide.pickup_lat, lng: currentRide.pickup_lng } : null"
                  :dropoff="['in_progress', 'completed'].includes(phase) && currentRide?.dropoff_lat != null ? { lat: currentRide.dropoff_lat, lng: currentRide.dropoff_lng } : null"
+                 :stop="stopPoint"
                  @error="mapFailed = true" />
       <HarborBackdrop v-else show-route />
     </div>
@@ -349,7 +370,11 @@ onUnmounted(() => {
                   <div class="text-[11px] text-[var(--color-text-muted)] font-semibold uppercase tracking-wide">Pickup</div>
                   <div class="text-[14px] font-semibold">{{ currentRide.pickup_address }}</div>
                 </div>
-                <div :class="phase !== 'in_progress' && 'opacity-60'">
+                <div v-if="hasStop" :class="!stopPending && 'opacity-60'">
+                  <div class="text-[11px] text-[var(--color-text-muted)] font-semibold uppercase tracking-wide">Stop{{ currentRide.stop_reached_at ? ' · done' : '' }}</div>
+                  <div class="text-[14px] font-semibold">{{ currentRide.stop_address }}</div>
+                </div>
+                <div :class="(phase !== 'in_progress' || stopPending) && 'opacity-60'">
                   <div class="text-[11px] text-[var(--color-text-muted)] font-semibold uppercase tracking-wide">Drop-off</div>
                   <div class="text-[14px] font-semibold">{{ currentRide.dropoff_address }}</div>
                 </div>
@@ -366,6 +391,12 @@ onUnmounted(() => {
           </div>
 
           <p v-if="actionError" class="mb-3 text-[13px] text-red-500" role="alert">{{ actionError }}</p>
+
+          <!-- Extra stop -->
+          <button v-if="stopPending" @click="markStopDone" :disabled="busy"
+                  class="w-full mb-3 py-3.5 border-2 border-[#2b8659] text-[var(--color-brand)] font-bold rounded-2xl text-[15px] disabled:opacity-60">
+            Stop done · continue to drop-off
+          </button>
 
           <!-- Slide to complete -->
           <template v-if="phase === 'in_progress'">

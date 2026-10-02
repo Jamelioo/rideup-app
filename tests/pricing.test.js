@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { calculateFare, driverPayout, formatFare, RATES, BOOKING_FEE_CENTS, isAirportPickup } from '../src/lib/pricing.js'
-import { previewDiscounts, chargeOf } from '../src/lib/discounts.js'
+import { calculateFare, driverPayout, formatFare, RATES, BOOKING_FEE_CENTS, isAirportPickup, normalizeSurge } from '../src/lib/pricing.js'
+import { previewDiscounts, chargeOf, splitShares } from '../src/lib/discounts.js'
 
 // These expected values are also what the database trigger (migration 002) produces — keep them in sync.
 test('standard fare: 5 mi / 15 min', () => assert.equal(calculateFare(5, 15, 'standard'), 1450))
@@ -56,4 +56,25 @@ test('discount preview matches the database: promo or referral, then credit, rid
   assert.equal(previewDiscounts(1410, { creditCents: 500 }).charge, 910)
   assert.equal(previewDiscounts(1410, { promo: { code: 'W', amount_cents: 500 }, creditCents: 2000 }).charge, 100)
   assert.equal(chargeOf({ fare_cents: 1410, promo_discount_cents: 500, credit_applied_cents: 0 }), 910)
+})
+
+test('busy-time pricing multiplies the trip part only, capped at 1.5x (same numbers as the database test)', () => {
+  assert.equal(calculateFare(4.4, 16, 'standard', { surge: 1.3 }), 1803)
+  const lpia = { lat: 25.0392, lng: -77.4655 }
+  assert.equal(calculateFare(10, 25, 'standard', { pickup: lpia, surge: 1.5 }), Math.round(2325 * 1.5) + 300 + 100)
+  assert.equal(normalizeSurge(3), 1.5)
+  assert.equal(normalizeSurge(0.5), 1)
+  assert.equal(normalizeSurge(undefined), 1)
+})
+test('an extra stop adds 3 minutes to the time floor (same numbers as the database test)', () => {
+  // 6.38 mi through the stop, app claimed 1 min -> priced as 6.38*2 + 3 = 15.76 min
+  assert.equal(calculateFare(6.38, 1, 'standard', { stop: true }), 1649)
+  assert.equal(calculateFare(6.38, 30, 'standard', { stop: true }), calculateFare(6.38, 30, 'standard'))
+})
+test('split fare: equal shares, the rider covers the leftover cent; tiny fares are not split', () => {
+  assert.deepEqual(splitShares(1803, 2), { friendShare: 601, ownerShare: 601, friends: 2 })
+  assert.deepEqual(splitShares(1000, 3), { friendShare: 250, ownerShare: 250, friends: 3 })
+  assert.deepEqual(splitShares(1001, 1), { friendShare: 500, ownerShare: 501, friends: 1 })
+  assert.deepEqual(splitShares(1000, 9).friends, 3)
+  assert.deepEqual(splitShares(150, 3), { friendShare: 0, ownerShare: 150, friends: 0 })
 })

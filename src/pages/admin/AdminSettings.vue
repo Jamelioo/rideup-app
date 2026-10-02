@@ -43,6 +43,12 @@ const toggles = [
     note: 'Adds a step for every rider. Uber offers this as an option.',
   },
   {
+    key: 'surge_pricing',
+    title: 'Busy-time pricing',
+    description: 'When ride requests near a pickup outnumber free drivers, fares go up automatically (1.2× to at most 1.5×, trip part only). Riders see the price and a “Busy” note before booking; drivers keep 80% of the extra.',
+    note: 'Turn off during emergencies such as hurricanes or island-wide outages.',
+  },
+  {
     key: 'offer_xl',
     title: 'Offer RideUp XL',
     description: 'Shows the XL ride option (6+ seats) to riders. XL trips only go to drivers approved for XL.',
@@ -61,7 +67,7 @@ const toggles = [
     note: 'Needs an SMS provider (e.g. Twilio) set up in Supabase → Authentication → Phone. Turn this on only after testing a code arrives.',
   },
 ]
-const values = reactive({ require_pickup_pin: false, offer_xl: false, offer_premium: false, require_verified_phone: false })
+const values = reactive({ surge_pricing: true, require_pickup_pin: false, offer_xl: false, offer_premium: false, require_verified_phone: false })
 const saving = ref('')
 const error = ref('')
 
