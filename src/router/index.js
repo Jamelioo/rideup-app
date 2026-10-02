@@ -11,6 +11,8 @@ import RiderFlow from '../pages/rider/RiderFlow.vue'
 // Lazy: everything else
 const Login = () => import('../pages/Login.vue')
 const Signup = () => import('../pages/Signup.vue')
+const ResetPassword = () => import('../pages/ResetPassword.vue')
+const VerifyPhone = () => import('../pages/VerifyPhone.vue')
 const Profile = () => import('../pages/Profile.vue')
 const EditProfile = () => import('../pages/EditProfile.vue')
 const MyRides = () => import('../pages/MyRides.vue')
@@ -56,6 +58,9 @@ const routes = [
   { path: '/book', name: 'book', component: RiderFlow, meta: { title: 'RideUp Nassau' } },
   { path: '/login', name: 'login', component: Login, meta: { guestOnly: true, title: 'Log In — RideUp' } },
   { path: '/signup', name: 'signup', component: Signup, meta: { guestOnly: true, title: 'Sign Up — RideUp' } },
+  { path: '/reset-password', name: 'reset-password', component: ResetPassword, meta: { title: 'Reset Password — RideUp' } },
+  { path: '/set-password', name: 'set-password', component: ResetPassword, meta: { title: 'Choose a Password — RideUp' } },
+  { path: '/verify-phone', name: 'verify-phone', component: VerifyPhone, meta: { requiresAuth: true, title: 'Verify Your Phone — RideUp' } },
   { path: '/profile', name: 'profile', component: Profile, meta: { requiresAuth: true, title: 'Profile — RideUp' } },
   { path: '/edit-profile', name: 'edit-profile', component: EditProfile, meta: { requiresAuth: true, title: 'Edit Profile — RideUp' } },
   { path: '/my-rides', name: 'my-rides', component: MyRides, meta: { requiresAuth: true, title: 'My Rides — RideUp' } },
@@ -131,7 +136,8 @@ router.beforeEach(async (to) => {
     return { path: '/login', query: { redirect: to.fullPath } }
   }
 
-  if (to.meta.guestOnly && user.value) {
+  // Guests (anonymous or phone-only sessions) can still reach log in and sign up to use a real account.
+  if (to.meta.guestOnly && user.value?.email && !user.value.is_anonymous) {
     return { path: '/book' }
   }
 

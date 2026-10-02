@@ -1,11 +1,23 @@
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { DEMO_MODE } from './lib/demoMode'
 import { useAuth } from './lib/useAuth'
 import BottomNav from './components/BottomNav.vue'
 
-const { init } = useAuth()
+const router = useRouter()
+const route = useRoute()
+const { init, pendingRoute, clearPendingRoute } = useAuth()
 onMounted(() => init())
+
+// Emailed links (password reset, guest email confirmation, driver email confirmation) can land on the
+// home page if the exact path isn't in Supabase's redirect allow-list. Send people where they meant to go.
+watch(pendingRoute, async (path) => {
+  if (!path) return
+  await router.isReady()
+  clearPendingRoute()
+  if (route.path !== path) router.replace(path)
+}, { immediate: true })
 </script>
 
 <template>

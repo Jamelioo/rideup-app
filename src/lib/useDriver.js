@@ -180,7 +180,17 @@ async function pollRequests() {
     p_lng: pos?.lng ?? null,
     p_radius_miles: MAX_PICKUP_DISTANCE_MILES,
   })
-  if (error) return
+  if (error) {
+    // The server took us offline because the app stopped checking in (closed, asleep, no signal).
+    if (error.hint === 'offline' || /you are offline/i.test(error.message || '')) {
+      stopPolling()
+      isOnline.value = false
+      incomingRequest.value = null
+      if (driver.value) driver.value = { ...driver.value, status: 'offline' }
+      onlineError.value = 'You were set to offline because RideUp wasn’t open for a few minutes. Go online again when you’re ready.'
+    }
+    return
+  }
   const open = (data || []).filter((r) => !dismissedRequests.has(r.id))
 
   // The request on screen was taken, cancelled or expired: close it.
@@ -354,6 +364,19 @@ async function cancelCurrentRide({ noShow = false } = {}) {
   }
 }
 
+// After the driver edits their own row: keep local state in step with what the database stored
+// (the guard may have sent them back to review and taken them offline).
+function applyDriverRow(row) {
+  if (!row) return
+  driver.value = row
+  const online = ['online', 'on_trip'].includes(row.status)
+  if (!online && isOnline.value) {
+    isOnline.value = false
+    stopPolling()
+    incomingRequest.value = null
+  }
+}
+
 function completeRide() {
   currentRide.value = null
   if (isOnline.value && !DEMO_MODE) startPolling()
@@ -382,5 +405,6 @@ export function useDriver() {
     pinRequired,
     cancelCurrentRide,
     completeRide,
+    applyDriverRow,
   }
 }

@@ -6,8 +6,11 @@ import { DEMO_MODE } from '../../lib/demoMode'
 import { apiPost } from '../../lib/api'
 import HarborBackdrop from '../../components/HarborBackdrop.vue'
 
-const props = defineProps({ rideId: { type: String, required: true } })
-const emit = defineEmits(['matched', 'cancelled'])
+const props = defineProps({
+  rideId: { type: String, required: true },
+  notice: { type: String, default: '' }, // e.g. "Your driver had to cancel…" after an automatic re-match
+})
+const emit = defineEmits(['matched', 'cancelled', 'replaced'])
 const router = useRouter()
 const ride = ref(null)
 const driverFound = ref(false)
@@ -16,6 +19,8 @@ const elapsedSeconds = ref(0)
 const paymentFailed = ref(false)
 const cancelling = ref(false)
 const cancelError = ref('')
+const confirming = ref(false) // a driver accepted; the card hold is being placed
+let replacementDeadline = null
 let channel = null
 let demoTimer = null
 let timeoutTimer = null
@@ -110,6 +115,25 @@ onMounted(async () => {
   function handleRideUpdate(updatedRide) {
     if (driverFound.value) return // already matched, ignore
     ride.value = updatedRide
+    confirming.value = updatedRide.status === 'pending_driver_response'
+    if (updatedRide.status === 'cancelled' && updatedRide.replaced_by_ride_id) {
+      // The driver cancelled and the server already booked a fresh request: follow it.
+      emit('replaced', updatedRide.replaced_by_ride_id)
+      return
+    }
+    if (updatedRide.status === 'cancelled' && updatedRide.cancel_reason === 'driver_cancelled') {
+      // The re-match lands a moment after the cancellation; give it a few seconds before giving up.
+      if (!replacementDeadline) replacementDeadline = setTimeout(() => emit('cancelled'), 8000)
+      return
+    }
+    if (updatedRide.status === 'cancelled' && updatedRide.cancel_reason !== 'payment_failed') {
+      if (elapsedTimer) clearInterval(elapsedTimer)
+      if (timeoutTimer) clearTimeout(timeoutTimer)
+      if (pollTimer) clearInterval(pollTimer)
+      if (updatedRide.cancel_reason === 'no_drivers') timedOut.value = true
+      else emit('cancelled')
+      return
+    }
     if (updatedRide.status === 'accepted') {
       driverFound.value = true
       if (pollTimer) clearInterval(pollTimer)
@@ -146,6 +170,7 @@ onUnmounted(() => {
   if (timeoutTimer) clearTimeout(timeoutTimer)
   if (elapsedTimer) clearInterval(elapsedTimer)
   if (pollTimer) clearInterval(pollTimer)
+  if (replacementDeadline) clearTimeout(replacementDeadline)
 })
 
 // Nobody answered: withdraw the request so it doesn't sit in drivers' queues.
@@ -209,9 +234,10 @@ async function cancelRequest() {
             </svg>
           </div>
         </div>
+        <div v-if="notice" class="w-full max-w-sm rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-4 py-3 text-[13px] text-[var(--color-text-primary)] text-center" role="status">{{ notice }}</div>
         <div class="text-center">
-          <div class="text-xl font-medium mb-1.5">{{ driverFound ? 'Driver found' : 'Looking for a driver' }}</div>
-          <div class="text-[var(--color-text-secondary)] text-[13px]">{{ driverFound ? 'Connecting you now...' : (DEMO_MODE ? 'Connecting you with a nearby driver...' : 'Connecting you with a nearby driver') }}</div>
+          <div class="text-xl font-medium mb-1.5">{{ driverFound || confirming ? 'Driver found' : 'Looking for a driver' }}</div>
+          <div class="text-[var(--color-text-secondary)] text-[13px]">{{ driverFound ? 'Connecting you now…' : confirming ? 'Confirming your payment method…' : 'Connecting you with a nearby driver' }}</div>
           <p v-if="!timedOut && elapsedSeconds > 10" class="text-[var(--color-text-muted)] text-xs mt-2">
             Searching... {{ elapsedSeconds }}s
           </p>

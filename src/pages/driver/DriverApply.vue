@@ -1,12 +1,13 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuth } from '../../lib/useAuth'
+import { useAuth, friendlyAuthError, MIN_PASSWORD } from '../../lib/useAuth'
+import { useDriver } from '../../lib/useDriver'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
 import { DEMO_MODE } from '../../lib/demoMode'
 
 const router = useRouter()
-const { user, signUp } = useAuth()
+const { user, signUp, resendConfirmation } = useAuth()
 
 const form = ref({
   name: '', email: '', phone: '',
@@ -16,28 +17,97 @@ const form = ref({
 })
 const password = ref('')
 const error = ref('')
+const notice = ref('')
 const submitting = ref(false)
 const success = ref(false)
+const awaitingConfirmation = ref(false)
+const finishing = ref(false)
+
+// Guests (anonymous sessions) have no login, so they apply with a new account like anyone signed out.
+const hasAccount = computed(() => !!user.value && !user.value.is_anonymous)
+const maxYear = new Date().getFullYear() + 1
+
+function toRow(f) {
+  return {
+    name: f.name.trim(),
+    phone: f.phone.trim(),
+    email: f.email.trim(),
+    vehicle_make: f.vehicleMake.trim(),
+    vehicle_model: f.vehicleModel.trim(),
+    vehicle_color: f.vehicleColor.trim(),
+    license_plate: f.vehiclePlate.trim().toUpperCase(),
+    vehicle_year: parseInt(f.vehicleYear) || null,
+    license_number: f.licenseNumber.trim() || null,
+    vehicle_type: f.vehicleType,
+  }
+}
+
+// Insert the application for a signed-in user. Used right away, or after they confirm their email.
+async function submitApplication(authUser, row) {
+  const { error: insertErr } = await supabase.from('drivers').insert({ ...row, auth_user_id: authUser.id })
+  if (insertErr && insertErr.code !== '23505') return insertErr // 23505: already applied
+  if (authUser.user_metadata?.driver_application) {
+    await supabase.auth.updateUser({ data: { driver_application: null } })
+  }
+  useDriver().reset()
+  return null
+}
+
+onMounted(async () => {
+  if (DEMO_MODE || !supabaseConfigured) return
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+  if (!authUser || authUser.is_anonymous) return
+
+  form.value.email = authUser.email || ''
+  form.value.name = authUser.user_metadata?.name || ''
+
+  // Already a driver: nothing to apply for.
+  const { data: existing } = await supabase.from('drivers').select('id, approved').eq('auth_user_id', authUser.id).maybeSingle()
+  const saved = authUser.user_metadata?.driver_application
+  if (existing) {
+    if (saved) await supabase.auth.updateUser({ data: { driver_application: null } })
+    router.replace(existing.approved ? '/driver/dashboard' : '/driver/pending')
+    return
+  }
+
+  // Back from the confirmation email: submit the application they filled in before confirming.
+  if (saved && typeof saved === 'object') {
+    finishing.value = true
+    const err = await submitApplication(authUser, saved)
+    finishing.value = false
+    if (err) {
+      Object.assign(form.value, {
+        name: saved.name || '', phone: saved.phone || '', email: authUser.email || '',
+        vehicleMake: saved.vehicle_make || '', vehicleModel: saved.vehicle_model || '', vehicleYear: saved.vehicle_year || '',
+        vehicleColor: saved.vehicle_color || '', vehiclePlate: saved.license_plate || '',
+        vehicleType: saved.vehicle_type || 'standard', licenseNumber: saved.license_number || '',
+      })
+      error.value = `We couldn’t submit your saved application: ${err.message}. Check your details and tap Submit.`
+      return
+    }
+    success.value = true
+    setTimeout(() => router.push('/driver/pending'), 2000)
+  }
+})
+
+function validate(f) {
+  if (!f.name.trim() || !f.email.trim() || !f.phone.trim()) return 'Please fill in all personal details.'
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) return 'Please enter a valid email address.'
+  if (f.phone.replace(/\D/g, '').length < 7) return 'Please enter a valid phone number.'
+  if (!f.vehicleMake.trim() || !f.vehicleModel.trim() || !f.vehiclePlate.trim()) return 'Please fill in all vehicle details.'
+  const year = parseInt(f.vehicleYear)
+  if (f.vehicleYear && (!year || year < 1990 || year > maxYear)) return `Enter the vehicle year between 1990 and ${maxYear}.`
+  if (!f.licenseNumber.trim()) return 'Please enter your driver\'s license number.'
+  if (!hasAccount.value && password.value.length < MIN_PASSWORD) return `Please create a password (at least ${MIN_PASSWORD} characters).`
+  return ''
+}
 
 async function handleSubmit() {
   error.value = ''
   const f = form.value
-
-  if (!f.name.trim() || !f.email.trim() || !f.phone.trim()) {
-    error.value = 'Please fill in all personal details.'
-    return
-  }
-  if (!f.vehicleMake.trim() || !f.vehicleModel.trim() || !f.vehiclePlate.trim()) {
-    error.value = 'Please fill in all vehicle details.'
-    return
-  }
-  if (!f.licenseNumber.trim()) {
-    error.value = 'Please enter your driver\'s license number.'
-    return
-  }
-
-  if (!user.value && password.value.length < 6) {
-    error.value = 'Please create a password (at least 6 characters).'
+  const problem = validate(f)
+  if (problem) {
+    error.value = problem
     return
   }
 
@@ -48,43 +118,56 @@ async function handleSubmit() {
     setTimeout(() => router.push('/driver/dashboard'), 1500)
     return
   }
-
-  submitting.value = true
-
-  // Create account if not logged in
-  if (!user.value && password.value.length >= 6) {
-    const { error: authErr } = await signUp(f.email.trim(), password.value, f.name.trim())
-    if (authErr) { error.value = authErr.message; submitting.value = false; return }
-  }
-
   if (!supabaseConfigured) {
     error.value = 'Database not configured.'
-    submitting.value = false
     return
   }
 
+  submitting.value = true
+  const row = toRow(f)
+
+  if (!hasAccount.value) {
+    // Keep the application with the new account so it survives email confirmation, on any device.
+    const result = await signUp(row.email, password.value, row.name, { redirectPath: '/driver/apply', data: { driver_application: row } })
+    if (result.error) {
+      submitting.value = false
+      error.value = friendlyAuthError(result.error)
+      return
+    }
+    if (result.needsConfirmation) {
+      submitting.value = false
+      awaitingConfirmation.value = true
+      return
+    }
+  }
+
   const { data: { user: currentUser } } = await supabase.auth.getUser()
-  if (!currentUser) { error.value = 'Please log in first.'; submitting.value = false; return }
-
-  const { error: insertErr } = await supabase.from('drivers').insert({
-    auth_user_id: currentUser.id,
-    name: f.name.trim(),
-    phone: f.phone.trim(),
-    email: f.email.trim(),
-    vehicle_make: f.vehicleMake.trim(),
-    vehicle_model: f.vehicleModel.trim(),
-    vehicle_color: f.vehicleColor.trim(),
-    license_plate: f.vehiclePlate.trim(),
-    vehicle_year: parseInt(f.vehicleYear) || null,
-    license_number: f.licenseNumber?.trim() || null,
-    vehicle_type: f.vehicleType,
-    approved: false,
-  })
-
+  if (!currentUser) {
+    submitting.value = false
+    error.value = 'Please log in first.'
+    return
+  }
+  const err = await submitApplication(currentUser, row)
   submitting.value = false
-  if (insertErr) { error.value = insertErr.message; return }
+  if (err) {
+    error.value = err.message
+    return
+  }
   success.value = true
   setTimeout(() => router.push('/driver/pending'), 2000)
+}
+
+async function resend() {
+  notice.value = ''
+  error.value = ''
+  submitting.value = true
+  const { error: err } = await resendConfirmation(form.value.email.trim(), '/driver/apply')
+  submitting.value = false
+  if (err) {
+    error.value = friendlyAuthError(err)
+    return
+  }
+  notice.value = 'Sent again. It can take a minute; check your spam folder too.'
 }
 
 function goBack() {
@@ -104,8 +187,22 @@ function goBack() {
     </div>
 
     <div class="flex-1 px-6 w-full max-w-md mx-auto">
+      <p v-if="finishing" class="pt-20 text-center text-[var(--color-text-secondary)]" role="status">Submitting your application…</p>
+
+      <!-- Waiting for email confirmation -->
+      <div v-else-if="awaitingConfirmation" class="pt-10">
+        <h2 class="text-2xl font-bold mb-2" role="status">Confirm your email to finish</h2>
+        <p class="text-[var(--color-text-secondary)] text-[14px] mb-6">
+          We sent a link to <strong class="text-[var(--color-text-primary)]">{{ form.email }}</strong>. Tap it and your application is submitted automatically. We saved everything you entered.
+        </p>
+        <p v-if="notice" class="text-[13px] text-[var(--color-brand)] mb-3" role="status">{{ notice }}</p>
+        <p v-if="error" class="text-[13px] text-[var(--color-danger)] mb-3" role="alert">{{ error }}</p>
+        <button @click="resend" :disabled="submitting" class="w-full py-3.5 rounded-xl border border-[var(--color-border)] font-semibold text-[15px] disabled:opacity-50">{{ submitting ? 'Sending…' : 'Resend email' }}</button>
+        <button @click="awaitingConfirmation = false" class="w-full py-3 mt-2 text-[14px] font-semibold text-[var(--color-text-muted)]">Wrong email? Go back</button>
+      </div>
+
       <!-- Success -->
-      <div v-if="success" class="pt-20 text-center">
+      <div v-else-if="success" class="pt-20 text-center">
         <div class="w-16 h-16 rounded-full bg-[#2b8659] flex items-center justify-center mx-auto mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
@@ -132,7 +229,7 @@ function goBack() {
               </label>
               <label class="block">
                 <span class="sr-only">Email</span>
-                <input v-model="form.email" type="email" placeholder="Email address" autocomplete="email"
+                <input v-model="form.email" type="email" placeholder="Email address" autocomplete="email" :readonly="hasAccount" :aria-readonly="hasAccount"
                        class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all placeholder:text-[var(--color-text-muted)]" />
               </label>
               <label class="block">
@@ -140,9 +237,9 @@ function goBack() {
                 <input v-model="form.phone" type="tel" placeholder="Phone number" autocomplete="tel"
                        class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all placeholder:text-[var(--color-text-muted)]" />
               </label>
-              <label v-if="!user" class="block">
+              <label v-if="!hasAccount" class="block">
                 <span class="sr-only">Password</span>
-                <input v-model="password" type="password" placeholder="Create a password (min 6 chars)" autocomplete="new-password"
+                <input v-model="password" type="password" :placeholder="`Create a password (at least ${MIN_PASSWORD} characters)`" autocomplete="new-password"
                        class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all placeholder:text-[var(--color-text-muted)]" />
               </label>
             </div>
@@ -167,7 +264,7 @@ function goBack() {
               <div class="grid grid-cols-2 gap-2">
                 <label class="block">
                   <span class="sr-only">Vehicle year</span>
-                  <input v-model="form.vehicleYear" type="number" placeholder="Year"
+                  <input v-model="form.vehicleYear" type="number" inputmode="numeric" min="1990" :max="maxYear" placeholder="Year"
                          class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all placeholder:text-[var(--color-text-muted)]" />
                 </label>
                 <label class="block">
@@ -203,7 +300,7 @@ function goBack() {
           </div>
         </div>
 
-        <p v-if="error" class="text-red-500 text-[13px] mt-4">{{ error }}</p>
+        <p v-if="error" class="text-[var(--color-danger)] text-[13px] mt-4" role="alert">{{ error }}</p>
 
         <button @click="handleSubmit" :disabled="submitting"
                 class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mt-6 mb-4 transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:opacity-50 disabled:shadow-none">

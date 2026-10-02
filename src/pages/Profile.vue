@@ -3,10 +3,15 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
 import ThemeToggle from '../components/ThemeToggle.vue'
+import AccountConversionCard from '../components/AccountConversionCard.vue'
 import { supabase } from '../lib/supabase'
+import { formatPhone } from '../lib/phone'
+import { useSettings } from '../lib/settings'
+import { pushStatus, enablePushNotifications } from '../lib/push'
 
 const router = useRouter()
-const { user, signOut } = useAuth()
+const { user, signOut, needsLogin, isGuest } = useAuth()
+const settings = useSettings()
 
 const toast = ref('')
 function showToast(msg) {
@@ -14,8 +19,23 @@ function showToast(msg) {
   setTimeout(() => { toast.value = '' }, 2500)
 }
 
-const displayName = computed(() => user.value?.user_metadata?.name || 'Rider')
-const displayEmail = computed(() => user.value?.email || '')
+const riderName = ref('')
+const riderPhone = ref('')
+const displayName = computed(() => user.value?.user_metadata?.name || riderName.value || (isGuest.value ? 'Guest' : 'Rider'))
+const displayEmail = computed(() => user.value?.email || (needsLogin.value ? 'Guest account: add your email to keep it' : ''))
+const phoneVerified = computed(() => !!user.value?.phone_confirmed_at)
+const displayPhone = computed(() => formatPhone(user.value?.phone ? `+${user.value.phone.replace(/^\+/, '')}` : riderPhone.value))
+
+// Trip alerts on this device (only offered once web push keys are configured).
+const push = ref('unavailable')
+const pushBusy = ref(false)
+async function turnOnPush() {
+  pushBusy.value = true
+  const ok = await enablePushNotifications()
+  push.value = await pushStatus()
+  pushBusy.value = false
+  if (!ok && push.value === 'blocked') showToast('Notifications are blocked. Allow them in your browser settings.')
+}
 const initials = computed(() =>
   displayName.value
     .split(' ')
@@ -44,16 +64,19 @@ const riderRating = ref(null)
 const riderTotalRides = ref(0)
 
 onMounted(async () => {
+  pushStatus().then((status) => { push.value = status })
   if (!user.value) return
   try {
     const { data } = await supabase
       .from('riders')
-      .select('rating, total_rides')
+      .select('rating, total_rides, name, phone')
       .eq('auth_user_id', user.value.id)
-      .single()
+      .maybeSingle()
     if (data) {
       riderRating.value = data.rating
       riderTotalRides.value = data.total_rides || 0
+      riderName.value = data.name || ''
+      riderPhone.value = data.phone || ''
     }
   } catch (e) { /* keep defaults */ }
 })
@@ -65,6 +88,7 @@ function handleDeleteAccount() {
 }
 
 async function handleLogout() {
+  if (needsLogin.value && !window.confirm('You’re using a guest account. If you log out you won’t be able to get back to your trips and receipts. Log out anyway?')) return
   await signOut()
   router.push('/welcome')
 }
@@ -104,8 +128,36 @@ async function handleLogout() {
     </div>
 
     <!-- Email -->
-    <div class="flex items-center justify-center gap-2 mb-8">
+    <div class="flex items-center justify-center gap-2 mb-6">
       <span class="text-[var(--color-text-muted)] text-sm">{{ displayEmail }}</span>
+    </div>
+
+    <!-- Guests: save the account so trips and receipts aren't lost -->
+    <div v-if="needsLogin" class="px-5 mb-6 max-w-lg mx-auto w-full">
+      <AccountConversionCard :show-skip="false" />
+    </div>
+
+    <!-- Account -->
+    <div class="px-5 max-w-lg mx-auto w-full mb-2">
+      <h2 class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-1">Account</h2>
+      <div class="flex items-center justify-between py-4 border-b border-[var(--color-border)]">
+        <div class="min-w-0">
+          <div class="text-base">Phone number</div>
+          <div class="text-[13px] text-[var(--color-text-muted)] truncate">{{ displayPhone || 'Not added' }}</div>
+        </div>
+        <span v-if="phoneVerified" class="text-[13px] font-semibold text-[var(--color-brand)]">✓ Verified</span>
+        <button v-else-if="settings.require_verified_phone" @click="router.push({ path: '/verify-phone', query: { redirect: '/profile' } })" class="text-[var(--color-brand)] text-sm font-bold uppercase tracking-wide">Verify</button>
+      </div>
+      <div v-if="push !== 'unavailable'" class="flex items-center justify-between py-4 border-b border-[var(--color-border)]">
+        <div class="min-w-0 pr-3">
+          <div class="text-base">Trip notifications</div>
+          <div class="text-[13px] text-[var(--color-text-muted)]">
+            {{ push === 'on' ? 'On for this device' : push === 'blocked' ? 'Blocked in your browser settings' : 'Get told when your driver arrives, even with the app closed' }}
+          </div>
+        </div>
+        <button v-if="push === 'off'" @click="turnOnPush" :disabled="pushBusy" class="text-[var(--color-brand)] text-sm font-bold uppercase tracking-wide disabled:opacity-50">Turn on</button>
+        <span v-else-if="push === 'on'" class="text-[13px] font-semibold text-[var(--color-brand)]">✓ On</span>
+      </div>
     </div>
 
     <!-- Favorite Locations -->
@@ -117,9 +169,12 @@ async function handleLogout() {
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" />
           </svg>
-          <span class="text-base">Home</span>
+          <div class="min-w-0">
+            <div class="text-base">Home</div>
+            <div v-if="homeAddress" class="text-[13px] text-[var(--color-text-muted)] truncate">{{ homeAddress }}</div>
+          </div>
         </div>
-        <button @click="goToSavedPlaces" class="text-[var(--color-brand)] text-sm font-bold uppercase tracking-wide">Add</button>
+        <button @click="goToSavedPlaces" class="text-[var(--color-brand)] text-sm font-bold uppercase tracking-wide flex-shrink-0 pl-3">{{ homeAddress ? 'Edit' : 'Add' }}</button>
       </div>
 
       <div class="flex items-center justify-between py-4 border-b border-[var(--color-border)]">
@@ -127,9 +182,12 @@ async function handleLogout() {
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m8 0H8m8 0a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2" />
           </svg>
-          <span class="text-base">Work</span>
+          <div class="min-w-0">
+            <div class="text-base">Work</div>
+            <div v-if="workAddress" class="text-[13px] text-[var(--color-text-muted)] truncate">{{ workAddress }}</div>
+          </div>
         </div>
-        <button @click="goToSavedPlaces" class="text-[var(--color-brand)] text-sm font-bold uppercase tracking-wide">Add</button>
+        <button @click="goToSavedPlaces" class="text-[var(--color-brand)] text-sm font-bold uppercase tracking-wide flex-shrink-0 pl-3">{{ workAddress ? 'Edit' : 'Add' }}</button>
       </div>
     </div>
 

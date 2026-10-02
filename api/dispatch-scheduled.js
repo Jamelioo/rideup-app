@@ -1,6 +1,7 @@
 import { admin } from './_auth.js'
 import { calculateFare } from '../src/lib/pricing.js'
 import { pushToUser } from './_push.js'
+import { captureRide } from './_capture.js'
 
 // Turns due scheduled rides into live ride requests and clears stale unanswered requests.
 // Call every minute (Vercel Cron on Pro, Supabase pg_cron + pg_net, or any external pinger) with
@@ -9,6 +10,8 @@ import { pushToUser } from './_push.js'
 
 const DISPATCH_WINDOW_MIN = 3     // create the request this many minutes before pickup time
 const STALE_REQUEST_MIN = 5       // requests nobody answered within this long are cancelled
+const CAPTURE_GRACE_MIN = 2       // the driver's app captures at drop-off; after this the sweeper does it
+const DRIVER_IDLE_MIN = 3         // online drivers whose app hasn't checked in for this long are taken offline
 
 function straightLineMiles(aLat, aLng, bLat, bLng) {
   const rad = (d) => (d * Math.PI) / 180
@@ -22,7 +25,7 @@ export default async function handler(req, res) {
   if (!admin || !secret) return res.status(500).json({ error: 'Server is not configured' })
   if (req.headers.authorization !== `Bearer ${secret}`) return res.status(401).json({ error: 'Unauthorized' })
 
-  const result = { expired: 0, dispatched: 0, failed: 0 }
+  const result = { expired: 0, dispatched: 0, failed: 0, captured: 0, capture_failed: 0, drivers_offlined: 0 }
 
   try {
     const staleBefore = new Date(Date.now() - STALE_REQUEST_MIN * 60_000).toISOString()
@@ -97,6 +100,37 @@ export default async function handler(req, res) {
         tag: `ride-${ride.id}`,
       })
       result.dispatched++
+    }
+
+    // Drivers who closed the app without going offline (like Uber, they stop being "online" after a few minutes).
+    const idleBefore = new Date(Date.now() - DRIVER_IDLE_MIN * 60_000).toISOString()
+    const { data: idle } = await admin
+      .from('drivers')
+      .update({ status: 'offline' })
+      .eq('status', 'online')
+      .or(`last_seen_at.is.null,last_seen_at.lt.${idleBefore}`)
+      .select('id')
+    result.drivers_offlined = idle?.length || 0
+
+    // Safety net: charge completed trips whose capture call never arrived (e.g. the driver lost signal at drop-off).
+    const captureBefore = new Date(Date.now() - CAPTURE_GRACE_MIN * 60_000).toISOString()
+    const { data: uncaptured } = await admin
+      .from('rides')
+      .select('id')
+      .eq('status', 'completed')
+      .eq('payment_status', 'authorized')
+      .lt('completed_at', captureBefore)
+      .order('completed_at', { ascending: true })
+      .limit(20)
+    for (const r of uncaptured || []) {
+      try {
+        const out = await captureRide(r.id)
+        if (out.ok) result.captured++
+        else result.capture_failed++
+      } catch (err) {
+        console.error('Sweeper capture failed:', r.id, err.message)
+        result.capture_failed++
+      }
     }
 
     return res.status(200).json(result)

@@ -7,7 +7,7 @@ import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { apiPost } from '../../lib/api'
-import { loadSettings } from '../../lib/settings'
+import { loadSettings, useSettings } from '../../lib/settings'
 import { enablePushNotifications } from '../../lib/push'
 import { loadGoogleMaps, reverseGeocode } from '../../lib/useGoogleMaps'
 import { calculateFare, formatFare, VEHICLE_TYPES } from '../../lib/pricing'
@@ -30,6 +30,12 @@ const pickupText = ref('')
 const dropoffText = ref('')
 
 const selectedVehicle = ref('standard')
+// Premium is only offered once an admin has approved Premium vehicles and switched it on.
+const appSettings = useSettings()
+const availableVehicles = computed(() => VEHICLE_TYPES.filter((v) => v.id !== 'premium' || appSettings.value.offer_premium))
+watch(availableVehicles, (list) => {
+  if (!list.some((v) => v.id === selectedVehicle.value)) selectedVehicle.value = 'standard'
+})
 const distanceMiles = ref(null)
 const durationMinutes = ref(null)
 const isCalculating = ref(false)
@@ -650,7 +656,7 @@ async function scheduleRide({ date, time, summary }) {
           </div>
           <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2.5 px-1">Choose your ride</p>
           <div class="space-y-2">
-            <button v-for="vehicle in VEHICLE_TYPES" :key="vehicle.id" @click="selectedVehicle = vehicle.id"
+            <button v-for="vehicle in availableVehicles" :key="vehicle.id" @click="selectedVehicle = vehicle.id"
                     class="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border-2 transition-all duration-200"
                     :class="selectedVehicle === vehicle.id ? 'border-[#2b8659] bg-[#2b8659]/[0.06] shadow-[0_0_0_3px_rgba(43,134,89,0.08)]' : 'border-transparent bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-secondary)] active:scale-[0.99]'">
               <div class="flex items-center gap-3">
@@ -773,7 +779,7 @@ async function scheduleRide({ date, time, summary }) {
           </div>
           <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3 px-1">Choose your ride</p>
           <div class="space-y-2">
-            <button v-for="vehicle in VEHICLE_TYPES" :key="vehicle.id" @click="selectedVehicle = vehicle.id"
+            <button v-for="vehicle in availableVehicles" :key="vehicle.id" @click="selectedVehicle = vehicle.id"
                     class="w-full flex items-center justify-between px-4 py-4 rounded-2xl border-2 transition-all duration-200"
                     :class="selectedVehicle === vehicle.id ? 'border-[#2b8659] bg-[#2b8659]/[0.06] shadow-[0_0_0_3px_rgba(43,134,89,0.08)]' : 'border-transparent bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-secondary)]'">
               <div class="flex items-center gap-3.5">
