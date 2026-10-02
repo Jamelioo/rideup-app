@@ -8,16 +8,25 @@ export const RATES = {
   premium:  { base: 700, perMile: 320, perMinute: 40, minimum: 2000 },
 }
 
+// $1.00 per trip kept by RideUp (covers card processing and maps); drivers keep 80% of everything else.
+export const BOOKING_FEE_CENTS = 100
+// Never price a trip faster than 30 mph average (2 min per mile), whatever trip time the app sends.
+export const MIN_MINUTES_PER_MILE = 2
+
+// Upfront price: max(base + distance + time, minimum) + booking fee. Must match guard_rides_insert (migration 008).
 export function calculateFare(distanceMiles, durationMinutes, vehicleType = 'standard') {
   const rate = RATES[vehicleType] || RATES.standard
-  const raw = rate.base + distanceMiles * rate.perMile + durationMinutes * rate.perMinute
-  return Math.max(Math.round(raw), rate.minimum)
+  const minutes = Math.max(durationMinutes || 0, (distanceMiles || 0) * MIN_MINUTES_PER_MILE)
+  const trip = rate.base + distanceMiles * rate.perMile + minutes * rate.perMinute
+  return Math.max(Math.round(trip), rate.minimum) + BOOKING_FEE_CENTS
 }
 
-// What the driver keeps (fare minus the 20% platform fee). Rides created after migration 003 store it;
-// older rows fall back to the same 80% split.
+// What the driver keeps: 80% of the fare excluding the booking fee. Rides store it; older rows fall back
+// to the same rule.
 export function driverPayout(ride) {
-  return ride?.driver_payout_cents ?? Math.round((ride?.fare_cents || 0) * 0.8)
+  if (ride?.driver_payout_cents != null) return ride.driver_payout_cents
+  const fare = ride?.fare_cents || 0
+  return Math.round((fare - (ride?.booking_fee_cents || 0)) * 0.8)
 }
 
 export function formatFare(cents) {

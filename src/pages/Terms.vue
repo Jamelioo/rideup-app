@@ -40,7 +40,7 @@ function goBack() {
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Fares and Payment</h2>
-        <p>Your fare is calculated from distance and time and shown before you request a ride; that is the price you pay. A valid payment card is required to request a ride. When a driver accepts, we place a temporary hold for the fare on your card. When the trip is completed the hold is converted into the charge for that fare and we email you a receipt. If the ride is cancelled before the trip starts, the hold is released (less any fee described below). If your driver cancels, we automatically look for another driver at the same price. You can add an optional tip of $1 to $100 for up to 3 days after a trip; tips are charged separately to your card and 100% goes to your driver. Payments are processed by Stripe; RideUp does not store your full card number.</p>
+        <p>Your fare is calculated from distance and the expected trip time (including current traffic), plus a $1.00 booking fee, and is shown before you request a ride; that is the price you pay, even if the trip takes longer. A valid payment card is required to request a ride. When a driver accepts, we place a temporary hold for the fare on your card. When the trip is completed the hold is converted into the charge for that fare and we email you a receipt. If the ride is cancelled before the trip starts, the hold is released (less any fee described below). If your driver cancels, we automatically look for another driver at the same price. You can add an optional tip of $1 to $100 for up to 3 days after a trip; tips are charged separately to your card and 100% goes to your driver. Payments are processed by Stripe; RideUp does not store your full card number.</p>
       </section>
 
       <section>
@@ -50,7 +50,7 @@ function goBack() {
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Drivers</h2>
-        <p>Drivers must apply and be approved before accepting rides, and must keep their photo, documents and vehicle information accurate; changing these sends the profile back for review, and expired licence or insurance documents must be renewed before going online. Drivers keep 80% of each fare and of any cancellation or no-show fee, and 100% of tips; RideUp retains a 20% platform fee. Ratings are averaged over recent trips, and a sustained low rating may lead to a quality review. RideUp may suspend or remove drivers who break these terms or the law.</p>
+        <p>Drivers must apply and be approved before accepting rides, and must keep their photo, documents and vehicle information accurate; changing these sends the profile back for review, and expired licence or insurance documents must be renewed before going online. Drivers keep 80% of each fare (excluding the booking fee) and of any cancellation or no-show fee, and 100% of tips; RideUp retains a 20% platform fee. Ratings are averaged over recent trips, and a sustained low rating may lead to a quality review. RideUp may suspend or remove drivers who break these terms or the law.</p>
       </section>
 
       <section>
