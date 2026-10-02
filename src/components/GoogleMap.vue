@@ -303,6 +303,8 @@ onMounted(async () => {
     styles: mapStyles,
     disableDefaultUI: true,
     zoomControl: false,
+    clickableIcons: false,     // no Google place pop-ups when tapping the map
+    gestureHandling: 'greedy', // one finger moves the map, never the page
   }
 
   map = new maps.Map(mapRef.value, mapOptions)

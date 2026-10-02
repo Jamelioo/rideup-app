@@ -173,8 +173,14 @@ router.beforeEach(async (to) => {
   }
 })
 
+// Full-screen app screens: lock the page so only their inner panels scroll (see html.app-shell in style.css).
+const APP_SHELL_ROUTES = ['/book', '/ride/', '/driver/dashboard', '/driver/active-ride']
+
 router.afterEach((to) => {
   document.title = to.meta.title || 'RideUp Nassau'
+  const shell = APP_SHELL_ROUTES.some((p) => to.path === p || (p.endsWith('/') && to.path.startsWith(p)))
+  document.documentElement.classList.toggle('app-shell', shell)
+  if (shell) window.scrollTo(0, 0)
 })
 
 export default router
