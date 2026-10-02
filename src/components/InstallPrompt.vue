@@ -11,7 +11,9 @@ const SNOOZE_DAYS = 14
 const deferred = ref(null)
 const visible = ref(false)
 const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) && !/crios|fxios|edgios/i.test(navigator.userAgent)
-const standalone = window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true
+// Already installed: Home Screen app, or the App Store / Play Store app (Capacitor).
+const standalone = window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true ||
+  window.Capacitor?.isNativePlatform?.() === true || /RideUpApp/.test(navigator.userAgent)
 const isDriver = computed(() => route.path.startsWith('/driver'))
 const onShownScreen = computed(() => route.path === '/book' || route.path === '/driver/dashboard')
 
