@@ -3,6 +3,7 @@ import { watch } from 'vue'
 import { useAuth } from '../lib/useAuth'
 import { useDriver } from '../lib/useDriver'
 import { DEMO_MODE } from '../lib/demoMode'
+import { setPendingReferral } from '../lib/rewards'
 
 // Eager: landing + main booking (first paint)
 import RiderLanding from '../pages/RiderLanding.vue'
@@ -51,6 +52,7 @@ const AdminRevenue = () => import('../pages/admin/AdminRevenue.vue')
 const AdminSupport = () => import('../pages/admin/AdminSupport.vue')
 const AdminSafety = () => import('../pages/admin/AdminSafety.vue')
 const AdminPayouts = () => import('../pages/admin/AdminPayouts.vue')
+const AdminPromos = () => import('../pages/admin/AdminPromos.vue')
 const AdminSettings = () => import('../pages/admin/AdminSettings.vue')
 
 const routes = [
@@ -76,6 +78,16 @@ const routes = [
   { path: '/about', name: 'about', component: About, meta: { title: 'About — RideUp' } },
   { path: '/track/:token', name: 'track-trip', component: TrackTrip, meta: { title: 'Live trip — RideUp', public: true } },
   { path: '/welcome', redirect: '/' },
+  // Referral links (rideupnassau.com/r/RIDEXXXXX): remember the code, then sign up. It's applied once the
+  // friend has an account (App.vue), giving them $5 off their first ride.
+  {
+    path: '/r/:code',
+    name: 'referral-link',
+    redirect: (to) => {
+      setPendingReferral(String(to.params.code || '').slice(0, 20))
+      return { path: '/signup', query: { ref: '1' } }
+    },
+  },
   { path: '/drive', name: 'driver-landing', component: DriverLanding, meta: { title: 'Drive with RideUp Nassau' } },
   { path: '/privacy', name: 'privacy', component: Privacy, meta: { title: 'Privacy Policy — RideUp' } },
   { path: '/terms', name: 'terms', component: Terms, meta: { title: 'Terms of Service — RideUp' } },
@@ -103,6 +115,7 @@ const routes = [
       { path: 'support', name: 'admin-support', component: AdminSupport, meta: { title: 'Support Tickets — RideUp' } },
       { path: 'safety', name: 'admin-safety', component: AdminSafety, meta: { title: 'Safety Reports — RideUp' } },
       { path: 'payouts', name: 'admin-payouts', component: AdminPayouts, meta: { title: 'Driver Payouts — RideUp' } },
+      { path: 'promos', name: 'admin-promos', component: AdminPromos, meta: { title: 'Promo Codes — RideUp' } },
       { path: 'settings', name: 'admin-settings', component: AdminSettings, meta: { title: 'Settings — RideUp' } },
     ],
   },

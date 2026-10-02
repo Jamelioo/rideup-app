@@ -1,3 +1,4 @@
+import { chargeOf } from '../src/lib/discounts.js'
 import { Resend } from 'resend'
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
@@ -34,13 +35,17 @@ export function tripReceiptEmail({ ride, driverName }) {
   const date = new Date(ride.completed_at || ride.created_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Nassau' })
   const card = ride.payment_last4 ? `${escapeHtml(ride.payment_brand || 'Card')} •••• ${escapeHtml(ride.payment_last4)}` : 'Card on file'
   return {
-    subject: `Your RideUp receipt — ${money(ride.fare_cents)}`,
+    subject: `Your RideUp receipt — ${money(chargeOf(ride))}`,
     html: layout('Thanks for riding with RideUp', `
       <p style="font-size:14px;color:#555">${escapeHtml(date)} · Driver: ${escapeHtml(driverName || 'your driver')}</p>
       <p style="font-size:14px"><strong>From:</strong> ${escapeHtml(ride.pickup_address)}<br><strong>To:</strong> ${escapeHtml(ride.dropoff_address)}</p>
       <table style="width:100%;font-size:14px;border-top:1px solid #eee;margin-top:12px">
-        ${row('Trip fare', money(ride.fare_cents))}
-        ${row('Total charged', money(ride.fare_cents), true)}
+        ${row('Trip fare', money(ride.fare_cents - (ride.booking_fee_cents || 0) - (ride.airport_fee_cents || 0)))}
+        ${ride.airport_fee_cents ? row('Airport pickup fee', money(ride.airport_fee_cents)) : ''}
+        ${ride.booking_fee_cents ? row('Booking fee', money(ride.booking_fee_cents)) : ''}
+        ${ride.promo_discount_cents ? row(ride.promo_code === 'REFERRAL' ? 'Friend referral' : `Promo ${escapeHtml(ride.promo_code || '')}`, '−' + money(ride.promo_discount_cents)) : ''}
+        ${ride.credit_applied_cents ? row('RideUp credit', '−' + money(ride.credit_applied_cents)) : ''}
+        ${row('Total charged', money(chargeOf(ride)), true)}
         ${row('Paid with', card)}
       </table>`),
   }

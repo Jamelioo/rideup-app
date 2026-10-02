@@ -9,7 +9,7 @@ Without Supabase keys the app runs in **demo mode** (sample data, no backend) so
 ## What it does
 
 **Riders**
-- Book with Google Places search, see upfront prices for Go ($2.00 + $1.25/mile + $0.35/min, $10 minimum; XL and Premium appear once an admin turns them on), book as a
+- Book with Google Places search, see upfront prices for Go ($2.00 + $1.25/mile + $0.35/min with live traffic, $10 minimum, plus a $1 booking fee and a $3 LPIA pickup fee; XL and Premium appear once an admin turns them on), promo codes and referrals ($5 off a friend's first ride, $5 credit to the referrer), book as a
   guest or with an account, schedule rides.
 - Live trip screen: driver photo, car and big plate, live ETA, wait timer at pickup, call and in-app chat (phone and
   chat only while the trip is active; chat stays open 30 minutes after drop-off for lost items).
@@ -46,7 +46,7 @@ npm install
 
 1. Create a project at [supabase.com/dashboard](https://supabase.com/dashboard).
 2. In **SQL Editor**, run these files **in order**: `supabase-schema.sql`, then everything in
-   `supabase/migrations/` (`001` … `007`). Each migration can be re-run safely.
+   `supabase/migrations/` (`001` … `009`). Each migration can be re-run safely.
 3. Make yourself an admin (SQL Editor, use your account's email):
    ```sql
    update auth.users set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb

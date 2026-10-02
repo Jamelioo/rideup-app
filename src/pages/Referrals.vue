@@ -1,53 +1,67 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuth } from '../lib/useAuth'
+import { loadRewards, redeemReferral } from '../lib/rewards'
+import { formatFare } from '../lib/pricing'
+import { DEMO_MODE } from '../lib/demoMode'
 
 const router = useRouter()
-const { user } = useAuth()
 
 const copied = ref(false)
+const rewards = ref(DEMO_MODE ? { referral_code: 'RIDE7K2QF', credit_cents: 500, referral_discount_pending: false, friends_joined: 2, friends_rewarded: 1 } : null)
+const loading = ref(!DEMO_MODE)
 
-const referralCode = computed(() => {
-  if (!user.value?.id) return 'RIDEUP-XXXX'
-  const hash = user.value.id.replace(/-/g, '').slice(0, 6).toUpperCase()
-  return `RIDEUP-${hash}`
+onMounted(async () => {
+  if (!DEMO_MODE) rewards.value = await loadRewards()
+  loading.value = false
 })
 
+const referralCode = computed(() => rewards.value?.referral_code || '')
+const shareLink = computed(() => (referralCode.value ? `https://rideupnassau.com/r/${referralCode.value}` : 'https://rideupnassau.com'))
 const shareMessage = computed(() =>
-  `Try RideUp for rides around Nassau — flat upfront fares, no surprises. Sign up at https://rideupnassau.com`
+  `I ride with RideUp around Nassau. Use my link and get $5 off your first ride: ${shareLink.value}`
 )
+const whatsappUrl = computed(() => `https://wa.me/?text=${encodeURIComponent(shareMessage.value)}`)
+const smsUrl = computed(() => `sms:?&body=${encodeURIComponent(shareMessage.value)}`)
 
-const whatsappUrl = computed(() =>
-  `https://wa.me/?text=${encodeURIComponent(shareMessage.value)}`
-)
-
-const smsUrl = computed(() =>
-  `sms:?body=${encodeURIComponent(shareMessage.value)}`
-)
-
-async function copyCode() {
+async function copyLink() {
   try {
-    await navigator.clipboard.writeText(referralCode.value)
-    copied.value = true
-    setTimeout(() => { copied.value = false }, 2000)
+    if (navigator.share) {
+      await navigator.share({ title: 'RideUp', text: shareMessage.value })
+      return
+    }
+    await navigator.clipboard.writeText(shareMessage.value)
   } catch {
-    // Fallback for older browsers
-    const el = document.createElement('textarea')
-    el.value = referralCode.value
-    document.body.appendChild(el)
-    el.select()
-    document.execCommand('copy')
-    document.body.removeChild(el)
-    copied.value = true
-    setTimeout(() => { copied.value = false }, 2000)
+    return
+  }
+  copied.value = true
+  setTimeout(() => { copied.value = false }, 2000)
+}
+
+// New riders can enter a friend's code before their first trip.
+const friendCode = ref('')
+const friendMsg = ref('')
+const friendOk = ref(false)
+const friendBusy = ref(false)
+async function applyFriendCode() {
+  const code = friendCode.value.trim().toUpperCase()
+  if (!code) return
+  friendBusy.value = true
+  friendMsg.value = ''
+  const res = await redeemReferral(code)
+  friendBusy.value = false
+  friendOk.value = res.ok
+  friendMsg.value = res.ok ? `Done! You’ll get $5 off your first ride, thanks to ${res.friendName}.` : res.message
+  if (res.ok) {
+    friendCode.value = ''
+    rewards.value = await loadRewards()
   }
 }
 
 const steps = [
-  { number: '1', title: 'Share RideUp', description: 'Send the link to friends and family in Nassau' },
-  { number: '2', title: 'They sign up', description: 'They create an account or book as a guest' },
-  { number: '3', title: 'Everyone rides', description: 'Flat upfront fares across New Providence' },
+  { number: '1', title: 'Share your link', description: 'Send it to friends and family in Nassau' },
+  { number: '2', title: 'They get $5 off', description: 'Their first RideUp ride is $5 cheaper' },
+  { number: '3', title: 'You get $5 credit', description: 'Added once they finish that first ride, used on your next trip' },
 ]
 </script>
 
@@ -72,16 +86,20 @@ const steps = [
           </svg>
         </div>
         <h2 class="text-2xl font-bold mb-2">Invite friends</h2>
-        <p class="text-[14px] text-[var(--color-text-muted)]">Know someone who needs a ride in Nassau? Send them RideUp. Referral rewards are coming soon.</p>
+        <p class="text-[14px] text-[var(--color-text-muted)]">Give friends $5 off their first ride. Get $5 credit when they finish it.</p>
+        <p v-if="rewards" class="text-[13px] text-[var(--color-text-secondary)] mt-3">
+          {{ rewards.friends_joined }} friend{{ rewards.friends_joined === 1 ? '' : 's' }} joined · {{ rewards.friends_rewarded }} rode · Your credit: <strong>{{ formatFare(rewards.credit_cents) }}</strong>
+        </p>
       </div>
 
       <!-- Referral Code -->
       <div class="mb-6">
         <h2 class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Your referral code</h2>
         <div class="border-2 border-dashed border-[#2b8659]/30 rounded-xl p-4 flex items-center justify-between bg-[var(--color-surface-secondary)]/50">
-          <span class="text-xl font-bold tracking-[0.15em] text-[var(--color-brand)]">{{ referralCode }}</span>
+          <span class="text-xl font-bold tracking-[0.15em] text-[var(--color-brand)]">{{ loading ? '…' : referralCode || 'Book a ride to get your code' }}</span>
           <button
-            @click="copyCode"
+            @click="copyLink"
+            :disabled="!referralCode"
             class="flex items-center gap-1.5 px-4 py-2 bg-[#2b8659] text-white text-[13px] font-bold rounded-lg active:scale-[0.97] transition-all"
           >
             <svg v-if="!copied" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -90,7 +108,7 @@ const steps = [
             <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
             </svg>
-            {{ copied ? 'Copied' : 'Copy' }}
+            {{ copied ? 'Copied' : 'Share' }}
           </button>
         </div>
       </div>
@@ -119,6 +137,19 @@ const steps = [
             SMS
           </a>
         </div>
+      </div>
+
+      <!-- Enter a friend's code (new riders) -->
+      <div v-if="!DEMO_MODE && rewards && !rewards.referral_discount_pending" class="mb-8">
+        <h2 class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Have a friend’s code?</h2>
+        <form @submit.prevent="applyFriendCode" class="flex gap-2">
+          <label class="sr-only" for="friend-code">Friend’s referral code</label>
+          <input id="friend-code" v-model="friendCode" autocapitalize="characters" autocomplete="off" placeholder="RIDE…"
+                 class="flex-1 min-w-0 px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] uppercase" />
+          <button type="submit" :disabled="friendBusy" class="px-5 rounded-xl bg-[#2b8659] text-white font-bold disabled:opacity-50">{{ friendBusy ? '…' : 'Apply' }}</button>
+        </form>
+        <p v-if="friendMsg" class="text-[13px] mt-2" :class="friendOk ? 'text-[var(--color-brand)]' : 'text-[var(--color-danger)]'" role="status">{{ friendMsg }}</p>
+        <p class="text-[12px] text-[var(--color-text-muted)] mt-1">For new riders, before their first trip.</p>
       </div>
 
       <!-- How It Works -->

@@ -1,4 +1,5 @@
 <script setup>
+import { chargeOf } from '../lib/discounts'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
@@ -153,7 +154,7 @@ onMounted(async () => {
             </div>
 
             <!-- Right: fare -->
-            <span class="text-base font-semibold text-[var(--color-text-primary)]">{{ formatFare(ride.status === 'cancelled' ? ride.cancel_fee_cents : ride.fare_cents + (ride.tip_payment_intent_id ? ride.tip_cents || 0 : 0)) }}</span>
+            <span class="text-base font-semibold text-[var(--color-text-primary)]">{{ formatFare(ride.status === 'cancelled' ? ride.cancel_fee_cents : chargeOf(ride) + (ride.tip_payment_intent_id ? ride.tip_cents || 0 : 0)) }}</span>
           </div>
 
           <!-- View receipt button for completed rides -->

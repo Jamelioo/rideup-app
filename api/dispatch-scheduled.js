@@ -1,6 +1,6 @@
 import Stripe from 'stripe'
 import { admin } from './_auth.js'
-import { calculateFare, BOOKING_FEE_CENTS } from '../src/lib/pricing.js'
+import { calculateFare, BOOKING_FEE_CENTS, isAirportPickup, AIRPORT_FEE_CENTS } from '../src/lib/pricing.js'
 import { pushToUser } from './_push.js'
 import { captureRide } from './_capture.js'
 import { notifyNearbyDrivers } from './_notifyDrivers.js'
@@ -91,8 +91,9 @@ export default async function handler(req, res) {
           vehicle_type: vehicleType,
           distance_miles: distance,
           duration_minutes: duration,
-          fare_cents: calculateFare(distance, duration, vehicleType),
+          fare_cents: calculateFare(distance, duration, vehicleType, { pickup: { lat: sr.pickup_lat, lng: sr.pickup_lng } }),
           booking_fee_cents: BOOKING_FEE_CENTS,
+          airport_fee_cents: isAirportPickup({ lat: sr.pickup_lat, lng: sr.pickup_lng }) ? AIRPORT_FEE_CENTS : 0,
         })
         .select('id')
         .single()

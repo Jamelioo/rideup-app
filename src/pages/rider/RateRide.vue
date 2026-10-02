@@ -7,6 +7,7 @@ import ReportSafety from '../../components/ReportSafety.vue'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
 import { apiPost } from '../../lib/api'
 import { formatFare } from '../../lib/pricing'
+import { chargeOf } from '../../lib/discounts'
 import { useAuth } from '../../lib/useAuth'
 import { DEMO_MODE } from '../../lib/demoMode'
 
@@ -56,7 +57,7 @@ onMounted(async () => {
   }
   const { data, error: err } = await supabase
     .from('rides')
-    .select('id, status, rider_rating, fare_cents, cancel_fee_cents, pickup_address, dropoff_address, completed_at, tip_cents, payment_status')
+    .select('id, status, rider_rating, fare_cents, promo_discount_cents, credit_applied_cents, cancel_fee_cents, pickup_address, dropoff_address, completed_at, tip_cents, payment_status')
     .eq('id', rideId.value)
     .maybeSingle()
   if (err || !data) {
@@ -239,7 +240,7 @@ function done() {
           <span v-if="vehicle">{{ vehicle }}<span v-if="driver?.license_plate"> · {{ driver.license_plate }}</span> · </span>{{ tripDate }}
         </p>
         <p class="text-[13px] text-[var(--color-text-secondary)] mt-1 truncate max-w-full">{{ ride.pickup_address }} → {{ ride.dropoff_address }}</p>
-        <p v-if="completed" class="text-[15px] font-bold mt-1">{{ formatFare(ride.fare_cents) }}</p>
+        <p v-if="completed" class="text-[15px] font-bold mt-1">{{ formatFare(chargeOf(ride)) }}</p>
       </div>
 
       <template v-if="completed">

@@ -10,7 +10,8 @@ import { apiPost } from '../../lib/api'
 import { loadSettings, useSettings } from '../../lib/settings'
 import { enablePushNotifications } from '../../lib/push'
 import { loadGoogleMaps, reverseGeocode } from '../../lib/useGoogleMaps'
-import { calculateFare, formatFare, VEHICLE_TYPES } from '../../lib/pricing'
+import { calculateFare, formatFare, VEHICLE_TYPES, isAirportPickup, AIRPORT_FEE_CENTS } from '../../lib/pricing'
+import { getSavedPromo, savePromo, clearSavedPromo, checkPromo, loadRewards, previewDiscounts } from '../../lib/rewards'
 import { DEMO_MODE, DEMO_LOCATIONS, fakeRoute } from '../../lib/demoMode'
 import GoogleMap from '../../components/GoogleMap.vue'
 import HarborBackdrop from '../../components/HarborBackdrop.vue'
@@ -290,7 +291,7 @@ const fareEstimates = computed(() => {
   if (!distanceMiles.value || !durationMinutes.value) return {}
   const estimates = {}
   for (const v of VEHICLE_TYPES) {
-    let fare = calculateFare(distanceMiles.value, durationMinutes.value, v.id)
+    let fare = calculateFare(distanceMiles.value, durationMinutes.value, v.id, { pickup: pickup.value })
     estimates[v.id] = fare
   }
   return estimates
@@ -324,6 +325,54 @@ async function loadPaymentMethod() {
     : 'Add a card at the next step'
 }
 onMounted(loadPaymentMethod)
+
+// ── Promo codes, referral discount and ride credit (the database applies them; this previews them) ──
+const rewards = ref({ credit_cents: 0, referral_discount_pending: false })
+const promo = ref(getSavedPromo())
+const promoOpen = ref(false)
+const promoInput = ref('')
+const promoError = ref('')
+const promoBusy = ref(false)
+const airportPickup = computed(() => isAirportPickup(pickup.value))
+const discounts = computed(() => previewDiscounts(fareEstimates.value[selectedVehicle.value], {
+  promo: promo.value,
+  referralPending: rewards.value.referral_discount_pending,
+  creditCents: rewards.value.credit_cents,
+}))
+
+async function loadRiderRewards() {
+  if (DEMO_MODE) return
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) return
+  rewards.value = (await loadRewards()) || rewards.value
+  // A saved code may have been used or expired since it was entered.
+  if (promo.value) {
+    const res = await checkPromo(promo.value.code)
+    if (!res.ok) { clearSavedPromo(); promo.value = null }
+  }
+}
+onMounted(loadRiderRewards)
+
+async function applyPromo() {
+  const code = promoInput.value.trim().toUpperCase()
+  if (!code) return
+  promoError.value = ''
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) { promoError.value = 'Book once (or log in) to use promo codes.'; return }
+  promoBusy.value = true
+  const res = await checkPromo(code)
+  promoBusy.value = false
+  if (!res.ok) { promoError.value = res.message; return }
+  promo.value = res.promo
+  savePromo(res.promo)
+  promoOpen.value = false
+  promoInput.value = ''
+}
+
+function removePromo() {
+  promo.value = null
+  clearSavedPromo()
+}
 
 async function requestRide() {
   if (!canRequest.value) return
@@ -434,6 +483,7 @@ async function createRideForUser(user, guestInfo = null) {
       vehicle_type: selectedVehicle.value, distance_miles: distanceMiles.value,
       duration_minutes: durationMinutes.value || Math.round((distanceMiles.value || 1) * 3),
       fare_cents: fare,
+      promo_code: promo.value?.code || null,
     }).select().single()
     if (rideErr) {
       isSubmitting.value = false
@@ -441,6 +491,12 @@ async function createRideForUser(user, guestInfo = null) {
         // Already has a ride in progress: take them to it instead of booking a second one.
         showGuestSheet.value = false
         emit('existing-ride')
+        return
+      }
+      if (rideErr.hint === 'promo') {
+        // The code stopped being valid (used, expired): drop it and let the rider book at the normal price.
+        removePromo()
+        error.value = `${rideErr.message} We removed it. Tap the button again to book at the normal price.`
         return
       }
       if (/verify your phone/i.test(rideErr.message)) {
@@ -714,6 +770,30 @@ async function scheduleRide({ date, time, summary }) {
             </button>
           </div>
           <div class="sticky bottom-0 z-10 -mx-5 px-5 pt-3 pb-1 mt-3 bg-[var(--color-surface)] border-t border-[var(--color-border)]">
+            <!-- Airport fee, promo / referral discount and credit, shown before booking -->
+            <div v-if="hasRoute" class="px-1 mb-2 space-y-1 text-[13px]">
+              <p v-if="airportPickup" class="text-[var(--color-text-secondary)]">Includes {{ formatFare(AIRPORT_FEE_CENTS) }} airport pickup fee</p>
+              <div v-if="discounts.discount || discounts.credit" class="flex items-center justify-between gap-2 rounded-xl bg-[#2b8659]/10 px-3 py-2">
+                <span class="text-[var(--color-text-primary)]">
+                  <span v-if="discounts.discount">{{ discounts.label }} −{{ formatFare(discounts.discount) }}</span>
+                  <span v-if="discounts.discount && discounts.credit"> · </span>
+                  <span v-if="discounts.credit">Credit −{{ formatFare(discounts.credit) }}</span>
+                </span>
+                <span class="font-bold text-[var(--color-brand)] whitespace-nowrap">You pay {{ formatFare(discounts.charge) }}</span>
+              </div>
+              <div v-if="!DEMO_MODE" class="flex items-center gap-3">
+                <button v-if="!promo && !promoOpen" type="button" @click="promoOpen = true" class="text-[var(--color-brand)] font-semibold py-1">Add promo code</button>
+                <button v-if="promo" type="button" @click="removePromo" class="text-[var(--color-text-muted)] py-1">Remove {{ promo.code }}</button>
+              </div>
+              <form v-if="promoOpen" @submit.prevent="applyPromo" class="flex gap-2">
+                <label class="sr-only" for="promo-code">Promo code</label>
+                <input id="promo-code" v-model="promoInput" autocapitalize="characters" autocomplete="off" placeholder="Promo code"
+                       class="flex-1 min-w-0 px-3 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] uppercase" />
+                <button type="submit" :disabled="promoBusy" class="px-4 rounded-xl bg-[#2b8659] text-white font-semibold disabled:opacity-50">{{ promoBusy ? '…' : 'Apply' }}</button>
+                <button type="button" @click="promoOpen = false; promoError = ''" class="px-2 text-[var(--color-text-muted)]" aria-label="Close">✕</button>
+              </form>
+              <p v-if="promoError" class="text-[var(--color-danger)]" role="alert">{{ promoError }}</p>
+            </div>
             <component :is="hasCardOnFile && !DEMO_MODE ? 'router-link' : 'div'" :to="hasCardOnFile && !DEMO_MODE ? '/payments' : undefined"
                        class="flex items-center gap-2 text-[13px] text-[var(--color-text-secondary)] mb-2.5 px-1">
               <svg class="w-4 h-4 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
@@ -841,6 +921,30 @@ async function scheduleRide({ date, time, summary }) {
             </button>
           </div>
           <div class="sticky bottom-0 z-10 -mx-6 px-6 pt-3 pb-4 mt-4 bg-[var(--color-surface)] border-t border-[var(--color-border)]">
+            <!-- Airport fee, promo / referral discount and credit, shown before booking -->
+            <div v-if="hasRoute" class="px-1 mb-2 space-y-1 text-[13px]">
+              <p v-if="airportPickup" class="text-[var(--color-text-secondary)]">Includes {{ formatFare(AIRPORT_FEE_CENTS) }} airport pickup fee</p>
+              <div v-if="discounts.discount || discounts.credit" class="flex items-center justify-between gap-2 rounded-xl bg-[#2b8659]/10 px-3 py-2">
+                <span class="text-[var(--color-text-primary)]">
+                  <span v-if="discounts.discount">{{ discounts.label }} −{{ formatFare(discounts.discount) }}</span>
+                  <span v-if="discounts.discount && discounts.credit"> · </span>
+                  <span v-if="discounts.credit">Credit −{{ formatFare(discounts.credit) }}</span>
+                </span>
+                <span class="font-bold text-[var(--color-brand)] whitespace-nowrap">You pay {{ formatFare(discounts.charge) }}</span>
+              </div>
+              <div v-if="!DEMO_MODE" class="flex items-center gap-3">
+                <button v-if="!promo && !promoOpen" type="button" @click="promoOpen = true" class="text-[var(--color-brand)] font-semibold py-1">Add promo code</button>
+                <button v-if="promo" type="button" @click="removePromo" class="text-[var(--color-text-muted)] py-1">Remove {{ promo.code }}</button>
+              </div>
+              <form v-if="promoOpen" @submit.prevent="applyPromo" class="flex gap-2">
+                <label class="sr-only" for="promo-code">Promo code</label>
+                <input id="promo-code" v-model="promoInput" autocapitalize="characters" autocomplete="off" placeholder="Promo code"
+                       class="flex-1 min-w-0 px-3 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] uppercase" />
+                <button type="submit" :disabled="promoBusy" class="px-4 rounded-xl bg-[#2b8659] text-white font-semibold disabled:opacity-50">{{ promoBusy ? '…' : 'Apply' }}</button>
+                <button type="button" @click="promoOpen = false; promoError = ''" class="px-2 text-[var(--color-text-muted)]" aria-label="Close">✕</button>
+              </form>
+              <p v-if="promoError" class="text-[var(--color-danger)]" role="alert">{{ promoError }}</p>
+            </div>
             <component :is="hasCardOnFile && !DEMO_MODE ? 'router-link' : 'div'" :to="hasCardOnFile && !DEMO_MODE ? '/payments' : undefined"
                        class="flex items-center gap-2 text-[13px] text-[var(--color-text-secondary)] mb-2.5 px-1">
               <svg class="w-4 h-4 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>

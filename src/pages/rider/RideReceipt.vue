@@ -37,7 +37,8 @@ onMounted(async () => {
     const distanceCharge = Math.round(miles * rate.perMile)
     const timeCharge = Math.round(minutes * rate.perMinute)
     const bookingFee = data.booking_fee_cents || 0
-    const adjustment = total - bookingFee - (rate.base + distanceCharge + timeCharge)
+    const airportFee = data.airport_fee_cents || 0
+    const adjustment = total - bookingFee - airportFee - (rate.base + distanceCharge + timeCharge)
 
     const d = new Date(data.completed_at || data.cancelled_at || data.created_at)
     const cancelled = data.status === 'cancelled'
@@ -47,7 +48,7 @@ onMounted(async () => {
       cancelFee: cancelled ? (data.cancel_fee_cents || 0) : 0,
       noShow: data.cancel_reason === 'rider_no_show',
       tip,
-      grandTotal: cancelled ? (data.cancel_fee_cents || 0) : total + tip,
+      grandTotal: cancelled ? (data.cancel_fee_cents || 0) : total - (data.promo_discount_cents || 0) - (data.credit_applied_cents || 0) + tip,
       date: `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`,
       time: d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
       pickup: data.pickup_address || 'Pickup',
@@ -61,6 +62,10 @@ onMounted(async () => {
       timeCharge,
       minimumAdjustment: adjustment > 1 ? adjustment : 0, // minimum fare kicked in
       bookingFee,
+      airportFee,
+      promoDiscount: data.promo_discount_cents || 0,
+      promoLabel: data.promo_code === 'REFERRAL' ? 'Friend referral' : `Promo ${data.promo_code || ''}`,
+      creditApplied: data.credit_applied_cents || 0,
       total,
       paymentLast4: data.payment_last4 || '',
       paymentBrand: data.payment_brand || '',
@@ -194,6 +199,10 @@ async function shareReceipt() {
             <span class="text-sm text-[var(--color-text-secondary)]">Minimum fare adjustment</span>
             <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.minimumAdjustment) }}</span>
           </div>
+          <div v-if="receipt.airportFee > 0" class="flex items-center justify-between">
+            <span class="text-sm text-[var(--color-text-secondary)]">Airport pickup fee</span>
+            <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.airportFee) }}</span>
+          </div>
           <div v-if="receipt.bookingFee > 0" class="flex items-center justify-between">
             <span class="text-sm text-[var(--color-text-secondary)]">Booking fee</span>
             <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.bookingFee) }}</span>
@@ -204,6 +213,14 @@ async function shareReceipt() {
           <div class="flex items-center justify-between">
             <span class="text-sm font-semibold text-[var(--color-text-primary)]">Trip fare</span>
             <span class="text-sm font-semibold text-[var(--color-text-primary)]">{{ formatCents(receipt.total) }}</span>
+          </div>
+          <div v-if="receipt.promoDiscount" class="flex items-center justify-between">
+            <span class="text-sm text-[var(--color-text-secondary)]">{{ receipt.promoLabel }}</span>
+            <span class="text-sm text-[var(--color-brand)]">−{{ formatCents(receipt.promoDiscount) }}</span>
+          </div>
+          <div v-if="receipt.creditApplied" class="flex items-center justify-between">
+            <span class="text-sm text-[var(--color-text-secondary)]">RideUp credit</span>
+            <span class="text-sm text-[var(--color-brand)]">−{{ formatCents(receipt.creditApplied) }}</span>
           </div>
           <div v-if="receipt.tip" class="flex items-center justify-between">
             <span class="text-sm text-[var(--color-text-secondary)]">Tip (100% to your driver)</span>
