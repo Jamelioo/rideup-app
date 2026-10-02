@@ -33,6 +33,9 @@ const pickupText = ref('')
 const dropoffText = ref('')
 
 const selectedVehicle = ref('standard')
+// Extra minutes live traffic adds to this trip (already included in the price).
+const trafficDelayMinutes = ref(0)
+const heavyTraffic = computed(() => durationMinutes.value && trafficDelayMinutes.value >= 3 && trafficDelayMinutes.value / durationMinutes.value >= 0.15)
 // XL and Premium are only offered once an admin switches them on (Admin → Settings); Go is always offered.
 const appSettings = useSettings()
 const availableVehicles = computed(() => VEHICLE_TYPES.filter((v) =>
@@ -263,6 +266,7 @@ function maybeCalculateRoute() {
       const normal = leg.duration.value
       const withTraffic = leg.duration_in_traffic?.value || 0
       durationMinutes.value = Math.max(normal, withTraffic) / 60
+      trafficDelayMinutes.value = Math.max(0, (withTraffic - normal) / 60)
     }
   )
 }
@@ -590,6 +594,7 @@ async function scheduleRide({ date, time, summary }) {
         ref="mapRef"
         :pickup="pickup"
         :dropoff="dropoff"
+        show-traffic
         class="absolute inset-0 z-0"
         @map-tap="handleMapTap"
         @marker-drag="handleMarkerDrag"
@@ -685,6 +690,10 @@ async function scheduleRide({ date, time, summary }) {
             <div class="inline-flex items-center gap-1.5 bg-[var(--color-surface-secondary)] rounded-full px-3 py-1.5">
               <svg class="w-3.5 h-3.5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               <span class="text-[12px] font-semibold text-[var(--color-text-secondary)]">~{{ Math.round(durationMinutes) }} min</span>
+            </div>
+            <div v-if="heavyTraffic" class="inline-flex items-center gap-1.5 bg-amber-500/15 rounded-full px-3 py-1.5" title="Live traffic is adding time to this trip. It's included in the price.">
+              <span class="w-2 h-2 rounded-full bg-[#e8710a]" aria-hidden="true"></span>
+              <span class="text-[12px] font-semibold text-[var(--color-text-primary)]">Heavy traffic · +{{ Math.round(trafficDelayMinutes) }} min</span>
             </div>
           </div>
           <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2.5 px-1">Choose your ride</p>
@@ -808,6 +817,10 @@ async function scheduleRide({ date, time, summary }) {
             <div class="inline-flex items-center gap-1.5 bg-[var(--color-surface-secondary)] rounded-full px-3 py-1.5">
               <svg class="w-3.5 h-3.5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               <span class="text-[12px] font-semibold text-[var(--color-text-secondary)]">~{{ Math.round(durationMinutes) }} min</span>
+            </div>
+            <div v-if="heavyTraffic" class="inline-flex items-center gap-1.5 bg-amber-500/15 rounded-full px-3 py-1.5" title="Live traffic is adding time to this trip. It's included in the price.">
+              <span class="w-2 h-2 rounded-full bg-[#e8710a]" aria-hidden="true"></span>
+              <span class="text-[12px] font-semibold text-[var(--color-text-primary)]">Heavy traffic · +{{ Math.round(trafficDelayMinutes) }} min</span>
             </div>
           </div>
           <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3 px-1">Choose your ride</p>
