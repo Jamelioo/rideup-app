@@ -21,6 +21,9 @@ const cancelling = ref(false)
 const cancelError = ref('')
 const confirming = ref(false) // a driver accepted; the card hold is being placed
 let replacementDeadline = null
+let confirmDeadline = null
+let handleLatest = () => {} // set in onMounted to the status handler
+const CONFIRM_TIMEOUT_MS = 45_000 // holding a card takes seconds; after this, stop waiting
 let channel = null
 let demoTimer = null
 let timeoutTimer = null
@@ -116,6 +119,11 @@ onMounted(async () => {
     if (driverFound.value) return // already matched, ignore
     ride.value = updatedRide
     confirming.value = updatedRide.status === 'pending_driver_response'
+    if (confirming.value && !confirmDeadline) {
+      // A driver is found, so the "no drivers" timeout no longer applies; the payment timeout does.
+      if (timeoutTimer) clearTimeout(timeoutTimer)
+      confirmDeadline = setTimeout(giveUpOnPayment, CONFIRM_TIMEOUT_MS)
+    }
     if (updatedRide.status === 'cancelled' && updatedRide.replaced_by_ride_id) {
       // The driver cancelled and the server already booked a fresh request: follow it.
       emit('replaced', updatedRide.replaced_by_ride_id)
@@ -148,6 +156,8 @@ onMounted(async () => {
     }
   }
 
+  handleLatest = handleRideUpdate
+
   // Realtime subscription
   channel = supabase.channel(`ride-${props.rideId}`)
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rides', filter: `id=eq.${props.rideId}` }, (payload) => {
@@ -171,7 +181,26 @@ onUnmounted(() => {
   if (elapsedTimer) clearInterval(elapsedTimer)
   if (pollTimer) clearInterval(pollTimer)
   if (replacementDeadline) clearTimeout(replacementDeadline)
+  if (confirmDeadline) clearTimeout(confirmDeadline)
 })
+
+// A driver accepted but the card hold never completed (declined card, or the driver's app dropped).
+// Re-check once, then cancel for free so the rider isn't stuck on "Confirming your payment method…".
+async function giveUpOnPayment() {
+  if (driverFound.value || paymentFailed.value) return
+  const { data: latest } = await supabase.from('rides').select('*').eq('id', props.rideId).maybeSingle()
+  if (latest && latest.status !== 'pending_driver_response') {
+    confirmDeadline = null
+    return handleLatest(latest)
+  }
+  try {
+    await apiPost('/api/cancel-ride', { rideId: props.rideId })
+  } catch { /* the server also clears stuck rides within a couple of minutes */ }
+  if (elapsedTimer) clearInterval(elapsedTimer)
+  if (timeoutTimer) clearTimeout(timeoutTimer)
+  if (pollTimer) clearInterval(pollTimer)
+  paymentFailed.value = true
+}
 
 // Nobody answered: withdraw the request so it doesn't sit in drivers' queues.
 async function expireRequest() {
@@ -267,9 +296,12 @@ async function cancelRequest() {
           </svg>
         </div>
         <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-2">Payment issue</h2>
-        <p class="text-[var(--color-text-muted)] text-sm mb-6">We couldn't authorize payment on your card. Please check your card details and try again.</p>
-        <button @click="emit('cancelled')" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px]">
-          Try again
+        <p class="text-[var(--color-text-muted)] text-sm mb-6">Your card couldn’t be charged (for example, it was declined or has insufficient funds), so the ride was cancelled. You weren’t charged.</p>
+        <button @click="router.push('/payments')" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mb-2">
+          Use a different card
+        </button>
+        <button @click="emit('cancelled')" class="w-full py-3 text-[var(--color-text-secondary)] font-semibold text-[14px]">
+          Try again with the same card
         </button>
       </div>
     </div>

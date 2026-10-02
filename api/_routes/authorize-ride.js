@@ -6,11 +6,18 @@ import { pushToUser, rideParticipants } from '../_push.js'
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
 
+// The rider's screen waits on this status, and the driver can't take another ride until it changes,
+// so make sure it is written (retry once) and log loudly if it isn't.
 async function cancelForPayment(rideId) {
-  await admin
-    .from('rides')
-    .update({ status: 'cancelled', cancel_reason: 'payment_failed', cancelled_at: new Date().toISOString() })
-    .eq('id', rideId)
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { error } = await admin
+      .from('rides')
+      .update({ status: 'cancelled', cancel_reason: 'payment_failed', cancelled_at: new Date().toISOString() })
+      .eq('id', rideId)
+      .in('status', ['requested', 'pending_driver_response'])
+    if (!error) return
+    console.error('Cancel after failed payment did not save:', rideId, error.message)
+  }
 }
 
 // Called by the driver right after claiming a ride (accept_ride RPC leaves it in
