@@ -1,114 +1,131 @@
-# RideUp Nassau — On-Demand App (Vue + Supabase)
+# RideUp Nassau
 
-Rebuild of RideUp Nassau as an Uber-style on-demand ride app for locals in
-New Providence. Vue 3 + Vite + Tailwind on the frontend, Supabase (Postgres)
-on the backend.
+An Uber-style ride app for New Providence: riders book and track trips, drivers accept and run them, and admins
+approve drivers, handle safety reports and pay drivers out. Vue 3 + Vite + Tailwind on the front end, Supabase
+(Postgres, auth, storage, realtime) for data, Stripe for payments, Vercel serverless functions in `api/`.
 
-## What's built so far
+Without Supabase keys the app runs in **demo mode** (sample data, no backend) so you can click through every screen.
 
-- **Rider booking flow** (`src/pages/rider/`)
-  - `RiderBooking.vue` — pickup/dropoff with Google Places autocomplete
-    (biased to New Providence), live route + fare calculation, vehicle
-    picker (Standard / XL), submits a ride request to Supabase
-  - `SearchingForDriver.vue` — shown after request, listens in real time
-    for a driver to accept via Supabase Realtime
-  - `RiderFlow.vue` — parent component wiring the two screens together
+## What it does
 
-- **Database schema** (`supabase-schema.sql` + `supabase/migrations/`)
-  - `riders`, `drivers`, `rides`, `scheduled_rides`, `ride_messages`, support/safety tables
-  - Row Level Security + guard triggers so users can only touch their own data and can't edit fares, payments or driver approval
-  - Realtime enabled on `rides` and `ride_messages`
+**Riders**
+- Book with Google Places search, see upfront prices for Go / XL (and Premium once an admin turns it on), book as a
+  guest or with an account, schedule rides.
+- Live trip screen: driver photo, car and big plate, live ETA, wait timer at pickup, call and in-app chat (phone and
+  chat only while the trip is active; chat stays open 30 minutes after drop-off for lost items).
+- Safety: share a live trip link (`/track/<token>`, no login needed), optional pickup PIN, report a problem,
+  emergency call (919).
+- Cancel with a clear fee preview (free for 2 minutes after a driver accepts, then $5). If the driver cancels, the
+  app finds another driver automatically at the same price.
+- After the trip: rate the driver, add a tip (100% to the driver), receipt page and receipt email.
+- Password reset, email confirmation, saving a guest account, optional SMS phone verification.
 
-- **Fare calculation** (`src/lib/pricing.js`)
-  - Distance + time based pricing, separate rates for Standard vs XL
-  - This is for on-demand point-to-point rides — your existing airport
-    transfer flat rates stay on the current Stripe/WordPress setup unless
-    you want those folded in here too
+**Drivers**
+- Apply (the application survives email confirmation), upload documents with review status and expiry warnings,
+  profile photo (re-reviewed when changed).
+- Go online, see nearby requests with distance and earnings but only an approximate pickup until accepting, accept
+  or decline, navigate, arrive, start (with PIN if required), complete, rate the rider.
+- No-show: after 5 minutes waiting at pickup the driver can cancel and the rider pays the no-show fee.
+- Earnings: today and this week, balance, tips and payouts received.
+- Drivers whose app has been closed for 3 minutes are set offline automatically.
 
-## What's NOT built yet (next steps, in order)
-
-1. **Driver dashboard** (port the Firebase version we built earlier to
-   Supabase — same online/offline toggle, same accept/decline flow, just
-   swapping Firebase Realtime DB for Supabase's `driver_locations` table
-   and Postgres changes instead of Firestore listeners)
-2. **Matching logic** — a Supabase Edge Function that runs when a ride is
-   requested: finds nearest online, approved driver, assigns them, and
-   reassigns to the next-nearest if they decline or timeout
-3. **Live tracking screen** — rider sees the matched driver's dot move in
-   real time via `driver_locations` Realtime subscription
-4. **Auth** — phone number sign-up/login for both riders and drivers
-   (Supabase Auth supports phone OTP natively)
-5. **Stripe payment on completion**
-6. **Driver sign-up flow** — the form where new drivers apply (name, phone,
-   vehicle info), which creates an `approved = false` row until you
-   manually approve them
+**Admins** (`/admin`, needs the admin role)
+- Dashboard, rides, riders (suspend), drivers (document review with checklist, expiry dates, background check,
+  vehicle class, approve / reject with a note, low-rating flags), revenue, support, safety reports (with reporter,
+  trip and phone numbers), payouts ledger, and trip settings (pickup PIN, Premium, required phone verification).
 
 ## Setup
 
-### 1. Install dependencies
+### 1. Install
 
 ```bash
 npm install
 ```
 
-### 2. Create a Supabase project
+### 2. Supabase
 
-1. Go to [supabase.com/dashboard](https://supabase.com/dashboard)
-2. Create a new project (e.g. "rideup-nassau")
-3. Once it's ready, go to the **SQL Editor** and run these files **in order**:
-   `supabase-schema.sql`, then `supabase/migrations/001_create_leads_table.sql`,
-   `002_security_hardening.sql`, `003_high_priority_fixes.sql`, `004_leads_hardening.sql`, `005_minimum_fares.sql`.
-   (`002` explains how to grant your admin account the `app_metadata` admin role.)
-4. Go to **Project Settings → API** — copy the **Project URL** and
-   **anon public key**
+1. Create a project at [supabase.com/dashboard](https://supabase.com/dashboard).
+2. In **SQL Editor**, run these files **in order**: `supabase-schema.sql`, then everything in
+   `supabase/migrations/` (`001` … `006`). Each migration can be re-run safely.
+3. Make yourself an admin (SQL Editor, use your account's email):
+   ```sql
+   update auth.users set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb
+   where email = 'you@example.com';
+   ```
+   Log out and back in for it to take effect.
+4. **Authentication → URL Configuration**: set **Site URL** to your domain and add these **Redirect URLs**
+   (they're where emailed links land):
+   `https://YOUR_DOMAIN/reset-password`, `https://YOUR_DOMAIN/set-password`, `https://YOUR_DOMAIN/driver/apply`,
+   `https://YOUR_DOMAIN/book` (or simply `https://YOUR_DOMAIN/**`).
+5. **Authentication → Sign In / Providers**: enable **Anonymous sign-ins** (guest booking). "Confirm email" can be
+   on or off; the app handles both.
+6. Optional, for SMS phone verification: **Authentication → Phone**, connect an SMS provider (e.g. Twilio). Only
+   then turn on "Require verified phone numbers" in Admin → Settings.
+7. **Project Settings → API**: copy the Project URL, the anon key and the service role key.
 
-### 3. Get a Google Maps API key
+### 3. Google Maps
 
-1. Go to [console.cloud.google.com](https://console.cloud.google.com)
-2. Create a project (or use an existing one)
-3. Enable these APIs: **Maps JavaScript API**, **Places API**,
-   **Geocoding API**, **Directions API**
-4. Go to **Credentials** → Create API key
-5. (Recommended) Restrict the key to your domain once you deploy
+Create an API key in [Google Cloud](https://console.cloud.google.com) with **Maps JavaScript API**, **Places API**,
+**Geocoding API** and **Directions API** enabled. Restrict it to your domain (it ships in the browser) and set a
+budget alert.
 
-### 4. Configure environment variables
+### 4. Environment variables
 
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` and fill in the three values from steps 2 and 3.
+`.env.example` explains every value. For Vercel, add the same variables under **Settings → Environment Variables**:
 
-### 5. Run it
+| Variable | Needed for |
+|---|---|
+| `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | the app (leave empty for demo mode) |
+| `VITE_GOOGLE_MAPS_API_KEY` | maps, address search, routes |
+| `VITE_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | payments (see `STRIPE_INTEGRATION_TODO.md`) |
+| `SUPABASE_SERVICE_ROLE_KEY` | every protected `/api/*` route (they refuse to run without it) |
+| `DOMAIN` | Stripe redirect URLs |
+| `CRON_SECRET` | the every-minute job below |
+| `CANCEL_FEE_CENTS`, `CANCEL_GRACE_SECONDS`, `FREE_WAIT_SECONDS` | cancellation / no-show policy (defaults $5, 2 min, 5 min); set `VITE_CANCEL_GRACE_SECONDS` / `VITE_FREE_WAIT_SECONDS` to match |
+| `RESEND_API_KEY`, `EMAIL_FROM` | optional: receipts, fee and tip receipts, driver approval emails |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `VITE_VAPID_PUBLIC_KEY` | optional: push notifications (`npx web-push generate-vapid-keys`) |
+
+Optional features stay switched off until their keys are set; nothing breaks without them.
+
+### 5. The every-minute job
+
+`/api/dispatch-scheduled` must be called every minute with `Authorization: Bearer $CRON_SECRET` (Vercel Cron on the
+Pro plan sends it automatically; Supabase `pg_cron` + `pg_net` or any external pinger also works). Each run:
+
+- turns due scheduled rides into live requests and alerts nearby drivers,
+- cancels requests nobody accepted within 5 minutes,
+- sets drivers offline whose app hasn't checked in for 3 minutes,
+- charges completed trips whose payment capture didn't arrive from the driver's phone.
+
+Without it, scheduled rides never dispatch and stale requests and online statuses linger.
+
+### 6. Stripe webhook
+
+Add `https://YOUR_DOMAIN/api/webhook` in Stripe → Developers → Webhooks. Events and testing are in
+`STRIPE_INTEGRATION_TODO.md`.
+
+## Develop and test
 
 ```bash
-npm run dev
+npm run dev          # http://localhost:5173 (demo mode without .env)
+npm test             # unit tests: pricing, fees, auth helpers, API helpers
+npx playwright test  # end-to-end tests in e2e/ (runs against the dev server)
+npm run build        # production build into dist/
 ```
 
-Note: since there's no auth/driver sign-up yet, requesting a ride will
-currently fail at the "find rider profile" step unless you manually
-insert a test rider row in Supabase's Table Editor with your test
-`auth_user_id`. Auth is the next thing to build so this works end to end.
+Fares are computed in two places that must agree: `src/lib/pricing.js` (shown to riders) and the
+`guard_rides_insert` trigger (charged). `tests/pricing.test.js` pins the expected values.
 
-## Deploying
+## Project layout
 
-Push this to a GitHub repo, then connect it to **Netlify** or **Vercel**
-for automatic deploys on push. Add the same three env vars in their
-dashboard settings.
-
-
-## Server configuration (Vercel environment variables)
-
-| Variable | Used by |
-|---|---|
-| `SUPABASE_SERVICE_ROLE_KEY` | every protected `/api/*` route (they refuse to run without it) |
-| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | payments + webhook (listen for `checkout.session.completed` and `payment_intent.payment_failed`) |
-| `CRON_SECRET` | `/api/dispatch-scheduled` |
-| `CANCEL_FEE_CENTS`, `CANCEL_GRACE_SECONDS` | rider cancellation fee (default $5.00 = 500; set 0 to disable) |
-| `RESEND_API_KEY`, `EMAIL_FROM` | driver approval emails |
-
-### Scheduled rides and stale requests
-
-`/api/dispatch-scheduled` turns due scheduled rides into live requests and cancels requests no driver answered
-within 5 minutes. Call it every minute with `Authorization: Bearer $CRON_SECRET` — Vercel Cron (Pro plan),
-Supabase `pg_cron` + `pg_net`, or any external pinger. Without it, scheduled rides are saved but never dispatched.
+- `src/pages/rider`, `src/pages/driver`, `src/pages/admin`: the three apps; `src/components`: shared pieces.
+- `src/lib`: auth (`useAuth`), driver session (`useDriver`), pricing, policy, push, settings, helpers.
+- `api/`: serverless routes. Payments (`authorize-ride`, `capture-payment`, `cancel-ride`, `add-tip`, setup/save
+  card, `webhook`), notifications (`trip-event`, `notify-driver`), the cron (`dispatch-scheduled`).
+- `supabase/migrations/`: database rules (row-level security, guard triggers, RPCs). Clients can't change fares,
+  payments, ratings they don't own, driver approval or protected ride fields.
+- `AUDIT.md`, `AUDIT_V2.md`: audits and what was fixed.

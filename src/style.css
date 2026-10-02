@@ -17,6 +17,7 @@
   --color-overlay: rgba(0, 0, 0, 0.4);
   --color-danger: #ef4444;
   --color-success: #22c55e;
+  --color-warning: #b45309;
 }
 
 body {
@@ -40,6 +41,7 @@ html.dark {
   --color-overlay: rgba(0, 0, 0, 0.6);
   --color-danger: #f87171;
   --color-success: #4ade80;
+  --color-warning: #fbbf24;
 }
 
 /* Tables that turn into stacked cards on phones (add class="stack-table" and data-label="…" on each <td>) */

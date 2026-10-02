@@ -1,12 +1,14 @@
 import { admin, requireUser, getDriverForUser, getRiderForUser, fail } from './_auth.js'
 import { rateLimit } from './_rateLimit.js'
 import { pushToUser, rideParticipants } from './_push.js'
+import { notifyNearbyDrivers } from './_notifyDrivers.js'
 
 const checkRate = rateLimit({ maxRequests: 30, windowMs: 60_000 })
+const FREE_WAIT_MINUTES = Math.round(Math.max(0, parseInt(process.env.FREE_WAIT_SECONDS || '300', 10) || 0) / 60)
 
 // The app reports trip moments here so the other side gets a push notification even when
 // their app is in the background (Uber: "Your driver has arrived", "New trip request").
-//   events: 'requested' (rider) → online drivers; 'arrived' (driver) → rider; 'started' (driver) → rider
+//   events: 'requested' (rider) → nearby online drivers; 'arrived' (driver) → rider; 'started' (driver) → rider
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
   if (checkRate(req)) return res.status(429).json({ error: 'Too many requests.' })
@@ -18,18 +20,18 @@ export default async function handler(req, res) {
   if (!rideId || !['requested', 'arrived', 'started'].includes(event)) return res.status(400).json({ error: 'Bad request' })
 
   try {
-    const { data: ride } = await admin.from('rides').select('id, rider_id, driver_id, status, pickup_address, vehicle_type').eq('id', rideId).maybeSingle()
+    const { data: ride } = await admin
+      .from('rides')
+      .select('id, rider_id, driver_id, status')
+      .eq('id', rideId)
+      .maybeSingle()
     if (!ride) return res.status(404).json({ error: 'Ride not found' })
 
     if (event === 'requested') {
       const rider = await getRiderForUser(user.id)
       if (!rider || rider.id !== ride.rider_id || ride.status !== 'requested') return res.status(403).json({ error: 'Not allowed' })
-      // Wake up drivers who are online (their app polls for nearby requests once it's open).
-      const { data: drivers } = await admin.from('drivers').select('auth_user_id').eq('status', 'online').eq('approved', true).limit(25)
-      await Promise.all((drivers || []).map((d) => pushToUser(d.auth_user_id, {
-        title: 'New ride request', body: `Pickup: ${ride.pickup_address}`, url: '/driver/dashboard', tag: 'ride-request',
-      })))
-      return res.status(200).json({ success: true })
+      const notified = await notifyNearbyDrivers(rideId)
+      return res.status(200).json({ success: true, notified })
     }
 
     const driver = await getDriverForUser(user.id)
@@ -39,7 +41,7 @@ export default async function handler(req, res) {
 
     const people = await rideParticipants(rideId)
     await pushToUser(people.riderUserId, event === 'arrived'
-      ? { title: 'Your driver has arrived', body: 'Meet them at the pickup. Free waiting time is 5 minutes.', url: `/ride/${rideId}`, tag: `ride-${rideId}` }
+      ? { title: 'Your driver has arrived', body: `Meet them at the pickup. Free waiting time is ${FREE_WAIT_MINUTES} minutes.`, url: `/ride/${rideId}`, tag: `ride-${rideId}` }
       : { title: 'Trip started', body: 'Enjoy your ride. You can share your trip from the shield button.', url: `/ride/${rideId}`, tag: `ride-${rideId}` })
     return res.status(200).json({ success: true })
   } catch (err) {

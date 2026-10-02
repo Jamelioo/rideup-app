@@ -177,7 +177,7 @@ const inputClass = 'w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] round
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h1 class="text-2xl font-bold mb-2" role="status">{{ isSetup ? 'Your account is saved' : 'Password updated' }}</h1>
+        <h1 class="text-2xl font-bold mb-2" aria-live="polite">{{ isSetup ? 'Your account is saved' : 'Password updated' }}</h1>
         <p class="text-[14px] text-[var(--color-text-muted)] mb-8">
           {{ isSetup ? 'Your trips and receipts are kept with your account. Log in with your email and password next time.' : 'Use your new password the next time you log in.' }}
         </p>

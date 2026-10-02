@@ -21,7 +21,7 @@
     </div>
 
     <h2 class="text-lg font-bold mt-8 mb-2">Fees and waiting time</h2>
-    <p class="text-sm text-[var(--color-text-secondary)] mb-3">Set in Vercel environment variables (redeploy after changing):</p>
+    <p class="text-sm text-[var(--color-text-secondary)] mb-3">Set in Vercel environment variables (redeploy after changing). If you change the two timings, set <code>VITE_CANCEL_GRACE_SECONDS</code> and <code>VITE_FREE_WAIT_SECONDS</code> to the same values so the in-app timers match.</p>
     <ul class="text-sm space-y-1.5 text-[var(--color-text-primary)]">
       <li><code>CANCEL_FEE_CENTS</code>: cancellation and no-show fee, default <strong>500</strong> ($5.00). 0 turns fees off.</li>
       <li><code>CANCEL_GRACE_SECONDS</code>: free cancellation window after a driver accepts, default <strong>120</strong>.</li>

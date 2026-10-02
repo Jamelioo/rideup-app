@@ -49,9 +49,9 @@ function showToast(msg) {
 
 const STATUS = {
   missing: { label: 'Not uploaded', cls: 'text-[var(--color-text-muted)] bg-[var(--color-surface)]' },
-  review: { label: 'Under review', cls: 'text-amber-700 bg-amber-50' },
+  review: { label: 'Under review', cls: 'text-[var(--color-warning)] bg-amber-500/15' },
   approved: { label: 'Approved', cls: 'text-[var(--color-brand)] bg-[#2b8659]/10' },
-  expired: { label: 'Expired', cls: 'text-red-700 bg-red-50' },
+  expired: { label: 'Expired', cls: 'text-[var(--color-danger)] bg-red-500/15' },
 }
 
 function formatDate(d) {
@@ -120,12 +120,12 @@ function goBack() {
     <div class="max-w-lg mx-auto px-5 pb-8">
       <p class="text-[14px] text-[var(--color-text-muted)] mb-4">Upload clear photos or PDFs. Our team reviews every document before you can drive, and again when one is renewed.</p>
 
-      <div v-if="driver?.review_note && !driver?.approved" class="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-[13px] text-red-800" role="alert">
+      <div v-if="driver?.review_note && !driver?.approved" class="mb-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-[13px] text-[var(--color-text-primary)]" role="alert">
         <p class="font-semibold mb-1">Message from our review team</p>
         <p>{{ driver.review_note }}</p>
       </div>
       <p v-if="loadError" class="mb-4 text-[13px] text-[var(--color-danger)]" role="alert">{{ loadError }}</p>
-      <p v-else-if="!loading && missingCount" class="mb-4 text-[13px] font-semibold text-amber-700">{{ missingCount }} document{{ missingCount === 1 ? '' : 's' }} still needed.</p>
+      <p v-else-if="!loading && missingCount" class="mb-4 text-[13px] font-semibold text-[var(--color-warning)]">{{ missingCount }} document{{ missingCount === 1 ? '' : 's' }} still needed.</p>
       <p v-if="loading" class="text-[13px] text-[var(--color-text-muted)] mb-4" role="status">Loading your documents…</p>
 
       <!-- Document list -->
@@ -143,7 +143,7 @@ function goBack() {
             </span>
           </div>
 
-          <p v-if="doc.expires" class="text-[12px] mb-2" :class="doc.expiry === 'expired' ? 'text-red-700 font-semibold' : doc.expiry === 'soon' ? 'text-amber-700 font-semibold' : 'text-[var(--color-text-muted)]'">
+          <p v-if="doc.expires" class="text-[12px] mb-2" :class="doc.expiry === 'expired' ? 'text-[var(--color-danger)] font-semibold' : doc.expiry === 'soon' ? 'text-[var(--color-warning)] font-semibold' : 'text-[var(--color-text-muted)]'">
             {{ doc.expiry === 'expired' ? `Expired ${formatDate(doc.expires)}. Upload the renewed document to keep driving.` : doc.expiry === 'soon' ? `Expires ${formatDate(doc.expires)}. Upload the renewal soon.` : `Valid until ${formatDate(doc.expires)}` }}
           </p>
 

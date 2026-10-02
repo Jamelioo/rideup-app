@@ -138,7 +138,7 @@ async function handleLogout() {
     </div>
 
     <!-- Account -->
-    <div class="px-5 max-w-lg mx-auto w-full mb-2">
+    <div class="px-5 max-w-lg mx-auto w-full mb-6">
       <h2 class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-1">Account</h2>
       <div class="flex items-center justify-between py-4 border-b border-[var(--color-border)]">
         <div class="min-w-0">

@@ -13,6 +13,7 @@ import { formatFare } from '../../lib/pricing'
 import { etaMinutes as estimateEta } from '../../lib/eta'
 import { loadSettings } from '../../lib/settings'
 import { enablePushNotifications } from '../../lib/push'
+import { CANCEL_GRACE_SECONDS } from '../../lib/policy'
 import { useAuth } from '../../lib/useAuth'
 
 const route = useRoute()
@@ -310,7 +311,7 @@ const endedMessage = computed(() => {
       <div class="bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-3xl p-6 max-w-sm w-full text-center">
         <h2 id="cancel-title" class="text-xl font-bold mb-2">Cancel this ride?</h2>
         <p class="text-[var(--color-text-secondary)] text-sm mb-6">
-          <template v-if="cancelFeeCents > 0">Your driver accepted more than 2 minutes ago and is on the way, so a {{ formatFare(cancelFeeCents) }} cancellation fee applies. Most of it goes to your driver.</template>
+          <template v-if="cancelFeeCents > 0">Your driver accepted more than {{ Math.round(CANCEL_GRACE_SECONDS / 60) }} minutes ago{{ rideStatus === 'driver_arrived' ? ' and is waiting for you' : ' and is on the way' }}, so a {{ formatFare(cancelFeeCents) }} cancellation fee applies. Most of it goes to your driver.</template>
           <template v-else>You won’t be charged.</template>
         </p>
         <p v-if="cancelError" class="text-[13px] text-red-500 mb-3" role="alert">{{ cancelError }}</p>

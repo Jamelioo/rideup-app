@@ -95,7 +95,7 @@ const updatedText = computed(() => updated.value ? new Date(updated.value).toLoc
       </div>
 
       <main class="flex-1 px-5 py-5 max-w-lg w-full mx-auto">
-        <h1 class="text-[22px] font-bold leading-tight" role="status" aria-live="polite">{{ headline }}</h1>
+        <h1 class="text-[22px] font-bold leading-tight" aria-live="polite">{{ headline }}</h1>
         <p v-if="eta" class="text-[14px] text-[var(--color-text-secondary)] mt-1">About {{ eta }} min to the destination</p>
         <p v-if="updatedText" class="text-[12px] text-[var(--color-text-muted)] mt-1">Updated {{ updatedText }} · refreshes automatically</p>
 

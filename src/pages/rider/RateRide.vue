@@ -207,7 +207,7 @@ function done() {
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
         </svg>
       </div>
-      <h2 class="text-xl font-bold mb-1" role="status">Thanks for your feedback</h2>
+      <h2 class="text-xl font-bold mb-1" aria-live="polite">Thanks for your feedback</h2>
       <p class="text-[var(--color-text-muted)] text-sm text-center mb-6">
         <template v-if="tipSaved && tipCents">{{ driverName }} gets 100% of your {{ formatFare(tipCents) }} tip. </template>
         Ratings help keep RideUp safe and friendly.

@@ -103,7 +103,7 @@ function skip() {
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
         </svg>
       </div>
-      <h2 class="text-xl font-bold mb-1" role="status">Thanks for rating</h2>
+      <h2 class="text-xl font-bold mb-1" aria-live="polite">Thanks for rating</h2>
       <p class="text-[var(--color-text-muted)] text-sm">Back to your dashboard…</p>
     </div>
 

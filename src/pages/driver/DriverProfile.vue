@@ -191,7 +191,7 @@ async function changePassword() {
           </span>
         </button>
         <input ref="photoInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="uploadPhoto" />
-        <p v-if="!driver?.photo_url" class="text-[12px] text-amber-700 font-semibold mb-2">Add a clear photo of your face. Riders use it to recognise you.</p>
+        <p v-if="!driver?.photo_url" class="text-[12px] text-[var(--color-warning)] font-semibold mb-2">Add a clear photo of your face. Riders use it to recognise you.</p>
         <h2 class="text-xl font-bold">{{ driver?.name || 'Driver' }}</h2>
         <p class="text-[14px] text-[var(--color-text-muted)] mt-1">★ {{ ratingText }} · {{ driver?.total_trips || 0 }} trips</p>
       </div>
@@ -242,7 +242,7 @@ async function changePassword() {
           <p v-if="!docsLoaded" class="text-[13px] text-[var(--color-text-muted)]">Checking your documents…</p>
           <div v-else v-for="d in docRows" :key="d.label" class="flex items-center justify-between">
             <span class="text-[14px]">{{ d.label }}</span>
-            <span class="text-[12px] font-semibold" :class="d.tone === 'ok' ? 'text-[var(--color-brand)]' : d.tone === 'warn' ? 'text-amber-700' : 'text-red-600'">{{ d.text }}</span>
+            <span class="text-[12px] font-semibold" :class="d.tone === 'ok' ? 'text-[var(--color-brand)]' : d.tone === 'warn' ? 'text-[var(--color-warning)]' : 'text-[var(--color-danger)]'">{{ d.text }}</span>
           </div>
         </div>
         <button @click="router.push('/driver/documents')" class="text-[13px] text-[var(--color-brand)] font-semibold mt-2 px-1">Upload / Update</button>

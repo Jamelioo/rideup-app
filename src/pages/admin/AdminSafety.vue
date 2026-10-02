@@ -25,10 +25,27 @@
           <span class="text-xs text-[var(--color-text-muted)]">{{ new Date(r.created_at).toLocaleString() }}</span>
         </div>
         <p class="text-sm text-[var(--color-text-primary)] whitespace-pre-wrap mb-3">{{ r.description || 'No description provided.' }}</p>
-        <div class="text-xs text-[var(--color-text-secondary)] mb-3 space-x-3">
-          <span>Reporter: <code>{{ r.reporter_id || 'unknown' }}</code></span>
-          <span v-if="r.ride_id">Ride: <code>{{ r.ride_id }}</code></span>
-        </div>
+        <dl class="text-xs text-[var(--color-text-secondary)] mb-3 grid gap-1">
+          <div>
+            <dt class="inline font-semibold text-[var(--color-text-primary)]">Reported by:</dt>
+            <dd class="inline">
+              <template v-if="r.reporter">{{ r.reporter.name || 'Unnamed' }} ({{ r.reporter.role }})<template v-if="r.reporter.phone"> · <a :href="`tel:${r.reporter.phone}`" class="text-[var(--color-brand)] font-semibold">{{ r.reporter.phone }}</a></template><template v-if="r.reporter.email"> · {{ r.reporter.email }}</template></template>
+              <code v-else>{{ r.reporter_id || 'unknown' }}</code>
+            </dd>
+          </div>
+          <div v-if="r.trip">
+            <dt class="inline font-semibold text-[var(--color-text-primary)]">Trip:</dt>
+            <dd class="inline">{{ new Date(r.trip.created_at).toLocaleString() }} · {{ r.trip.pickup_address }} → {{ r.trip.dropoff_address }} · {{ r.trip.status }}</dd>
+          </div>
+          <div v-if="r.trip">
+            <dt class="inline font-semibold text-[var(--color-text-primary)]">People:</dt>
+            <dd class="inline">
+              Rider {{ r.trip.rider_name || '—' }}<template v-if="r.trip.rider_phone"> (<a :href="`tel:${r.trip.rider_phone}`" class="text-[var(--color-brand)]">{{ r.trip.rider_phone }}</a>)</template>
+              · Driver {{ r.trip.driver_name || '—' }}<template v-if="r.trip.driver_phone"> (<a :href="`tel:${r.trip.driver_phone}`" class="text-[var(--color-brand)]">{{ r.trip.driver_phone }}</a>)</template>
+            </dd>
+          </div>
+          <div v-else-if="r.ride_id"><dt class="inline font-semibold">Ride:</dt> <dd class="inline"><code>{{ r.ride_id }}</code></dd></div>
+        </dl>
         <label class="block text-xs font-semibold text-[var(--color-text-muted)] mb-1" :for="`note-${r.id}`">Internal note</label>
         <textarea :id="`note-${r.id}`" v-model="r.admin_note" rows="2" class="w-full px-3 py-2 text-sm rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] mb-3"></textarea>
         <div class="flex flex-wrap gap-2">
@@ -79,8 +96,50 @@ async function load() {
   loading.value = true
   const { data, error: err } = await supabase.from('safety_reports').select('*').order('created_at', { ascending: false }).limit(200)
   if (err) error.value = 'Could not load safety reports. Check that your account has the admin role.'
-  reports.value = (data || []).map((r) => ({ ...r, admin_note: r.admin_note || '' }))
+  const rows = (data || []).map((r) => ({ ...r, admin_note: r.admin_note || '' }))
+  await attachContext(rows)
+  reports.value = rows
   loading.value = false
+}
+
+// Who reported it and which trip, so the team can call the people involved straight away.
+async function attachContext(rows) {
+  const uniq = (list) => [...new Set(list.filter(Boolean))]
+  const reporterIds = uniq(rows.map((r) => r.reporter_id))
+  const rideIds = uniq(rows.map((r) => r.ride_id))
+  const none = Promise.resolve({ data: [] })
+  const [{ data: riderReporters }, { data: driverReporters }, { data: trips }] = await Promise.all([
+    reporterIds.length ? supabase.from('riders').select('auth_user_id, name, phone, email').in('auth_user_id', reporterIds) : none,
+    reporterIds.length ? supabase.from('drivers').select('auth_user_id, name, phone, email').in('auth_user_id', reporterIds) : none,
+    rideIds.length ? supabase.from('rides').select('id, created_at, status, pickup_address, dropoff_address, rider_id, driver_id, rider_name').in('id', rideIds) : none,
+  ])
+  const riderIds = uniq((trips || []).map((t) => t.rider_id))
+  const driverIds = uniq((trips || []).map((t) => t.driver_id))
+  const [{ data: tripRiders }, { data: tripDrivers }] = await Promise.all([
+    riderIds.length ? supabase.from('riders').select('id, name, phone').in('id', riderIds) : none,
+    driverIds.length ? supabase.from('drivers').select('id, name, phone').in('id', driverIds) : none,
+  ])
+  const byKey = (list, key) => Object.fromEntries((list || []).map((x) => [x[key], x]))
+  const riderBy = byKey(riderReporters, 'auth_user_id')
+  const driverBy = byKey(driverReporters, 'auth_user_id')
+  const tripBy = byKey(trips, 'id')
+  const tripRiderBy = byKey(tripRiders, 'id')
+  const tripDriverBy = byKey(tripDrivers, 'id')
+  for (const r of rows) {
+    const isDriver = (r.category || '').startsWith('[Driver]')
+    const who = isDriver ? driverBy[r.reporter_id] || riderBy[r.reporter_id] : riderBy[r.reporter_id] || driverBy[r.reporter_id]
+    if (who) r.reporter = { ...who, role: driverBy[r.reporter_id] === who ? 'driver' : 'rider' }
+    const t = tripBy[r.ride_id]
+    if (t) {
+      r.trip = {
+        ...t,
+        rider_name: tripRiderBy[t.rider_id]?.name || t.rider_name,
+        rider_phone: tripRiderBy[t.rider_id]?.phone || '',
+        driver_name: tripDriverBy[t.driver_id]?.name || '',
+        driver_phone: tripDriverBy[t.driver_id]?.phone || '',
+      }
+    }
+  }
 }
 
 async function save(r, status) {
