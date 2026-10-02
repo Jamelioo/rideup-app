@@ -46,7 +46,7 @@ npm install
 
 1. Create a project at [supabase.com/dashboard](https://supabase.com/dashboard).
 2. In **SQL Editor**, run these files **in order**: `supabase-schema.sql`, then everything in
-   `supabase/migrations/` (`001` … `009`). Each migration can be re-run safely.
+   `supabase/migrations/` (`001` … `010`). Each migration can be re-run safely.
 3. Make yourself an admin (SQL Editor, use your account's email):
    ```sql
    update auth.users set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb
@@ -88,6 +88,9 @@ cp .env.example .env
 | `CANCEL_FEE_CENTS`, `CANCEL_GRACE_SECONDS`, `FREE_WAIT_SECONDS` | cancellation / no-show policy (defaults $5, 2 min, 5 min); set `VITE_CANCEL_GRACE_SECONDS` / `VITE_FREE_WAIT_SECONDS` to match |
 | `RESEND_API_KEY`, `EMAIL_FROM` | optional: receipts, fee and tip receipts, driver approval emails |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `VITE_VAPID_PUBLIC_KEY` | optional: push notifications (`npx web-push generate-vapid-keys`) |
+| `APNS_KEY`, `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_BUNDLE_ID`, `APNS_PRODUCTION` | optional: push in the App Store app (see MOBILE_APP.md) |
+| `FCM_SERVICE_ACCOUNT` | optional: push in the Google Play app (Firebase service-account JSON; see MOBILE_APP.md) |
+| `APP_URL` | optional: link base for emails (default `https://rideupnassau.com`) |
 
 Optional features stay switched off until their keys are set; nothing breaks without them.
 

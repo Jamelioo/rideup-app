@@ -1,4 +1,5 @@
 <script setup>
+import DeleteAccountSheet from '../../components/DeleteAccountSheet.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDriver } from '../../lib/useDriver'
@@ -103,6 +104,8 @@ async function uploadPhoto(event) {
     uploadingPhoto.value = false
   }
 }
+
+const showDelete = ref(false)
 
 async function handleLogout() {
   await signOut()
@@ -291,7 +294,9 @@ async function changePassword() {
                 class="w-full py-3.5 text-red-500 text-[14px] font-semibold rounded-2xl active:bg-red-50 transition-colors">
           Log Out
         </button>
+        <button @click="showDelete = true" class="w-full py-3 text-[var(--color-text-muted)] text-[13px]">Delete account</button>
       </div>
+      <DeleteAccountSheet :open="showDelete" role="driver" @close="showDelete = false" />
     </div>
 
     <!-- Toast -->

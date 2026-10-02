@@ -11,6 +11,7 @@ import GoogleMap from '../../components/GoogleMap.vue'
 import HarborBackdrop from '../../components/HarborBackdrop.vue'
 import SideMenu from '../../components/SideMenu.vue'
 import DriverRideRequest from './DriverRideRequest.vue'
+import DriverQuests from '../../components/DriverQuests.vue'
 
 const router = useRouter()
 const { user } = useAuth()
@@ -210,6 +211,8 @@ const initials = computed(() => {
           <p class="text-[14px] text-[var(--color-brand)] font-medium">Waiting for rides...</p>
         </div>
 
+        <DriverQuests />
+
         <!-- Today's summary -->
         <div class="grid grid-cols-3 gap-2 mb-4">
           <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-3 text-center">
@@ -295,6 +298,8 @@ const initials = computed(() => {
           <span class="w-3 h-3 rounded-full bg-[#2b8659] animate-pulse flex-shrink-0"></span>
           <p class="text-[14px] text-[var(--color-brand)] font-medium">Waiting for rides...</p>
         </div>
+
+        <DriverQuests />
 
         <!-- Today's summary -->
         <div class="grid grid-cols-3 gap-3 mb-5">

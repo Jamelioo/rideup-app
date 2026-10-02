@@ -31,21 +31,24 @@ function layout(title, body) {
 const row = (label, value, bold = false) =>
   `<tr><td style="padding:6px 0;color:#555">${label}</td><td style="padding:6px 0;text-align:right;${bold ? 'font-weight:700' : ''}">${value}</td></tr>`
 
-export function tripReceiptEmail({ ride, driverName }) {
+// splitPaidCents: what friends paid through split fare (the rider who booked is charged the rest).
+export function tripReceiptEmail({ ride, driverName, splitPaidCents = 0, splitFriends = 0 }) {
+  const charged = chargeOf(ride) - splitPaidCents
   const date = new Date(ride.completed_at || ride.created_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Nassau' })
   const card = ride.payment_last4 ? `${escapeHtml(ride.payment_brand || 'Card')} •••• ${escapeHtml(ride.payment_last4)}` : 'Card on file'
   return {
-    subject: `Your RideUp receipt — ${money(chargeOf(ride))}`,
+    subject: `Your RideUp receipt — ${money(charged)}`,
     html: layout('Thanks for riding with RideUp', `
       <p style="font-size:14px;color:#555">${escapeHtml(date)} · Driver: ${escapeHtml(driverName || 'your driver')}</p>
-      <p style="font-size:14px"><strong>From:</strong> ${escapeHtml(ride.pickup_address)}<br><strong>To:</strong> ${escapeHtml(ride.dropoff_address)}</p>
+      <p style="font-size:14px"><strong>From:</strong> ${escapeHtml(ride.pickup_address)}${ride.stop_address ? `<br><strong>Stop:</strong> ${escapeHtml(ride.stop_address)}` : ''}<br><strong>To:</strong> ${escapeHtml(ride.dropoff_address)}</p>
       <table style="width:100%;font-size:14px;border-top:1px solid #eee;margin-top:12px">
-        ${row('Trip fare', money(ride.fare_cents - (ride.booking_fee_cents || 0) - (ride.airport_fee_cents || 0)))}
+        ${row(Number(ride.surge_multiplier) > 1 ? 'Trip fare (busy-time pricing)' : 'Trip fare', money(ride.fare_cents - (ride.booking_fee_cents || 0) - (ride.airport_fee_cents || 0)))}
         ${ride.airport_fee_cents ? row('Airport pickup fee', money(ride.airport_fee_cents)) : ''}
         ${ride.booking_fee_cents ? row('Booking fee', money(ride.booking_fee_cents)) : ''}
         ${ride.promo_discount_cents ? row(ride.promo_code === 'REFERRAL' ? 'Friend referral' : `Promo ${escapeHtml(ride.promo_code || '')}`, '−' + money(ride.promo_discount_cents)) : ''}
         ${ride.credit_applied_cents ? row('RideUp credit', '−' + money(ride.credit_applied_cents)) : ''}
-        ${row('Total charged', money(chargeOf(ride)), true)}
+        ${splitPaidCents ? row(`Split with ${splitFriends} friend${splitFriends === 1 ? '' : 's'}`, '−' + money(splitPaidCents)) : ''}
+        ${row(splitPaidCents ? 'Your share' : 'Total charged', money(charged), true)}
         ${row('Paid with', card)}
       </table>`),
   }
@@ -69,5 +72,29 @@ export function tipReceiptEmail({ ride, tipCents }) {
     subject: `Thanks for tipping — ${money(tipCents)}`,
     html: layout('Your tip was sent', `<p style="font-size:14px;color:#555">100% of your ${money(tipCents)} tip goes to your driver.</p>
       <p style="font-size:14px"><strong>Trip:</strong> ${escapeHtml(ride.pickup_address)} → ${escapeHtml(ride.dropoff_address)}</p>`),
+  }
+}
+
+export function splitInviteEmail({ inviter, ride, url }) {
+  return {
+    subject: `${inviter} wants to split a RideUp fare with you`,
+    html: layout('Split a ride?', `
+      <p style="font-size:14px;color:#555">${escapeHtml(inviter)} invited you to split the fare for their RideUp trip. Everyone who joins pays an equal share when the trip ends.</p>
+      <p style="font-size:14px"><strong>From:</strong> ${escapeHtml(ride.pickup_address)}<br><strong>To:</strong> ${escapeHtml(ride.dropoff_address)}</p>
+      <p><a href="${escapeHtml(url)}" style="display:inline-block;background:#2b8659;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:12px">View invite</a></p>
+      <p style="font-size:13px;color:#555">Didn’t expect this? Just ignore it; you won’t be charged.</p>`),
+  }
+}
+
+export function splitReceiptEmail({ ride, inviter, shareCents, card }) {
+  return {
+    subject: `Your share of a RideUp trip — ${money(shareCents)}`,
+    html: layout('Thanks for splitting the fare', `
+      <p style="font-size:14px;color:#555">You split this trip with ${escapeHtml(inviter)}.</p>
+      <p style="font-size:14px"><strong>From:</strong> ${escapeHtml(ride.pickup_address)}<br><strong>To:</strong> ${escapeHtml(ride.dropoff_address)}</p>
+      <table style="width:100%;font-size:14px;border-top:1px solid #eee;margin-top:12px">
+        ${row('Your share', money(shareCents), true)}
+        ${row('Paid with', card ? escapeHtml(card) : 'Card on file')}
+      </table>`),
   }
 }

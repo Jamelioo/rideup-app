@@ -26,14 +26,23 @@ export function isAirportPickup(point) {
   return 2 * 3958.8 * Math.asin(Math.min(1, Math.sqrt(a))) <= AIRPORT.radiusMiles
 }
 
-// Upfront price: max(base + distance + time, minimum) + airport fee + booking fee.
-// Must match guard_rides_insert (migrations 008/009). Pass { pickup } so airport pickups are priced right.
-export function calculateFare(distanceMiles, durationMinutes, vehicleType = 'standard', { pickup = null } = {}) {
+// One extra stop on the way: priced on the whole route, plus a few minutes for the stop itself.
+export const STOP_MINUTES = 3
+
+// Busy-time pricing: when ride requests near the pickup outnumber free drivers, the trip part of the fare
+// (not the airport or booking fee) goes up, never more than 1.5×. Set by the database (surge_multiplier_at).
+export const MAX_SURGE = 1.5
+export const normalizeSurge = (m) => Math.min(MAX_SURGE, Math.max(1, Math.round((Number(m) || 1) * 100) / 100))
+
+// Upfront price: max(base + distance + time, minimum) × busy-time multiplier + airport fee + booking fee.
+// Must match guard_rides_insert (migration 010). Pass { pickup } so airport pickups are priced right,
+// { surge } for busy times and { stop: true } when the trip has an extra stop.
+export function calculateFare(distanceMiles, durationMinutes, vehicleType = 'standard', { pickup = null, surge = 1, stop = false } = {}) {
   const rate = RATES[vehicleType] || RATES.standard
-  const minutes = Math.max(durationMinutes || 0, (distanceMiles || 0) * MIN_MINUTES_PER_MILE)
+  const minutes = Math.max(durationMinutes || 0, (distanceMiles || 0) * MIN_MINUTES_PER_MILE + (stop ? STOP_MINUTES : 0))
   const trip = rate.base + distanceMiles * rate.perMile + minutes * rate.perMinute
   const airport = isAirportPickup(pickup) ? AIRPORT_FEE_CENTS : 0
-  return Math.max(Math.round(trip), rate.minimum) + airport + BOOKING_FEE_CENTS
+  return Math.round(Math.max(Math.round(trip), rate.minimum) * normalizeSurge(surge)) + airport + BOOKING_FEE_CENTS
 }
 
 // What the driver keeps: 80% of the fare excluding the booking fee. Rides store it; older rows fall back

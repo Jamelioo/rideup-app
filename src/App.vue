@@ -6,11 +6,15 @@ import { useAuth } from './lib/useAuth'
 import BottomNav from './components/BottomNav.vue'
 import InstallPrompt from './components/InstallPrompt.vue'
 import { getPendingReferral, setPendingReferral, redeemReferral } from './lib/rewards'
+import { isNativeApp, initNativePush, refreshNativePush } from './lib/nativePush'
 
 const router = useRouter()
 const route = useRoute()
 const { init, pendingRoute, clearPendingRoute, user } = useAuth()
-onMounted(() => init())
+onMounted(() => {
+  init()
+  if (isNativeApp() && !DEMO_MODE) initNativePush(router).catch((err) => console.warn('Native push setup failed:', err.message))
+})
 
 // Emailed links (password reset, guest email confirmation, driver email confirmation) can land on the
 // home page if the exact path isn't in Supabase's redirect allow-list. Send people where they meant to go.
@@ -20,6 +24,9 @@ watch(pendingRoute, async (path) => {
   clearPendingRoute()
   if (route.path !== path) router.replace(path)
 }, { immediate: true })
+
+// Store app: trip alerts follow whoever is signed in on this phone.
+watch(() => user.value?.id, (id) => { if (id && isNativeApp()) refreshNativePush().catch(() => {}) })
 
 // A friend's referral code from a /r/CODE link is applied as soon as this person has a rider profile.
 watch(user, async (u) => {

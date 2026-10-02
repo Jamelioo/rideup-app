@@ -1,31 +1,47 @@
 import webpush from 'web-push'
 import { admin } from './_auth.js'
+import { sendNativePush, apnsConfigured, fcmConfigured } from './_nativePush.js'
 
 const enabled = Boolean(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY && admin)
 if (enabled) {
   webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:support@rideupnassau.com', process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY)
 }
 
-// Sends a push notification to every device a user has registered. Best-effort: never throws,
-// and removes subscriptions the browser reports as gone.
+// Sends a push notification to every device a user has registered: browsers / Home Screen apps (web push)
+// and the App Store / Google Play apps (APNs / FCM). Best-effort: never throws, and removes devices the
+// platform reports as gone.
 export async function pushToUser(userId, { title, body, url = '/', tag }) {
-  if (!enabled || !userId) return 0
-  const { data: subs } = await admin.from('push_subscriptions').select('id, endpoint, p256dh, auth').eq('user_id', userId)
+  if (!admin || !userId) return 0
   let sent = 0
-  for (const s of subs || []) {
-    try {
-      await webpush.sendNotification(
-        { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
-        JSON.stringify({ title, body, url, tag }),
-        { TTL: 120 }
-      )
-      sent++
-    } catch (err) {
-      if (err.statusCode === 404 || err.statusCode === 410) {
-        await admin.from('push_subscriptions').delete().eq('id', s.id)
-      } else {
-        console.error('Push failed:', err.statusCode || err.message)
+  if (enabled) {
+    const { data: subs } = await admin.from('push_subscriptions').select('id, endpoint, p256dh, auth').eq('user_id', userId)
+    for (const s of subs || []) {
+      try {
+        await webpush.sendNotification(
+          { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+          JSON.stringify({ title, body, url, tag }),
+          { TTL: 120 }
+        )
+        sent++
+      } catch (err) {
+        if (err.statusCode === 404 || err.statusCode === 410) {
+          await admin.from('push_subscriptions').delete().eq('id', s.id)
+        } else {
+          console.error('Push failed:', err.statusCode || err.message)
+        }
       }
+    }
+  }
+  if (apnsConfigured() || fcmConfigured()) {
+    try {
+      const { data: tokens } = await admin.from('native_push_tokens').select('platform, token').eq('user_id', userId)
+      if (tokens?.length) {
+        const out = await sendNativePush(tokens, { title, body, url, tag })
+        sent += out.sent
+        if (out.dead.length) await admin.from('native_push_tokens').delete().in('token', out.dead)
+      }
+    } catch (err) {
+      console.error('Native push failed:', err.message)
     }
   }
   return sent

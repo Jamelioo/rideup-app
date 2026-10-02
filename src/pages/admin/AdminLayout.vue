@@ -31,7 +31,7 @@
             'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
             isActive(item.to)
               ? 'bg-[#2b8659] text-white'
-              : 'text-[var(--color-text-muted)] hover:text-white hover:bg-[var(--color-surface)]/5'
+              : 'text-white/65 hover:text-white hover:bg-white/5'
           ]"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 flex-shrink-0" aria-hidden="true">
@@ -118,7 +118,7 @@ const navItems = [
     ]
   },
   {
-    label: 'Revenue',
+    label: 'Money',
     to: '/admin/revenue',
     paths: [
       { d: 'M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z' },
@@ -145,6 +145,13 @@ const navItems = [
     to: '/admin/promos',
     paths: [
       { fillRule: 'evenodd', d: 'M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z', clipRule: 'evenodd' },
+    ]
+  },
+  {
+    label: 'Incentives',
+    to: '/admin/incentives',
+    paths: [
+      { fillRule: 'evenodd', d: 'M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm4.707 3.707a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L8.414 9H10a3 3 0 013 3v1a1 1 0 102 0v-1a5 5 0 00-5-5H8.414l1.293-1.293z', clipRule: 'evenodd' },
     ]
   },
   {

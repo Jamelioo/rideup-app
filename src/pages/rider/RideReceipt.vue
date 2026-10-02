@@ -28,6 +28,9 @@ onMounted(async () => {
     // Drivers' rows are private; the RPC returns them for this ride's participants only.
     const { data: rpc } = await supabase.rpc('get_ride_driver', { p_ride_id: rideId })
     const driver = Array.isArray(rpc) ? rpc[0] : rpc
+    // Split fare: what friends paid comes off this rider's total.
+    const { data: splits } = await supabase.from('fare_splits').select('share_cents').eq('ride_id', rideId).eq('status', 'paid')
+    const splitPaid = (splits || []).reduce((sum, x) => sum + (x.share_cents || 0), 0)
 
     // Rebuild the line items from the same rates the fare was computed with.
     const rate = RATES[data.vehicle_type] || RATES.standard
@@ -38,7 +41,12 @@ onMounted(async () => {
     const timeCharge = Math.round(minutes * rate.perMinute)
     const bookingFee = data.booking_fee_cents || 0
     const airportFee = data.airport_fee_cents || 0
-    const adjustment = total - bookingFee - airportFee - (rate.base + distanceCharge + timeCharge)
+    // Busy-time pricing multiplies the trip part (not the fees); split it back out for the receipt.
+    const surge = Number(data.surge_multiplier) || 1
+    const tripPart = total - bookingFee - airportFee
+    const beforeSurge = surge > 1 ? Math.round(tripPart / surge) : tripPart
+    const busyCharge = tripPart - beforeSurge
+    const adjustment = beforeSurge - (rate.base + distanceCharge + timeCharge)
 
     const d = new Date(data.completed_at || data.cancelled_at || data.created_at)
     const cancelled = data.status === 'cancelled'
@@ -48,11 +56,15 @@ onMounted(async () => {
       cancelFee: cancelled ? (data.cancel_fee_cents || 0) : 0,
       noShow: data.cancel_reason === 'rider_no_show',
       tip,
-      grandTotal: cancelled ? (data.cancel_fee_cents || 0) : total - (data.promo_discount_cents || 0) - (data.credit_applied_cents || 0) + tip,
+      grandTotal: cancelled ? (data.cancel_fee_cents || 0) : total - (data.promo_discount_cents || 0) - (data.credit_applied_cents || 0) - splitPaid + tip,
+      splitPaid,
+      splitFriends: (splits || []).length,
       date: `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`,
       time: d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
       pickup: data.pickup_address || 'Pickup',
       dropoff: data.dropoff_address || 'Dropoff',
+      stop: data.stop_address || '',
+      busyCharge,
       baseFare: rate.base,
       distanceMiles: miles,
       ratePerMile: rate.perMile,
@@ -158,6 +170,7 @@ async function shareReceipt() {
           </div>
           <div class="flex flex-col justify-between">
             <p class="text-sm font-semibold text-[var(--color-text-primary)]">{{ receipt.pickup }}</p>
+            <p v-if="receipt.stop" class="mt-3 text-sm text-[var(--color-text-secondary)]">Stop: {{ receipt.stop }}</p>
             <p class="mt-5 text-sm font-semibold text-[var(--color-text-primary)]">{{ receipt.dropoff }}</p>
           </div>
         </div>
@@ -199,6 +212,10 @@ async function shareReceipt() {
             <span class="text-sm text-[var(--color-text-secondary)]">Minimum fare adjustment</span>
             <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.minimumAdjustment) }}</span>
           </div>
+          <div v-if="receipt.busyCharge > 0" class="flex items-center justify-between">
+            <span class="text-sm text-[var(--color-text-secondary)]">Busy-time pricing</span>
+            <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.busyCharge) }}</span>
+          </div>
           <div v-if="receipt.airportFee > 0" class="flex items-center justify-between">
             <span class="text-sm text-[var(--color-text-secondary)]">Airport pickup fee</span>
             <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.airportFee) }}</span>
@@ -221,6 +238,10 @@ async function shareReceipt() {
           <div v-if="receipt.creditApplied" class="flex items-center justify-between">
             <span class="text-sm text-[var(--color-text-secondary)]">RideUp credit</span>
             <span class="text-sm text-[var(--color-brand)]">−{{ formatCents(receipt.creditApplied) }}</span>
+          </div>
+          <div v-if="receipt.splitPaid" class="flex items-center justify-between">
+            <span class="text-sm text-[var(--color-text-secondary)]">Split with {{ receipt.splitFriends }} friend{{ receipt.splitFriends === 1 ? '' : 's' }}</span>
+            <span class="text-sm text-[var(--color-brand)]">−{{ formatCents(receipt.splitPaid) }}</span>
           </div>
           <div v-if="receipt.tip" class="flex items-center justify-between">
             <span class="text-sm text-[var(--color-text-secondary)]">Tip (100% to your driver)</span>
