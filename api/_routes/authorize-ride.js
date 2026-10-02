@@ -1,6 +1,7 @@
 import Stripe from 'stripe'
 import { admin, requireUser, getDriverForUser, fail } from '../_auth.js'
 import { rateLimit } from '../_rateLimit.js'
+import { chargeOf } from '../../src/lib/discounts.js'
 import { pushToUser, rideParticipants } from '../_push.js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
@@ -44,7 +45,7 @@ export default async function handler(req, res) {
 
     const { data: ride } = await admin
       .from('rides')
-      .select('id, fare_cents, rider_id, driver_id, status, payment_status, payment_intent_id')
+      .select('id, fare_cents, promo_discount_cents, credit_applied_cents, rider_id, driver_id, status, payment_status, payment_intent_id')
       .eq('id', rideId)
       .maybeSingle()
 
@@ -74,7 +75,7 @@ export default async function handler(req, res) {
     try {
       paymentIntent = await stripe.paymentIntents.create(
         {
-          amount: ride.fare_cents,
+          amount: chargeOf(ride), // fare minus promo/referral discount and ride credit (RideUp pays those)
           currency: 'usd',
           customer: rider.stripe_customer_id,
           payment_method: rider.payment_method_id,

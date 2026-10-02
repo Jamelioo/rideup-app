@@ -4,10 +4,11 @@ import { useRouter, useRoute } from 'vue-router'
 import { DEMO_MODE } from './lib/demoMode'
 import { useAuth } from './lib/useAuth'
 import BottomNav from './components/BottomNav.vue'
+import { getPendingReferral, setPendingReferral, redeemReferral } from './lib/rewards'
 
 const router = useRouter()
 const route = useRoute()
-const { init, pendingRoute, clearPendingRoute } = useAuth()
+const { init, pendingRoute, clearPendingRoute, user } = useAuth()
 onMounted(() => init())
 
 // Emailed links (password reset, guest email confirmation, driver email confirmation) can land on the
@@ -17,6 +18,15 @@ watch(pendingRoute, async (path) => {
   await router.isReady()
   clearPendingRoute()
   if (route.path !== path) router.replace(path)
+}, { immediate: true })
+
+// A friend's referral code from a /r/CODE link is applied as soon as this person has a rider profile.
+watch(user, async (u) => {
+  const code = getPendingReferral()
+  if (!u || !code || DEMO_MODE) return
+  const res = await redeemReferral(code)
+  // Keep it for later only if there's no rider profile yet (e.g. a guest who hasn't booked).
+  if (res.ok || !/sign in first/i.test(res.message || '')) setPendingReferral(null)
 }, { immediate: true })
 </script>
 

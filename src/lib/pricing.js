@@ -13,12 +13,27 @@ export const BOOKING_FEE_CENTS = 100
 // Never price a trip faster than 30 mph average (2 min per mile), whatever trip time the app sends.
 export const MIN_MINUTES_PER_MILE = 2
 
-// Upfront price: max(base + distance + time, minimum) + booking fee. Must match guard_rides_insert (migration 008).
-export function calculateFare(distanceMiles, durationMinutes, vehicleType = 'standard') {
+// $3.00 for pickups at Lynden Pindling International Airport (about 1 mile around the terminals).
+// Part of the fare, so the driver keeps 80% of it. Must match is_airport_pickup() (migration 009).
+export const AIRPORT = { lat: 25.039, lng: -77.4662, radiusMiles: 1 }
+export const AIRPORT_FEE_CENTS = 300
+
+export function isAirportPickup(point) {
+  if (point?.lat == null || point?.lng == null) return false
+  const rad = (d) => (d * Math.PI) / 180
+  const a = Math.sin(rad(point.lat - AIRPORT.lat) / 2) ** 2 +
+    Math.cos(rad(AIRPORT.lat)) * Math.cos(rad(point.lat)) * Math.sin(rad(point.lng - AIRPORT.lng) / 2) ** 2
+  return 2 * 3958.8 * Math.asin(Math.min(1, Math.sqrt(a))) <= AIRPORT.radiusMiles
+}
+
+// Upfront price: max(base + distance + time, minimum) + airport fee + booking fee.
+// Must match guard_rides_insert (migrations 008/009). Pass { pickup } so airport pickups are priced right.
+export function calculateFare(distanceMiles, durationMinutes, vehicleType = 'standard', { pickup = null } = {}) {
   const rate = RATES[vehicleType] || RATES.standard
   const minutes = Math.max(durationMinutes || 0, (distanceMiles || 0) * MIN_MINUTES_PER_MILE)
   const trip = rate.base + distanceMiles * rate.perMile + minutes * rate.perMinute
-  return Math.max(Math.round(trip), rate.minimum) + BOOKING_FEE_CENTS
+  const airport = isAirportPickup(pickup) ? AIRPORT_FEE_CENTS : 0
+  return Math.max(Math.round(trip), rate.minimum) + airport + BOOKING_FEE_CENTS
 }
 
 // What the driver keeps: 80% of the fare excluding the booking fee. Rides store it; older rows fall back

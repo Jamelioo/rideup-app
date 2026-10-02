@@ -1,6 +1,7 @@
 import Stripe from 'stripe'
 import { admin, requireUser, rideRoles, fail } from '../_auth.js'
 import { rateLimit } from '../_rateLimit.js'
+import { chargeOf } from '../../src/lib/discounts.js'
 import { cancellationFeeCents, noShowFeeCents, noShowAllowed, splitFee } from '../_fees.js'
 import { sendEmail, cancellationFeeEmail } from '../_email.js'
 import { pushToUser, rideParticipants } from '../_push.js'
@@ -39,7 +40,7 @@ export default async function handler(req, res) {
   try {
     const { data: ride } = await admin
       .from('rides')
-      .select('id, rider_id, driver_id, status, fare_cents, accepted_at, arrived_at, payment_intent_id, payment_status, pickup_address')
+      .select('id, rider_id, driver_id, status, fare_cents, promo_discount_cents, credit_applied_cents, accepted_at, arrived_at, payment_intent_id, payment_status, pickup_address')
       .eq('id', rideId)
       .maybeSingle()
     if (!ride) return res.status(404).json({ error: 'Ride not found' })
@@ -56,7 +57,7 @@ export default async function handler(req, res) {
     if (actor === 'rider') {
       feeCents = cancellationFeeCents({
         role: 'rider', status: ride.status, paymentStatus: ride.payment_status,
-        acceptedAt: ride.accepted_at, fareCents: ride.fare_cents, feeCents: FEE_CENTS, graceSeconds: GRACE_SECONDS,
+        acceptedAt: ride.accepted_at, fareCents: chargeOf(ride), feeCents: FEE_CENTS, graceSeconds: GRACE_SECONDS,
       })
     } else if (actor === 'driver' && noShow) {
       if (!noShowAllowed({ status: ride.status, arrivedAt: ride.arrived_at, waitSeconds: FREE_WAIT_SECONDS })) {
@@ -64,7 +65,7 @@ export default async function handler(req, res) {
       }
       feeCents = noShowFeeCents({
         status: ride.status, paymentStatus: ride.payment_status, arrivedAt: ride.arrived_at,
-        fareCents: ride.fare_cents, feeCents: FEE_CENTS, waitSeconds: FREE_WAIT_SECONDS,
+        fareCents: chargeOf(ride), feeCents: FEE_CENTS, waitSeconds: FREE_WAIT_SECONDS,
       })
     }
 
@@ -148,7 +149,7 @@ async function rebook(rideId, cancellingDriverId) {
   try {
     const { data: old } = await admin
       .from('rides')
-      .select('rider_id, rider_name, pickup_address, pickup_lat, pickup_lng, dropoff_address, dropoff_lat, dropoff_lng, vehicle_type, distance_miles, duration_minutes, fare_cents, booking_fee_cents, promo_code, promo_discount_cents')
+      .select('rider_id, rider_name, pickup_address, pickup_lat, pickup_lng, dropoff_address, dropoff_lat, dropoff_lng, vehicle_type, distance_miles, duration_minutes, fare_cents, booking_fee_cents, airport_fee_cents, promo_code, promo_discount_cents, credit_applied_cents')
       .eq('id', rideId)
       .maybeSingle()
     if (!old) return null

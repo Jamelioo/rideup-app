@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuth, friendlyAuthError, MIN_PASSWORD } from '../lib/useAuth'
 import { safeRedirect } from '../lib/safeRedirect'
 import AccountConversionCard from '../components/AccountConversionCard.vue'
+import { getPendingReferral, setPendingReferral } from '../lib/rewards'
 
 const router = useRouter()
 const route = useRoute()
@@ -17,6 +18,8 @@ const error = ref('')
 const notice = ref('')
 const submitting = ref(false)
 const confirmationSent = ref(false)
+// A friend's referral code ($5 off the first ride). Prefilled from a /r/CODE link; applied after sign-up.
+const referral = ref(getPendingReferral() || '')
 
 const redirect = () => safeRedirect(route.query.redirect, '/book')
 
@@ -39,6 +42,7 @@ async function handleSignup() {
     return
   }
 
+  setPendingReferral(referral.value.trim() || null)
   submitting.value = true
   const result = await signUp(email.value.trim(), password.value, name.value.trim(), { redirectPath: redirect() })
   submitting.value = false
@@ -129,6 +133,11 @@ const inputClass = 'w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] round
             <button type="button" @click="showPassword = !showPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[var(--color-brand)] px-1 py-1"
                     :aria-pressed="showPassword" :aria-label="showPassword ? 'Hide password' : 'Show password'">{{ showPassword ? 'Hide' : 'Show' }}</button>
           </label>
+          <label class="block">
+            <span class="sr-only">Friend’s referral code (optional)</span>
+            <input v-model="referral" type="text" autocapitalize="characters" autocomplete="off" placeholder="Friend’s referral code (optional)" :class="inputClass" class="uppercase" />
+          </label>
+          <p v-if="referral" class="text-[12px] text-[var(--color-brand)] px-1">You’ll get $5 off your first ride.</p>
         </div>
 
         <p v-if="error" class="text-[var(--color-danger)] text-[13px] mb-4" role="alert">{{ error }}</p>
