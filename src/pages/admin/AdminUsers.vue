@@ -1,5 +1,6 @@
 <template>
   <div>
+    <p v-if="actionError" class="mb-4 text-sm text-red-600" role="alert">{{ actionError }}</p>
     <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6">User Management</h1>
 
     <!-- Search + filter -->
@@ -49,7 +50,7 @@
               :key="user.id"
               class="border-t border-[var(--color-border)] hover:bg-[var(--color-surface-secondary)] transition-colors"
             >
-              <td data-label="Name" class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ user.name }}</td>
+              <td data-label="Name" class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ user.name }} <span v-if="user.guest" class="ml-1 text-xs font-medium px-1.5 py-0.5 rounded bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)]">Guest</span></td>
               <td data-label="Email" class="px-4 py-3 text-[var(--color-text-muted)]">{{ user.email }}</td>
               <td data-label="Phone" class="px-4 py-3 text-[var(--color-text-muted)]">{{ user.phone }}</td>
               <td data-label="Rides" class="px-4 py-3 text-[var(--color-text-primary)]">{{ user.rides }}</td>
@@ -115,15 +116,18 @@ const filteredUsers = computed(() => {
   return list
 })
 
+const actionError = ref('')
+
+// Suspension is enforced by the database: suspended riders can't request rides.
 async function toggleUserStatus(user) {
-  const newStatus = user.status === 'Active' ? 'Suspended' : 'Active'
-  user.status = newStatus
+  const suspend = user.status === 'Active'
+  if (suspend && !window.confirm(`Suspend ${user.name}? They won't be able to request rides until you unsuspend them.`)) return
+  actionError.value = ''
   if (supabaseConfigured) {
-    await supabase
-      .from('riders')
-      .update({ status: newStatus.toLowerCase() })
-      .eq('id', user.id)
+    const { error } = await supabase.from('riders').update({ suspended: suspend }).eq('id', user.id)
+    if (error) { actionError.value = `Couldn't update ${user.name}: ${error.message}`; return }
   }
+  user.status = suspend ? 'Suspended' : 'Active'
 }
 
 onMounted(async () => {
@@ -143,7 +147,8 @@ onMounted(async () => {
         rides: r.total_rides || 0,
         rating: r.rating || 0,
         joined: r.created_at ? r.created_at.split('T')[0] : '-',
-        status: r.status === 'suspended' ? 'Suspended' : 'Active',
+        status: r.suspended ? 'Suspended' : 'Active',
+        guest: !!r.is_guest,
       }))
     }
   } catch (e) { /* keep empty */ }

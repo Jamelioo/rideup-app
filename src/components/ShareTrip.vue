@@ -1,129 +1,124 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { supabase, supabaseConfigured } from '../lib/supabase'
+import { useAuth } from '../lib/useAuth'
 
+// Uber-style "Share trip status": a secret live link (/track/<token>) showing the driver, car, plate and
+// live position until an hour after the trip ends. Anyone with the link can watch; nobody else can.
 const props = defineProps({
   ride: { type: Object, default: () => ({}) },
 })
-
 const emit = defineEmits(['back', 'close'])
 
+const { user } = useAuth()
+const link = ref('')
+const loading = ref(true)
+const error = ref('')
 const copied = ref(false)
 
 const driverName = computed(() => props.ride?.driverName || 'Your driver')
-const vehicleInfo = computed(() => props.ride?.vehicleInfo || 'Vehicle details unavailable')
-const pickup = computed(() => props.ride?.pickup || 'Pickup location')
-const dropoff = computed(() => props.ride?.dropoff || 'Dropoff location')
+const vehicleInfo = computed(() => [props.ride?.vehicleInfo, props.ride?.plate].filter(Boolean).join(' · ') || 'Vehicle details on the way')
+const trustedContacts = computed(() => {
+  const list = user.value?.user_metadata?.trusted_contacts
+  return Array.isArray(list) ? list.filter((c) => c?.phone) : []
+})
 
-const shareText = computed(() =>
-  `I'm on a RideUp ride\nFrom: ${pickup.value}\nTo: ${dropoff.value}`
+const message = computed(() =>
+  `I'm on a RideUp trip with ${driverName.value} (${vehicleInfo.value}). Follow my ride live: ${link.value}`
 )
 
-function shareWhatsApp() {
-  const encoded = encodeURIComponent(shareText.value)
-  window.open(`https://wa.me/?text=${encoded}`, '_blank')
+onMounted(async () => {
+  if (!supabaseConfigured || !props.ride?.id || String(props.ride.id).startsWith('demo')) {
+    link.value = `${location.origin}/track/demo`
+    loading.value = false
+    return
+  }
+  const { data, error: rpcErr } = await supabase.rpc('create_share_link', { p_ride_id: props.ride.id })
+  if (rpcErr || !data) {
+    error.value = 'Could not create a share link right now. You can still call 919 in an emergency.'
+  } else {
+    link.value = `${location.origin}/track/${data}`
+  }
+  loading.value = false
+})
+
+async function shareNative() {
+  if (!navigator.share) return copyLink()
+  try {
+    await navigator.share({ title: 'My RideUp trip', text: message.value, url: link.value })
+  } catch { /* user cancelled */ }
 }
 
-function shareSMS() {
-  const encoded = encodeURIComponent(shareText.value)
-  window.location.href = `sms:?body=${encoded}`
+function shareWhatsApp() {
+  window.open(`https://wa.me/?text=${encodeURIComponent(message.value)}`, '_blank', 'noopener')
+}
+
+function smsHref(phone = '') {
+  return `sms:${phone.replace(/[^\d+]/g, '')}?&body=${encodeURIComponent(message.value)}`
 }
 
 async function copyLink() {
   try {
-    await navigator.clipboard.writeText(shareText.value)
-    copied.value = true
-    setTimeout(() => { copied.value = false }, 2000)
+    await navigator.clipboard.writeText(message.value)
   } catch {
-    // Fallback for older browsers
-    const textarea = document.createElement('textarea')
-    textarea.value = shareText.value
-    document.body.appendChild(textarea)
-    textarea.select()
+    const t = document.createElement('textarea')
+    t.value = message.value
+    document.body.appendChild(t)
+    t.select()
     document.execCommand('copy')
-    document.body.removeChild(textarea)
-    copied.value = true
-    setTimeout(() => { copied.value = false }, 2000)
+    document.body.removeChild(t)
   }
+  copied.value = true
+  setTimeout(() => { copied.value = false }, 2000)
 }
 </script>
 
 <template>
   <div class="px-5 pt-2 pb-8">
-    <!-- Header -->
     <div class="flex items-center justify-between mb-5">
-      <button @click="emit('back')" class="w-8 h-8 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
+      <button @click="emit('back')" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
+        <svg class="w-5 h-5 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
       </button>
-      <h2 class="text-lg font-bold text-[var(--color-text-primary)]">Share my trip</h2>
-      <button @click="emit('close')" class="w-8 h-8 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Close">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
+      <h2 class="text-lg font-bold text-[var(--color-text-primary)]">Share trip status</h2>
+      <button @click="emit('close')" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Close">
+        <svg class="w-5 h-5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
       </button>
     </div>
 
-    <!-- Trip Info Card -->
-    <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-4 mb-6">
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-9 h-9 rounded-full bg-[#2b8659] flex items-center justify-center shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-        </div>
-        <div>
-          <p class="text-[14px] font-semibold text-[var(--color-text-primary)]">{{ driverName }}</p>
-          <p class="text-xs text-[var(--color-text-muted)]">{{ vehicleInfo }}</p>
-        </div>
-      </div>
+    <p class="text-[13px] text-[var(--color-text-secondary)] mb-4">
+      People you share with can follow your ride live, see your driver and car, and know when you arrive. The link stops working an hour after the trip ends.
+    </p>
 
-      <div class="space-y-2 ml-1">
-        <div class="flex items-start gap-3">
-          <div class="w-2 h-2 rounded-full bg-[#2b8659] mt-1.5 shrink-0" />
-          <p class="text-[13px] text-[var(--color-text-secondary)]">{{ pickup }}</p>
-        </div>
-        <div class="flex items-start gap-3">
-          <div class="w-2 h-2 rounded-full bg-[var(--color-text-primary)] mt-1.5 shrink-0" />
-          <p class="text-[13px] text-[var(--color-text-secondary)]">{{ dropoff }}</p>
-        </div>
-      </div>
+    <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-4 mb-5">
+      <p class="text-[14px] font-semibold text-[var(--color-text-primary)]">{{ driverName }}</p>
+      <p class="text-[13px] text-[var(--color-text-secondary)]">{{ vehicleInfo }}</p>
+      <p v-if="loading" class="text-[12px] text-[var(--color-text-muted)] mt-2">Creating your live link…</p>
+      <p v-else-if="link" class="text-[12px] text-[var(--color-brand)] mt-2 break-all">{{ link }}</p>
+      <p v-if="error" class="text-[13px] text-red-500 mt-2" role="alert">{{ error }}</p>
     </div>
 
-    <!-- Share Buttons -->
+    <div v-if="trustedContacts.length && link" class="mb-5">
+      <p class="text-[12px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">Your trusted contacts</p>
+      <a v-for="c in trustedContacts" :key="c.phone" :href="smsHref(c.phone)"
+         class="flex items-center justify-between py-3 border-b border-[var(--color-border)] last:border-b-0">
+        <span class="text-[15px] text-[var(--color-text-primary)]">{{ c.name || c.phone }}</span>
+        <span class="text-[13px] font-semibold text-[var(--color-brand)]">Send link</span>
+      </a>
+    </div>
+    <router-link v-else-if="!trustedContacts.length" to="/trusted-contacts" class="block text-[13px] text-[var(--color-brand)] font-semibold mb-5">
+      Add trusted contacts to share in one tap →
+    </router-link>
+
     <div class="space-y-3">
-      <button
-        @click="shareWhatsApp"
-        class="w-full flex items-center justify-center gap-2.5 py-3.5 bg-[#25D366]/10 text-[#25D366] font-semibold text-[14px] rounded-xl active:bg-[#25D366]/20 transition-colors"
-      >
-        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-        </svg>
-        WhatsApp
+      <button @click="shareNative" :disabled="!link"
+              class="w-full py-3.5 bg-[#2b8659] text-white font-semibold text-[15px] rounded-xl disabled:opacity-50">
+        Share link
       </button>
-
-      <button
-        @click="shareSMS"
-        class="w-full flex items-center justify-center gap-2.5 py-3.5 bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] font-semibold text-[14px] rounded-xl active:bg-[var(--color-text-primary)]/[0.08] transition-colors"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-        </svg>
-        SMS
-      </button>
-
-      <button
-        @click="copyLink"
-        class="w-full flex items-center justify-center gap-2.5 py-3.5 border border-[var(--color-border)] text-[var(--color-text-primary)] font-semibold text-[14px] rounded-xl active:bg-[var(--color-surface-secondary)] transition-colors"
-      >
-        <svg v-if="!copied" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-        </svg>
-        <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
-        {{ copied ? 'Copied!' : 'Copy link' }}
-      </button>
+      <div class="grid grid-cols-3 gap-2">
+        <button @click="shareWhatsApp" :disabled="!link" class="py-3 rounded-xl bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] text-[13px] font-semibold disabled:opacity-50">WhatsApp</button>
+        <a :href="link ? smsHref() : undefined" class="py-3 rounded-xl bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] text-[13px] font-semibold text-center" :class="!link && 'opacity-50 pointer-events-none'">SMS</a>
+        <button @click="copyLink" :disabled="!link" class="py-3 rounded-xl bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] text-[13px] font-semibold disabled:opacity-50">{{ copied ? 'Copied!' : 'Copy' }}</button>
+      </div>
     </div>
   </div>
 </template>

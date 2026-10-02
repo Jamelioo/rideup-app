@@ -1,6 +1,8 @@
 import Stripe from 'stripe'
 import { admin, requireUser, rideRoles, fail } from './_auth.js'
 import { rateLimit } from './_rateLimit.js'
+import { sendEmail, tripReceiptEmail } from './_email.js'
+import { pushToUser, rideParticipants } from './_push.js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
@@ -46,6 +48,12 @@ export default async function handler(req, res) {
       .from('rides')
       .update({ payment_status: 'captured', paid_at: new Date().toISOString() })
       .eq('id', rideId)
+
+    // Receipt (email + push), like Uber's end-of-trip receipt.
+    const { data: full } = await admin.from('rides').select('*').eq('id', rideId).maybeSingle()
+    const people = await rideParticipants(rideId)
+    if (full && people.riderEmail) await sendEmail({ to: people.riderEmail, ...tripReceiptEmail({ ride: full, driverName: people.driverName }) })
+    await pushToUser(people.riderUserId, { title: 'You’ve arrived', body: 'Rate your trip and view your receipt.', url: `/rate/${rideId}`, tag: `ride-${rideId}` })
 
     return res.status(200).json({ success: true })
   } catch (err) {

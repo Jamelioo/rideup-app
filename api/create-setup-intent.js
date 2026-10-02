@@ -21,11 +21,27 @@ export default async function handler(req, res) {
   const { name } = req.body || {}
 
   try {
-    const { data: rider } = await admin
+    let { data: rider } = await admin
       .from('riders')
-      .select('stripe_customer_id')
+      .select('id, stripe_customer_id')
       .eq('auth_user_id', user.id)
       .maybeSingle()
+
+    // Make sure there's a rider profile to attach the customer to (older accounts may not have one).
+    if (!rider) {
+      const { data: created, error: createErr } = await admin
+        .from('riders')
+        .insert({
+          auth_user_id: user.id,
+          name: typeof name === 'string' && name.trim() ? name.trim().slice(0, 100) : (user.email?.split('@')[0] || 'Rider'),
+          email: user.email || null,
+          is_guest: !!user.is_anonymous,
+        })
+        .select('id, stripe_customer_id')
+        .single()
+      if (createErr) throw createErr
+      rider = created
+    }
 
     let customerId = rider?.stripe_customer_id
 

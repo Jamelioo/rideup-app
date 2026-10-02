@@ -33,7 +33,7 @@ export default async function handler(req, res) {
   try {
     const { data: driver } = await supabase
       .from('drivers')
-      .select('name, email, auth_user_id')
+      .select('name, email, auth_user_id, review_note')
       .eq('id', driverId)
       .single()
 
@@ -67,7 +67,8 @@ export default async function handler(req, res) {
             </div>
             <h1 style="font-size:22px;color:#191f1c;margin-bottom:8px;">Hi ${driverName},</h1>
             <p style="font-size:15px;color:#555;line-height:1.6;">Thank you for your interest in driving with RideUp. Unfortunately, we're unable to approve your application at this time.</p>
-            <p style="font-size:15px;color:#555;line-height:1.6;">If you believe this was in error, please contact our support team.</p>
+            ${driver.review_note ? `<p style="font-size:15px;color:#555;line-height:1.6;"><strong>Reviewer note:</strong> ${escapeHtml(driver.review_note)}</p>` : ''}
+            <p style="font-size:15px;color:#555;line-height:1.6;">If you believe this was in error, or once you've fixed the issue, contact our support team.</p>
             <a href="https://www.rideupnassau.com/support" style="display:inline-block;background:#2b8659;color:white;padding:14px 32px;border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;margin:24px 0;">Contact Support</a>
             <p style="font-size:13px;color:#999;margin-top:32px;">— The RideUp Nassau Team</p>
           </div>`,

@@ -5,13 +5,16 @@ import { useAuth } from '../lib/useAuth'
 
 const props = defineProps({
   ride: { type: Object, default: () => ({}) },
+  role: { type: String, default: 'rider' }, // 'rider' | 'driver'
 })
 
 const emit = defineEmits(['back', 'close'])
 
 const { user } = useAuth()
 
-const categories = ['Driver behavior', 'Route concern', 'Vehicle issue', 'Other']
+const categories = props.role === 'driver'
+  ? ['Rider behavior', 'Felt unsafe', 'Damage to vehicle', 'Other']
+  : ['Driver behavior', 'Felt unsafe', 'Route concern', 'Vehicle issue', 'Other']
 const selectedCategory = ref('')
 const description = ref('')
 const submitting = ref(false)
@@ -30,16 +33,18 @@ async function handleSubmit() {
 
   try {
     if (supabaseConfigured) {
-      await supabase.from('safety_reports').insert({
-        user_id: user.value?.id || null,
-        category: selectedCategory.value,
-        description: description.value,
-        ride_id: props.ride?.id || null,
-        created_at: new Date().toISOString(),
+      const rideId = props.ride?.id && !String(props.ride.id).startsWith('demo') ? props.ride.id : null
+      const { error: insertErr } = await supabase.from('safety_reports').insert({
+        reporter_id: user.value?.id,
+        category: `${props.role === 'driver' ? '[Driver] ' : ''}${selectedCategory.value}`,
+        description: description.value.trim().slice(0, 2000),
+        ride_id: rideId,
       })
+      if (insertErr) throw insertErr
     }
     submitted.value = true
   } catch (err) {
+    console.error('Safety report failed:', err?.message)
     error.value = 'Something went wrong. Please try again or call 919.'
   } finally {
     submitting.value = false
@@ -72,7 +77,7 @@ async function handleSubmit() {
         </svg>
       </div>
       <h3 class="text-lg font-bold text-[var(--color-text-primary)] mb-2">Report submitted</h3>
-      <p class="text-[13px] text-[var(--color-text-muted)] text-center max-w-[260px]">Thank you for letting us know. Our safety team will review this report.</p>
+      <p class="text-[13px] text-[var(--color-text-muted)] text-center max-w-[260px]">Thank you for letting us know. Our team reviews every report and will contact you if we need more details. If you are in danger, call 919 now.</p>
       <button
         @click="emit('close')"
         class="mt-6 w-full py-3.5 bg-[#2b8659] text-white font-semibold text-[14px] rounded-xl active:bg-[#236e49] transition-colors"

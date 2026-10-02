@@ -3,9 +3,12 @@ import { ref } from 'vue'
 import ShareTrip from './ShareTrip.vue'
 import ReportSafety from './ReportSafety.vue'
 
+import { EMERGENCY_NUMBER } from '../lib/policy'
+
 const props = defineProps({
   isOpen: { type: Boolean, default: false },
   ride: { type: Object, default: () => ({}) },
+  role: { type: String, default: 'rider' }, // drivers can't create rider share links
 })
 
 const emit = defineEmits(['close'])
@@ -30,7 +33,7 @@ function backToMain() {
 }
 
 function callEmergency() {
-  window.location.href = 'tel:919'
+  window.location.href = `tel:${EMERGENCY_NUMBER}`
 }
 </script>
 
@@ -69,6 +72,7 @@ function callEmergency() {
 
           <!-- Share my trip -->
           <button
+            v-if="role === 'rider'"
             @click="openShare"
             class="w-full flex items-center gap-4 py-4 border-b border-[var(--color-border)] active:bg-[var(--color-surface-secondary)] transition-colors"
           >
@@ -97,7 +101,7 @@ function callEmergency() {
               </svg>
             </div>
             <div class="flex-1 text-left">
-              <p class="text-[15px] font-semibold text-[var(--color-text-primary)]">Emergency (919)</p>
+              <p class="text-[15px] font-semibold text-[var(--color-text-primary)]">Call emergency services ({{ EMERGENCY_NUMBER }})</p>
               <p class="text-xs text-[var(--color-text-muted)] mt-0.5">Call Bahamas emergency services</p>
             </div>
             <svg class="w-5 h-5 text-[var(--color-text-muted)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -117,7 +121,7 @@ function callEmergency() {
             </div>
             <div class="flex-1 text-left">
               <p class="text-[15px] font-semibold text-[var(--color-text-primary)]">Report safety issue</p>
-              <p class="text-xs text-[var(--color-text-muted)] mt-0.5">Let us know about a concern</p>
+              <p class="text-xs text-[var(--color-text-muted)] mt-0.5">Our team reviews every report</p>
             </div>
             <svg class="w-5 h-5 text-[var(--color-text-muted)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6" />
@@ -137,6 +141,7 @@ function callEmergency() {
         <ReportSafety
           v-if="activePanel === 'report'"
           :ride="ride"
+          :role="role"
           @back="backToMain"
           @close="close"
         />
