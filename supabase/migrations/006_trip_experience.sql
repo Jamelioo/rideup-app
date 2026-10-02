@@ -16,9 +16,12 @@ alter table public.riders add column if not exists suspended boolean default fal
 alter table public.rides add column if not exists arrived_at timestamptz;
 alter table public.rides add column if not exists driver_location_at timestamptz;
 alter table public.rides add column if not exists share_token uuid;
+alter table public.drivers add column if not exists last_seen_at timestamptz;
 alter table public.rides add column if not exists tip_cents integer default 0;
 alter table public.rides add column if not exists tip_payment_intent_id text;
 alter table public.rides add column if not exists cancelled_by text;
+-- When a driver cancels, the server books the rider a fresh request (Uber re-matches automatically).
+alter table public.rides add column if not exists replaced_by_ride_id uuid references public.rides(id) on delete set null;
 create unique index if not exists idx_rides_share_token on public.rides (share_token) where share_token is not null;
 create index if not exists idx_rides_rider_status on public.rides (rider_id, status);
 create index if not exists idx_rides_driver_status on public.rides (driver_id, status);
@@ -41,7 +44,8 @@ create policy "Admins manage settings" on public.app_settings for all using (pub
 
 insert into public.app_settings (key, value) values
   ('require_pickup_pin', 'false'::jsonb),
-  ('require_verified_phone', 'false'::jsonb)
+  ('require_verified_phone', 'false'::jsonb),
+  ('offer_premium', 'false'::jsonb)
 on conflict (key) do nothing;
 
 create or replace function public.setting_enabled(p_key text)
@@ -107,6 +111,9 @@ begin
   if tg_op = 'INSERT' then
     new.approved := false;
     new.status := 'pending';
+    if coalesce(new.vehicle_type, '') not in ('standard', 'xl') then
+      new.vehicle_type := 'standard'; -- the Premium class is granted by an admin after inspecting the car
+    end if;
     new.rating := 5.0;
     new.total_rides := 0;
     new.total_trips := 0;
@@ -127,6 +134,10 @@ begin
   new.review_note := old.review_note;
   new.license_expires_on := old.license_expires_on;
   new.insurance_expires_on := old.insurance_expires_on;
+
+  if new.vehicle_type = 'premium' and old.vehicle_type is distinct from 'premium' then
+    new.vehicle_type := old.vehicle_type; -- only admins grant Premium
+  end if;
 
   -- Changing who/what drives (name, photo, licence, vehicle) needs a fresh review, like Uber.
   if coalesce(old.approved, false) and (
@@ -149,6 +160,9 @@ begin
       or (old.insurance_expires_on is not null and old.insurance_expires_on < current_date)
     ) then
       new.status := old.status; -- expired documents: stay offline until renewed
+    end if;
+    if new.status = 'online' and old.status is distinct from 'online' then
+      new.last_seen_at := now(); -- heartbeat starts now, so the offline sweeper doesn't catch a driver who just went online
     end if;
   end if;
 
@@ -185,6 +199,10 @@ begin
     raise exception 'Please verify your phone number before requesting a ride.' using errcode = '42501';
   end if;
 
+  if new.vehicle_type = 'premium' and not public.setting_enabled('offer_premium') then
+    raise exception 'RideUp Premium isn''t available yet. Please choose another ride type.' using errcode = '22023';
+  end if;
+
   if new.pickup_lat is null or new.pickup_lng is null
      or new.dropoff_lat is null or new.dropoff_lng is null then
     raise exception 'Pickup and dropoff coordinates are required' using errcode = '22023';
@@ -218,6 +236,7 @@ begin
   new.driver_lat := null;
   new.driver_lng := null;
   new.driver_location_at := null;
+  new.replaced_by_ride_id := null;
 
   if new.vehicle_type is null or new.vehicle_type not in ('standard', 'xl', 'premium') then
     new.vehicle_type := 'standard';
@@ -439,7 +458,7 @@ returns table (
   license_plate text, rating numeric, phone text
 )
 language sql stable security definer set search_path = public as $$
-  select d.id, d.name, d.photo_url, d.vehicle_make, d.vehicle_model, d.vehicle_color,
+  select d.id, split_part(coalesce(nullif(d.name, ''), 'Driver'), ' ', 1), d.photo_url, d.vehicle_make, d.vehicle_model, d.vehicle_color,
          d.license_plate, d.rating,
          case when public.ride_is_active(r.status) then d.phone else null end
     from rides r
@@ -499,7 +518,7 @@ returns table (
   fare_cents integer, driver_payout_cents integer,
   rider_first_name text, rider_rating numeric, pickup_distance_miles numeric
 )
-language plpgsql stable security definer set search_path = public as $$
+language plpgsql security definer set search_path = public as $$
 #variable_conflict use_column
 declare
   d public.drivers;
@@ -508,6 +527,13 @@ begin
   if not found then
     raise exception 'Not an approved driver' using errcode = '42501';
   end if;
+  -- The sweeper takes drivers offline when their app stops checking in (closed or asleep).
+  if d.status not in ('online', 'on_trip') then
+    raise exception 'You are offline' using errcode = 'P0001', hint = 'offline';
+  end if;
+  -- Heartbeat: polling means the app is open. Written at most every 30 seconds.
+  update drivers set last_seen_at = now()
+   where id = d.id and (last_seen_at is null or last_seen_at < now() - interval '30 seconds');
 
   return query
   select * from (
@@ -531,9 +557,11 @@ begin
        and r.driver_id is null
        and r.created_at > now() - interval '3 minutes'
        and not (d.id = any (coalesce(r.declined_by, '{}')))
-       and r.vehicle_type = any (case when d.vehicle_type = 'xl'
-                                      then array['standard', 'xl', 'premium']
-                                      else array['standard', 'premium'] end)
+       -- Premium only goes to vehicles approved as Premium; XL only to XL. Bigger/better cars can take Go trips.
+       and r.vehicle_type = any (case d.vehicle_type
+                                      when 'xl' then array['standard', 'xl']
+                                      when 'premium' then array['standard', 'premium']
+                                      else array['standard'] end)
   ) q
   where q.pickup_distance_miles is null or q.pickup_distance_miles <= p_radius_miles
   order by q.created_at desc
@@ -641,7 +669,7 @@ begin
     select
       coalesce(sum(case when r.payment_status in ('captured', 'paid', 'partially_refunded')
                         then coalesce(r.driver_payout_cents, 0) else 0 end), 0)::bigint as earned,
-      coalesce(sum(case when r.payment_status in ('captured', 'paid', 'partially_refunded')
+      coalesce(sum(case when r.payment_status in ('captured', 'paid', 'partially_refunded') and r.tip_payment_intent_id is not null
                         then coalesce(r.tip_cents, 0) else 0 end), 0)::bigint as tips,
       count(*) filter (where r.status = 'completed' and r.payment_status in ('captured', 'paid', 'partially_refunded'))::bigint as trips
       from rides r where r.driver_id = target

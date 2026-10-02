@@ -135,10 +135,16 @@ async function completeTrip() {
     actionError.value = res.error || 'Couldn’t complete the trip. Try again.'
     return
   }
-  // Charge the held fare (receipt goes to the rider).
-  if (!DEMO_MODE && currentRide.value?.id) {
-    apiPost('/api/capture-payment', { rideId: currentRide.value.id }).catch((err) => console.error('Capture failed:', err))
-  }
+  // Charge the held fare (receipt goes to the rider). Retried a few times; the server sweeps up any miss.
+  if (!DEMO_MODE && currentRide.value?.id) captureWithRetry(currentRide.value.id)
+}
+
+async function captureWithRetry(rideId, attempt = 0) {
+  try {
+    const res = await apiPost('/api/capture-payment', { rideId })
+    if (res.ok || res.status < 500) return
+  } catch { /* offline: retry below */ }
+  if (attempt < 3) setTimeout(() => captureWithRetry(rideId, attempt + 1), 3000 * 2 ** attempt)
 }
 
 function finish() {

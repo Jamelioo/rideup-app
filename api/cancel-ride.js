@@ -111,23 +111,59 @@ export default async function handler(req, res) {
       }
     }
 
-    // 3. Free the driver and tell the other side.
+    // 3. Free the driver. If the driver cancelled, keep the rider's trip going with a new request
+    //    (same route, same upfront price, not offered to this driver again), like Uber's automatic re-match.
     if (ride.driver_id) {
       await admin.from('drivers').update({ status: 'online' }).eq('id', ride.driver_id).eq('status', 'on_trip')
     }
+    const rebookedRideId = actor === 'driver' && !noShow ? await rebook(rideId, ride.driver_id) : null
+
+    // 4. Tell the other side.
     const people = await rideParticipants(rideId)
     if (actor === 'rider' && people.driverUserId) {
       await pushToUser(people.driverUserId, { title: 'Ride cancelled', body: 'The rider cancelled this trip.', url: '/driver/dashboard', tag: `ride-${rideId}` })
     } else if (actor !== 'rider' && people.riderUserId) {
-      const body = noShow ? 'Your driver waited 5 minutes and marked the ride as a no-show.' : 'Your driver cancelled. Request again and we’ll find you another driver.'
-      await pushToUser(people.riderUserId, { title: 'Ride cancelled', body, url: '/book', tag: `ride-${rideId}` })
+      const minutes = Math.round(FREE_WAIT_SECONDS / 60)
+      const body = noShow
+        ? `Your driver waited ${minutes} minutes and marked the ride as a no-show.`
+        : rebookedRideId
+          ? 'Your driver had to cancel. We’re finding you another driver now. You weren’t charged.'
+          : 'Your ride was cancelled. You weren’t charged. Request again and we’ll find you a driver.'
+      await pushToUser(people.riderUserId, { title: rebookedRideId ? 'Finding you a new driver' : 'Ride cancelled', body, url: '/book', tag: `ride-${rideId}` })
     }
     if (feeCents > 0 && people.riderEmail) {
       await sendEmail({ to: people.riderEmail, ...cancellationFeeEmail({ ride, feeCents, noShow: !!noShow }) })
     }
 
-    return res.status(200).json({ success: true, fee_cents: feeCents })
+    return res.status(200).json({ success: true, fee_cents: feeCents, rebooked_ride_id: rebookedRideId })
   } catch (err) {
     return fail(res, 'Cancel ride error', err)
+  }
+}
+
+// Creates a fresh request for the rider after their driver cancelled. Best effort: if it fails the rider
+// simply sees "ride cancelled" and can request again.
+async function rebook(rideId, cancellingDriverId) {
+  try {
+    const { data: old } = await admin
+      .from('rides')
+      .select('rider_id, rider_name, pickup_address, pickup_lat, pickup_lng, dropoff_address, dropoff_lat, dropoff_lng, vehicle_type, distance_miles, duration_minutes, fare_cents, promo_code, promo_discount_cents')
+      .eq('id', rideId)
+      .maybeSingle()
+    if (!old) return null
+    const { data: fresh, error } = await admin
+      .from('rides')
+      .insert({ ...old, status: 'requested', declined_by: cancellingDriverId ? [cancellingDriverId] : [] })
+      .select('id')
+      .single()
+    if (error || !fresh) {
+      console.error('Rebook after driver cancel failed:', error?.message)
+      return null
+    }
+    await admin.from('rides').update({ replaced_by_ride_id: fresh.id }).eq('id', rideId)
+    return fresh.id
+  } catch (err) {
+    console.error('Rebook after driver cancel failed:', err.message)
+    return null
   }
 }

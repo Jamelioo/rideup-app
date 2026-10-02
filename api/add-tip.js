@@ -47,22 +47,43 @@ export default async function handler(req, res) {
     }
     if (!rider.stripe_customer_id || !rider.payment_method_id) return res.status(400).json({ error: 'Add a card to tip.' })
 
-    const pi = await stripe.paymentIntents.create(
-      {
-        amount,
-        currency: 'usd',
-        customer: rider.stripe_customer_id,
-        payment_method: rider.payment_method_id,
-        confirm: true,
-        off_session: true,
-        description: 'RideUp tip',
-        metadata: { ride_id: rideId, type: 'tip' },
-      },
-      { idempotencyKey: `tip-${rideId}` }
-    )
-    if (pi.status !== 'succeeded') return res.status(402).json({ error: 'Your card didn’t go through for the tip.' })
+    // Claim the tip first so two taps (or two devices) can't both charge.
+    const { data: claimed } = await admin
+      .from('rides')
+      .update({ tip_cents: amount })
+      .eq('id', rideId)
+      .or('tip_cents.is.null,tip_cents.eq.0')
+      .select('id')
+    if (!claimed?.length) return res.status(409).json({ error: 'You already tipped for this trip.' })
 
-    await admin.from('rides').update({ tip_cents: amount, tip_payment_intent_id: pi.id }).eq('id', rideId).eq('tip_cents', 0)
+    const release = () => admin.from('rides').update({ tip_cents: 0 }).eq('id', rideId).eq('tip_cents', amount).is('tip_payment_intent_id', null)
+
+    let pi
+    try {
+      pi = await stripe.paymentIntents.create(
+        {
+          amount,
+          currency: 'usd',
+          customer: rider.stripe_customer_id,
+          payment_method: rider.payment_method_id,
+          confirm: true,
+          off_session: true,
+          description: 'RideUp tip',
+          metadata: { ride_id: rideId, type: 'tip' },
+        },
+        // Keyed on the card too, so a rider whose card was declined can retry with a new one.
+        { idempotencyKey: `tip-${rideId}-${amount}-${rider.payment_method_id}` }
+      )
+    } catch (err) {
+      await release()
+      throw err
+    }
+    if (pi.status !== 'succeeded') {
+      await release()
+      return res.status(402).json({ error: 'Your card didn’t go through for the tip.' })
+    }
+
+    await admin.from('rides').update({ tip_payment_intent_id: pi.id }).eq('id', rideId)
 
     const people = await rideParticipants(rideId)
     await pushToUser(people.driverUserId, { title: 'You got a tip!', body: `A rider tipped you $${(amount / 100).toFixed(2)}.`, url: '/driver/earnings' })

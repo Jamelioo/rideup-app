@@ -84,6 +84,8 @@ const shareRide = computed(() => ({
   dropoff: ride.value?.dropoff_address,
 }))
 
+let rematchChecks = 0
+
 function applyRide(row) {
   if (!row) return
   ride.value = { ...(ride.value || {}), ...row }
@@ -92,8 +94,21 @@ function applyRide(row) {
   if (row.driver_lat != null && row.driver_lng != null) driverLocation.value = { lat: row.driver_lat, lng: row.driver_lng }
 
   if (row.status === 'cancelled') {
-    if (!cancelling.value) endedBy.value = { reason: row.cancel_reason, fee: row.cancel_fee_cents || 0 }
     stopLive()
+    if (cancelling.value) return
+    if (row.replaced_by_ride_id) {
+      // The driver cancelled and the server already booked a new request: go back to searching.
+      try { sessionStorage.setItem('rideup_notice', 'Your driver had to cancel. We’re finding you another driver. You weren’t charged.') } catch { /* private mode */ }
+      router.replace({ name: 'book' })
+      return
+    }
+    if (row.cancel_reason === 'driver_cancelled' && rematchChecks < 3) {
+      // The automatic re-match is written a moment after the cancellation.
+      rematchChecks++
+      setTimeout(refreshRide, 2000)
+      return
+    }
+    endedBy.value = { reason: row.cancel_reason, fee: row.cancel_fee_cents || 0 }
     return
   }
   if (row.status === 'requested' || row.status === 'pending_driver_response') {

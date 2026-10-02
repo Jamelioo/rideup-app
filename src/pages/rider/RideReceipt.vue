@@ -38,8 +38,15 @@ onMounted(async () => {
     const timeCharge = Math.round(minutes * rate.perMinute)
     const adjustment = total - (rate.base + distanceCharge + timeCharge)
 
-    const d = new Date(data.completed_at || data.created_at)
+    const d = new Date(data.completed_at || data.cancelled_at || data.created_at)
+    const cancelled = data.status === 'cancelled'
+    const tip = data.tip_payment_intent_id ? (data.tip_cents || 0) : 0
     receipt.value = {
+      cancelled,
+      cancelFee: cancelled ? (data.cancel_fee_cents || 0) : 0,
+      noShow: data.cancel_reason === 'rider_no_show',
+      tip,
+      grandTotal: cancelled ? (data.cancel_fee_cents || 0) : total + tip,
       date: `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`,
       time: d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
       pickup: data.pickup_address || 'Pickup',
@@ -56,8 +63,9 @@ onMounted(async () => {
       paymentLast4: data.payment_last4 || '',
       paymentBrand: data.payment_brand || '',
       paid: ['captured', 'paid'].includes(data.payment_status),
+      hasDriver: !!driver,
       driverName: driver?.name || 'Your driver',
-      driverRating: driver?.rating ?? null,
+      driverRating: driver?.rating != null ? Number(driver.rating) : null,
     }
   } catch (err) {
     console.error('Failed to load receipt:', err)
@@ -68,7 +76,7 @@ onMounted(async () => {
 })
 
 async function shareReceipt() {
-  const text = `RideUp Receipt\n${receipt.value.date} at ${receipt.value.time}\n${receipt.value.pickup} -> ${receipt.value.dropoff}\nTotal: ${formatCents(receipt.value.total)}`
+  const text = `RideUp Receipt\n${receipt.value.date} at ${receipt.value.time}\n${receipt.value.pickup} -> ${receipt.value.dropoff}\nTotal: ${formatCents(receipt.value.grandTotal)}`
 
   if (navigator.share) {
     try {
@@ -150,8 +158,23 @@ async function shareReceipt() {
         <!-- Divider -->
         <div class="mb-5 border-b border-[var(--color-border)]"></div>
 
+        <!-- Cancelled trip -->
+        <div v-if="receipt.cancelled" class="mb-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-[var(--color-text-secondary)]">{{ receipt.cancelFee ? (receipt.noShow ? 'No-show fee' : 'Cancellation fee') : 'Trip cancelled' }}</span>
+            <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.cancelFee) }}</span>
+          </div>
+          <p v-if="!receipt.cancelFee" class="text-xs text-[var(--color-text-muted)]">No charge. Any hold on your card has been released.</p>
+          <p v-else class="text-xs text-[var(--color-text-muted)]">{{ receipt.noShow ? 'Charged because the driver waited at pickup and you didn’t arrive.' : 'Charged because the trip was cancelled after the free cancellation window.' }} Think this is wrong? Report an issue below.</p>
+          <div class="border-b border-[var(--color-border)]"></div>
+          <div class="flex items-center justify-between">
+            <span class="text-base font-bold text-[var(--color-text-primary)]">Total</span>
+            <span class="text-base font-bold text-[var(--color-text-primary)]">{{ formatCents(receipt.grandTotal) }}</span>
+          </div>
+        </div>
+
         <!-- Fare Breakdown -->
-        <div class="mb-5 space-y-3">
+        <div v-else class="mb-5 space-y-3">
           <div class="flex items-center justify-between">
             <span class="text-sm text-[var(--color-text-secondary)]">Base fare</span>
             <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.baseFare) }}</span>
@@ -173,8 +196,16 @@ async function shareReceipt() {
           <div class="border-b border-[var(--color-border)]"></div>
 
           <div class="flex items-center justify-between">
+            <span class="text-sm font-semibold text-[var(--color-text-primary)]">Trip fare</span>
+            <span class="text-sm font-semibold text-[var(--color-text-primary)]">{{ formatCents(receipt.total) }}</span>
+          </div>
+          <div v-if="receipt.tip" class="flex items-center justify-between">
+            <span class="text-sm text-[var(--color-text-secondary)]">Tip (100% to your driver)</span>
+            <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.tip) }}</span>
+          </div>
+          <div class="flex items-center justify-between">
             <span class="text-base font-bold text-[var(--color-text-primary)]">Total</span>
-            <span class="text-base font-bold text-[var(--color-text-primary)]">{{ formatCents(receipt.total) }}</span>
+            <span class="text-base font-bold text-[var(--color-text-primary)]">{{ formatCents(receipt.grandTotal) }}</span>
           </div>
         </div>
 
@@ -194,7 +225,7 @@ async function shareReceipt() {
         </div>
 
         <!-- Driver -->
-        <div class="flex items-center justify-between">
+        <div v-if="receipt.hasDriver" class="flex items-center justify-between">
           <span class="text-sm text-[var(--color-text-muted)]">Driver</span>
           <div class="flex items-center gap-2">
             <span class="text-sm font-medium text-[var(--color-text-primary)]">{{ receipt.driverName }}</span>
@@ -202,7 +233,7 @@ async function shareReceipt() {
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-[var(--color-text-primary)]" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
-              <span class="text-xs font-medium text-[var(--color-text-secondary)]">{{ receipt.driverRating != null ? receipt.driverRating.toFixed(1) : 'New' }}</span>
+              <span class="text-xs font-medium text-[var(--color-text-secondary)]">{{ receipt.driverRating != null && !Number.isNaN(receipt.driverRating) ? receipt.driverRating.toFixed(1) : 'New' }}</span>
             </div>
           </div>
         </div>

@@ -39,7 +39,10 @@
                 <span :class="badge(d.status)">{{ d.status }}</span>
                 <span v-if="d.expired" class="ml-1 text-xs font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-700">Docs expired</span>
               </td>
-              <td data-label="Rating" class="px-4 py-3 text-[var(--color-text-primary)]">{{ d.trips > 0 ? Number(d.rating).toFixed(2) : '--' }}</td>
+              <td data-label="Rating" class="px-4 py-3 text-[var(--color-text-primary)]">
+                {{ d.trips > 0 ? Number(d.rating).toFixed(2) : '--' }}
+                <span v-if="d.trips >= 10 && Number(d.rating) < LOW_RATING" class="ml-1 text-[11px] font-semibold px-1.5 py-0.5 rounded bg-red-50 text-red-700" title="Average of recent ratings is below the review threshold">Review</span>
+              </td>
               <td data-label="Trips" class="px-4 py-3 text-[var(--color-text-primary)]">{{ d.trips }}</td>
               <td data-label="Balance owed" class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ formatFare(d.balance) }}</td>
               <td data-label="Actions" class="px-4 py-3">
@@ -106,6 +109,13 @@
             <input v-model="form.insurance_expires_on" type="date" class="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]" />
           </label>
         </div>
+        <label class="flex flex-col gap-1 text-sm mb-3">Vehicle class
+          <select v-model="form.vehicle_type" class="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
+            <option value="standard">Go (standard, 4 seats)</option>
+            <option value="xl">XL (6+ seats)</option>
+            <option value="premium">Premium (newer, high-end vehicle)</option>
+          </select>
+        </label>
         <label class="flex flex-col gap-1 text-sm mb-3">Background check
           <select v-model="form.background_check_status" class="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
             <option value="not_started">Not started</option>
@@ -143,6 +153,10 @@ import { supabase, supabaseConfigured } from '../../lib/supabase'
 import { apiPost } from '../../lib/api'
 import { formatFare } from '../../lib/pricing'
 import { DEMO_MODE } from '../../lib/demoMode'
+import { listDriverDocs } from '../../lib/driverDocs'
+
+// Like Uber, a sustained low average (recent trips) flags a driver for a quality review.
+const LOW_RATING = 4.6
 
 const filterTabs = ['All', 'Pending', 'Approved', 'Rejected', 'Suspended']
 const DOCS = [
@@ -227,7 +241,7 @@ const docsLoading = ref(false)
 const saving = ref(false)
 const actionError = ref('')
 const actionDone = ref('')
-const form = reactive({ license_expires_on: '', insurance_expires_on: '', background_check_status: 'not_started', review_note: '' })
+const form = reactive({ license_expires_on: '', insurance_expires_on: '', background_check_status: 'not_started', review_note: '', vehicle_type: 'standard' })
 
 async function openReview(d) {
   review.value = d
@@ -238,16 +252,19 @@ async function openReview(d) {
     insurance_expires_on: d.raw.insurance_expires_on || '',
     background_check_status: d.raw.background_check_status || 'not_started',
     review_note: d.raw.review_note || '',
+    vehicle_type: d.raw.vehicle_type || 'standard',
   })
   for (const k of Object.keys(docs)) delete docs[k]
   if (DEMO_MODE || !d.raw.auth_user_id) return
   docsLoading.value = true
-  const folder = `driver-documents/${d.raw.auth_user_id}`
-  const { data: files } = await supabase.storage.from('documents').list(folder)
-  for (const f of files || []) {
-    const key = f.name.replace(/\.[^.]+$/, '')
-    const { data: signed } = await supabase.storage.from('documents').createSignedUrl(`${folder}/${f.name}`, 600)
-    if (signed?.signedUrl) docs[key] = signed.signedUrl
+  try {
+    const files = await listDriverDocs(d.raw.auth_user_id)
+    for (const [key, f] of Object.entries(files)) {
+      const { data: signed } = await supabase.storage.from('documents').createSignedUrl(f.path, 600)
+      if (signed?.signedUrl) docs[key] = signed.signedUrl
+    }
+  } catch (err) {
+    actionError.value = `Couldn’t load documents: ${err.message}`
   }
   docsLoading.value = false
 }
@@ -274,6 +291,7 @@ function detailFields() {
     insurance_expires_on: form.insurance_expires_on || null,
     background_check_status: form.background_check_status,
     review_note: form.review_note.trim() || null,
+    vehicle_type: form.vehicle_type,
   }
 }
 

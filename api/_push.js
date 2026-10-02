@@ -42,6 +42,6 @@ export async function rideParticipants(rideId) {
     riderUserId: data?.riders?.auth_user_id || null,
     riderEmail: data?.riders?.email || null,
     driverUserId: data?.drivers?.auth_user_id || null,
-    driverName: data?.drivers?.name || null,
+    driverName: data?.drivers?.name ? data.drivers.name.trim().split(/\s+/)[0] : null, // first name only, like Uber
   }
 }

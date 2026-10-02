@@ -45,3 +45,28 @@ export async function enablePushNotifications() {
     return false
   }
 }
+
+// On sign-out: forget this device's subscription so the next person to log in here doesn't get alerts
+// meant for the previous one. Best effort; never blocks signing out.
+export async function removePushSubscription() {
+  if (!pushSupported()) return
+  try {
+    const reg = await navigator.serviceWorker.getRegistration()
+    const sub = await reg?.pushManager.getSubscription()
+    if (!sub) return
+    await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
+    await sub.unsubscribe()
+  } catch {
+    /* ignore */
+  }
+}
+
+// 'on' | 'off' | 'blocked' | 'unavailable'
+export async function pushStatus() {
+  if (!pushSupported()) return 'unavailable'
+  if (Notification.permission === 'denied') return 'blocked'
+  if (Notification.permission !== 'granted') return 'off'
+  const reg = await navigator.serviceWorker.getRegistration()
+  const sub = await reg?.pushManager.getSubscription()
+  return sub ? 'on' : 'off'
+}

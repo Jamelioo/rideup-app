@@ -9,6 +9,18 @@ import { supabase, supabaseConfigured } from '../../lib/supabase'
 const router = useRouter()
 const step = ref(DEMO_MODE || !supabaseConfigured ? 'booking' : 'checking') // checking | booking | searching
 const activeRide = ref(null)
+const notice = ref('')
+
+// One-time message carried across a page change (e.g. the trip screen after a driver cancels).
+function takeNotice() {
+  try {
+    const text = sessionStorage.getItem('rideup_notice') || ''
+    sessionStorage.removeItem('rideup_notice')
+    return text
+  } catch {
+    return ''
+  }
+}
 
 const SEARCHING = ['requested', 'pending_driver_response']
 const ON_TRIP = ['accepted', 'driver_arrived', 'in_progress']
@@ -36,6 +48,7 @@ async function restoreTrip() {
         }
         if (ride) {
           activeRide.value = ride
+          notice.value = takeNotice()
           step.value = 'searching'
           return
         }
@@ -56,7 +69,13 @@ function handleRequested(ride) {
 
 function handleCancelled() {
   activeRide.value = null
+  notice.value = ''
   step.value = 'booking'
+}
+
+function handleReplaced(newRideId) {
+  activeRide.value = { id: newRideId }
+  notice.value = 'Your driver had to cancel. We’re finding you another driver. You weren’t charged.'
 }
 </script>
 
@@ -68,5 +87,5 @@ function handleCancelled() {
     </div>
   </div>
   <RiderBooking v-else-if="step === 'booking'" @requested="handleRequested" @existing-ride="restoreTrip" />
-  <SearchingForDriver v-else-if="step === 'searching' && activeRide" :ride-id="activeRide.id" @cancelled="handleCancelled" />
+  <SearchingForDriver v-else-if="step === 'searching' && activeRide" :key="activeRide.id" :ride-id="activeRide.id" :notice="notice" @cancelled="handleCancelled" @replaced="handleReplaced" />
 </template>
