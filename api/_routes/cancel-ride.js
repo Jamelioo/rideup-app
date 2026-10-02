@@ -148,7 +148,7 @@ async function rebook(rideId, cancellingDriverId) {
   try {
     const { data: old } = await admin
       .from('rides')
-      .select('rider_id, rider_name, pickup_address, pickup_lat, pickup_lng, dropoff_address, dropoff_lat, dropoff_lng, vehicle_type, distance_miles, duration_minutes, fare_cents, promo_code, promo_discount_cents')
+      .select('rider_id, rider_name, pickup_address, pickup_lat, pickup_lng, dropoff_address, dropoff_lat, dropoff_lng, vehicle_type, distance_miles, duration_minutes, fare_cents, booking_fee_cents, promo_code, promo_discount_cents')
       .eq('id', rideId)
       .maybeSingle()
     if (!old) return null

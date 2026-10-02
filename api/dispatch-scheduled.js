@@ -1,6 +1,6 @@
 import Stripe from 'stripe'
 import { admin } from './_auth.js'
-import { calculateFare } from '../src/lib/pricing.js'
+import { calculateFare, BOOKING_FEE_CENTS } from '../src/lib/pricing.js'
 import { pushToUser } from './_push.js'
 import { captureRide } from './_capture.js'
 import { notifyNearbyDrivers } from './_notifyDrivers.js'
@@ -77,7 +77,7 @@ export default async function handler(req, res) {
       // Same floors as the DB trigger: never cheaper than the straight line.
       const straight = straightLineMiles(sr.pickup_lat, sr.pickup_lng, sr.dropoff_lat, sr.dropoff_lng)
       const distance = Math.round(Math.max(Number(sr.distance_miles) || 0, straight) * 100) / 100
-      const duration = Math.round(Math.max(Number(sr.duration_minutes) || 0, distance * 3) * 100) / 100
+      const duration = Math.round(Math.max(Number(sr.duration_minutes) || 0, distance * 2) * 100) / 100
       const vehicleType = ['standard', 'xl', 'premium'].includes(sr.vehicle_type) ? sr.vehicle_type : 'standard'
 
       const { data: ride, error } = await admin
@@ -92,6 +92,7 @@ export default async function handler(req, res) {
           distance_miles: distance,
           duration_minutes: duration,
           fare_cents: calculateFare(distance, duration, vehicleType),
+          booking_fee_cents: BOOKING_FEE_CENTS,
         })
         .select('id')
         .single()

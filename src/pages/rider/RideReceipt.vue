@@ -36,7 +36,8 @@ onMounted(async () => {
     const total = data.fare_cents || 0
     const distanceCharge = Math.round(miles * rate.perMile)
     const timeCharge = Math.round(minutes * rate.perMinute)
-    const adjustment = total - (rate.base + distanceCharge + timeCharge)
+    const bookingFee = data.booking_fee_cents || 0
+    const adjustment = total - bookingFee - (rate.base + distanceCharge + timeCharge)
 
     const d = new Date(data.completed_at || data.cancelled_at || data.created_at)
     const cancelled = data.status === 'cancelled'
@@ -59,6 +60,7 @@ onMounted(async () => {
       ratePerMinute: rate.perMinute,
       timeCharge,
       minimumAdjustment: adjustment > 1 ? adjustment : 0, // minimum fare kicked in
+      bookingFee,
       total,
       paymentLast4: data.payment_last4 || '',
       paymentBrand: data.payment_brand || '',
@@ -191,6 +193,10 @@ async function shareReceipt() {
           <div v-if="receipt.minimumAdjustment > 0" class="flex items-center justify-between">
             <span class="text-sm text-[var(--color-text-secondary)]">Minimum fare adjustment</span>
             <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.minimumAdjustment) }}</span>
+          </div>
+          <div v-if="receipt.bookingFee > 0" class="flex items-center justify-between">
+            <span class="text-sm text-[var(--color-text-secondary)]">Booking fee</span>
+            <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.bookingFee) }}</span>
           </div>
 
           <div class="border-b border-[var(--color-border)]"></div>

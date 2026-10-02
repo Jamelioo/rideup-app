@@ -248,13 +248,21 @@ function maybeCalculateRoute() {
   isCalculating.value = true
   error.value = null
   directionsService.route(
-    { origin: { lat: pickup.value.lat, lng: pickup.value.lng }, destination: { lat: dropoff.value.lat, lng: dropoff.value.lng }, travelMode: window.google.maps.TravelMode.DRIVING },
+    {
+      origin: { lat: pickup.value.lat, lng: pickup.value.lng },
+      destination: { lat: dropoff.value.lat, lng: dropoff.value.lng },
+      travelMode: window.google.maps.TravelMode.DRIVING,
+      // Live traffic, like Uber's upfront price: rush hour costs more, quiet hours never less than normal.
+      drivingOptions: { departureTime: new Date(), trafficModel: 'bestguess' },
+    },
     (result, status) => {
       isCalculating.value = false
       if (status !== 'OK') { error.value = "Couldn't calculate a route between these locations."; return }
       const leg = result.routes[0].legs[0]
       distanceMiles.value = leg.distance.value / 1609.34
-      durationMinutes.value = leg.duration.value / 60
+      const normal = leg.duration.value
+      const withTraffic = leg.duration_in_traffic?.value || 0
+      durationMinutes.value = Math.max(normal, withTraffic) / 60
     }
   )
 }
