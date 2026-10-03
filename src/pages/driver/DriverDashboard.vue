@@ -115,6 +115,7 @@ onUnmounted(() => {
 
 // Busy-area map (Uber-style): where riders are requesting, refreshed every minute while online.
 const hotspots = ref([])
+const mapFailed = ref(false) // no Maps key / script blocked → illustrated backdrop instead of a blank area
 let hotspotTimer = null
 async function loadHotspots() {
   if (DEMO_MODE || !isOnline.value) { hotspots.value = []; return }
@@ -175,14 +176,14 @@ const initials = computed(() => {
 
     <!-- Map fills right side on desktop, top on mobile -->
     <div class="absolute inset-0 md:left-[400px]">
-      <GoogleMap v-if="!DEMO_MODE" class="absolute inset-0 z-0" :hotspots="hotspots" />
+      <GoogleMap v-if="!DEMO_MODE && !mapFailed" class="absolute inset-0 z-0" :hotspots="hotspots" @error="mapFailed = true" />
+      <HarborBackdrop v-else />
       <div v-if="isOnline && hotspots.length" class="absolute left-1/2 -translate-x-1/2 top-[max(6.5rem,calc(env(safe-area-inset-top)+5.5rem))] md:top-6 z-10 pointer-events-none">
         <div class="flex items-center gap-3 rounded-full bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.12)] px-4 py-2 text-[12px] font-semibold">
           <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#2b8659]" aria-hidden="true"></span>Riders requesting</span>
           <span v-if="hotspots.some((h) => Number(h.surge) > 1)" class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#e8710a]" aria-hidden="true"></span>Higher fares</span>
         </div>
       </div>
-      <HarborBackdrop v-else />
     </div>
 
     <!-- MOBILE: Top bar -->
