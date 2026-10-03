@@ -109,3 +109,15 @@ export function refundEmail({ ride, amountCents, method, target }) {
       <p style="font-size:14px"><strong>Trip:</strong> ${escapeHtml(ride.pickup_address)} → ${escapeHtml(ride.dropoff_address)}</p>`),
   }
 }
+
+export function docExpiryEmail({ name, doc, when, expired }) {
+  const first = escapeHtml(String(name || '').trim().split(/\s+/)[0] || 'there')
+  return {
+    subject: expired ? `Your ${doc} has expired` : `Your ${doc} expires on ${when}`,
+    html: layout(expired ? `Your ${escapeHtml(doc)} has expired` : 'A document is expiring soon', `
+      <p style="font-size:14px;color:#555">Hi ${first}, ${expired
+        ? `your ${escapeHtml(doc)} expired on ${escapeHtml(when)}, so you can’t go online until we’ve checked the new one.`
+        : `your ${escapeHtml(doc)} expires on ${escapeHtml(when)}. Upload the renewed document before then so you can keep driving without a break.`}</p>
+      <p><a href="${escapeHtml(process.env.APP_URL || 'https://rideupnassau.com')}/driver/documents" style="display:inline-block;background:#2b8659;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:12px">Upload document</a></p>`),
+  }
+}

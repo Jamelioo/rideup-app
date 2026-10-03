@@ -113,7 +113,8 @@ async function ownerAction(req, res, me, action) {
     throw error
   }
 
-  const inviter = firstName(ride.rider_name)
+  const { data: booker } = await admin.from('riders').select('name').eq('id', ride.rider_id).maybeSingle()
+  const inviter = firstName(booker?.name || ride.rider_name)
   const url = `/split/${split.id}`
   await pushToUser(friend.auth_user_id, { title: 'Split a ride?', body: `${inviter} wants to split the fare for a trip to ${ride.dropoff_address?.split(',')[0] || 'their destination'}.`, url, tag: `split-${split.id}` })
   if (friend.email) await sendEmail({ to: friend.email, ...splitInviteEmail({ inviter, ride, url: `${process.env.APP_URL || 'https://rideupnassau.com'}${url}` }) })
@@ -138,7 +139,7 @@ async function friendAction(req, res, me, action) {
     return res.status(200).json({
       status: split.status,
       open: open && split.status === 'invited',
-      inviter: firstName(ride.rider_name),
+      inviter: firstName((await admin.from('riders').select('name').eq('id', ride.rider_id).maybeSingle()).data?.name || ride.rider_name),
       pickup: ride.pickup_address,
       dropoff: ride.dropoff_address,
       share_cents: split.share_cents || estimate,

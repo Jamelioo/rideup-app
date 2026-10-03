@@ -33,7 +33,8 @@ export async function checkPromo(code) {
   const { data, error } = await supabase.rpc('check_promo', { p_code: code })
   if (error) return { ok: false, message: friendly(error, 'Couldn’t check that code. Try again.') }
   const promo = Array.isArray(data) ? data[0] : data
-  if (!promo) return { ok: false, message: 'That promo code isn’t valid.' }
+  if (promo?.error) return { ok: false, message: promo.error } // migration 012: reasons come back as data
+  if (!promo?.code) return { ok: false, message: 'That promo code isn’t valid.' }
   return { ok: true, promo }
 }
 

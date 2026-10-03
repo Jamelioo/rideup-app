@@ -354,6 +354,7 @@ onUnmounted(() => {
               <div class="w-11 h-11 rounded-full bg-[#2b8659]/15 flex items-center justify-center text-[var(--color-brand)] font-bold" aria-hidden="true">{{ riderName.charAt(0).toUpperCase() }}</div>
               <div class="flex-1 min-w-0">
                 <div class="text-[16px] font-bold truncate">{{ riderName }}</div>
+                <div v-if="currentRide?.passenger_phone" class="text-[12px] font-semibold text-[var(--color-brand)]">Booked by someone else for {{ riderName }}</div>
                 <div class="text-[13px] text-[var(--color-text-secondary)]"><span class="text-amber-500" aria-hidden="true">&#9733;</span> {{ riderRating != null ? riderRating.toFixed(1) : 'New' }}</div>
               </div>
               <div class="text-right">
@@ -464,7 +465,7 @@ onUnmounted(() => {
     <div v-if="showPinEntry" role="dialog" aria-modal="true" aria-labelledby="pin-title" class="fixed inset-0 z-[200] bg-black/60 flex items-end sm:items-center justify-center px-4 pb-6">
       <form @submit.prevent="doStart(pinInput)" class="bg-[var(--color-surface)] rounded-3xl p-6 max-w-sm w-full text-center">
         <h2 id="pin-title" class="text-xl font-bold mb-2">Enter the rider’s PIN</h2>
-        <p class="text-[13px] text-[var(--color-text-secondary)] mb-4">Ask {{ riderName }} for the 4-digit PIN shown in their app. It confirms you picked up the right person.</p>
+        <p class="text-[13px] text-[var(--color-text-secondary)] mb-4">Ask {{ riderName }} for the 4-digit PIN{{ currentRide?.passenger_phone ? ' (sent to them by text)' : ' shown in their app' }}. It confirms you picked up the right person.</p>
         <input v-model="pinInput" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="one-time-code" aria-label="4-digit PIN"
                class="w-full text-center text-[32px] tracking-[0.5em] font-bold bg-[var(--color-surface-secondary)] rounded-2xl py-3 mb-3 outline-none" />
         <p v-if="actionError" class="text-[13px] text-red-500 mb-3" role="alert">{{ actionError }}</p>

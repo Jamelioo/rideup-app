@@ -12,6 +12,7 @@ import HarborBackdrop from '../../components/HarborBackdrop.vue'
 import SideMenu from '../../components/SideMenu.vue'
 import DriverRideRequest from './DriverRideRequest.vue'
 import DriverQuests from '../../components/DriverQuests.vue'
+import DocExpiryBanner from '../../components/DocExpiryBanner.vue'
 
 const router = useRouter()
 const { user } = useAuth()
@@ -229,6 +230,7 @@ const initials = computed(() => {
           <p class="text-[14px] text-[var(--color-brand)] font-medium">Waiting for rides...</p>
         </div>
 
+        <DocExpiryBanner :driver="driver" />
         <DriverQuests />
 
         <!-- Today's summary -->
@@ -317,6 +319,7 @@ const initials = computed(() => {
           <p class="text-[14px] text-[var(--color-brand)] font-medium">Waiting for rides...</p>
         </div>
 
+        <DocExpiryBanner :driver="driver" />
         <DriverQuests />
 
         <!-- Today's summary -->

@@ -70,10 +70,15 @@ select pg_temp.check(fare_cents - promo_discount_cents - credit_applied_cents = 
 update rides set status = 'cancelled' where id = '70000000-0000-0000-0000-000000000003';
 
 set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
+select pg_temp.check(error is not null and code is null, 'first-ride promo refused on another account with the same card')
+  from public.check_promo('WELCOME5');
+select count(*) from (select public.check_promo('NOPE' || g) from generate_series(1, 9) g) t;
+select pg_temp.check(error like 'Too many tries%', 'promo codes can''t be guessed: 10 wrong tries an hour, then blocked')
+  from public.check_promo('WELCOME5');
 do $$ begin
-  perform * from public.check_promo('WELCOME5');
-  raise exception 'FAIL: a second account on a card that already rode got a first-ride promo';
-exception when sqlstate '22023' then raise notice 'ok  first-ride promo refused on another account with the same card';
+  perform public.promo_discount_for((select id from riders where name = 'Tom T'), 'BIG');
+  raise exception 'FAIL: the internal promo check can be called directly';
+exception when insufficient_privilege then raise notice 'ok  internal promo check is not callable from the app';
 end $$;
 do $$ begin
   perform public.redeem_referral((select referral_code from riders where name = 'Ann A'));
@@ -177,6 +182,24 @@ select pg_temp.as_user('00000000-0000-0000-0000-0000000000ad', '{"role":"admin"}
 select pg_temp.check(sum(refund_cents) = 500 and sum(refund_driver_cents) = 400, 'money summary counts refunds')
   from public.admin_money_summary(current_date - 1, current_date + 1);
 reset role; select pg_temp.as_server();
+
+\echo '== Book for someone else'
+set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000a2');
+do $$ begin
+  insert into rides (rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, passenger_name)
+  values ((select id from riders where name = 'Ned N'), 25.04, -77.35, 25.08, -77.33, 'a', 'b', 'Mum');
+  raise exception 'FAIL: a ride for someone else was booked without their phone number';
+exception when sqlstate '22023' then raise notice 'ok  booking for someone else needs their phone number';
+end $$;
+insert into rides (id, rider_id, rider_name, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, passenger_name, passenger_phone)
+values ('70000000-0000-0000-0000-000000000009', :'rn', 'Ned N', 25.04, -77.35, 25.08, -77.33, 'a', 'b', 'Mary Mum', '242-555-7788');
+reset role; select pg_temp.as_server();
+update rides set status = 'accepted', driver_id = '20000000-0000-0000-0000-0000000000d2' where id = '70000000-0000-0000-0000-000000000009';
+set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000d2');
+select pg_temp.check(first_name = 'Mary' and phone = '242-555-7788', 'the driver sees the passenger''s name and phone, not the booker''s')
+  from public.get_ride_rider('70000000-0000-0000-0000-000000000009');
+reset role; select pg_temp.as_server();
+update rides set status = 'cancelled' where id = '70000000-0000-0000-0000-000000000009';
 
 \echo '== Account deletion'
 select pg_temp.check(public.account_deletion_blocker('00000000-0000-0000-0000-0000000000d1') = 'payout_owed', 'a driver who is owed money can''t delete yet');

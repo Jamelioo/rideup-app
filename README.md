@@ -46,7 +46,7 @@ npm install
 
 1. Create a project at [supabase.com/dashboard](https://supabase.com/dashboard).
 2. In **SQL Editor**, run these files **in order**: `supabase-schema.sql`, then everything in
-   `supabase/migrations/` (`001` … `011`). Each migration can be re-run safely.
+   `supabase/migrations/` (`001` … `012`). Each migration can be re-run safely.
 3. Make yourself an admin (SQL Editor, use your account's email):
    ```sql
    update auth.users set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb
@@ -92,6 +92,7 @@ cp .env.example .env
 | `FCM_SERVICE_ACCOUNT` | optional: push in the Google Play app (Firebase service-account JSON; see MOBILE_APP.md) |
 | `APP_URL` | optional: link base for emails (default `https://rideupnassau.com`) |
 | `VITE_SENTRY_DSN`, `SENTRY_DSN` | optional: error reports to Sentry (see Monitoring) |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` | optional: texts to passengers when a rider books for someone else |
 
 Optional features stay switched off until their keys are set; nothing breaks without them.
 
@@ -107,7 +108,11 @@ Pro plan sends it automatically; Supabase `pg_cron` + `pg_net` or any external p
 - cancels trips stuck on "confirming payment",
 - sends trip check-ins ("Everything OK?") when a trip stops moving for 8 minutes or runs far longer than
   expected, and opens a safety report if nobody answers within 5 minutes,
+- once an hour, reminds drivers 30 days and 7 days before their licence or insurance expires (and on expiry,
+  when it also takes them offline),
 - records a heartbeat, which `/api/health` and the admin pages check.
+
+Before launch, work through [LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md).
 
 Without it, scheduled rides never dispatch and stale requests and online statuses linger. The admin pages show a red
 warning when it hasn't run for 5 minutes.

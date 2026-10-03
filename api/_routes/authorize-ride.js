@@ -3,6 +3,7 @@ import { admin, requireUser, getDriverForUser, fail } from '../_auth.js'
 import { rateLimit } from '../_rateLimit.js'
 import { chargeOf } from '../../src/lib/discounts.js'
 import { pushToUser, rideParticipants } from '../_push.js'
+import { notifyPassenger } from '../_passenger.js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
@@ -128,6 +129,8 @@ export default async function handler(req, res) {
       url: `/ride/${rideId}`,
       tag: `ride-${rideId}`,
     })
+
+    await notifyPassenger(rideId, 'accepted') // booked for someone else: text them the driver and a trip link
 
     return res.status(200).json({ success: true, payment_intent_id: paymentIntent.id })
   } catch (err) {

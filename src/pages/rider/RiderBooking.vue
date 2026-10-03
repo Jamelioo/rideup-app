@@ -19,6 +19,7 @@ import SideMenu from '../../components/SideMenu.vue'
 import ScheduleRidePicker from '../../components/ScheduleRidePicker.vue'
 import GuestInfoSheet from '../../components/GuestInfoSheet.vue'
 import CardCollectionSheet from '../../components/CardCollectionSheet.vue'
+import WhoIsRiding from '../../components/WhoIsRiding.vue'
 
 const router = useRouter()
 const menuOpen = ref(false)
@@ -35,6 +36,8 @@ const dropoff = ref(null)
 const pickupText = ref('')
 // One extra stop on the way (Uber-style "Add stop").
 const stop = ref(null)
+// Booking for someone else: { name, phone } or null for the rider themselves.
+const passenger = ref(null)
 const stopOpen = ref(false)
 const dropoffText = ref('')
 
@@ -530,6 +533,7 @@ async function createRideForUser(user, guestInfo = null) {
       promo_code: promo.value?.code || null,
       surge_multiplier: surge.value,
       stop_address: stop.value?.address || null, stop_lat: stop.value?.lat ?? null, stop_lng: stop.value?.lng ?? null,
+      passenger_name: passenger.value?.name || null, passenger_phone: passenger.value?.phone || null,
     }).select().single()
     if (rideErr) {
       isSubmitting.value = false
@@ -537,6 +541,10 @@ async function createRideForUser(user, guestInfo = null) {
         // Already has a ride in progress: take them to it instead of booking a second one.
         showGuestSheet.value = false
         emit('existing-ride')
+        return
+      }
+      if (rideErr.hint === 'passenger') {
+        error.value = rideErr.message
         return
       }
       if (rideErr.hint === 'surge') {
@@ -562,6 +570,7 @@ async function createRideForUser(user, guestInfo = null) {
     }
 
     showGuestSheet.value = false
+    passenger.value = null // the next booking is for the rider again unless they choose otherwise
     emit('requested', ride)
     isSubmitting.value = false
     // Wake up nearby drivers, and offer trip alerts to the rider ("driver arrived" while the app is closed).
@@ -864,6 +873,7 @@ async function scheduleRide({ date, time, summary }) {
               </form>
               <p v-if="promoError" class="text-[var(--color-danger)]" role="alert">{{ promoError }}</p>
             </div>
+            <WhoIsRiding v-model="passenger" />
             <component :is="hasCardOnFile && !DEMO_MODE ? 'router-link' : 'div'" :to="hasCardOnFile && !DEMO_MODE ? '/payments' : undefined"
                        class="flex items-center gap-2 text-[13px] text-[var(--color-text-secondary)] mb-2.5 px-1">
               <svg class="w-4 h-4 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
@@ -1032,6 +1042,7 @@ async function scheduleRide({ date, time, summary }) {
               </form>
               <p v-if="promoError" class="text-[var(--color-danger)]" role="alert">{{ promoError }}</p>
             </div>
+            <WhoIsRiding v-model="passenger" />
             <component :is="hasCardOnFile && !DEMO_MODE ? 'router-link' : 'div'" :to="hasCardOnFile && !DEMO_MODE ? '/payments' : undefined"
                        class="flex items-center gap-2 text-[13px] text-[var(--color-text-secondary)] mb-2.5 px-1">
               <svg class="w-4 h-4 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
