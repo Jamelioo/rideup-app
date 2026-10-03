@@ -1,8 +1,13 @@
 import { admin } from './_auth.js'
-import { pushToUser } from './_push.js'
+import { pushToUser, usersWithPush } from './_push.js'
 
 const MAX_PICKUP_MILES = 10
 const MAX_DRIVERS = 10
+// A driver's app checks in every few seconds while it is open. Once it stops (closed, or the driver switched
+// to another app), they stay online for DRIVER_IDLE_MIN, or for DRIVER_BACKGROUND_MIN if we can still reach
+// them with a notification (like Uber's app, which keeps alerting drivers while it runs in the background).
+export const DRIVER_IDLE_MIN = 3
+export const DRIVER_BACKGROUND_MIN = 30
 // Which driver vehicle classes can take each trip type (same rule as open_ride_requests).
 const CLASSES_FOR = { standard: ['standard', 'xl', 'premium'], xl: ['xl'], premium: ['premium'] }
 
@@ -23,20 +28,24 @@ export async function notifyNearbyDrivers(rideId, { exclude = [] } = {}) {
       .maybeSingle()
     if (!ride || ride.status !== 'requested') return 0
 
-    const recent = new Date(Date.now() - 3 * 60_000).toISOString()
+    const recent = new Date(Date.now() - DRIVER_BACKGROUND_MIN * 60_000).toISOString()
     const { data: drivers } = await admin
       .from('drivers')
-      .select('id, auth_user_id, last_lat, last_lng')
+      .select('id, auth_user_id, last_lat, last_lng, last_seen_at')
       .eq('status', 'online')
       .eq('approved', true)
       .in('vehicle_type', CLASSES_FOR[ride.vehicle_type] || CLASSES_FOR.standard)
       .gte('last_seen_at', recent)
       .limit(200)
 
+    const activeSince = Date.now() - DRIVER_IDLE_MIN * 60_000
+    const inBackground = (drivers || []).filter((d) => new Date(d.last_seen_at).getTime() < activeSince)
+    const reachable = await usersWithPush(inBackground.map((d) => d.auth_user_id))
     const skip = new Set([...(ride.declined_by || []), ...exclude])
     const payout = ride.driver_payout_cents ?? Math.round((ride.fare_cents || 0) * 0.8)
     const nearby = (drivers || [])
       .filter((d) => !skip.has(d.id))
+      .filter((d) => new Date(d.last_seen_at).getTime() >= activeSince || reachable.has(d.auth_user_id))
       .map((d) => ({ ...d, miles: d.last_lat == null ? null : milesBetween(d.last_lat, d.last_lng, ride.pickup_lat, ride.pickup_lng) }))
       .filter((d) => d.miles == null || d.miles <= MAX_PICKUP_MILES)
       .sort((a, b) => (a.miles ?? 99) - (b.miles ?? 99))
