@@ -22,7 +22,7 @@
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
       <!-- Bar chart: rides per day -->
       <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5">
-        <h2 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Rides — Last 7 Days</h2>
+        <h2 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Completed Trips — Last 7 Days</h2>
         <div class="flex items-end gap-2 h-40">
           <div
             v-for="day in weeklyRides"
@@ -86,7 +86,7 @@ const SAMPLE_METRICS = [
   { label: 'New Signups', value: '23', change: '-2', changePositive: false },
 ]
 const metricCards = ref(DEMO_MODE ? SAMPLE_METRICS : [
-  { label: 'Total Rides', value: '—', change: '' },
+  { label: 'Completed Trips', value: '—', change: '' },
   { label: 'Approved Drivers', value: '—', change: '' },
   { label: 'Gross Bookings', value: '—', change: '' },
   { label: 'Total Riders', value: '—', change: '' },
@@ -143,12 +143,12 @@ onMounted(async () => {
     weekStart.setDate(weekStart.getDate() - 6)
 
     const [ridesRes, driversRes, ridersRes, revenueRes, todayRidesRes, weekRes, safetyRes] = await Promise.all([
-      supabase.from('rides').select('id', { count: 'exact', head: true }),
+      supabase.from('rides').select('id', { count: 'exact', head: true }).eq('status', 'completed'),
       supabase.from('drivers').select('id', { count: 'exact', head: true }).eq('approved', true),
       supabase.from('riders').select('id', { count: 'exact', head: true }),
       supabase.from('rides').select('fare_cents').eq('status', 'completed'),
       supabase.from('rides').select('*').gte('created_at', todayISO).order('created_at', { ascending: false }).limit(10),
-      supabase.from('rides').select('created_at').gte('created_at', weekStart.toISOString()),
+      supabase.from('rides').select('created_at, completed_at').eq('status', 'completed').gte('created_at', new Date(weekStart.getTime() - 86400000).toISOString()),
       supabase.from('safety_reports').select('id', { count: 'exact', head: true }).eq('status', 'open'),
     ])
     if (ridesRes.error) throw ridesRes.error
@@ -161,7 +161,7 @@ onMounted(async () => {
       days.push({ key: d.toDateString(), label: d.toLocaleDateString('en-US', { weekday: 'short' }), count: 0 })
     }
     for (const r of weekRes.data || []) {
-      const day = days.find((x) => x.key === new Date(r.created_at).toDateString())
+      const day = days.find((x) => x.key === new Date(r.completed_at || r.created_at).toDateString())
       if (day) day.count++
     }
     weeklyRides.value = days
@@ -170,7 +170,7 @@ onMounted(async () => {
     const totalRevenue = (revenueRes.data || []).reduce((sum, r) => sum + (r.fare_cents || 0), 0)
 
     metricCards.value = [
-      { label: 'Total Rides', value: String(ridesRes.count || 0), change: '', changePositive: true },
+      { label: 'Completed Trips', value: String(ridesRes.count || 0), change: '', changePositive: true },
       { label: 'Approved Drivers', value: String(driversRes.count || 0), change: '', changePositive: true },
       { label: 'Gross Bookings', value: `$${(totalRevenue / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, change: '', changePositive: true },
       { label: 'Total Riders', value: String(ridersRes.count || 0), change: '', changePositive: true },
