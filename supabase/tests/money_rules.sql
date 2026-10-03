@@ -201,6 +201,19 @@ select pg_temp.check(first_name = 'Mary' and phone = '242-555-7788', 'the driver
 reset role; select pg_temp.as_server();
 update rides set status = 'cancelled' where id = '70000000-0000-0000-0000-000000000009';
 
+\echo '== Ad measurement'
+set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000a2');
+select public.set_acquisition('{"utm_source":"facebook","utm_campaign":"launch","evil":"x"}');
+select public.set_acquisition('{"utm_source":"google","utm_campaign":"later"}');
+update riders set acquisition = '{"utm_source":"fake"}' where auth_user_id = '00000000-0000-0000-0000-0000000000a2';
+reset role; select pg_temp.as_server();
+select pg_temp.check(acquisition = '{"utm_source":"facebook","utm_campaign":"launch"}'::jsonb,
+  'the first ad gets the credit; unknown keys dropped; riders can''t rewrite it') from riders where id = :'rn';
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000ad', '{"role":"admin"}');
+select pg_temp.check(signups = 1 and riders_with_trip = 1 and trips >= 1, 'campaign report counts signups and riders who took a trip')
+  from public.admin_acquisition_report(current_date - 1, current_date + 1) where source = 'facebook' and campaign = 'launch';
+select pg_temp.as_server();
+
 \echo '== Account deletion'
 select pg_temp.check(public.account_deletion_blocker('00000000-0000-0000-0000-0000000000d1') = 'payout_owed', 'a driver who is owed money can''t delete yet');
 select pg_temp.check(public.account_deletion_blocker('00000000-0000-0000-0000-0000000000a4') is null, 'a rider with nothing pending can delete');

@@ -18,6 +18,7 @@ const Profile = () => import('../pages/Profile.vue')
 const EditProfile = () => import('../pages/EditProfile.vue')
 const MyRides = () => import('../pages/MyRides.vue')
 const SplitInvite = () => import('../pages/rider/SplitInvite.vue')
+const AirportLanding = () => import('../pages/AirportLanding.vue')
 const Payments = () => import('../pages/Payments.vue')
 const SavedPlaces = () => import('../pages/SavedPlaces.vue')
 const Support = () => import('../pages/Support.vue')
@@ -79,6 +80,7 @@ const routes = [
   { path: '/promotions', name: 'promotions', component: Promotions, meta: { requiresAuth: true, title: 'Promotions — RideUp' } },
   { path: '/referrals', name: 'referrals', component: Referrals, meta: { requiresAuth: true, title: 'Invite Friends — RideUp' } },
   { path: '/about', name: 'about', component: About, meta: { title: 'About — RideUp' } },
+  { path: '/airport', name: 'airport', component: AirportLanding, meta: { title: 'Nassau Airport Rides — RideUp', public: true } },
   { path: '/track/:token', name: 'track-trip', component: TrackTrip, meta: { title: 'Live trip — RideUp', public: true } },
   { path: '/welcome', redirect: '/' },
   // Referral links (rideupnassau.com/r/RIDEXXXXX): remember the code, then sign up. It's applied once the

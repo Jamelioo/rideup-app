@@ -5,6 +5,7 @@ import { useAuth, friendlyAuthError, MIN_PASSWORD } from '../lib/useAuth'
 import { safeRedirect } from '../lib/safeRedirect'
 import AccountConversionCard from '../components/AccountConversionCard.vue'
 import { getPendingReferral, setPendingReferral } from '../lib/rewards'
+import { trackSignUp } from '../lib/adTracking'
 
 const router = useRouter()
 const route = useRoute()
@@ -51,6 +52,7 @@ async function handleSignup() {
     error.value = friendlyAuthError(result.error)
     return
   }
+  trackSignUp()
   if (result.session) {
     router.push(redirect())
     return

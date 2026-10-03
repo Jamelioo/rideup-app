@@ -27,6 +27,11 @@ export const clearSavedPromo = () => write(PROMO_KEY, null)
 export const getPendingReferral = () => read(REF_KEY)
 export const setPendingReferral = (code) => write(REF_KEY, code ? String(code).toUpperCase() : null)
 
+// A promo code from an ad or flyer link (?promo=WELCOME5), applied once the visitor has an account.
+const PENDING_PROMO_KEY = 'rideup_pending_promo'
+export const getPendingPromoCode = () => read(PENDING_PROMO_KEY)
+export const setPendingPromoCode = (code) => write(PENDING_PROMO_KEY, code ? String(code).trim().toUpperCase().slice(0, 20) : null)
+
 const friendly = (error, fallback) => (error?.hint === 'promo' || error?.hint === 'referral' ? error.message : fallback)
 
 export async function checkPromo(code) {

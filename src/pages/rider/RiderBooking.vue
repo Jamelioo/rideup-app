@@ -20,6 +20,7 @@ import ScheduleRidePicker from '../../components/ScheduleRidePicker.vue'
 import GuestInfoSheet from '../../components/GuestInfoSheet.vue'
 import CardCollectionSheet from '../../components/CardCollectionSheet.vue'
 import WhoIsRiding from '../../components/WhoIsRiding.vue'
+import { trackRideBooked } from '../../lib/adTracking'
 
 const router = useRouter()
 const menuOpen = ref(false)
@@ -571,6 +572,7 @@ async function createRideForUser(user, guestInfo = null) {
 
     showGuestSheet.value = false
     passenger.value = null // the next booking is for the rider again unless they choose otherwise
+    trackRideBooked(ride)
     emit('requested', ride)
     isSubmitting.value = false
     // Wake up nearby drivers, and offer trip alerts to the rider ("driver arrived" while the app is closed).
