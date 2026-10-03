@@ -13,12 +13,15 @@ import SideMenu from '../../components/SideMenu.vue'
 import DriverRideRequest from './DriverRideRequest.vue'
 import DriverQuests from '../../components/DriverQuests.vue'
 import DocExpiryBanner from '../../components/DocExpiryBanner.vue'
+import { useWakeLock } from '../../lib/useWakeLock'
 
 const router = useRouter()
 const { user } = useAuth()
 const { driver, isOnline, incomingRequest, currentRide, loading: driverLoading, acceptError, onlineError, fetchDriver, goOnline, goOffline } = useDriver()
 
 const menuOpen = ref(false)
+// Screen stays on while online, so requests keep coming (a sleeping phone is taken offline after 3 minutes).
+useWakeLock(computed(() => !DEMO_MODE && isOnline.value))
 const todayEarnings = ref(0)
 const todayTrips = ref(0)
 const hoursOnline = ref(0)
