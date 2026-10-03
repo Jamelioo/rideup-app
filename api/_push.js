@@ -47,6 +47,19 @@ export async function pushToUser(userId, { title, body, url = '/', tag }) {
   return sent
 }
 
+// Which of these users have at least one device we can currently push to (web push or the store apps).
+// Used to keep drivers online while RideUp is in the background: a driver we can alert is still reachable.
+export async function usersWithPush(userIds) {
+  const ids = [...new Set((userIds || []).filter(Boolean))]
+  const reachable = new Set()
+  if (!admin || ids.length === 0) return reachable
+  const lookups = []
+  if (enabled) lookups.push(admin.from('push_subscriptions').select('user_id').in('user_id', ids))
+  if (apnsConfigured() || fcmConfigured()) lookups.push(admin.from('native_push_tokens').select('user_id').in('user_id', ids))
+  for (const { data } of await Promise.all(lookups)) for (const r of data || []) reachable.add(r.user_id)
+  return reachable
+}
+
 // Looks up the auth user ids behind a ride so events can be pushed to the right people.
 export async function rideParticipants(rideId) {
   const { data } = await admin

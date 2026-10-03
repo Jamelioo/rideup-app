@@ -14,6 +14,7 @@ import DriverRideRequest from './DriverRideRequest.vue'
 import DriverQuests from '../../components/DriverQuests.vue'
 import DocExpiryBanner from '../../components/DocExpiryBanner.vue'
 import { useWakeLock } from '../../lib/useWakeLock'
+import { pushStatus, enablePushNotifications } from '../../lib/push'
 
 const router = useRouter()
 const { user } = useAuth()
@@ -22,6 +23,18 @@ const { driver, isOnline, incomingRequest, currentRide, loading: driverLoading, 
 const menuOpen = ref(false)
 // Screen stays on while online, so requests keep coming (a sleeping phone is taken offline after 3 minutes).
 useWakeLock(computed(() => !DEMO_MODE && isOnline.value))
+// Whether this phone can get trip alerts while RideUp is in the background ('on' | 'off' | 'blocked' | 'unavailable').
+const notifyState = ref('')
+async function refreshNotifyState() {
+  if (DEMO_MODE || !isOnline.value) return
+  // Going online asks for permission; give that prompt a moment before reading the result.
+  notifyState.value = await pushStatus().catch(() => 'unavailable')
+}
+async function turnOnNotifications() {
+  await enablePushNotifications()
+  await refreshNotifyState()
+}
+watch(isOnline, (on) => { if (on) setTimeout(refreshNotifyState, 1500) }, { immediate: true })
 const todayEarnings = ref(0)
 const todayTrips = ref(0)
 const hoursOnline = ref(0)
@@ -233,6 +246,13 @@ const initials = computed(() => {
           <span class="w-3 h-3 rounded-full bg-[#2b8659] animate-pulse flex-shrink-0"></span>
           <p class="text-[14px] text-[var(--color-brand)] font-medium">Waiting for rides...</p>
         </div>
+        <p v-if="isOnline && !currentRide && !incomingRequest && notifyState" class="-mt-2 mb-4 px-1 text-[12px] leading-snug text-[var(--color-text-muted)]">
+          <template v-if="notifyState === 'on'">You can switch apps. We’ll send you a notification for new trips, and keep you online for 30 minutes while RideUp isn’t open.</template>
+          <template v-else>Keep RideUp open to get trips. If you switch apps you’ll go offline after 3 minutes.
+            <button v-if="notifyState === 'off'" @click="turnOnNotifications" class="font-semibold text-[var(--color-brand)] underline">Turn on notifications</button>
+            <span v-else-if="notifyState === 'blocked'">Notifications are blocked for RideUp in your phone’s settings.</span>
+          </template>
+        </p>
 
         <DocExpiryBanner :driver="driver" />
         <DriverQuests />
@@ -322,6 +342,13 @@ const initials = computed(() => {
           <span class="w-3 h-3 rounded-full bg-[#2b8659] animate-pulse flex-shrink-0"></span>
           <p class="text-[14px] text-[var(--color-brand)] font-medium">Waiting for rides...</p>
         </div>
+        <p v-if="isOnline && !currentRide && !incomingRequest && notifyState" class="-mt-2 mb-4 px-1 text-[12px] leading-snug text-[var(--color-text-muted)]">
+          <template v-if="notifyState === 'on'">You can switch apps. We’ll send you a notification for new trips, and keep you online for 30 minutes while RideUp isn’t open.</template>
+          <template v-else>Keep RideUp open to get trips. If you switch apps you’ll go offline after 3 minutes.
+            <button v-if="notifyState === 'off'" @click="turnOnNotifications" class="font-semibold text-[var(--color-brand)] underline">Turn on notifications</button>
+            <span v-else-if="notifyState === 'blocked'">Notifications are blocked for RideUp in your phone’s settings.</span>
+          </template>
+        </p>
 
         <DocExpiryBanner :driver="driver" />
         <DriverQuests />

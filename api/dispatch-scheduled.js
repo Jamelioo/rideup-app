@@ -1,9 +1,9 @@
 import Stripe from 'stripe'
 import { admin } from './_auth.js'
 import { calculateFare, BOOKING_FEE_CENTS, isAirportPickup, AIRPORT_FEE_CENTS } from '../src/lib/pricing.js'
-import { pushToUser, rideParticipants } from './_push.js'
+import { pushToUser, rideParticipants, usersWithPush } from './_push.js'
 import { captureRide } from './_capture.js'
-import { notifyNearbyDrivers } from './_notifyDrivers.js'
+import { notifyNearbyDrivers, DRIVER_IDLE_MIN, DRIVER_BACKGROUND_MIN } from './_notifyDrivers.js'
 import { captureServerError } from './_monitor.js'
 import { sendEmail, docExpiryEmail } from './_email.js'
 
@@ -18,7 +18,6 @@ const DISPATCH_WINDOW_MIN = 3     // create the request this many minutes before
 const STALE_REQUEST_MIN = 5       // requests nobody answered within this long are cancelled
 const CAPTURE_GRACE_MIN = 2       // the driver's app captures at drop-off; after this the sweeper does it
 const PAYMENT_CONFIRM_SEC = 90     // a ride stuck in "confirming payment" this long is cancelled
-const DRIVER_IDLE_MIN = 3         // online drivers whose app hasn't checked in for this long are taken offline
 const CHECKIN_STOPPED_MIN = 8     // trip check-in: the car hasn't moved for this long (while the driver's app is reporting)
 const CHECKIN_ESCALATE_MIN = 5    // no "I'm OK" within this long → safety report for the admin
 
@@ -85,6 +84,37 @@ async function tripCheckins(result) {
 
 // Driver licence / insurance reminders, like Uber: 30 days and 7 days before expiry, and on the day it lapses
 // (when the driver is also taken offline). Checked once an hour; each reminder is sent once.
+// Drivers whose app stopped checking in without going offline. Those we can still alert stay online in the
+// background for DRIVER_BACKGROUND_MIN (requests arrive as notifications); everyone else goes offline after
+// DRIVER_IDLE_MIN. Drivers who had notifications get told, so they don't think they're still getting trips.
+async function offlineIdleDrivers(result) {
+  const idleBefore = new Date(Date.now() - DRIVER_IDLE_MIN * 60_000).toISOString()
+  const backgroundBefore = Date.now() - DRIVER_BACKGROUND_MIN * 60_000
+  const { data: idle } = await admin
+    .from('drivers')
+    .select('id, auth_user_id, last_seen_at')
+    .eq('status', 'online')
+    .or(`last_seen_at.is.null,last_seen_at.lt.${idleBefore}`)
+  if (!idle?.length) { result.drivers_offlined = 0; return }
+  const reachable = await usersWithPush(idle.map((d) => d.auth_user_id))
+  const due = idle.filter((d) => !d.last_seen_at || !reachable.has(d.auth_user_id) || new Date(d.last_seen_at).getTime() < backgroundBefore)
+  if (!due.length) { result.drivers_offlined = 0; return }
+  const { data: offlined } = await admin
+    .from('drivers')
+    .update({ status: 'offline' })
+    .in('id', due.map((d) => d.id))
+    .eq('status', 'online')
+    .or(`last_seen_at.is.null,last_seen_at.lt.${idleBefore}`)
+    .select('id, auth_user_id')
+  result.drivers_offlined = offlined?.length || 0
+  await Promise.all((offlined || []).filter((d) => reachable.has(d.auth_user_id)).map((d) => pushToUser(d.auth_user_id, {
+    title: 'You’re offline',
+    body: 'RideUp hasn’t been open for a while, so we stopped sending you trips. Open the app to go back online.',
+    url: '/driver/dashboard',
+    tag: 'driver-offline',
+  })))
+}
+
 const DOC_LABEL = { license: 'driver’s licence', insurance: 'insurance' }
 async function docExpiryReminders(result) {
   const { data: last } = await admin.from('system_heartbeats').select('last_run_at').eq('name', 'doc_reminders').maybeSingle()
@@ -236,15 +266,7 @@ export default async function handler(req, res) {
     }
     result.stuck_cancelled = stuck?.length || 0
 
-    // Drivers who closed the app without going offline (like Uber, they stop being "online" after a few minutes).
-    const idleBefore = new Date(Date.now() - DRIVER_IDLE_MIN * 60_000).toISOString()
-    const { data: idle } = await admin
-      .from('drivers')
-      .update({ status: 'offline' })
-      .eq('status', 'online')
-      .or(`last_seen_at.is.null,last_seen_at.lt.${idleBefore}`)
-      .select('id')
-    result.drivers_offlined = idle?.length || 0
+    await offlineIdleDrivers(result)
 
     // Safety net: charge completed trips whose capture call never arrived (e.g. the driver lost signal at drop-off).
     const captureBefore = new Date(Date.now() - CAPTURE_GRACE_MIN * 60_000).toISOString()
