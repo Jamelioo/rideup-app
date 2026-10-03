@@ -92,6 +92,8 @@ cp .env.example .env
 | `FCM_SERVICE_ACCOUNT` | optional: push in the Google Play app (Firebase service-account JSON; see MOBILE_APP.md) |
 | `APP_URL` | optional: link base for emails (default `https://rideupnassau.com`) |
 | `VITE_SENTRY_DSN`, `SENTRY_DSN` | optional: error reports to Sentry (see Monitoring) |
+| `VITE_META_PIXEL_ID` | optional: Meta Pixel for Instagram / Facebook ads (page views, sign-ups, booked rides) |
+| `VITE_GOOGLE_TAG_ID`, `VITE_GOOGLE_ADS_BOOKING_SEND_TO` | optional: Google tag (Ads `AW-…`, GA4 `G-…`, comma-separated) and the Ads conversion for a booked ride (`AW-…/label`) |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` | optional: texts to passengers when a rider books for someone else |
 
 Optional features stay switched off until their keys are set; nothing breaks without them.

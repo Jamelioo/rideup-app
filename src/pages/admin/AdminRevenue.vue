@@ -92,6 +92,38 @@
       </div>
     </div>
 
+    <!-- Where riders came from (ads) -->
+    <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden mb-6">
+      <div class="p-5 pb-3">
+        <h2 class="text-sm font-semibold text-[var(--color-text-primary)]">Where new riders came from, last {{ days }} days</h2>
+        <p class="text-xs text-[var(--color-text-muted)]">From the ad link they first opened (utm_source / utm_campaign). Cost per rider = what you spent on that campaign ÷ “Took a trip”.</p>
+      </div>
+      <table class="w-full text-sm stack-table">
+        <caption class="sr-only">New riders by ad source and campaign</caption>
+        <thead>
+          <tr class="text-left text-[var(--color-text-muted)] text-xs uppercase tracking-wider bg-[var(--color-surface-secondary)]">
+            <th class="px-4 py-3 font-medium">Source</th>
+            <th class="px-4 py-3 font-medium">Campaign</th>
+            <th class="px-4 py-3 font-medium text-right">Signed up</th>
+            <th class="px-4 py-3 font-medium text-right">Took a trip</th>
+            <th class="px-4 py-3 font-medium text-right">Trips</th>
+            <th class="px-4 py-3 font-medium text-right">They paid</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="a in acquisition" :key="a.source + a.campaign" class="border-t border-[var(--color-border)]">
+            <td data-label="Source" class="px-4 py-2.5 font-semibold">{{ a.source }}</td>
+            <td data-label="Campaign" class="px-4 py-2.5">{{ a.campaign }}</td>
+            <td data-label="Signed up" class="px-4 py-2.5 text-right">{{ a.signups }}</td>
+            <td data-label="Took a trip" class="px-4 py-2.5 text-right">{{ a.riders_with_trip }} <span class="text-xs text-[var(--color-text-muted)]">({{ a.signups ? Math.round(100 * a.riders_with_trip / a.signups) : 0 }}%)</span></td>
+            <td data-label="Trips" class="px-4 py-2.5 text-right">{{ a.trips }}</td>
+            <td data-label="They paid" class="px-4 py-2.5 text-right">{{ money(a.rider_paid_cents) }}</td>
+          </tr>
+          <tr v-if="!acquisition.length"><td colspan="6" class="px-4 py-6 text-center text-[var(--color-text-muted)]">No new riders in this period yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
     <!-- Daily table -->
     <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden">
       <table class="w-full text-sm stack-table">
@@ -136,6 +168,7 @@ const FIELDS = ['trips', 'gross_fare_cents', 'platform_fee_cents', 'driver_fare_
 const days = ref(30)
 const rows = ref([])
 const owed = ref({ credit_outstanding_cents: 0, driver_balances_cents: 0, drivers_owed: 0 })
+const acquisition = ref([]) // admin_acquisition_report (migration 013)
 const loading = ref(false)
 const error = ref('')
 const hover = ref(null)
@@ -170,6 +203,7 @@ async function load() {
     return
   }
   loading.value = true
+  const acq = supabase.rpc('admin_acquisition_report', { p_from: nassauDate(1 - days.value), p_to: nassauDate(0) })
   const [summary, owedRes] = await Promise.all([
     supabase.rpc('admin_money_summary', { p_from: nassauDate(1 - days.value), p_to: nassauDate(0) }),
     supabase.rpc('admin_money_owed'),
@@ -177,6 +211,8 @@ async function load() {
   loading.value = false
   if (summary.error) { error.value = 'Could not load money data. Run migration 010 and check your account has the admin role.'; return }
   rows.value = (summary.data || []).map((d) => ({ ...d, ...Object.fromEntries(FIELDS.map((f) => [f, Number(d[f]) || 0])) }))
+  const { data: acqRows } = await acq
+  acquisition.value = (acqRows || []).map((a) => ({ ...a, signups: Number(a.signups), riders_with_trip: Number(a.riders_with_trip), trips: Number(a.trips), rider_paid_cents: Number(a.rider_paid_cents) }))
   const o = Array.isArray(owedRes.data) ? owedRes.data[0] : owedRes.data
   if (o) owed.value = { credit_outstanding_cents: Number(o.credit_outstanding_cents) || 0, driver_balances_cents: Number(o.driver_balances_cents) || 0, drivers_owed: Number(o.drivers_owed) || 0 }
 }
