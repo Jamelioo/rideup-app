@@ -5,6 +5,7 @@ import { pushToUser, rideParticipants } from './_push.js'
 import { captureRide } from './_capture.js'
 import { notifyNearbyDrivers } from './_notifyDrivers.js'
 import { captureServerError } from './_monitor.js'
+import { sendEmail, docExpiryEmail } from './_email.js'
 
 // Turns due scheduled rides into live ride requests and clears stale unanswered requests.
 // Call every minute (Vercel Cron on Pro, Supabase pg_cron + pg_net, or any external pinger) with
@@ -82,6 +83,51 @@ async function tripCheckins(result) {
   }
 }
 
+// Driver licence / insurance reminders, like Uber: 30 days and 7 days before expiry, and on the day it lapses
+// (when the driver is also taken offline). Checked once an hour; each reminder is sent once.
+const DOC_LABEL = { license: 'driver’s licence', insurance: 'insurance' }
+async function docExpiryReminders(result) {
+  const { data: last } = await admin.from('system_heartbeats').select('last_run_at').eq('name', 'doc_reminders').maybeSingle()
+  if (last && Date.now() - new Date(last.last_run_at).getTime() < 60 * 60_000) return
+  await admin.from('system_heartbeats').upsert({ name: 'doc_reminders', last_run_at: new Date().toISOString(), last_ok: true })
+
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Nassau' }) // YYYY-MM-DD
+  const in30 = new Date(Date.now() + 30 * 86_400_000).toLocaleDateString('en-CA', { timeZone: 'America/Nassau' })
+  const { data: drivers } = await admin
+    .from('drivers')
+    .select('id, auth_user_id, name, email, status, license_expires_on, insurance_expires_on')
+    .eq('approved', true)
+    .is('deleted_at', null)
+    .or(`license_expires_on.lte.${in30},insurance_expires_on.lte.${in30}`)
+    .limit(500)
+  for (const d of drivers || []) {
+    let expiredNow = false
+    for (const doc of ['license', 'insurance']) {
+      const expires = d[`${doc}_expires_on`]
+      if (!expires || expires > in30) continue
+      const daysLeft = Math.round((new Date(`${expires}T12:00:00`) - new Date(`${today}T12:00:00`)) / 86_400_000)
+      const stage = daysLeft < 0 ? 'expired' : daysLeft <= 7 ? '7d' : '30d'
+      if (stage === 'expired') expiredNow = true
+      const { data: fresh } = await admin.from('driver_doc_reminders')
+        .upsert({ driver_id: d.id, doc, stage, expires_on: expires }, { onConflict: 'driver_id,doc,stage,expires_on', ignoreDuplicates: true })
+        .select('driver_id')
+      if (!fresh?.length) continue // already reminded at this stage
+      result.doc_reminders++
+      const when = new Date(`${expires}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
+      const body = stage === 'expired'
+        ? `Your ${DOC_LABEL[doc]} expired on ${when}. Upload the new one to keep driving.`
+        : `Your ${DOC_LABEL[doc]} expires on ${when}. Upload the new one in Documents so you can keep driving.`
+      await pushToUser(d.auth_user_id, { title: stage === 'expired' ? 'Document expired' : 'Document expiring soon', body, url: '/driver/documents', tag: `doc-${doc}` })
+      if (d.email) await sendEmail({ to: d.email, ...docExpiryEmail({ name: d.name, doc: DOC_LABEL[doc], when, expired: stage === 'expired' }) })
+    }
+    // Expired papers: no new trips (the app already refuses to go online; this ends a session already open).
+    if (expiredNow && d.status === 'online') {
+      await admin.from('drivers').update({ status: 'offline' }).eq('id', d.id).eq('status', 'online')
+      result.expired_offline++
+    }
+  }
+}
+
 // /api/health and the admin pages read this to tell whether the job is still running.
 async function heartbeat(ok, result) {
   await admin.from('system_heartbeats')
@@ -94,7 +140,7 @@ export default async function handler(req, res) {
   if (!admin || !secret) return res.status(500).json({ error: 'Server is not configured' })
   if (req.headers.authorization !== `Bearer ${secret}`) return res.status(401).json({ error: 'Unauthorized' })
 
-  const result = { expired: 0, dispatched: 0, failed: 0, captured: 0, capture_failed: 0, drivers_offlined: 0, stuck_cancelled: 0, checkins: 0, escalated: 0 }
+  const result = { expired: 0, dispatched: 0, failed: 0, captured: 0, capture_failed: 0, drivers_offlined: 0, stuck_cancelled: 0, checkins: 0, escalated: 0, doc_reminders: 0, expired_offline: 0 }
 
   try {
     const staleBefore = new Date(Date.now() - STALE_REQUEST_MIN * 60_000).toISOString()
@@ -222,6 +268,7 @@ export default async function handler(req, res) {
     }
 
     await tripCheckins(result)
+    await docExpiryReminders(result)
 
     await heartbeat(true, result)
     return res.status(200).json(result)

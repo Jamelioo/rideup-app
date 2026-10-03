@@ -1,6 +1,7 @@
 import { admin, requireUser, getDriverForUser, getRiderForUser, fail } from '../_auth.js'
 import { rateLimit } from '../_rateLimit.js'
 import { pushToUser, rideParticipants } from '../_push.js'
+import { notifyPassenger } from '../_passenger.js'
 import { notifyNearbyDrivers } from '../_notifyDrivers.js'
 
 const checkRate = rateLimit({ maxRequests: 30, windowMs: 60_000 })
@@ -43,6 +44,7 @@ export default async function handler(req, res) {
     await pushToUser(people.riderUserId, event === 'arrived'
       ? { title: 'Your driver has arrived', body: `Meet them at the pickup. Free waiting time is ${FREE_WAIT_MINUTES} minutes.`, url: `/ride/${rideId}`, tag: `ride-${rideId}` }
       : { title: 'Trip started', body: 'Enjoy your ride. You can share your trip from the shield button.', url: `/ride/${rideId}`, tag: `ride-${rideId}` })
+    if (event === 'arrived') await notifyPassenger(rideId, 'arrived')
     return res.status(200).json({ success: true })
   } catch (err) {
     return fail(res, 'Trip event error', err)

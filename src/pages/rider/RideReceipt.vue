@@ -66,6 +66,7 @@ onMounted(async () => {
       pickup: data.pickup_address || 'Pickup',
       dropoff: data.dropoff_address || 'Dropoff',
       stop: data.stop_address || '',
+      passenger: data.passenger_name || '',
       busyCharge,
       baseFare: rate.base,
       distanceMiles: miles,
@@ -171,6 +172,7 @@ async function shareReceipt() {
             <div class="h-3 w-3 rounded-full bg-[#2b8659]"></div>
           </div>
           <div class="flex flex-col justify-between">
+            <p v-if="receipt.passenger" class="text-xs font-semibold text-[var(--color-brand)] mb-1">Ride for {{ receipt.passenger }}</p>
             <p class="text-sm font-semibold text-[var(--color-text-primary)]">{{ receipt.pickup }}</p>
             <p v-if="receipt.stop" class="mt-3 text-sm text-[var(--color-text-secondary)]">Stop: {{ receipt.stop }}</p>
             <p class="mt-5 text-sm font-semibold text-[var(--color-text-primary)]">{{ receipt.dropoff }}</p>

@@ -45,6 +45,21 @@ const chatOpen = ref(false)
 const unread = ref(0)
 const safetyOpen = ref(false)
 const splitOpen = ref(false)
+
+// Booked for someone else: send them the driver, car, PIN and a live trip link (WhatsApp, or the phone's share sheet).
+const passengerSent = ref(false)
+async function sendToPassenger() {
+  const r = ride.value
+  if (!r?.passenger_phone) return
+  const { data: token } = await supabase.rpc('create_share_link', { p_ride_id: rideId })
+  const link = token ? `${location.origin}/track/${token}` : ''
+  const car = [vehicle.value, plate.value].filter(Boolean).join(', ')
+  const text = `Hi ${r.passenger_name.split(' ')[0]}, I booked you a RideUp. ${driverName.value.split(' ')[0]}${car ? ` (${car})` : ''} is coming to ${String(r.pickup_address || 'your pickup').split(',')[0]}.${pin.value ? ` Tell the driver PIN ${pin.value}.` : ''}${link ? ` Follow the car: ${link}` : ''}`
+  const digits = r.passenger_phone.replace(/\D/g, '')
+  const intl = digits.length === 7 ? `1242${digits}` : digits.length === 10 ? `1${digits}` : digits
+  passengerSent.value = true
+  window.open(`https://wa.me/${intl}?text=${encodeURIComponent(text)}`, '_blank', 'noopener')
+}
 const stopPoint = computed(() => (ride.value?.stop_lat != null ? { lat: ride.value.stop_lat, lng: ride.value.stop_lng } : null))
 // Split fare is offered once the card is held (driver accepted) until drop-off.
 const canSplit = computed(() => !DEMO_MODE && ride.value?.payment_status === 'authorized' &&
@@ -302,6 +317,12 @@ const endedMessage = computed(() => {
       @message="chatOpen = true"
       @split="splitOpen = true"
     />
+
+    <div v-if="ride?.passenger_phone && ['driver_enroute', 'driver_arrived'].includes(rideStatus)"
+         class="absolute left-3 right-3 top-[max(4.5rem,calc(env(safe-area-inset-top)+4rem))] z-30 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-lg px-4 py-3 flex items-center gap-3">
+      <p class="flex-1 text-[13px]"><strong>Riding: {{ ride.passenger_name }}</strong><br><span class="text-[var(--color-text-secondary)]">{{ passengerSent ? 'Details sent. You can send them again.' : 'We text them the driver details. Send them on WhatsApp too.' }}</span></p>
+      <button @click="sendToPassenger" class="px-3 py-2 rounded-xl bg-[#2b8659] text-white text-[13px] font-bold whitespace-nowrap">Send on WhatsApp</button>
+    </div>
 
     <SplitFareSheet v-if="canSplit || splitOpen" :open="splitOpen" :ride-id="rideId" @close="splitOpen = false" />
 
