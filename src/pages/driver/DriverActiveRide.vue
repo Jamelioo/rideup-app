@@ -14,12 +14,15 @@ import HarborBackdrop from '../../components/HarborBackdrop.vue'
 import RideChat from '../../components/RideChat.vue'
 import SafetyToolkit from '../../components/SafetyToolkit.vue'
 import TripCheckin from '../../components/TripCheckin.vue'
+import { useWakeLock } from '../../lib/useWakeLock'
 
 const router = useRouter()
 const { user } = useAuth()
 const { currentRide, updateRideStatus, startTrip, pinRequired, cancelCurrentRide, completeRide, refreshCurrentRide } = useDriver()
 
 const phase = computed(() => currentRide.value?.status || 'none')
+// Screen stays on during the trip so the rider keeps seeing the car move.
+useWakeLock(computed(() => !DEMO_MODE && ['accepted', 'driver_arrived', 'in_progress'].includes(phase.value)))
 const earnings = computed(() => driverPayout(currentRide.value))
 const busy = ref(false)
 const actionError = ref('')
