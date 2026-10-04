@@ -281,7 +281,7 @@ async function cancelRequest() {
           </svg>
         </div>
         <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-2">No drivers available</h2>
-        <p class="text-[var(--color-text-muted)] text-sm mb-6">All drivers are currently busy. Please try again in a moment.</p>
+        <p class="text-[var(--color-text-muted)] text-sm mb-6">We couldn’t find a driver near you right now. You haven’t been charged.</p>
         <button @click="retrySearch" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mb-3">
           Try again
         </button>

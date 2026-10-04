@@ -21,6 +21,8 @@ import GuestInfoSheet from '../../components/GuestInfoSheet.vue'
 import CardCollectionSheet from '../../components/CardCollectionSheet.vue'
 import WhoIsRiding from '../../components/WhoIsRiding.vue'
 import { trackRideBooked } from '../../lib/adTracking'
+import { useAvailability } from '../../lib/useAvailability'
+import { availabilityFor, canBook, unavailableNotice, optionStatus } from '../../lib/availability'
 
 const router = useRouter()
 const menuOpen = ref(false)
@@ -353,7 +355,23 @@ function showToast(msg) {
   setTimeout(() => { toast.value = '' }, 3000)
 }
 
-const canRequest = computed(() => pickup.value && dropoff.value && fareEstimates.value[selectedVehicle.value] && !isSubmitting.value)
+// Route and price ready. Scheduling for later only needs this; booking now also needs a car that can come.
+const routeReady = computed(() => pickup.value && dropoff.value && fareEstimates.value[selectedVehicle.value] && !isSubmitting.value)
+
+// ── Can a car come now? Checked when the pickup changes and every 30 seconds (Uber: "No cars available") ──
+const { availability, refresh: refreshAvailability } = useAvailability(pickup)
+const selectedAvailability = computed(() => availabilityFor(availability.value, selectedVehicle.value))
+const carsUnavailable = computed(() => !canBook(selectedAvailability.value))
+const noCarsNotice = computed(() => unavailableNotice(selectedAvailability.value))
+// Another ride option that can come now, offered when the chosen one can't (e.g. no XL driver online).
+const availableAlternative = computed(() => (carsUnavailable.value
+  ? availableVehicles.value.find((v) => v.id !== selectedVehicle.value && availabilityFor(availability.value, v.id)?.state === 'available') || null
+  : null))
+const optionLine = (type) => {
+  const entry = availabilityFor(availability.value, type)
+  return { text: optionStatus(entry), unavailable: !canBook(entry) }
+}
+const canRequest = computed(() => routeReady.value && !carsUnavailable.value)
 const hasRoute = computed(() => distanceMiles.value && !isCalculating.value)
 
 const emit = defineEmits(['requested', 'existing-ride'])
@@ -509,6 +527,14 @@ async function ensureRider(user, guestInfo = null) {
 async function createRideForUser(user, guestInfo = null) {
   isSubmitting.value = true
   error.value = null
+  // One last check just before booking: if the nearby driver went offline a moment ago, the note above the
+  // button says so now instead of after a search. An unknown answer (the check failed) never blocks booking.
+  if (!canBook(availabilityFor(await refreshAvailability({ timeoutMs: 4000 }), selectedVehicle.value))) {
+    showGuestSheet.value = false // after signing up or adding a card, show the note rather than leave a sheet open
+    showCardSheet.value = false
+    isSubmitting.value = false
+    return
+  }
   const fare = fareEstimates.value[selectedVehicle.value]
 
   try {
@@ -660,7 +686,7 @@ async function handleCardSubmit({ cardElement, stripe }) {
 }
 
 async function scheduleRide({ date, time, summary }) {
-  if (!canRequest.value) return
+  if (!routeReady.value) return
   isScheduling.value = true
   showSchedulePicker.value = false
   const fare = fareEstimates.value[selectedVehicle.value]
@@ -844,11 +870,17 @@ async function scheduleRide({ date, time, summary }) {
                 </div>
               </div>
               <div class="text-right">
-                <div class="text-[16px] font-bold" :class="selectedVehicle === vehicle.id ? 'text-[var(--color-brand)]' : ''">{{ formatFare(fareEstimates[vehicle.id]) }}</div>
+                <div class="text-[16px] font-bold" :class="[selectedVehicle === vehicle.id ? 'text-[var(--color-brand)]' : '', optionLine(vehicle.id).unavailable ? 'opacity-50' : '']">{{ formatFare(fareEstimates[vehicle.id]) }}</div>
+                <div v-if="optionLine(vehicle.id).text" class="text-[12px] mt-0.5 text-[var(--color-text-muted)]" :class="optionLine(vehicle.id).unavailable ? 'font-semibold' : ''">{{ optionLine(vehicle.id).text }}</div>
               </div>
             </button>
           </div>
           <div class="sticky bottom-0 z-10 -mx-5 px-5 pt-3 pb-1 mt-3 bg-[var(--color-surface)] border-t border-[var(--color-border)]">
+            <div v-if="hasRoute && noCarsNotice" class="mb-2 rounded-xl bg-[var(--color-surface-secondary)] px-3 py-2.5" role="status" aria-live="polite">
+              <p class="text-[14px] font-semibold text-[var(--color-text-primary)]">{{ noCarsNotice.title }}</p>
+              <p class="text-[12px] leading-snug text-[var(--color-text-muted)] mt-0.5">{{ noCarsNotice.body }}</p>
+              <button v-if="availableAlternative" type="button" @click="selectedVehicle = availableAlternative.id" class="mt-1.5 text-[13px] font-semibold text-[var(--color-brand)]">Choose {{ availableAlternative.name }}, available now</button>
+            </div>
             <!-- Airport fee, promo / referral discount and credit, shown before booking -->
             <div v-if="hasRoute" class="px-1 mb-2 space-y-1 text-[13px]">
               <p v-if="airportPickup" class="text-[var(--color-text-secondary)]">Includes {{ formatFare(AIRPORT_FEE_CENTS) }} airport pickup fee</p>
@@ -885,9 +917,9 @@ async function scheduleRide({ date, time, summary }) {
           <div class="flex gap-2.5">
             <button @click="requestRide" :disabled="!canRequest"
                     class="flex-1 py-4 bg-[#2b8659] disabled:bg-[var(--color-surface-secondary)] disabled:text-[var(--color-text-muted)] text-white font-bold rounded-2xl text-[15px] transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:shadow-none">
-              {{ isSubmitting ? 'Requesting…' : `Choose ${VEHICLE_TYPES.find(v => v.id === selectedVehicle)?.name || 'ride'}` }}
+              {{ isSubmitting ? 'Requesting…' : carsUnavailable ? 'No cars available' : `Choose ${VEHICLE_TYPES.find(v => v.id === selectedVehicle)?.name || 'ride'}` }}
             </button>
-            <button @click="showSchedulePicker = true" :disabled="!canRequest"
+            <button @click="showSchedulePicker = true" :disabled="!routeReady"
                     class="w-[52px] flex-shrink-0 flex items-center justify-center bg-[var(--color-surface-secondary)] disabled:bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] disabled:text-[var(--color-text-muted)] rounded-2xl transition-all active:scale-[0.97] border border-[var(--color-border)]"
                     title="Schedule for later">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -1013,11 +1045,17 @@ async function scheduleRide({ date, time, summary }) {
                 </div>
               </div>
               <div class="text-right">
-                <div class="text-[17px] font-bold" :class="selectedVehicle === vehicle.id ? 'text-[var(--color-brand)]' : ''">{{ formatFare(fareEstimates[vehicle.id]) }}</div>
+                <div class="text-[17px] font-bold" :class="[selectedVehicle === vehicle.id ? 'text-[var(--color-brand)]' : '', optionLine(vehicle.id).unavailable ? 'opacity-50' : '']">{{ formatFare(fareEstimates[vehicle.id]) }}</div>
+                <div v-if="optionLine(vehicle.id).text" class="text-[12px] mt-0.5 text-[var(--color-text-muted)]" :class="optionLine(vehicle.id).unavailable ? 'font-semibold' : ''">{{ optionLine(vehicle.id).text }}</div>
               </div>
             </button>
           </div>
           <div class="sticky bottom-0 z-10 -mx-6 px-6 pt-3 pb-4 mt-4 bg-[var(--color-surface)] border-t border-[var(--color-border)]">
+            <div v-if="hasRoute && noCarsNotice" class="mb-2 rounded-xl bg-[var(--color-surface-secondary)] px-3 py-2.5" role="status" aria-live="polite">
+              <p class="text-[14px] font-semibold text-[var(--color-text-primary)]">{{ noCarsNotice.title }}</p>
+              <p class="text-[12px] leading-snug text-[var(--color-text-muted)] mt-0.5">{{ noCarsNotice.body }}</p>
+              <button v-if="availableAlternative" type="button" @click="selectedVehicle = availableAlternative.id" class="mt-1.5 text-[13px] font-semibold text-[var(--color-brand)]">Choose {{ availableAlternative.name }}, available now</button>
+            </div>
             <!-- Airport fee, promo / referral discount and credit, shown before booking -->
             <div v-if="hasRoute" class="px-1 mb-2 space-y-1 text-[13px]">
               <p v-if="airportPickup" class="text-[var(--color-text-secondary)]">Includes {{ formatFare(AIRPORT_FEE_CENTS) }} airport pickup fee</p>
@@ -1054,9 +1092,9 @@ async function scheduleRide({ date, time, summary }) {
           <div class="flex gap-2.5">
             <button @click="requestRide" :disabled="!canRequest"
                     class="flex-1 py-4 bg-[#2b8659] disabled:bg-[var(--color-surface-secondary)] disabled:text-[var(--color-text-muted)] text-white font-bold rounded-2xl text-[15px] transition-all hover:bg-[#236e49] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:shadow-none">
-              {{ isSubmitting ? 'Requesting…' : `Choose ${VEHICLE_TYPES.find(v => v.id === selectedVehicle)?.name || 'ride'}` }}
+              {{ isSubmitting ? 'Requesting…' : carsUnavailable ? 'No cars available' : `Choose ${VEHICLE_TYPES.find(v => v.id === selectedVehicle)?.name || 'ride'}` }}
             </button>
-            <button @click="showSchedulePicker = true" :disabled="!canRequest"
+            <button @click="showSchedulePicker = true" :disabled="!routeReady"
                     class="w-[52px] flex-shrink-0 flex items-center justify-center bg-[var(--color-surface-secondary)] disabled:bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] disabled:text-[var(--color-text-muted)] rounded-2xl transition-all hover:opacity-90 active:scale-[0.97] border border-[var(--color-border)]"
                     title="Schedule for later">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

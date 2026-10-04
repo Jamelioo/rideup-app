@@ -32,7 +32,16 @@ export default async function handler(req, res) {
       const rider = await getRiderForUser(user.id)
       if (!rider || rider.id !== ride.rider_id || ride.status !== 'requested') return res.status(403).json({ error: 'Not allowed' })
       const notified = await notifyNearbyDrivers(rideId)
-      return res.status(200).json({ success: true, notified })
+      if (notified === 0) {
+        // Nobody can take it (the booking screen's check was a moment out of date, e.g. the driver just went
+        // offline): end the search now instead of after the rider's 90-second wait. Same as the sweeper's
+        // 'no_drivers' cancellation; nothing is charged, and promo codes and credit are only used on completion.
+        await admin.from('rides')
+          .update({ status: 'cancelled', cancel_reason: 'no_drivers', cancelled_at: new Date().toISOString() })
+          .eq('id', rideId)
+          .eq('status', 'requested')
+      }
+      return res.status(200).json({ success: true, notified: notified ?? 0 })
     }
 
     const driver = await getDriverForUser(user.id)

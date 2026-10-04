@@ -59,6 +59,7 @@ after switching to live keys, and refund them afterwards.
 | 14 | Admin › Money | The day's trips, payments and RideUp's share look right |
 | 15 | Delete a test rider account from Profile | Logged out; the account can't sign in again |
 | 16 | Driver: go online, allow notifications, then switch to another app; rider books | Driver gets a "New trip request" notification; tapping it opens the request. After 30 minutes away the driver is taken offline and told so |
+| 17 | Driver offline; rider enters a trip | "No cars available right now", ride options say "Unavailable" and the button is off. Driver goes online: within 30 seconds the rider sees "5 min away" (or similar) and can book |
 
 ## 5. Business and legal
 
