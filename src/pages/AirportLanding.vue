@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { calculateFare, formatFare, AIRPORT, AIRPORT_FEE_CENTS } from '../lib/pricing'
 import { getPendingPromoCode } from '../lib/rewards'
+import { SCHEDULING_ENABLED } from '../lib/features'
 
 // Landing page for "Nassau airport taxi / ride" searches and airport ads. Example fares use the real pricing
 // (normal traffic, RideUp Go, airport fee and booking fee included); the app shows the exact price first.
@@ -39,7 +40,7 @@ onUnmounted(() => document.querySelector('meta[name="description"]')?.setAttribu
       <p class="mt-4 text-[17px] text-[var(--color-text-secondary)] max-w-xl">Landed at Lynden Pindling (NAS)? Book a RideUp from the arrivals area, see your fare before you ride, pay by card and follow your driver on the map.</p>
       <div class="mt-6 flex flex-wrap gap-3">
         <button @click="router.push('/book')" class="px-6 py-4 rounded-2xl bg-[#2b8659] text-white font-bold text-[16px] shadow-[0_4px_16px_rgba(43,134,89,0.3)]">Book from the airport</button>
-        <button @click="router.push('/book')" class="px-6 py-4 rounded-2xl border-2 border-[var(--color-border)] font-semibold text-[16px]">Schedule a pickup</button>
+        <button v-if="SCHEDULING_ENABLED" @click="router.push('/book')" class="px-6 py-4 rounded-2xl border-2 border-[var(--color-border)] font-semibold text-[16px]">Schedule a pickup</button>
       </div>
     </header>
 
