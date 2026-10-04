@@ -26,7 +26,7 @@ onMounted(async () => {
 
   if (DEMO_MODE) {
     fareAmount.value = '$12.50'
-    pickup.value = 'Bahamar Resort'
+    pickup.value = 'Baha Mar'
     dropoff.value = 'Downtown Nassau'
     verified.value = true
     loading.value = false

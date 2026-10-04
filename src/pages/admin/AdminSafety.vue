@@ -27,7 +27,7 @@
         <p class="text-sm text-[var(--color-text-primary)] whitespace-pre-wrap mb-3">{{ r.description || 'No description provided.' }}</p>
         <dl class="text-xs text-[var(--color-text-secondary)] mb-3 grid gap-1">
           <div>
-            <dt class="inline font-semibold text-[var(--color-text-primary)]">Reported by:</dt>
+            <dt class="inline font-semibold text-[var(--color-text-primary)]">Reported by:</dt>{{ ' ' }}
             <dd class="inline">
               <template v-if="r.reporter">{{ r.reporter.name || 'Unnamed' }} ({{ r.reporter.role }})<template v-if="r.reporter.phone"> · <a :href="`tel:${r.reporter.phone}`" class="text-[var(--color-brand)] font-semibold">{{ r.reporter.phone }}</a></template><template v-if="r.reporter.email"> · {{ r.reporter.email }}</template></template>
               <code v-else>{{ r.reporter_id || 'unknown' }}</code>

@@ -75,7 +75,7 @@ function goBack() {
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Contact</h2>
-        <p>Questions about these terms? Contact us at <a href="tel:+12424529911" class="text-[#2b8659] font-semibold">(242) 452-9911</a> or <a href="mailto:support@rideupnassau.com" class="text-[#2b8659] font-semibold">support@rideupnassau.com</a>.</p>
+        <p>Questions about these terms? Contact us at <a href="tel:+12424529911" class="text-[var(--color-brand)] font-semibold">(242) 452-9911</a> or <a href="mailto:support@rideupnassau.com" class="text-[var(--color-brand)] font-semibold">support@rideupnassau.com</a>.</p>
       </section>
     </div>
   </div>

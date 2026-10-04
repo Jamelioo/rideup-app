@@ -7,12 +7,12 @@ const router = useRouter()
 const faqs = ref([
   {
     question: 'How do I request a ride?',
-    answer: 'Tap "Where to?" on the home screen, enter your destination, and confirm your pickup location. You\'ll see available drivers nearby. Tap "Request Ride" to confirm — a driver will be matched with you within moments.',
+    answer: 'Enter your pickup and destination. You\'ll see the price of each ride option and how soon a car can come, then tap the green button to book. You\'ll see your driver, car and plate as soon as they accept.',
     open: false,
   },
   {
     question: 'How much does a ride cost?',
-    answer: 'Pricing is based on distance and estimated travel time. Before you confirm your ride, you\'ll see the fare estimate on screen so there are no surprises. The final fare may adjust slightly if the route changes during the trip.',
+    answer: 'The fare is worked out from distance and expected travel time, plus a $1.00 booking fee ($3.00 more for airport pickups). You see the exact price before you book, and that\'s what you pay, even if the trip takes longer. When lots of people are booking at once, fares can be a little higher; the app says so before you book.',
     open: false,
   },
   {
@@ -22,7 +22,7 @@ const faqs = ref([
   },
   {
     question: 'Is RideUp safe?',
-    answer: 'Every driver applies and is approved by RideUp before they can accept rides. You can see your driver\'s name, vehicle and plate once they accept, follow your trip live on the map, and share it with trusted contacts. In an emergency, call the local emergency number first.',
+    answer: 'Every driver applies and is approved by RideUp before they can accept rides. You can see your driver\'s name, vehicle and plate once they accept, follow your trip live on the map, and share it with trusted contacts. In an emergency, call 919 first.',
     open: false,
   },
   {
@@ -32,7 +32,7 @@ const faqs = ref([
   },
   {
     question: 'How do I contact my driver?',
-    answer: 'After you\'re matched with a driver, a call button will appear on the ride screen. Tap it to call your driver directly — useful for coordinating the exact pickup spot.',
+    answer: 'Once a driver accepts, use the Message button on your ride screen to chat with them, or call them from there. It\'s handy for agreeing the exact pickup spot.',
     open: false,
   },
 ])
@@ -91,7 +91,7 @@ function close() {
           </div>
           <div>
             <div class="text-[15px] font-semibold text-red-700">Emergency? Call us now</div>
-            <div class="text-[13px] text-red-600/70 mt-0.5">(242) 452-9911</div>
+            <div class="text-[13px] text-red-700 mt-0.5">(242) 452-9911</div>
           </div>
         </a>
       </div>

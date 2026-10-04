@@ -94,7 +94,7 @@ const updatedText = computed(() => updated.value ? new Date(updated.value).toLoc
         <HarborBackdrop v-else show-route />
       </div>
 
-      <main class="flex-1 px-5 py-5 max-w-lg w-full mx-auto">
+      <div class="flex-1 px-5 py-5 max-w-lg w-full mx-auto">
         <h1 class="text-[22px] font-bold leading-tight" aria-live="polite">{{ headline }}</h1>
         <p v-if="eta" class="text-[14px] text-[var(--color-text-secondary)] mt-1">About {{ eta }} min to the destination</p>
         <p v-if="updatedText" class="text-[12px] text-[var(--color-text-muted)] mt-1">Updated {{ updatedText }} · refreshes automatically</p>
@@ -120,7 +120,7 @@ const updatedText = computed(() => updated.value ? new Date(updated.value).toLoc
           If you believe {{ name }} is in danger, call <a :href="`tel:${EMERGENCY_NUMBER}`" class="font-bold text-[var(--color-brand)]">{{ EMERGENCY_NUMBER }}</a> right away.
           This link stops working an hour after the trip ends.
         </div>
-      </main>
+      </div>
     </template>
   </div>
 </template>

@@ -252,12 +252,12 @@ function goBack() {
               <div class="grid grid-cols-2 gap-2">
                 <label class="block">
                   <span class="sr-only">Vehicle make</span>
-                  <input v-model="form.vehicleMake" type="text" placeholder="Make (e.g. Toyota)"
+                  <input v-model="form.vehicleMake" type="text" placeholder="Make"
                          class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all placeholder:text-[var(--color-text-muted)]" />
                 </label>
                 <label class="block">
                   <span class="sr-only">Vehicle model</span>
-                  <input v-model="form.vehicleModel" type="text" placeholder="Model (e.g. Camry)"
+                  <input v-model="form.vehicleModel" type="text" placeholder="Model"
                          class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all placeholder:text-[var(--color-text-muted)]" />
                 </label>
               </div>

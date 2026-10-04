@@ -5,7 +5,7 @@
 
     <!-- Search + filter -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-      <div class="flex gap-1 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] p-1">
+      <div class="flex flex-wrap gap-1 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] p-1">
         <button
           v-for="tab in filterTabs"
           :key="tab"
@@ -83,10 +83,6 @@
       </div>
     </div>
 
-    <div v-if="users.length === 0" class="px-4 py-12 text-center text-[var(--color-text-muted)]">
-      <p class="text-lg font-medium mb-1">No users yet</p>
-      <p class="text-sm">Users will appear here when riders sign up.</p>
-    </div>
   </div>
 </template>
 

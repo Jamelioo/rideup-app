@@ -40,7 +40,7 @@ const requirements = [
 // Trip time is assumed at 3 minutes per mile; real trips vary with traffic.
 const routeExamples = [
   { route: 'Cable Beach → Downtown', miles: 4.2 },
-  { route: 'LPIA Airport → Bahamar', miles: 7.8 },
+  { route: 'LPIA Airport → Baha Mar', miles: 7.8 },
   { route: 'Paradise Island → Bay St', miles: 5.1 },
 ].map((r) => {
   const fare = calculateFare(r.miles, r.miles * 3, 'standard')
@@ -116,7 +116,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             </button>
-            <div class="flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-white/40">
+            <div class="flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-white/70">
               <span>Simple online application</span>
               <span class="text-white/15">|</span>
               <span>Use your own car</span>
@@ -139,7 +139,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
                       </div>
                     </div>
                     <div class="flex items-center justify-between">
-                      <div class="text-[14px] font-bold font-serif">Ride<span class="text-[var(--color-brand)]">Up</span> <span class="text-[11px] font-normal text-white/50 ml-0.5">Driver</span></div>
+                      <div class="text-[14px] font-bold font-serif">Ride<span class="text-[var(--color-brand)]">Up</span> <span class="text-[11px] font-normal text-white/70 ml-0.5">Driver</span></div>
                       <div class="flex items-center gap-1 bg-[#2b8659]/20 px-2 py-0.5 rounded-full">
                         <div class="w-1.5 h-1.5 rounded-full bg-[#2b8659]"></div>
                         <span class="text-[11px] text-[var(--color-brand)] font-semibold">Online</span>
@@ -189,7 +189,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
                   </div>
                 </div>
               </div>
-              <p class="mt-4 text-center text-[11px] text-white/40">Illustrative screen</p>
+              <p class="mt-4 text-center text-[11px] text-white/70">Illustrative screen</p>
               <!-- Glow -->
               <div class="absolute -inset-8 -z-10 rounded-full opacity-30" style="background: radial-gradient(circle, rgba(43,134,89,0.25), transparent 70%);"></div>
             </div>
@@ -200,19 +200,19 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
         <div class="mt-10 pt-8 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
           <div>
             <div class="text-[22px] font-semibold text-white">80%</div>
-            <div class="text-white/50 text-[12px]">Driver payout</div>
+            <div class="text-white/70 text-[12px]">Driver payout</div>
           </div>
           <div>
             <div class="text-[22px] font-semibold text-white">Free</div>
-            <div class="text-white/50 text-[12px]">To apply</div>
+            <div class="text-white/70 text-[12px]">To apply</div>
           </div>
           <div>
             <div class="text-[22px] font-semibold text-white">Your</div>
-            <div class="text-white/50 text-[12px]">Own hours</div>
+            <div class="text-white/70 text-[12px]">Own hours</div>
           </div>
           <div>
             <div class="text-[22px] font-semibold text-white">Phone</div>
-            <div class="text-white/50 text-[12px]">Support line</div>
+            <div class="text-white/70 text-[12px]">Support line</div>
           </div>
         </div>
       </div>
@@ -377,7 +377,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
           <div class="bg-[#2b8659] rounded-2xl p-6 text-white shadow-lg shadow-[#2b8659]/15">
             <div class="text-white/70 text-[13px] font-medium mb-1">You keep</div>
             <div class="text-[30px] font-semibold">80%</div>
-            <div class="text-[12px] text-white/50 mt-1">of every fare</div>
+            <div class="text-[12px] text-white/70 mt-1">of every fare</div>
           </div>
         </div>
         <p class="text-[12px] text-[var(--color-text-muted)] mt-4">Illustration only, not a guarantee: the weekly figures multiply the average of the example routes above by the number of trips. Actual earnings depend on when you drive, demand and trip length.</p>
@@ -432,7 +432,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
                 </div>
                 <div>
                   <div class="text-white text-[15px] font-semibold mb-1">Phone support</div>
-                  <div class="text-white/45 text-[14px]">Call <a href="tel:+12424529911" class="text-[var(--color-brand)] hover:underline">(242) 452-9911</a> for help with your account or a ride</div>
+                  <div class="text-white/70 text-[14px]">Call <a href="tel:+12424529911" class="text-[var(--color-brand)] hover:underline">(242) 452-9911</a> for help with your account or a ride</div>
                 </div>
               </div>
                             <div class="flex items-start gap-4">
@@ -443,7 +443,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
                 </div>
                 <div>
                   <div class="text-white text-[15px] font-semibold mb-1">Riders pay by card</div>
-                  <div class="text-white/45 text-[14px]">Every rider has a payment card on file before they can request a ride</div>
+                  <div class="text-white/70 text-[14px]">Every rider has a payment card on file before they can request a ride</div>
                 </div>
               </div>
             </div>
@@ -493,17 +493,17 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
       <div class="max-w-6xl mx-auto px-6 py-14 grid sm:grid-cols-4 gap-8">
         <div>
           <div class="text-lg font-semibold mb-3">Ride<span class="text-[var(--color-brand)]">Up</span></div>
-          <p class="text-white/40 text-[13px] leading-relaxed">Nassau's on-demand ride service across New Providence.</p>
+          <p class="text-white/70 text-[13px] leading-relaxed">Nassau's on-demand ride service across New Providence.</p>
         </div>
         <div>
-          <div class="text-[12px] font-bold text-white/30 uppercase tracking-wider mb-3">For riders</div>
-          <div class="flex flex-col gap-2 text-[14px] text-white/50">
+          <div class="text-[12px] font-bold text-white/70 uppercase tracking-wider mb-3">For riders</div>
+          <div class="flex flex-col gap-2 text-[14px] text-white/70">
             <router-link to="/welcome" class="hover:text-white transition-colors">Book a ride</router-link>
           </div>
         </div>
         <div>
-          <div class="text-[12px] font-bold text-white/30 uppercase tracking-wider mb-3">Support</div>
-          <div class="flex flex-col gap-2 text-[14px] text-white/50">
+          <div class="text-[12px] font-bold text-white/70 uppercase tracking-wider mb-3">Support</div>
+          <div class="flex flex-col gap-2 text-[14px] text-white/70">
             <a href="tel:+12424529911" class="hover:text-white transition-colors">(242) 452-9911</a>
             <a :href="whatsappLink" target="_blank" class="hover:text-white transition-colors">WhatsApp us</a>
             <router-link to="/privacy" class="hover:text-white transition-colors">Privacy Policy</router-link>
@@ -511,14 +511,14 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
           </div>
         </div>
         <div>
-          <div class="text-[12px] font-bold text-white/30 uppercase tracking-wider mb-3">Contact</div>
-          <div class="flex flex-col gap-2 text-[14px] text-white/50">
+          <div class="text-[12px] font-bold text-white/70 uppercase tracking-wider mb-3">Contact</div>
+          <div class="flex flex-col gap-2 text-[14px] text-white/70">
             <a href="tel:+12424529911" class="hover:text-white transition-colors">(242) 452-9911</a>
             <span>Nassau, Bahamas</span>
           </div>
         </div>
       </div>
-      <div class="border-t border-white/10 px-6 py-5 text-center text-white/25 text-[12px]">
+      <div class="border-t border-white/10 px-6 py-5 text-center text-white/70 text-[12px]">
         &copy; {{ new Date().getFullYear() }} RideUp Nassau. All rights reserved.
       </div>
     </footer>

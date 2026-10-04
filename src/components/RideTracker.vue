@@ -46,7 +46,7 @@ const headline = computed(() => {
 const subline = computed(() => {
   if (props.rideStatus === 'on_trip') return props.etaMinutes != null ? 'to your destination' : 'Enjoy your ride'
   if (props.rideStatus === 'driver_arrived') return 'Check the plate before you get in'
-  return 'until pickup · check the plate before you get in'
+  return props.etaMinutes > 1 ? 'until pickup · check the plate before you get in' : 'Check the plate before you get in'
 })
 
 // Free waiting time once the driver arrives (then the driver may cancel as a no-show).

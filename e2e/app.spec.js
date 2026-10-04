@@ -273,5 +273,5 @@ test('phone mockup hidden on mobile', async ({ page }) => {
 test('phone mockup visible on desktop', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/')
-  await expect(page.getByText('Confirm ride')).toBeVisible()
+  await expect(page.getByText('Choose RideUp Go', { exact: true })).toBeVisible()
 })

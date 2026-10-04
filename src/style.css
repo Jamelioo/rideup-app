@@ -9,10 +9,10 @@
   --color-surface-secondary: #f5f5f5;
   --color-surface-elevated: #ffffff;
   --color-text-primary: #191f1c;
-  --color-text-secondary: rgba(25, 31, 28, 0.72);
-  --color-text-muted: rgba(25, 31, 28, 0.6);
+  --color-text-secondary: rgba(25, 31, 28, 0.8);
+  --color-text-muted: rgba(25, 31, 28, 0.68);
   --color-border: rgba(25, 31, 28, 0.08);
-  --color-brand: #2b8659;
+  --color-brand: #23744c;
   --color-brand-light: #f0fdf4;
   --color-overlay: rgba(0, 0, 0, 0.4);
   --color-danger: #ef4444;
@@ -26,6 +26,13 @@ body {
   color: var(--color-text-primary);
   transition: background-color 0.3s, color 0.3s;
 }
+
+/* Pinch-zoom is allowed, so iPhones would zoom into any field under 16px; keep fields at 16px on phones. */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]), select, textarea { font-size: 16px !important; }
+}
+/* Codes are typed in capitals, but the hint text reads normally. */
+input.uppercase::placeholder { text-transform: none; letter-spacing: normal; }
 
 /* Nothing may ever push the page sideways on a phone. */
 html, body { overflow-x: clip; }
@@ -53,7 +60,7 @@ html.dark {
   --color-surface-elevated: #22252d;
   --color-text-primary: #e8e9eb;
   --color-text-secondary: rgba(232, 233, 235, 0.75);
-  --color-text-muted: rgba(232, 233, 235, 0.58);
+  --color-text-muted: rgba(232, 233, 235, 0.66);
   --color-border: rgba(232, 233, 235, 0.1);
   --color-brand: #34a065;
   --color-brand-light: rgba(43, 134, 89, 0.15);

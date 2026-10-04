@@ -14,7 +14,7 @@ const rides = ref([])
 const loading = ref(true)
 
 const demoRides = [
-  { id: 1, pickup_address: 'Bahamar Resort', fare_cents: 1298, status: 'completed', created_at: '2024-10-20T14:00:00Z' },
+  { id: 1, pickup_address: 'Baha Mar', fare_cents: 1298, status: 'completed', created_at: '2024-10-20T14:00:00Z' },
   { id: 2, pickup_address: 'Atlantis Paradise Island', fare_cents: 2781, status: 'completed', created_at: '2024-10-14T11:30:00Z' },
   { id: 3, pickup_address: 'Downtown Nassau', fare_cents: 991, status: 'completed', created_at: '2024-09-28T09:15:00Z' },
   { id: 4, pickup_address: 'Cable Beach', fare_cents: 1356, status: 'completed', created_at: '2024-09-12T16:45:00Z' },
