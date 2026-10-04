@@ -74,13 +74,13 @@
       </header>
 
       <!-- Page content -->
-      <main class="flex-1 overflow-y-auto p-4 lg:p-8">
+      <div tabindex="0" class="flex-1 overflow-y-auto p-4 lg:p-8 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2b8659]/40">
         <div v-if="jobWarning" role="alert" class="mb-4 rounded-xl border border-red-300 bg-red-50 text-red-800 px-4 py-3 text-sm">
           <strong>Background job {{ jobWarning }}.</strong> Scheduled rides, missed card charges, stuck-payment clean-up and trip check-ins
           are paused until it runs again. It must call <code>/api/dispatch-scheduled</code> every minute (see README › Background job).
         </div>
         <router-view />
-      </main>
+      </div>
     </div>
   </div>
 </template>

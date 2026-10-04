@@ -116,8 +116,9 @@ async function handleSave() {
     <div class="px-5 flex-1 max-w-lg mx-auto w-full">
       <!-- First Name -->
       <div class="mb-5">
-        <label class="block text-xs text-[var(--color-text-muted)] mb-1">First name</label>
+        <label for="ep-first" class="block text-xs text-[var(--color-text-muted)] mb-1">First name</label>
         <input
+          id="ep-first"
           v-model="firstName"
           type="text"
           autocomplete="given-name"
@@ -127,8 +128,9 @@ async function handleSave() {
 
       <!-- Last Name -->
       <div class="mb-5">
-        <label class="block text-xs text-[var(--color-text-muted)] mb-1">Last name</label>
+        <label for="ep-last" class="block text-xs text-[var(--color-text-muted)] mb-1">Last name</label>
         <input
+          id="ep-last"
           v-model="lastName"
           type="text"
           autocomplete="family-name"
@@ -138,8 +140,9 @@ async function handleSave() {
 
       <!-- Email (read-only) -->
       <div class="mb-5">
-        <label class="block text-xs text-[var(--color-text-muted)] mb-1">Email</label>
+        <label for="ep-email" class="block text-xs text-[var(--color-text-muted)] mb-1">Email</label>
         <input
+          id="ep-email"
           v-model="email"
           type="email"
           readonly
@@ -149,8 +152,9 @@ async function handleSave() {
 
       <!-- Phone Number -->
       <div class="mb-2">
-        <label class="block text-xs text-[var(--color-text-muted)] mb-1">Phone number</label>
+        <label for="ep-phone" class="block text-xs text-[var(--color-text-muted)] mb-1">Phone number</label>
         <input
+          id="ep-phone"
           v-model="phoneNumber"
           type="tel"
           autocomplete="tel"

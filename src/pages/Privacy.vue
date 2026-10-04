@@ -56,7 +56,7 @@ function goBack() {
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Your Rights</h2>
-        <p>You can ask to access, correct or delete your personal data at any time by contacting us at <a href="tel:+12424529911" class="text-[#2b8659] font-semibold">(242) 452-9911</a> or <a href="mailto:support@rideupnassau.com" class="text-[#2b8659] font-semibold">support@rideupnassau.com</a>.</p>
+        <p>You can ask to access, correct or delete your personal data at any time by contacting us at <a href="tel:+12424529911" class="text-[var(--color-brand)] font-semibold">(242) 452-9911</a> or <a href="mailto:support@rideupnassau.com" class="text-[var(--color-brand)] font-semibold">support@rideupnassau.com</a>.</p>
       </section>
 
       <section>
@@ -71,7 +71,7 @@ function goBack() {
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Contact Us</h2>
-        <p>Questions about this policy? Contact us at <a href="tel:+12424529911" class="text-[#2b8659] font-semibold">(242) 452-9911</a> or <a href="mailto:support@rideupnassau.com" class="text-[#2b8659] font-semibold">support@rideupnassau.com</a>.</p>
+        <p>Questions about this policy? Contact us at <a href="tel:+12424529911" class="text-[var(--color-brand)] font-semibold">(242) 452-9911</a> or <a href="mailto:support@rideupnassau.com" class="text-[var(--color-brand)] font-semibold">support@rideupnassau.com</a>.</p>
       </section>
     </div>
   </div>

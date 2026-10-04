@@ -4,7 +4,7 @@
 
     <!-- Search + filter tabs -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-      <div class="flex gap-1 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] p-1">
+      <div class="flex flex-wrap gap-1 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] p-1">
         <button
           v-for="tab in statusTabs"
           :key="tab"
@@ -75,7 +75,7 @@
       </div>
 
       <!-- Pagination -->
-      <div class="flex items-center justify-between px-4 py-3 border-t border-[var(--color-border)] bg-[var(--color-surface-secondary)]">
+      <div v-if="filteredRides.length" class="flex items-center justify-between px-4 py-3 border-t border-[var(--color-border)] bg-[var(--color-surface-secondary)]">
         <span class="text-xs text-[var(--color-text-muted)]">
           Showing {{ ((currentPage - 1) * perPage) + 1 }}–{{ Math.min(currentPage * perPage, filteredRides.length) }} of {{ filteredRides.length }}
         </span>

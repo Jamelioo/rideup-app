@@ -52,13 +52,13 @@ function goToDriverApply() {
 
     <!-- HERO -->
     <section class="bg-[var(--color-surface-secondary)]">
-      <div class="max-w-6xl mx-auto px-5 pt-10 pb-0 md:pt-14 md:grid md:grid-cols-2 md:gap-8 md:items-end">
+      <div class="max-w-6xl mx-auto px-5 pt-10 pb-0 md:pt-14 md:pb-14 md:grid md:grid-cols-2 md:gap-8 md:items-center">
         <div class="pb-10 md:pb-16">
           <h1 class="text-[35px] sm:text-[48px] lg:text-[60px] leading-[1.0] font-bold tracking-tight mb-5">
             Get anywhere in Nassau.
           </h1>
           <p class="text-[var(--color-text-muted)] text-[16px] leading-[1.5] max-w-md mb-8">
-            Book a ride in a few taps. See the exact fare upfront — no surge, no surprises.
+            Book a ride in a few taps. See your exact fare before you book, and that’s the price you pay.
           </p>
 
           <!-- Booking widget -->
@@ -81,9 +81,9 @@ function goToDriverApply() {
 
         <!-- Phone mockup — desktop only -->
         <div class="hidden md:flex justify-end">
-          <div class="w-[240px] sm:w-[270px] translate-y-4">
-            <div class="bg-[#2a2f2c] rounded-t-[34px] pt-2.5 px-2.5 shadow-2xl shadow-[#2b8659]/15 ring-1 ring-white/10">
-              <div class="bg-[var(--color-surface)] rounded-t-[24px] overflow-hidden">
+          <div class="w-[240px] sm:w-[270px]">
+            <div class="bg-[#2a2f2c] rounded-[34px] p-2.5 shadow-2xl shadow-[#2b8659]/15 ring-1 ring-white/10">
+              <div class="bg-[var(--color-surface)] rounded-[24px] overflow-hidden">
                 <div class="bg-[#2a2f2c] text-white px-4 pt-2.5 pb-3">
                   <div class="flex justify-between text-[11px] mb-2 opacity-60">
                     <span>9:41</span>
@@ -118,19 +118,19 @@ function goToDriverApply() {
                         <svg class="w-4 h-3 text-[var(--color-text-primary)]" viewBox="0 0 24 16" fill="currentColor"><path d="M3 11l1.5-5h13l1.5 5H3zm2.5 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm13 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg>
                         <span class="text-[11px] font-semibold">RideUp Go</span>
                       </div>
-                      <span class="text-[11px] font-bold">$16.00</span>
+                      <span class="text-[11px] font-bold">$17.18</span>
                     </div>
                     <div class="flex items-center justify-between bg-[var(--color-surface-secondary)] rounded-lg px-2.5 py-1.5">
                       <div class="flex items-center gap-1.5">
                         <svg class="w-4 h-3 text-[var(--color-text-muted)]" viewBox="0 0 24 16" fill="currentColor"><path d="M3 11l1.5-5h13l1.5 5H3zm2.5 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm13 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg>
                         <span class="text-[11px] font-medium text-[var(--color-text-muted)]">RideUp XL</span>
                       </div>
-                      <span class="text-[11px] font-bold text-[var(--color-text-muted)]">$23.70</span>
+                      <span class="text-[11px] font-bold text-[var(--color-text-muted)]">$25.39</span>
                     </div>
                   </div>
                 </div>
                 <div class="px-3.5 pb-3.5">
-                  <div class="bg-[#2b8659] text-white text-[11px] font-bold text-center py-2 rounded-xl">Confirm ride</div>
+                  <div class="bg-[#2b8659] text-white text-[11px] font-bold text-center py-2 rounded-xl">Choose RideUp Go</div>
                 </div>
               </div>
             </div>
@@ -151,8 +151,8 @@ function goToDriverApply() {
             </svg>
           </div>
           <div>
-            <h3 class="text-[20px] font-bold mb-1.5 leading-[1.3]">Know your fare before you ride</h3>
-            <p class="text-[var(--color-text-muted)] text-[16px] leading-[1.5]">The price you see is the price you pay. Fares are worked out from distance and time and shown before you book — no surge pricing, no hidden fees.</p>
+            <h2 class="text-[20px] font-bold mb-1.5 leading-[1.3]">Know your fare before you ride</h2>
+            <p class="text-[var(--color-text-muted)] text-[16px] leading-[1.5]">The price you see is the price you pay. Fares are worked out from distance and time and shown before you book, with no hidden fees, and they don’t change during the trip.</p>
           </div>
         </div>
 
@@ -164,7 +164,7 @@ function goToDriverApply() {
             </svg>
           </div>
           <div>
-            <h3 class="text-[20px] font-bold mb-1.5 leading-[1.3]">Every driver approved by RideUp</h3>
+            <h2 class="text-[20px] font-bold mb-1.5 leading-[1.3]">Every driver approved by RideUp</h2>
             <p class="text-[var(--color-text-muted)] text-[16px] leading-[1.5]">Drivers apply with their license and vehicle details and are reviewed by our team before they can accept rides. Track your ride live and share your trip with family — all built in.</p>
           </div>
         </div>
@@ -178,7 +178,7 @@ function goToDriverApply() {
             </svg>
           </div>
           <div>
-            <h3 class="text-[20px] font-bold mb-1.5 leading-[1.3]">Anywhere across Nassau</h3>
+            <h2 class="text-[20px] font-bold mb-1.5 leading-[1.3]">Anywhere across Nassau</h2>
             <p class="text-[var(--color-text-muted)] text-[16px] leading-[1.5]">Request a ride to anywhere on New Providence — LPIA Airport, Cable Beach, Paradise Island, Downtown.</p>
           </div>
         </div>
@@ -193,9 +193,9 @@ function goToDriverApply() {
           <img src="/images/driver-photo.jpg" alt="Driver behind the wheel" class="w-full h-[220px] md:h-[300px] object-cover rounded-2xl" loading="lazy" />
         </div>
         <div>
-          <div class="inline-block bg-[#2b8659]/20 text-[var(--color-brand)] text-[12px] font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wide">Drive with us</div>
+          <div class="inline-block bg-[#2b8659]/20 text-[#6fdca6] text-[12px] font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wide">Drive with us</div>
           <h2 class="text-[28px] sm:text-[35px] font-bold leading-[1.14] text-white mb-3">Keep 80% of every fare</h2>
-          <p class="text-white/50 text-[16px] leading-[1.5] mb-5">Drive with RideUp on your own schedule. No shifts, no minimums. Sign up today and start earning this week.</p>
+          <p class="text-white/70 text-[16px] leading-[1.5] mb-5">Drive with RideUp on your own schedule. No shifts, no minimums. Sign up today and start earning this week.</p>
           <div class="flex flex-wrap gap-x-5 gap-y-2 mb-6 text-[14px] text-white/60">
             <span class="flex items-center gap-1.5">
               <svg class="w-4 h-4 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
@@ -232,12 +232,12 @@ function goToDriverApply() {
         <div class="text-[20px] font-bold mb-5">Ride<span class="text-[var(--color-brand)]">Up</span></div>
 
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-1 mb-7">
-          <router-link to="/" class="text-[14px] text-white/50 hover:text-white transition-colors py-2 min-h-[44px] flex items-center">Ride</router-link>
-          <router-link to="/driver/apply" class="text-[14px] text-white/50 hover:text-white transition-colors py-2 min-h-[44px] flex items-center">Drive</router-link>
-          <router-link to="/support" class="text-[14px] text-white/50 hover:text-white transition-colors py-2 min-h-[44px] flex items-center">Support</router-link>
-          <router-link to="/about" class="text-[14px] text-white/50 hover:text-white transition-colors py-2 min-h-[44px] flex items-center">About</router-link>
-          <router-link to="/privacy" class="text-[14px] text-white/50 hover:text-white transition-colors py-2 min-h-[44px] flex items-center">Privacy</router-link>
-          <router-link to="/terms" class="text-[14px] text-white/50 hover:text-white transition-colors py-2 min-h-[44px] flex items-center">Terms</router-link>
+          <router-link to="/" class="text-[14px] text-white/70 hover:text-white transition-colors py-2 min-h-[44px] flex items-center">Ride</router-link>
+          <router-link to="/driver/apply" class="text-[14px] text-white/70 hover:text-white transition-colors py-2 min-h-[44px] flex items-center">Drive</router-link>
+          <router-link to="/support" class="text-[14px] text-white/70 hover:text-white transition-colors py-2 min-h-[44px] flex items-center">Support</router-link>
+          <router-link to="/about" class="text-[14px] text-white/70 hover:text-white transition-colors py-2 min-h-[44px] flex items-center">About</router-link>
+          <router-link to="/privacy" class="text-[14px] text-white/70 hover:text-white transition-colors py-2 min-h-[44px] flex items-center">Privacy</router-link>
+          <router-link to="/terms" class="text-[14px] text-white/70 hover:text-white transition-colors py-2 min-h-[44px] flex items-center">Terms</router-link>
         </div>
 
         <div class="flex gap-3 mb-7">
@@ -254,7 +254,7 @@ function goToDriverApply() {
         </div>
 
         <div class="h-px bg-[var(--color-surface)]/[0.08] mb-4"></div>
-        <div class="text-[12px] text-white/25">&copy; 2026 RideUp Nassau. All rights reserved.</div>
+        <div class="text-[12px] text-white/70">&copy; 2026 RideUp Nassau. All rights reserved.</div>
       </div>
     </footer>
 

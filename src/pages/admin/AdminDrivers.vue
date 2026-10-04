@@ -3,7 +3,7 @@
     <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6">Driver Management</h1>
 
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-      <div class="flex gap-1 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] p-1 overflow-x-auto" role="tablist">
+      <div class="flex flex-wrap gap-1 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] p-1" role="tablist">
         <button v-for="tab in filterTabs" :key="tab" @click="activeFilter = tab" role="tab" :aria-selected="activeFilter === tab"
                 :class="['px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap',
                          activeFilter === tab ? 'bg-[#2b8659] text-white' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)]']">

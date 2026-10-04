@@ -42,7 +42,7 @@
       <!-- Recent rides table -->
       <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5">
         <h2 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Recent Rides</h2>
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto" tabindex="0" aria-label="Today’s rides">
           <table class="w-full text-sm">
             <thead>
               <tr class="text-left text-[var(--color-text-muted)] text-xs uppercase tracking-wider border-b border-[var(--color-border)]">

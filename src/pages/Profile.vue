@@ -258,7 +258,7 @@ async function handleLogout() {
 
     <!-- Log Out -->
     <div class="px-5 mt-4">
-      <button @click="handleLogout" class="text-red-500 text-base font-medium">Log out</button>
+      <button @click="handleLogout" class="text-red-600 text-base font-medium">Log out</button>
     </div>
 
     <!-- Delete Account -->
