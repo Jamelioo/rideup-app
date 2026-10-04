@@ -3,6 +3,7 @@ import { computed, watch, ref, nextTick, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
 import { supabase, supabaseConfigured } from '../lib/supabase'
+import { SCHEDULING_ENABLED } from '../lib/features'
 
 const router = useRouter()
 const { user, signOut } = useAuth()
@@ -67,7 +68,7 @@ const menuItems = computed(() => {
       { label: 'Payments', route: '/payments', icon: 'card', requiresAuth: true },
       { label: 'Promotions', route: '/promotions', icon: 'tag', requiresAuth: true },
       { label: 'My Rides', route: '/my-rides', icon: 'history', requiresAuth: true },
-      { label: 'Scheduled Rides', route: '/scheduled-rides', icon: 'calendar', requiresAuth: true },
+      ...(SCHEDULING_ENABLED ? [{ label: 'Scheduled Rides', route: '/scheduled-rides', icon: 'calendar', requiresAuth: true }] : []),
     )
 
     if (isApprovedDriver.value) {

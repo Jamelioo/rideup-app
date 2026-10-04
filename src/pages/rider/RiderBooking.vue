@@ -21,6 +21,7 @@ import GuestInfoSheet from '../../components/GuestInfoSheet.vue'
 import CardCollectionSheet from '../../components/CardCollectionSheet.vue'
 import WhoIsRiding from '../../components/WhoIsRiding.vue'
 import { trackRideBooked } from '../../lib/adTracking'
+import { SCHEDULING_ENABLED } from '../../lib/features'
 import { useAvailability } from '../../lib/useAvailability'
 import { availabilityFor, canBook, unavailableNotice, optionStatus } from '../../lib/availability'
 
@@ -686,7 +687,7 @@ async function handleCardSubmit({ cardElement, stripe }) {
 }
 
 async function scheduleRide({ date, time, summary }) {
-  if (!routeReady.value) return
+  if (!SCHEDULING_ENABLED || !routeReady.value) return
   isScheduling.value = true
   showSchedulePicker.value = false
   const fare = fareEstimates.value[selectedVehicle.value]
@@ -919,7 +920,7 @@ async function scheduleRide({ date, time, summary }) {
                     class="flex-1 py-4 bg-[#2b8659] disabled:bg-[var(--color-surface-secondary)] disabled:text-[var(--color-text-muted)] text-white font-bold rounded-2xl text-[15px] transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:shadow-none">
               {{ isSubmitting ? 'Requesting…' : carsUnavailable ? 'No cars available' : `Choose ${VEHICLE_TYPES.find(v => v.id === selectedVehicle)?.name || 'ride'}` }}
             </button>
-            <button @click="showSchedulePicker = true" :disabled="!routeReady"
+            <button v-if="SCHEDULING_ENABLED" @click="showSchedulePicker = true" :disabled="!routeReady"
                     class="w-[52px] flex-shrink-0 flex items-center justify-center bg-[var(--color-surface-secondary)] disabled:bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] disabled:text-[var(--color-text-muted)] rounded-2xl transition-all active:scale-[0.97] border border-[var(--color-border)]"
                     title="Schedule for later">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -1094,7 +1095,7 @@ async function scheduleRide({ date, time, summary }) {
                     class="flex-1 py-4 bg-[#2b8659] disabled:bg-[var(--color-surface-secondary)] disabled:text-[var(--color-text-muted)] text-white font-bold rounded-2xl text-[15px] transition-all hover:bg-[#236e49] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:shadow-none">
               {{ isSubmitting ? 'Requesting…' : carsUnavailable ? 'No cars available' : `Choose ${VEHICLE_TYPES.find(v => v.id === selectedVehicle)?.name || 'ride'}` }}
             </button>
-            <button @click="showSchedulePicker = true" :disabled="!routeReady"
+            <button v-if="SCHEDULING_ENABLED" @click="showSchedulePicker = true" :disabled="!routeReady"
                     class="w-[52px] flex-shrink-0 flex items-center justify-center bg-[var(--color-surface-secondary)] disabled:bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] disabled:text-[var(--color-text-muted)] rounded-2xl transition-all hover:opacity-90 active:scale-[0.97] border border-[var(--color-border)]"
                     title="Schedule for later">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -1109,7 +1110,7 @@ async function scheduleRide({ date, time, summary }) {
 
     <!-- Schedule Ride Picker -->
     <GuestInfoSheet ref="guestSheetRef" :show="showGuestSheet" @submit="handleGuestSubmit" @close="showGuestSheet = false" />
-    <ScheduleRidePicker :show="showSchedulePicker" @close="showSchedulePicker = false" @confirm="scheduleRide" />
+    <ScheduleRidePicker v-if="SCHEDULING_ENABLED" :show="showSchedulePicker" @close="showSchedulePicker = false" @confirm="scheduleRide" />
     <CardCollectionSheet ref="cardSheetRef" :show="showCardSheet" @submit="handleCardSubmit" @close="showCardSheet = false" />
 
     <!-- Toast -->

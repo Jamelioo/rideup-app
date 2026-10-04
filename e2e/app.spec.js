@@ -174,13 +174,12 @@ test('booking shows how soon a car can come', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Choose RideUp Go' })).toBeEnabled()
 })
 
-test('booking is switched off when no car can come, but scheduling still works', async ({ page }) => {
+test('booking is switched off when no car can come', async ({ page }) => {
   await page.goto('/book?cars=none')
   await enterDemoTrip(page)
   await expect(page.getByText('No cars available right now').filter({ visible: true }).first()).toBeVisible()
   await expect(page.getByText('Unavailable').filter({ visible: true }).first()).toBeVisible()
   await expect(page.getByRole('button', { name: 'No cars available' })).toBeDisabled()
-  await expect(page.locator('button[title="Schedule for later"]:visible')).toBeEnabled()
 })
 
 test('booking explains when every driver is on a trip', async ({ page }) => {
