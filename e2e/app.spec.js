@@ -162,6 +162,34 @@ test('booking page loads', async ({ page }) => {
   await expect(page.locator('body')).not.toBeEmpty()
 })
 
+async function enterDemoTrip(page) {
+  await page.locator('input[placeholder="Pickup — try Cable Beach"]:visible').fill('Cable Beach, Nassau')
+  await page.locator('input[placeholder="Destination — try Airport"]:visible').fill('Downtown Nassau, Bay St')
+}
+
+test('booking shows how soon a car can come', async ({ page }) => {
+  await page.goto('/book')
+  await enterDemoTrip(page)
+  await expect(page.getByText('5 min away').filter({ visible: true }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Choose RideUp Go' })).toBeEnabled()
+})
+
+test('booking is switched off when no car can come, but scheduling still works', async ({ page }) => {
+  await page.goto('/book?cars=none')
+  await enterDemoTrip(page)
+  await expect(page.getByText('No cars available right now').filter({ visible: true }).first()).toBeVisible()
+  await expect(page.getByText('Unavailable').filter({ visible: true }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: 'No cars available' })).toBeDisabled()
+  await expect(page.locator('button[title="Schedule for later"]:visible')).toBeEnabled()
+})
+
+test('booking explains when every driver is on a trip', async ({ page }) => {
+  await page.goto('/book?cars=busy')
+  await enterDemoTrip(page)
+  await expect(page.getByText('All drivers are on trips right now').filter({ visible: true }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: 'No cars available' })).toBeDisabled()
+})
+
 // ─── Navigation ───
 
 test('Sign up link from landing navigates to /signup', async ({ page }) => {

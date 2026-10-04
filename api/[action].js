@@ -7,6 +7,7 @@ const routes = {
   'add-tip': () => import('./_routes/add-tip.js'),
   'admin-refund': () => import('./_routes/admin-refund.js'),
   'authorize-ride': () => import('./_routes/authorize-ride.js'),
+  'availability': () => import('./_routes/availability.js'),
   'cancel-ride': () => import('./_routes/cancel-ride.js'),
   'capture-payment': () => import('./_routes/capture-payment.js'),
   'create-setup-intent': () => import('./_routes/create-setup-intent.js'),

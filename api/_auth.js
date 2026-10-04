@@ -35,6 +35,21 @@ export async function requireUser(req, res) {
   return data.user
 }
 
+// The signed-in user when the request carries a valid session, otherwise null (never sends a response).
+// For endpoints that also answer logged-out visitors, with less detail.
+export async function optionalUser(req) {
+  if (!admin) return null
+  const header = req.headers.authorization || ''
+  const token = header.startsWith('Bearer ') ? header.slice(7) : ''
+  if (!token) return null
+  try {
+    const { data, error } = await admin.auth.getUser(token)
+    return error ? null : data?.user || null
+  } catch {
+    return null
+  }
+}
+
 export async function getDriverForUser(userId) {
   const { data } = await admin
     .from('drivers')
