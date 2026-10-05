@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { calculateFare, formatFare, AIRPORT, AIRPORT_FEE_CENTS } from '../lib/pricing'
+import { calculateFare, formatFare, AIRPORT, AIRPORT_FEE_CENTS, BOOKING_FEE_CENTS } from '../lib/pricing'
 import { getPendingPromoCode } from '../lib/rewards'
 import { SCHEDULING_ENABLED } from '../lib/features'
 
@@ -46,7 +46,7 @@ onUnmounted(() => document.querySelector('meta[name="description"]')?.setAttribu
 
     <section class="max-w-5xl mx-auto px-5 pb-10" aria-labelledby="fares-title">
       <h2 id="fares-title" class="text-[22px] font-bold mb-1">Typical fares from the airport</h2>
-      <p class="text-[13px] text-[var(--color-text-muted)] mb-4">RideUp Go, normal traffic, including the {{ formatFare(AIRPORT_FEE_CENTS) }} airport pickup fee and $1 booking fee. Your exact price is shown before you book and doesn’t change during the trip.</p>
+      <p class="text-[13px] text-[var(--color-text-muted)] mb-4">RideUp Go, normal traffic, including the {{ formatFare(AIRPORT_FEE_CENTS) }} airport pickup fee and {{ formatFare(BOOKING_FEE_CENTS) }} booking fee. Your exact price is shown before you book and doesn’t change during the trip.</p>
       <div class="rounded-2xl border border-[var(--color-border)] divide-y divide-[var(--color-border)]">
         <div v-for="f in fares" :key="f.name" class="flex items-center justify-between px-5 py-4">
           <div>

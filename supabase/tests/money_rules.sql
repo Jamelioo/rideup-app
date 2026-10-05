@@ -47,7 +47,7 @@ set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-00000000
 insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, distance_miles, duration_minutes)
 values ('70000000-0000-0000-0000-000000000001', :'ra', 25.04, -77.35, 25.08, -77.33, 'a', 'b', 4.4, 16);
 reset role; select pg_temp.as_server();
-select pg_temp.check(fare_cents = 1410 and driver_payout_cents = 1048 and booking_fee_cents = 100, 'Go 4.4 mi / 16 min = $14.10, driver $10.48')
+select pg_temp.check(fare_cents = 1560 and driver_payout_cents = 1048 and booking_fee_cents = 250, 'Go 4.4 mi / 16 min = $15.60 (incl. $2.50 booking fee), driver $10.48')
   from rides where id = '70000000-0000-0000-0000-000000000001';
 update rides set status = 'cancelled' where id = '70000000-0000-0000-0000-000000000001';
 
@@ -55,7 +55,7 @@ set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-00000000
 insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, distance_miles, duration_minutes, fare_cents)
 values ('70000000-0000-0000-0000-000000000002', :'ra', 25.0392, -77.4655, 25.08, -77.33, 'LPIA', 'b', 10, 25, 1);
 reset role; select pg_temp.as_server();
-select pg_temp.check(fare_cents = 2725 and airport_fee_cents = 300, 'LPIA pickup adds $3; the app can''t set its own fare')
+select pg_temp.check(fare_cents = 2875 and airport_fee_cents = 300, 'LPIA pickup adds $3; the app can''t set its own fare')
   from rides where id = '70000000-0000-0000-0000-000000000002';
 update rides set status = 'cancelled' where id = '70000000-0000-0000-0000-000000000002';
 
@@ -116,8 +116,8 @@ end $$;
 insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, distance_miles, duration_minutes, surge_multiplier)
 values ('70000000-0000-0000-0000-000000000005', :'ra', 25.04, -77.35, 25.08, -77.33, 'a', 'b', 4.4, 16, 1.5);
 reset role; select pg_temp.as_server();
-select pg_temp.check(fare_cents = 1803 and surge_multiplier = 1.30 and driver_payout_cents = 1362,
-  'busy fare $18.03 at the server''s 1.3× (not the 1.5× the app sent); driver keeps 80%')
+select pg_temp.check(fare_cents = 1953 and surge_multiplier = 1.30 and driver_payout_cents = 1362,
+  'busy fare $19.53 at the server''s 1.3× (not the 1.5× the app sent); driver keeps 80%')
   from rides where id = '70000000-0000-0000-0000-000000000005';
 update rides set status = 'cancelled' where status = 'requested' or id = '70000000-0000-0000-0000-000000000005';
 
@@ -126,7 +126,7 @@ set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-00000000
 insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, distance_miles, duration_minutes, stop_address, stop_lat, stop_lng)
 values ('70000000-0000-0000-0000-000000000006', :'ra', 25.04, -77.35, 25.04, -77.30, 'a', 'b', 1, 1, 'Stop', 25.08, -77.33);
 reset role; select pg_temp.as_server();
-select pg_temp.check(distance_miles = 6.38 and fare_cents = 1649, 'a stop is priced through the stop, plus 3 minutes')
+select pg_temp.check(distance_miles = 6.38 and fare_cents = 1799, 'a stop is priced through the stop, plus 3 minutes')
   from rides where id = '70000000-0000-0000-0000-000000000006';
 
 \echo '== Trip check-ins'
