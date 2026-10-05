@@ -8,8 +8,8 @@ export const RATES = {
   premium:  { base: 700, perMile: 320, perMinute: 40, minimum: 2000 },
 }
 
-// $1.00 per trip kept by RideUp (covers card processing and maps); drivers keep 80% of everything else.
-export const BOOKING_FEE_CENTS = 100
+// $2.50 per trip kept by RideUp (covers card processing and maps); drivers keep 80% of everything else.
+export const BOOKING_FEE_CENTS = 250
 // Never price a trip faster than 30 mph average (2 min per mile), whatever trip time the app sends.
 export const MIN_MINUTES_PER_MILE = 2
 

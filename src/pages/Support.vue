@@ -12,7 +12,7 @@ const faqs = ref([
   },
   {
     question: 'How much does a ride cost?',
-    answer: 'The fare is worked out from distance and expected travel time, plus a $1.00 booking fee ($3.00 more for airport pickups). You see the exact price before you book, and that\'s what you pay, even if the trip takes longer. When lots of people are booking at once, fares can be a little higher; the app says so before you book.',
+    answer: 'The fare is worked out from distance and expected travel time, plus a $2.50 booking fee ($3.00 more for airport pickups). You see the exact price before you book, and that\'s what you pay, even if the trip takes longer. When lots of people are booking at once, fares can be a little higher; the app says so before you book.',
     open: false,
   },
   {

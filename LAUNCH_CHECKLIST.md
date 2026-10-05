@@ -20,7 +20,7 @@ Work through this top to bottom before opening to the public. Tick each box only
 
 ## 2. Database and settings
 
-- [ ] Migrations `001` … `012` all run in the Supabase SQL Editor, in order.
+- [ ] Migrations `001` … `014` all run in the Supabase SQL Editor, in order.
 - [ ] Your admin account has `{"role":"admin"}` in its app metadata, and Admin pages open without errors.
 - [ ] Admin › Settings reviewed: busy-time pricing, pickup PIN, XL / Premium offered only when you have those drivers,
       verified phone numbers only if SMS is set up in Supabase.

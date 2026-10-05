@@ -118,14 +118,14 @@ function goToDriverApply() {
                         <svg class="w-4 h-3 text-[var(--color-text-primary)]" viewBox="0 0 24 16" fill="currentColor"><path d="M3 11l1.5-5h13l1.5 5H3zm2.5 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm13 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg>
                         <span class="text-[11px] font-semibold">RideUp Go</span>
                       </div>
-                      <span class="text-[11px] font-bold">$17.18</span>
+                      <span class="text-[11px] font-bold">$18.68</span>
                     </div>
                     <div class="flex items-center justify-between bg-[var(--color-surface-secondary)] rounded-lg px-2.5 py-1.5">
                       <div class="flex items-center gap-1.5">
                         <svg class="w-4 h-3 text-[var(--color-text-muted)]" viewBox="0 0 24 16" fill="currentColor"><path d="M3 11l1.5-5h13l1.5 5H3zm2.5 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm13 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg>
                         <span class="text-[11px] font-medium text-[var(--color-text-muted)]">RideUp XL</span>
                       </div>
-                      <span class="text-[11px] font-bold text-[var(--color-text-muted)]">$25.39</span>
+                      <span class="text-[11px] font-bold text-[var(--color-text-muted)]">$26.89</span>
                     </div>
                   </div>
                 </div>
