@@ -57,12 +57,12 @@ async function confirmDelete() {
 <template>
   <Transition name="fade">
     <div v-if="open" class="fixed inset-0 z-50 flex items-end justify-center bg-[var(--color-overlay)]" @click.self="emit('close')">
-      <div role="dialog" aria-modal="true" aria-labelledby="delete-title"
+      <div v-modal="() => emit('close')" role="dialog" aria-modal="true" aria-labelledby="delete-title"
            class="w-full max-w-md bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-t-3xl px-6 pt-8 pb-[max(2.5rem,env(safe-area-inset-bottom))] shadow-xl">
         <h3 id="delete-title" class="text-lg font-bold mb-2">Delete your account?</h3>
         <p v-if="checking" class="text-[14px] text-[var(--color-text-muted)] mb-6" aria-live="polite">Checking your account…</p>
         <template v-else-if="blocker">
-          <p class="text-[14px] text-red-600 mb-6" role="alert">{{ blocker }}</p>
+          <p class="text-[14px] text-[var(--color-danger)] mb-6" role="alert">{{ blocker }}</p>
           <button @click="emit('close')" class="w-full py-3.5 bg-[var(--color-surface-secondary)] font-bold rounded-xl text-[14px]">OK</button>
         </template>
         <template v-else>
@@ -76,7 +76,7 @@ async function confirmDelete() {
           <label for="delete-confirm" class="block text-[13px] font-semibold mb-1.5">Type DELETE to confirm</label>
           <input id="delete-confirm" v-model="typed" autocomplete="off" autocapitalize="characters" spellcheck="false"
                  class="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[16px] mb-3" />
-          <p v-if="error" class="text-[13px] text-red-600 mb-3" role="alert">{{ error }}</p>
+          <p v-if="error" class="text-[13px] text-[var(--color-danger)] mb-3" role="alert">{{ error }}</p>
           <button @click="confirmDelete" :disabled="typed.trim().toUpperCase() !== 'DELETE' || busy"
                   class="w-full py-3.5 bg-red-600 text-white font-bold rounded-xl text-[14px] mb-3 disabled:opacity-40">
             {{ busy ? 'Deleting…' : 'Delete my account' }}

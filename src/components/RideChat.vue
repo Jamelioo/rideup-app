@@ -115,12 +115,12 @@ onUnmounted(() => {
 <template>
   <Teleport to="body">
     <Transition name="slide-up">
-      <div v-if="open" class="fixed inset-0 z-[150] flex flex-col" role="dialog" aria-modal="true" :aria-label="`Chat with ${otherUserName}`">
+      <div v-if="open" v-modal="close" class="fixed inset-0 z-[150] flex flex-col" role="dialog" aria-modal="true" :aria-label="`Chat with ${otherUserName}`">
         <div class="flex-shrink-0 bg-black/40" style="height: 12vh" @click="close"></div>
 
         <div class="flex-1 flex flex-col bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-t-3xl shadow-[0_-8px_40px_rgba(0,0,0,0.15)] overflow-hidden">
           <div class="flex items-center gap-3 px-5 pt-5 pb-3 border-b border-[var(--color-border)]">
-            <button @click="close" class="w-10 h-10 rounded-full bg-[var(--color-surface-secondary)] flex items-center justify-center" aria-label="Close chat">
+            <button @click="close" class="w-11 h-11 rounded-full bg-[var(--color-surface-secondary)] flex items-center justify-center" aria-label="Close chat">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
             <div class="flex-1 min-w-0">
@@ -141,19 +141,19 @@ onUnmounted(() => {
               <div class="max-w-[78%]">
                 <div class="px-4 py-2.5 rounded-2xl text-[14px] leading-snug break-words"
                      :class="msg.sender_id === currentUserId
-                       ? (msg.failed ? 'bg-red-500/15 text-red-600 dark:text-red-300 rounded-br-sm' : 'bg-[#2b8659] text-white rounded-br-sm')
+                       ? (msg.failed ? 'bg-red-500/15 text-[var(--color-danger)] dark:text-red-300 rounded-br-sm' : 'bg-[#2b8659] text-white rounded-br-sm')
                        : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] rounded-bl-sm'">
                   {{ msg.content }}
                 </div>
                 <div v-if="msg.sender_id === currentUserId && (msg.pending || msg.failed)" class="text-[11px] text-right mt-0.5"
-                     :class="msg.failed ? 'text-red-500' : 'text-[var(--color-text-muted)]'">
+                     :class="msg.failed ? 'text-[var(--color-danger)]' : 'text-[var(--color-text-muted)]'">
                   {{ msg.failed ? 'Not sent' : 'Sending…' }}
                 </div>
               </div>
             </div>
           </div>
 
-          <p v-if="sendError" class="px-5 pb-2 text-[13px] text-red-500" role="alert">{{ sendError }}</p>
+          <p v-if="sendError" class="px-5 pb-2 text-[13px] text-[var(--color-danger)]" role="alert">{{ sendError }}</p>
 
           <div class="px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 border-t border-[var(--color-border)] flex items-center gap-2">
             <input

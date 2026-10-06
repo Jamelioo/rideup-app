@@ -3,14 +3,14 @@
     <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-2">Safety Reports</h1>
     <p class="text-sm text-[var(--color-text-secondary)] mb-6">Every report from the in-trip safety toolkit lands here. Review open reports first; contact the reporter and the other party as needed.</p>
 
-    <div class="flex gap-1 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] p-1 mb-4 w-fit" role="tablist">
-      <button v-for="tab in tabs" :key="tab.value" @click="filter = tab.value" role="tab" :aria-selected="filter === tab.value"
-              :class="['px-3 py-1.5 text-sm font-medium rounded-md', filter === tab.value ? 'bg-[#2b8659] text-white' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)]']">
-        {{ tab.label }} <span v-if="counts[tab.value]" class="ml-1 opacity-80">({{ counts[tab.value] }})</span>
+    <div class="flex gap-1 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] p-1 mb-4 w-fit" role="group" aria-label="Filter reports">
+      <button v-for="tab in tabs" :key="tab.value" @click="filter = tab.value" :aria-pressed="filter === tab.value"
+              :class="['px-3.5 py-2 min-w-[44px] text-sm font-medium rounded-md', filter === tab.value ? 'bg-[#2b8659] text-white' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)]']">
+        {{ tab.label }} <span v-if="counts[tab.value]" class="ml-1">({{ counts[tab.value] }})</span>
       </button>
     </div>
 
-    <p v-if="error" class="mb-4 text-sm text-red-600" role="alert">{{ error }}</p>
+    <p v-if="error" class="mb-4 text-sm text-[var(--color-danger)]" role="alert">{{ error }}</p>
     <p v-if="loading" class="text-sm text-[var(--color-text-muted)]">Loading…</p>
     <p v-else-if="visible.length === 0" class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center text-sm text-[var(--color-text-muted)]">No {{ filter === 'all' ? '' : filter }} reports.</p>
 

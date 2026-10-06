@@ -8,8 +8,9 @@
         v-for="tab in filterTabs"
         :key="tab"
         @click="activeFilter = tab"
+        :aria-pressed="activeFilter === tab"
         :class="[
-          'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+          'px-3.5 py-2 min-w-[44px] text-sm font-medium rounded-md transition-colors',
           activeFilter === tab
             ? 'bg-[#2b8659] text-white'
             : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)]'
@@ -28,8 +29,10 @@
       >
         <!-- Header row (clickable) -->
         <button
+          type="button"
           class="w-full flex items-center justify-between px-5 py-4 text-left"
           @click="toggle(ticket.id)"
+          :aria-expanded="String(expanded === ticket.id)"
         >
           <div class="flex items-center gap-4 min-w-0">
             <span class="text-xs text-[var(--color-text-muted)] font-mono">#{{ ticket.id }}</span>
@@ -70,7 +73,7 @@
             <button
               v-if="ticket.status === 'Resolved' || ticket.status === 'resolved'"
               @click="updateTicketStatus(ticket, 'open')"
-              class="text-xs font-medium px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+              class="text-xs font-medium px-3 py-1.5 rounded-lg bg-red-50 text-[var(--color-danger)] hover:bg-red-100 transition-colors"
             >
               Reopen
             </button>

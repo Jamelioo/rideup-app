@@ -78,7 +78,7 @@ function goBack() {
   <div class="min-h-dvh bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top Bar -->
     <div class="flex items-center gap-3 px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
+      <button @click="goBack" class="w-11 h-11 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -88,33 +88,40 @@ function goBack() {
 
     <div class="px-5 max-w-lg mx-auto w-full flex-1">
       <!-- Add Contact Form -->
-      <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-4 mb-6">
-        <p class="text-[13px] font-semibold text-[var(--color-brand)] mb-3">Add a contact</p>
+      <form class="bg-[var(--color-surface-secondary)] rounded-2xl p-4 mb-6" @submit.prevent="addContact">
+        <h2 class="text-[13px] font-semibold text-[var(--color-brand)] mb-3">Add a contact</h2>
+        <label for="tc-name" class="block text-[13px] font-medium text-[var(--color-text-secondary)] mb-1">Name</label>
         <input
+          id="tc-name"
           v-model="newName"
           type="text"
-          placeholder="Name"
-          class="w-full px-4 py-3 bg-[var(--color-surface)] rounded-xl text-[14px] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] mb-2 focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30"
+          autocomplete="off"
+          placeholder="e.g. Mum"
+          class="w-full px-4 py-3 bg-[var(--color-surface)] rounded-xl text-[14px] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] mb-3 focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30"
         />
+        <label for="tc-phone" class="block text-[13px] font-medium text-[var(--color-text-secondary)] mb-1">Phone number</label>
         <input
+          id="tc-phone"
           v-model="newPhone"
           type="tel"
-          placeholder="Phone number"
+          inputmode="tel"
+          autocomplete="off"
+          placeholder="242 555 1234"
           class="w-full px-4 py-3 bg-[var(--color-surface)] rounded-xl text-[14px] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] mb-3 focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30"
         />
         <button
-          @click="addContact"
+          type="submit"
           :disabled="!newName.trim() || !newPhone.trim() || saving"
           :class="[
             'w-full py-3 font-semibold text-[14px] rounded-xl transition-colors',
             newName.trim() && newPhone.trim() && !saving
               ? 'bg-[#2b8659] text-white active:bg-[#236e49]'
-              : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] cursor-not-allowed'
+              : 'bg-[var(--color-border)] text-[var(--color-text-muted)] cursor-not-allowed'
           ]"
         >
           {{ saving ? 'Saving...' : 'Add contact' }}
         </button>
-      </div>
+      </form>
 
       <!-- Contacts List -->
       <div v-if="contacts.length > 0">

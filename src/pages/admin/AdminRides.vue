@@ -9,8 +9,9 @@
           v-for="tab in statusTabs"
           :key="tab"
           @click="activeTab = tab"
+          :aria-pressed="activeTab === tab"
           :class="[
-            'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+            'px-3.5 py-2 min-w-[44px] text-sm font-medium rounded-md transition-colors',
             activeTab === tab
               ? 'bg-[#2b8659] text-white'
               : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)]'
@@ -21,8 +22,9 @@
       </div>
       <input
         v-model="search"
-        type="text"
-        placeholder="Search rides..."
+        type="search"
+        placeholder="Search rides…"
+        aria-label="Search rides"
         class="px-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30 focus:border-[#2b8659] w-full sm:w-64"
       />
     </div>
@@ -33,19 +35,25 @@
         <table class="w-full text-sm stack-table">
           <thead>
             <tr class="text-left text-[var(--color-text-muted)] text-xs uppercase tracking-wider bg-[var(--color-surface-secondary)]">
-              <th class="px-4 py-3 font-medium cursor-pointer hover:text-[var(--color-text-secondary)]" @click="toggleSort('id')">
-                ID <span v-if="sortKey === 'id'" class="text-[var(--color-brand)]">{{ sortDir === 'asc' ? '&#9650;' : '&#9660;' }}</span>
+              <th class="px-2 py-1 font-medium" :aria-sort="sortKey === 'id' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'">
+                <button type="button" class="inline-flex items-center gap-1 px-2 py-2 min-h-[44px] uppercase tracking-wider hover:text-[var(--color-text-secondary)]" @click="toggleSort('id')">
+                  ID <span v-if="sortKey === 'id'" class="text-[var(--color-brand)]" aria-hidden="true">{{ sortDir === 'asc' ? '&#9650;' : '&#9660;' }}</span>
+                </button>
               </th>
               <th class="px-4 py-3 font-medium">Rider</th>
               <th class="px-4 py-3 font-medium">Driver</th>
               <th class="px-4 py-3 font-medium">Pickup</th>
               <th class="px-4 py-3 font-medium">Dropoff</th>
-              <th class="px-4 py-3 font-medium cursor-pointer hover:text-[var(--color-text-secondary)]" @click="toggleSort('fare')">
-                Fare <span v-if="sortKey === 'fare'" class="text-[var(--color-brand)]">{{ sortDir === 'asc' ? '&#9650;' : '&#9660;' }}</span>
+              <th class="px-2 py-1 font-medium" :aria-sort="sortKey === 'fare' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'">
+                <button type="button" class="inline-flex items-center gap-1 px-2 py-2 min-h-[44px] uppercase tracking-wider hover:text-[var(--color-text-secondary)]" @click="toggleSort('fare')">
+                  Fare <span v-if="sortKey === 'fare'" class="text-[var(--color-brand)]" aria-hidden="true">{{ sortDir === 'asc' ? '&#9650;' : '&#9660;' }}</span>
+                </button>
               </th>
               <th class="px-4 py-3 font-medium">Status</th>
-              <th class="px-4 py-3 font-medium cursor-pointer hover:text-[var(--color-text-secondary)]" @click="toggleSort('date')">
-                Date <span v-if="sortKey === 'date'" class="text-[var(--color-brand)]">{{ sortDir === 'asc' ? '&#9650;' : '&#9660;' }}</span>
+              <th class="px-2 py-1 font-medium" :aria-sort="sortKey === 'date' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'">
+                <button type="button" class="inline-flex items-center gap-1 px-2 py-2 min-h-[44px] uppercase tracking-wider hover:text-[var(--color-text-secondary)]" @click="toggleSort('date')">
+                  Date <span v-if="sortKey === 'date'" class="text-[var(--color-brand)]" aria-hidden="true">{{ sortDir === 'asc' ? '&#9650;' : '&#9660;' }}</span>
+                </button>
               </th>
             </tr>
           </thead>

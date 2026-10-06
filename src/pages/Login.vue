@@ -19,7 +19,7 @@ const submitting = ref(false)
 const needsConfirmation = ref(false)
 
 function goBack() {
-  router.push('/welcome')
+  router.push('/')
 }
 
 async function forgotPassword() {
@@ -88,7 +88,7 @@ const inputClass = 'w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] round
   <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top bar -->
     <div class="flex items-center px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
+      <button @click="goBack" class="w-11 h-11 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -99,21 +99,23 @@ const inputClass = 'w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] round
       <h1 class="text-[28px] font-bold leading-tight mb-2">Welcome back</h1>
       <p class="text-[var(--color-text-muted)] text-[14px] mb-8">Log in with your email and password</p>
 
-      <div class="space-y-3 mb-3">
-        <label class="block">
-          <span class="sr-only">Email address</span>
-          <input v-model="email" type="email" placeholder="Email address" autocomplete="email" inputmode="email" :class="inputClass" />
-        </label>
-        <label class="block relative">
-          <span class="sr-only">Password</span>
-          <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="Password" autocomplete="current-password" :class="inputClass" class="pr-16" />
-          <button type="button" @click="showPassword = !showPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[var(--color-brand)] px-1 py-1"
-                  :aria-pressed="showPassword" :aria-label="showPassword ? 'Hide password' : 'Show password'">{{ showPassword ? 'Hide' : 'Show' }}</button>
-        </label>
+      <div class="space-y-4 mb-3">
+        <div>
+          <label for="login-email" class="block text-[14px] font-medium text-[var(--color-text-secondary)] mb-1.5">Email address</label>
+          <input id="login-email" v-model="email" type="email" autocomplete="email" inputmode="email" :class="inputClass" />
+        </div>
+        <div>
+          <label for="login-password" class="block text-[14px] font-medium text-[var(--color-text-secondary)] mb-1.5">Password</label>
+          <div class="relative">
+            <input id="login-password" v-model="password" :type="showPassword ? 'text' : 'password'" autocomplete="current-password" :class="inputClass" class="pr-16" />
+            <button type="button" @click="showPassword = !showPassword" class="absolute right-1 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[var(--color-brand)] min-w-[48px] min-h-[44px] px-2"
+                    :aria-pressed="showPassword" :aria-label="showPassword ? 'Hide password' : 'Show password'">{{ showPassword ? 'Hide' : 'Show' }}</button>
+          </div>
+        </div>
       </div>
 
       <div class="text-right mb-4">
-        <button type="button" @click="forgotPassword" :disabled="submitting" class="text-[13px] text-[var(--color-brand)] font-medium py-1">Forgot password?</button>
+        <button type="button" @click="forgotPassword" :disabled="submitting" class="text-[13px] text-[var(--color-brand)] font-medium min-h-[44px] px-1">Forgot password?</button>
       </div>
 
       <p v-if="notice" class="text-[var(--color-brand)] text-[13px] font-medium mb-4" role="status">{{ notice }}</p>

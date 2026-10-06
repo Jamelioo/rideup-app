@@ -222,7 +222,7 @@ function done() {
     <!-- Rate -->
     <div v-else class="flex-1 flex flex-col max-w-lg mx-auto w-full">
       <div class="flex items-center justify-between px-4 pt-[max(1.5rem,env(safe-area-inset-top))] pb-2">
-        <button @click="router.push('/book')" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Close">
+        <button @click="router.push('/book')" class="w-11 h-11 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Close">
           <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -313,7 +313,7 @@ function done() {
     </div>
 
     <!-- Safety report sheet -->
-    <div v-if="showReport" class="fixed inset-0 z-[100] bg-[var(--color-overlay)] flex items-end justify-center" @click.self="showReport = false" role="dialog" aria-modal="true" aria-label="Report a safety issue">
+    <div v-if="showReport" v-modal="() => (showReport = false)" class="fixed inset-0 z-[100] bg-[var(--color-overlay)] flex items-end justify-center" @click.self="showReport = false" role="dialog" aria-modal="true" aria-label="Report a safety issue">
       <div class="w-full max-w-lg bg-[var(--color-surface)] rounded-t-3xl max-h-[90dvh] overflow-y-auto">
         <ReportSafety :ride="ride" role="rider" @back="showReport = false" @close="showReport = false" />
       </div>

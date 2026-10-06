@@ -60,9 +60,9 @@
       <!-- Top bar -->
       <header class="flex items-center justify-between px-4 lg:px-8 py-4 bg-[var(--color-surface)] border-b border-[var(--color-border)]">
         <button
-          class="lg:hidden p-2 -ml-2 text-[var(--color-text-secondary)] hover:text-gray-900 rounded-lg hover:bg-[var(--color-surface-secondary)]"
+          class="lg:hidden p-2.5 -ml-2.5 text-[var(--color-text-secondary)] hover:text-gray-900 rounded-lg hover:bg-[var(--color-surface-secondary)]"
           @click="sidebarOpen = !sidebarOpen"
-         aria-label="Toggle navigation menu">
+         aria-label="Toggle navigation menu" :aria-expanded="String(sidebarOpen)">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
           </svg>

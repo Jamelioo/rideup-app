@@ -24,13 +24,13 @@
         <input v-model="form.ends" required type="datetime-local" class="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]" />
       </label>
       <p class="sm:col-span-2 text-xs text-[var(--color-text-muted)]">Times are Nassau time. Every approved driver can earn it once. Tip: target busy times (Friday evening to Sunday night) so more drivers are online when riders need them.</p>
-      <p v-if="formError" class="sm:col-span-2 text-red-600" role="alert">{{ formError }}</p>
+      <p v-if="formError" class="sm:col-span-2 text-[var(--color-danger)]" role="alert">{{ formError }}</p>
       <div class="sm:col-span-2">
         <button type="submit" :disabled="saving" class="px-4 py-2 rounded-lg bg-[#2b8659] text-white font-semibold disabled:opacity-50">{{ saving ? 'Saving…' : 'Create incentive' }}</button>
       </div>
     </form>
 
-    <p v-if="error" class="mb-4 text-sm text-red-600" role="alert">{{ error }}</p>
+    <p v-if="error" class="mb-4 text-sm text-[var(--color-danger)]" role="alert">{{ error }}</p>
     <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden">
       <table class="w-full text-sm stack-table">
         <thead>

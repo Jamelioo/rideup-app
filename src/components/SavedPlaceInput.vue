@@ -98,7 +98,7 @@ function handleDelete() {
         <button
           v-if="place"
           @click="handleDelete"
-          class="w-full py-3 text-red-500 text-[14px] font-medium mt-3"
+          class="w-full py-3 text-[var(--color-danger)] text-[14px] font-medium mt-3"
         >
           Remove this place
         </button>

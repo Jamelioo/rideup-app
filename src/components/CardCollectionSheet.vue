@@ -95,7 +95,7 @@ defineExpose({ reset, setError })
     </Transition>
 
     <Transition name="sheet">
-      <div v-if="show" class="fixed inset-x-0 bottom-0 z-[9999] bg-[var(--color-surface)] rounded-t-[28px] shadow-[0_-4px_40px_rgba(0,0,0,0.15)]" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
+      <div v-if="show" v-modal="() => emit('close')" aria-label="Add payment method" class="fixed inset-x-0 bottom-0 z-[9999] bg-[var(--color-surface)] rounded-t-[28px] shadow-[0_-4px_40px_rgba(0,0,0,0.15)]" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
         <div class="flex justify-center pt-3 pb-1">
           <div class="w-10 h-1 rounded-full bg-[var(--color-text-muted)]/30"></div>
         </div>
@@ -103,13 +103,13 @@ defineExpose({ reset, setError })
         <div class="px-6 pb-6">
           <div class="flex items-center justify-between mb-1">
             <h2 class="text-[18px] font-bold">Add payment method</h2>
-            <button @click="emit('close')" class="w-8 h-8 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center text-[var(--color-text-muted)]" aria-label="Close">
+            <button @click="emit('close')" class="w-11 h-11 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center text-[var(--color-text-muted)]" aria-label="Close">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>
           <p class="text-[13px] text-[var(--color-text-muted)] mb-5">A card is required to request a ride. You'll only be charged after your trip.</p>
 
-          <div v-if="error" class="bg-red-500/10 border border-red-500/20 text-red-400 text-[13px] px-4 py-2.5 rounded-xl mb-4">{{ error }}</div>
+          <div v-if="error" role="alert" class="bg-red-500/10 border border-red-500/20 text-[var(--color-danger)] text-[13px] px-4 py-2.5 rounded-xl mb-4">{{ error }}</div>
 
           <label class="block mb-5">
             <span class="text-[12px] font-medium text-[var(--color-text-muted)] mb-1 block">Card details</span>
@@ -117,7 +117,7 @@ defineExpose({ reset, setError })
                  class="bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3.5 min-h-[44px]">
               <span v-if="stripeLoading" class="text-[13px] text-[var(--color-text-muted)]">Loading payment...</span>
             </div>
-            <p v-if="cardError" class="text-red-400 text-[12px] mt-1">{{ cardError }}</p>
+            <p v-if="cardError" role="alert" class="text-[var(--color-danger)] text-[12px] mt-1">{{ cardError }}</p>
           </label>
 
           <button @click="handleSubmit" :disabled="!cardComplete || submitting"

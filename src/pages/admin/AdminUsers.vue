@@ -1,6 +1,6 @@
 <template>
   <div>
-    <p v-if="actionError" class="mb-4 text-sm text-red-600" role="alert">{{ actionError }}</p>
+    <p v-if="actionError" class="mb-4 text-sm text-[var(--color-danger)]" role="alert">{{ actionError }}</p>
     <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6">User Management</h1>
 
     <!-- Search + filter -->
@@ -10,8 +10,9 @@
           v-for="tab in filterTabs"
           :key="tab"
           @click="activeFilter = tab"
+          :aria-pressed="activeFilter === tab"
           :class="[
-            'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+            'px-3.5 py-2 min-w-[44px] text-sm font-medium rounded-md transition-colors',
             activeFilter === tab
               ? 'bg-[#2b8659] text-white'
               : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)]'
@@ -22,8 +23,9 @@
       </div>
       <input
         v-model="search"
-        type="text"
-        placeholder="Search users..."
+        type="search"
+        placeholder="Search users…"
+        aria-label="Search users"
         class="px-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30 focus:border-[#2b8659] w-full sm:w-64"
       />
     </div>
@@ -67,7 +69,7 @@
                   :class="[
                     'text-xs font-medium px-3 py-1.5 rounded-lg transition-colors',
                     user.status === 'Active'
-                      ? 'text-red-600 bg-red-50 hover:bg-red-100'
+                      ? 'text-[var(--color-danger)] bg-red-50 hover:bg-red-100'
                       : 'text-[var(--color-brand)] bg-green-50 hover:bg-green-100'
                   ]"
                 >

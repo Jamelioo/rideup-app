@@ -54,7 +54,7 @@ function close() {
       <div class="flex items-center justify-between px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
         <button
           @click="close"
-          class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[var(--color-surface-secondary)] transition-colors"
+          class="w-11 h-11 flex items-center justify-center rounded-full hover:bg-[var(--color-surface-secondary)] transition-colors"
           aria-label="Close"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -108,14 +108,18 @@ function close() {
             class="rounded-xl bg-[var(--color-surface-secondary)] overflow-hidden transition-colors"
           >
             <button
+              type="button"
               @click="toggleFaq(index)"
-              class="w-full flex items-center justify-between px-4 py-4 hover:bg-[var(--color-surface-secondary)] transition-colors"
+              :aria-expanded="String(!!faq.open)"
+              :aria-controls="`faq-answer-${index}`"
+              class="w-full flex items-center justify-between px-4 py-4 hover:bg-[var(--color-border)] transition-colors"
             >
               <span class="text-[15px] font-semibold text-left pr-3">{{ faq.question }}</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="w-5 h-5 text-[var(--color-text-muted)] shrink-0 transition-transform duration-300"
                 :class="{ 'rotate-90': faq.open }"
+                aria-hidden="true"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -127,7 +131,7 @@ function close() {
               </svg>
             </button>
             <Transition name="expand">
-              <div v-if="faq.open" class="px-4 pb-4">
+              <div v-if="faq.open" :id="`faq-answer-${index}`" class="px-4 pb-4">
                 <p class="text-[14px] text-[var(--color-text-secondary)] leading-relaxed">
                   {{ faq.answer }}
                 </p>

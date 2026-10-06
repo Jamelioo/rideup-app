@@ -67,7 +67,7 @@ function handleDecline() {
 </script>
 
 <template>
-  <div class="fixed inset-0 z-50 bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col" role="dialog" aria-modal="true" aria-label="New trip request">
+  <div v-modal class="fixed inset-0 z-50 bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col" role="dialog" aria-modal="true" aria-label="New trip request">
     <div class="flex-shrink-0 pt-[max(2.5rem,env(safe-area-inset-top))] pb-3 flex flex-col items-center">
       <div class="relative w-20 h-20">
         <svg class="w-20 h-20 -rotate-90" viewBox="0 0 100 100" aria-hidden="true">

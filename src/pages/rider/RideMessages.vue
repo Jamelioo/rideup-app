@@ -125,19 +125,19 @@ onUnmounted(() => {
     <div class="bg-[#2b8659] px-5 pt-[max(2.5rem,env(safe-area-inset-top))] pb-4 flex items-center gap-3 flex-shrink-0">
       <button
         @click="goBack"
-        class="w-10 h-10 rounded-full bg-[var(--color-surface)]/20 flex items-center justify-center text-white"
+        class="w-11 h-11 rounded-full bg-[var(--color-surface)]/20 flex items-center justify-center text-white"
         aria-label="Back to ride"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
-      <div class="w-9 h-9 rounded-full bg-[var(--color-surface)]/25 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+      <div class="w-9 h-9 rounded-full bg-black/25 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
         {{ driverName.split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2) || 'DR' }}
       </div>
       <div class="flex-1 min-w-0">
-        <div class="text-white font-bold text-[15px] truncate">{{ driverName }}</div>
-        <div class="text-white/60 text-[11px]">Your driver</div>
+        <h1 class="text-white font-bold text-[15px] truncate">{{ driverName }}</h1>
+        <div class="text-white text-[12px]">Your driver</div>
       </div>
     </div>
 
@@ -175,11 +175,12 @@ onUnmounted(() => {
         @keyup.enter="sendMessage(draft)"
         type="text"
         placeholder="Type a message..."
+        aria-label="Message"
         class="flex-1 bg-[var(--color-surface-secondary)] rounded-full px-4 py-2.5 text-[13px] outline-none placeholder:text-[var(--color-text-muted)] font-sans"
       />
       <button
         @click="sendMessage(draft)"
-        class="w-10 h-10 rounded-full bg-[#2b8659] text-white flex items-center justify-center flex-shrink-0 active:opacity-80 transition-opacity"
+        class="w-11 h-11 rounded-full bg-[#2b8659] text-white flex items-center justify-center flex-shrink-0 active:opacity-80 transition-opacity"
         aria-label="Send message"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

@@ -120,10 +120,11 @@ async function shareReceipt() {
 
 <template>
   <div class="min-h-dvh bg-[var(--color-surface-secondary)] px-4 pt-[max(1.5rem,env(safe-area-inset-top))] pb-6">
+    <h1 class="sr-only">Trip receipt</h1>
     <!-- Top Bar -->
     <div class="mb-4 flex items-center">
       <button
-        class="flex h-10 w-10 items-center justify-center rounded-full transition-colors active:bg-[var(--color-surface-secondary)]"
+        class="flex h-11 w-11 items-center justify-center rounded-full transition-colors active:bg-[var(--color-surface-secondary)]"
         @click="router.back()"
        aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -142,7 +143,7 @@ async function shareReceipt() {
 
     <!-- Receipt Card -->
     <div v-else-if="notFound || !receipt" class="mx-auto max-w-md text-center py-20">
-      <p class="text-lg font-bold text-[var(--color-text-primary)] mb-2">Receipt not found</p>
+      <p class="text-lg font-bold text-[var(--color-text-primary)] mb-2" role="alert">Receipt not found</p>
       <p class="text-sm text-[var(--color-text-secondary)] mb-6">We couldn't load this receipt. It may belong to another account.</p>
       <button @click="router.push('/my-rides')" class="px-6 py-3 bg-[#2b8659] text-white font-bold rounded-xl text-sm">Back to my rides</button>
     </div>

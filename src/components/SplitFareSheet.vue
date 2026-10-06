@@ -53,7 +53,7 @@ async function invite() {
 <template>
   <Transition name="fade">
     <div v-if="open" class="fixed inset-0 z-50 flex items-end justify-center bg-[var(--color-overlay)]" @click.self="emit('close')">
-      <div role="dialog" aria-modal="true" aria-labelledby="split-title"
+      <div v-modal="() => emit('close')" role="dialog" aria-modal="true" aria-labelledby="split-title"
            class="w-full max-w-md bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-t-3xl px-6 pt-7 pb-[max(2rem,env(safe-area-inset-bottom))] shadow-xl">
         <h3 id="split-title" class="text-lg font-bold mb-1">Split fare</h3>
         <p class="text-[13px] text-[var(--color-text-secondary)] mb-4">
@@ -68,7 +68,7 @@ async function invite() {
             {{ busy ? '…' : 'Invite' }}
           </button>
         </form>
-        <p v-if="error" class="text-[13px] text-red-600 mb-3" role="alert">{{ error }}</p>
+        <p v-if="error" class="text-[13px] text-[var(--color-danger)] mb-3" role="alert">{{ error }}</p>
         <p v-if="notice" class="text-[13px] text-[var(--color-brand)] mb-3" aria-live="polite">{{ notice }}</p>
 
         <ul v-if="splits.length" class="divide-y divide-[var(--color-border)] border-y border-[var(--color-border)] mb-3">

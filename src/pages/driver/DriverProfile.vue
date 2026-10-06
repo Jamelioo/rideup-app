@@ -109,7 +109,7 @@ const showDelete = ref(false)
 
 async function handleLogout() {
   await signOut()
-  router.push('/welcome')
+  router.push('/')
 }
 
 function goBack() {
@@ -171,7 +171,7 @@ async function changePassword() {
   <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)]">
     <!-- Top bar -->
     <div class="flex items-center justify-between px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
+      <button @click="goBack" class="w-11 h-11 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -220,7 +220,7 @@ async function changePassword() {
             <span class="text-[14px] font-semibold capitalize">{{ driver?.vehicle_type || 'standard' }}</span>
           </div>
         </div>
-        <button @click="showToast('Contact support at (242) 452-9911')" class="text-[13px] text-[var(--color-brand)] font-semibold mt-2 px-1">Edit Vehicle</button>
+        <button @click="showToast('Contact support at (242) 452-9911')" class="text-[13px] text-[var(--color-brand)] font-semibold mt-1 px-1 min-h-[44px]">Edit Vehicle</button>
       </div>
 
       <!-- Stats -->
@@ -248,7 +248,7 @@ async function changePassword() {
             <span class="text-[12px] font-semibold" :class="d.tone === 'ok' ? 'text-[var(--color-brand)]' : d.tone === 'warn' ? 'text-[var(--color-warning)]' : 'text-[var(--color-danger)]'">{{ d.text }}</span>
           </div>
         </div>
-        <button @click="router.push('/driver/documents')" class="text-[13px] text-[var(--color-brand)] font-semibold mt-2 px-1">Upload / Update</button>
+        <button @click="router.push('/driver/documents')" class="text-[13px] text-[var(--color-brand)] font-semibold mt-1 px-1 min-h-[44px]">Upload / Update</button>
       </div>
 
       <!-- Account -->
@@ -265,7 +265,7 @@ async function changePassword() {
               </div>
               <div v-else class="text-[14px] font-semibold">{{ driver?.phone || '—' }}</div>
             </div>
-            <button v-if="!editingPhone" @click="startEditPhone" class="text-[12px] text-[var(--color-brand)] font-semibold">Edit</button>
+            <button v-if="!editingPhone" @click="startEditPhone" class="text-[12px] text-[var(--color-brand)] font-semibold min-w-[44px] min-h-[44px] -my-3 -mr-2">Edit</button>
           </div>
           <div class="border-t border-[var(--color-border)]"></div>
           <div class="flex items-center justify-between">
@@ -278,10 +278,10 @@ async function changePassword() {
               </div>
               <div v-else class="text-[14px] font-semibold">{{ driver?.email || '—' }}</div>
             </div>
-            <button v-if="!editingEmail" @click="startEditEmail" class="text-[12px] text-[var(--color-brand)] font-semibold">Edit</button>
+            <button v-if="!editingEmail" @click="startEditEmail" class="text-[12px] text-[var(--color-brand)] font-semibold min-w-[44px] min-h-[44px] -my-3 -mr-2">Edit</button>
           </div>
         </div>
-        <button @click="changePassword" class="text-[13px] text-[var(--color-brand)] font-semibold mt-2 px-1">Change password</button>
+        <button @click="changePassword" class="text-[13px] text-[var(--color-brand)] font-semibold mt-1 px-1 min-h-[44px]">Change password</button>
       </div>
 
       <!-- Switch + Logout -->
@@ -291,7 +291,7 @@ async function changePassword() {
           Switch to Rider
         </button>
         <button @click="handleLogout"
-                class="w-full py-3.5 text-red-500 text-[14px] font-semibold rounded-2xl active:bg-red-50 transition-colors">
+                class="w-full py-3.5 text-[var(--color-danger)] text-[14px] font-semibold rounded-2xl active:bg-red-50 transition-colors">
           Log Out
         </button>
         <button @click="showDelete = true" class="w-full py-3 text-[var(--color-text-muted)] text-[13px]">Delete account</button>

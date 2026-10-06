@@ -40,14 +40,14 @@ function doCancel() {
 <template>
   <div class="fixed inset-0 z-50 flex items-end justify-center">
     <div class="absolute inset-0 bg-[var(--color-overlay)]" @click="emit('close')"></div>
-    <div class="relative w-full max-w-lg bg-[var(--color-surface)] rounded-t-3xl z-10">
+    <div v-modal="() => emit('close')" aria-label="Cancel ride" class="relative w-full max-w-lg bg-[var(--color-surface)] rounded-t-3xl z-10">
       <!-- Handle -->
       <div class="w-10 h-1 rounded-full bg-[var(--color-surface-secondary)] mx-auto mt-3 mb-2"></div>
 
       <!-- Not confirming yet — select reason -->
       <div v-if="!confirming" class="px-6 pb-8">
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-1">Cancel ride</h2>
-        <p v-if="!isFreeCancel" class="text-[14px] text-red-500 mb-4">
+        <p v-if="!isFreeCancel" class="text-[14px] text-[var(--color-danger)] mb-4">
           A ${{ cancelFee.toFixed(2) }} cancellation fee will apply
         </p>
         <p v-else class="text-[14px] text-[var(--color-text-muted)] mb-4">

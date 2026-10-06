@@ -64,7 +64,7 @@ onMounted(async () => {
       <div class="flex items-center px-4 py-3.5">
         <button
           @click="router.back()"
-          class="w-9 h-9 flex items-center justify-center rounded-full active:bg-[#191f1c]/5 transition-colors"
+          class="w-11 h-11 flex items-center justify-center rounded-full active:bg-[#191f1c]/5 transition-colors"
          aria-label="Back">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M19 12H5" />
@@ -87,7 +87,7 @@ onMounted(async () => {
       </div>
 
       <!-- Error -->
-      <div v-if="error" class="mb-4 bg-red-50 text-red-600 text-[14px] rounded-xl px-4 py-3">
+      <div v-if="error" class="mb-4 bg-red-50 text-[var(--color-danger)] text-[14px] rounded-xl px-4 py-3">
         {{ error }}
       </div>
 
@@ -139,22 +139,6 @@ onMounted(async () => {
             </svg>
           </button>
 
-          <!-- Divider -->
-          <div class="mx-5 border-t border-[var(--color-border)]"></div>
-
-          <!-- Cash option -->
-          <div class="flex items-center gap-4 px-5 py-4 opacity-40">
-            <div class="w-10 h-10 rounded-full bg-[var(--color-text-primary)]/5 flex items-center justify-center shrink-0">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="text-[var(--color-text-muted)]" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="1" x2="12" y2="23" />
-                <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-              </svg>
-            </div>
-            <div class="flex-1">
-              <span class="text-[15px] font-medium text-[var(--color-text-primary)]">Cash</span>
-              <p class="text-[13px] text-[var(--color-text-muted)] mt-0.5">Coming soon</p>
-            </div>
-          </div>
 
         </div>
       </section>

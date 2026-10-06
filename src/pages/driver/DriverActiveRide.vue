@@ -296,6 +296,7 @@ onUnmounted(() => {
 <template>
   <div class="relative h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)] overflow-hidden"
        @mousemove="onSlideMove" @mouseup="onSlideEnd" @touchmove.passive="onSlideMove" @touchend="onSlideEnd">
+    <h1 class="sr-only">Current trip</h1>
     <!-- Map -->
     <div class="absolute inset-0 md:left-[400px]">
       <GoogleMap v-if="!mapFailed" class="absolute inset-0"
@@ -410,7 +411,7 @@ onUnmounted(() => {
             <span v-else class="text-[var(--color-text-secondary)]"> · free wait time is over</span>
           </div>
 
-          <p v-if="actionError" class="mb-3 text-[13px] text-red-500" role="alert">{{ actionError }}</p>
+          <p v-if="actionError" class="mb-3 text-[13px] text-[var(--color-danger)]" role="alert">{{ actionError }}</p>
 
           <!-- Extra stop -->
           <button v-if="stopPending" @click="markStopDone" :disabled="busy"
@@ -465,13 +466,13 @@ onUnmounted(() => {
     <SafetyToolkit :is-open="safetyOpen" :ride="safetyRide" role="driver" @close="safetyOpen = false" />
 
     <!-- PIN entry -->
-    <div v-if="showPinEntry" role="dialog" aria-modal="true" aria-labelledby="pin-title" class="fixed inset-0 z-[200] bg-black/60 flex items-end sm:items-center justify-center px-4 pb-6">
+    <div v-if="showPinEntry" v-modal="() => (showPinEntry = false)" role="dialog" aria-modal="true" aria-labelledby="pin-title" class="fixed inset-0 z-[200] bg-black/60 flex items-end sm:items-center justify-center px-4 pb-6">
       <form @submit.prevent="doStart(pinInput)" class="bg-[var(--color-surface)] rounded-3xl p-6 max-w-sm w-full text-center">
         <h2 id="pin-title" class="text-xl font-bold mb-2">Enter the rider’s PIN</h2>
         <p class="text-[13px] text-[var(--color-text-secondary)] mb-4">Ask {{ riderName }} for the 4-digit PIN{{ currentRide?.passenger_phone ? ' (sent to them by text)' : ' shown in their app' }}. It confirms you picked up the right person.</p>
         <input v-model="pinInput" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="one-time-code" aria-label="4-digit PIN"
                class="w-full text-center text-[32px] tracking-[0.5em] font-bold bg-[var(--color-surface-secondary)] rounded-2xl py-3 mb-3 outline-none" />
-        <p v-if="actionError" class="text-[13px] text-red-500 mb-3" role="alert">{{ actionError }}</p>
+        <p v-if="actionError" class="text-[13px] text-[var(--color-danger)] mb-3" role="alert">{{ actionError }}</p>
         <button type="submit" :disabled="pinInput.length !== 4 || busy" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl disabled:opacity-50">{{ busy ? 'Checking…' : 'Start trip' }}</button>
         <button type="button" @click="showPinEntry = false" class="w-full py-3 mt-1 text-[14px] text-[var(--color-text-secondary)]">Back</button>
       </form>
@@ -485,7 +486,7 @@ onUnmounted(() => {
           <template v-if="confirm === 'noshow'">You waited {{ formatClock(waitedSeconds) }}. The rider is charged a no-show fee and you receive your share of it.</template>
           <template v-else>The rider won’t be charged and will be matched with another driver. Frequent cancellations can affect your account.</template>
         </p>
-        <p v-if="actionError" class="text-[13px] text-red-500 mb-3" role="alert">{{ actionError }}</p>
+        <p v-if="actionError" class="text-[13px] text-[var(--color-danger)] mb-3" role="alert">{{ actionError }}</p>
         <button @click="doCancel(confirm === 'noshow')" :disabled="busy" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl disabled:opacity-50">
           {{ busy ? 'One moment…' : confirm === 'noshow' ? 'Yes, rider didn’t show' : 'Yes, cancel trip' }}
         </button>

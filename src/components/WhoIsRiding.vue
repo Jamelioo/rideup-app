@@ -43,7 +43,7 @@ function done() {
   <Teleport to="body">
     <Transition name="fade">
       <div v-if="open" class="fixed inset-0 z-[120] flex items-end md:items-center justify-center bg-[var(--color-overlay)]" @click.self="open = false">
-        <div role="dialog" aria-modal="true" aria-labelledby="who-title"
+        <div v-modal="() => (open = false)" role="dialog" aria-modal="true" aria-labelledby="who-title"
              class="w-full max-w-md bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-t-3xl md:rounded-3xl px-6 pt-7 pb-[max(2rem,env(safe-area-inset-bottom))] shadow-xl">
           <h3 id="who-title" class="text-lg font-bold mb-4">Who’s riding?</h3>
           <div class="space-y-2 mb-4" role="radiogroup" aria-labelledby="who-title">
@@ -65,7 +65,7 @@ function done() {
             </label>
             <p class="text-[12px] text-[var(--color-text-muted)]">The driver sees their name and can call them. We text them the driver, car and a link to follow the trip. You pay, and the receipt comes to you.</p>
           </div>
-          <p v-if="error" class="text-[13px] text-red-600 mb-3" role="alert">{{ error }}</p>
+          <p v-if="error" class="text-[13px] text-[var(--color-danger)] mb-3" role="alert">{{ error }}</p>
           <button @click="done" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-xl text-[15px]">Done</button>
         </div>
       </div>

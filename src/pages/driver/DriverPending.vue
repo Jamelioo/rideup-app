@@ -59,7 +59,7 @@ async function checkStatus() {
         We're reviewing your application. You'll receive an email when you're approved to start driving.
       </p>
 
-      <p v-if="statusMessage" class="text-[13px] mb-4" :class="statusMessage.includes('still') ? 'text-[var(--color-text-muted)]' : 'text-red-500'">
+      <p v-if="statusMessage" class="text-[13px] mb-4" :class="statusMessage.includes('still') ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-danger)]'">
         {{ statusMessage }}
       </p>
 
@@ -73,7 +73,7 @@ async function checkStatus() {
         Skip to Dashboard (Demo)
       </button>
 
-      <router-link to="/welcome" class="block mt-6 text-[14px] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]">
+      <router-link to="/" class="block mt-3 py-3 text-[14px] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]">
         Back to Home
       </router-link>
     </div>

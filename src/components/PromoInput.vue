@@ -39,6 +39,9 @@ async function handleApply() {
         v-model="code"
         type="text"
         placeholder="Enter promo code"
+        aria-label="Promo code"
+        autocapitalize="characters"
+        autocomplete="off"
         class="flex-1 px-4 py-3 border border-[var(--color-border)] rounded-xl text-[15px] font-[var(--font-sans)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[#2b8659] focus:ring-1 focus:ring-[#2b8659] transition-colors uppercase tracking-wider"
         :disabled="applying"
         @keyup.enter="handleApply"
@@ -62,7 +65,7 @@ async function handleApply() {
         <p
           :class="[
             'text-[13px] font-medium px-3 py-2 rounded-lg',
-            feedback.type === 'success' ? 'bg-[var(--color-surface-secondary)] text-[var(--color-brand)]' : 'bg-red-50 text-red-600',
+            feedback.type === 'success' ? 'bg-[var(--color-surface-secondary)] text-[var(--color-brand)]' : 'bg-red-50 text-[var(--color-danger)]',
           ]"
         >
           {{ feedback.message }}

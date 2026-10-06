@@ -76,11 +76,11 @@ async function copyLink() {
 <template>
   <div class="px-5 pt-2 pb-8">
     <div class="flex items-center justify-between mb-5">
-      <button @click="emit('back')" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
+      <button @click="emit('back')" class="w-11 h-11 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
         <svg class="w-5 h-5 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
       </button>
       <h2 class="text-lg font-bold text-[var(--color-text-primary)]">Share trip status</h2>
-      <button @click="emit('close')" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Close">
+      <button @click="emit('close')" class="w-11 h-11 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Close">
         <svg class="w-5 h-5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
       </button>
     </div>
@@ -94,7 +94,7 @@ async function copyLink() {
       <p class="text-[13px] text-[var(--color-text-secondary)]">{{ vehicleInfo }}</p>
       <p v-if="loading" class="text-[12px] text-[var(--color-text-muted)] mt-2">Creating your live link…</p>
       <p v-else-if="link" class="text-[12px] text-[var(--color-brand)] mt-2 break-all">{{ link }}</p>
-      <p v-if="error" class="text-[13px] text-red-500 mt-2" role="alert">{{ error }}</p>
+      <p v-if="error" class="text-[13px] text-[var(--color-danger)] mt-2" role="alert">{{ error }}</p>
     </div>
 
     <div v-if="trustedContacts.length && link" class="mb-5">

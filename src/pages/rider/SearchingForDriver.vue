@@ -249,7 +249,7 @@ async function cancelRequest() {
   <div class="relative min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col overflow-hidden">
     <HarborBackdrop />
     <div class="relative px-6 pt-[max(2rem,env(safe-area-inset-top))] pb-4 flex items-center gap-3">
-      <button @click="cancelRequest" class="w-10 h-10 rounded-full bg-[var(--color-surface-secondary)] border border-[var(--color-border)] flex items-center justify-center text-base" aria-label="Cancel">←</button>
+      <button @click="cancelRequest" class="w-11 h-11 rounded-full bg-[var(--color-surface-secondary)] border border-[var(--color-border)] flex items-center justify-center text-base" aria-label="Cancel">←</button>
       <div class="text-lg font-semibold">Ride<span class="text-[var(--color-brand)]">Up</span></div>
     </div>
     <div class="relative flex-1 flex flex-col items-center justify-center gap-6 px-6">
@@ -272,7 +272,7 @@ async function cancelRequest() {
           </p>
         </div>
         <button @click="cancelRequest" :disabled="cancelling" class="text-[var(--color-text-secondary)] text-[13px] underline underline-offset-2 mt-2 py-2 px-4 min-h-[44px] disabled:opacity-50">{{ cancelling ? 'Cancelling…' : 'Cancel request' }}</button>
-        <p v-if="cancelError" class="text-[13px] text-red-500" role="alert">{{ cancelError }}</p>
+        <p v-if="cancelError" class="text-[13px] text-[var(--color-danger)]" role="alert">{{ cancelError }}</p>
       </template>
       <div v-if="timedOut" class="text-center px-6">
         <div class="w-16 h-16 rounded-full bg-[var(--color-surface-secondary)] flex items-center justify-center mx-auto mb-4">

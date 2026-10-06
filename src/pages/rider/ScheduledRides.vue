@@ -120,7 +120,7 @@ onMounted(fetchScheduledRides)
     <!-- Header -->
     <div class="bg-[var(--color-surface)] border-b border-[var(--color-border)]">
       <div class="max-w-lg mx-auto px-5 pt-[max(1.5rem,env(safe-area-inset-top))] pb-4 flex items-center gap-3">
-        <button @click="router.back()" class="w-10 h-10 rounded-full hover:bg-[var(--color-text-primary)]/5 flex items-center justify-center transition-colors -ml-2" aria-label="Back">
+        <button @click="router.back()" class="w-11 h-11 rounded-full hover:bg-[var(--color-text-primary)]/5 flex items-center justify-center transition-colors -ml-2" aria-label="Back">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
@@ -136,7 +136,7 @@ onMounted(fetchScheduledRides)
       </div>
 
       <!-- Error -->
-      <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-600 text-[13px] rounded-xl px-4 py-3">
+      <div v-else-if="error" class="bg-red-50 border border-red-200 text-[var(--color-danger)] text-[13px] rounded-xl px-4 py-3">
         {{ error }}
       </div>
 
@@ -189,7 +189,7 @@ onMounted(fetchScheduledRides)
                 <button
                   v-if="showCancelConfirm !== ride.id"
                   @click="showCancelConfirm = ride.id"
-                  class="text-[13px] font-semibold text-red-500 active:text-red-700 transition-colors"
+                  class="text-[13px] font-semibold text-[var(--color-danger)] active:text-red-700 transition-colors"
                 >
                   Cancel ride
                 </button>
@@ -198,7 +198,7 @@ onMounted(fetchScheduledRides)
                   <button
                     @click="cancelRide(ride.id)"
                     :disabled="cancellingId === ride.id"
-                    class="text-[13px] font-bold text-red-500 disabled:text-red-300"
+                    class="text-[13px] font-bold text-[var(--color-danger)] disabled:text-red-300"
                   >
                     {{ cancellingId === ride.id ? 'Cancelling...' : 'Yes, cancel' }}
                   </button>
@@ -228,7 +228,7 @@ onMounted(fetchScheduledRides)
                 </div>
                 <div class="text-right">
                   <span class="text-[16px] font-bold text-[var(--color-text-muted)]">{{ formatFare(ride.fare_cents) }}</span>
-                  <p v-if="ride.status === 'cancelled'" class="text-[11px] text-red-400 font-semibold">Cancelled</p>
+                  <p v-if="ride.status === 'cancelled'" class="text-[11px] text-[var(--color-danger)] font-semibold">Cancelled</p>
                 </div>
               </div>
 

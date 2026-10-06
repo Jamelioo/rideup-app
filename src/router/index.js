@@ -60,7 +60,7 @@ const AdminSettings = () => import('../pages/admin/AdminSettings.vue')
 
 const routes = [
   { path: '/', name: 'home', component: RiderLanding, meta: { title: 'RideUp Nassau — Book a ride with upfront prices' } },
-  { path: '/book', name: 'book', component: RiderFlow, meta: { title: 'RideUp Nassau' } },
+  { path: '/book', name: 'book', component: RiderFlow, meta: { title: 'Book a Ride — RideUp' } },
   { path: '/login', name: 'login', component: Login, meta: { guestOnly: true, title: 'Log In — RideUp' } },
   { path: '/signup', name: 'signup', component: Signup, meta: { guestOnly: true, title: 'Sign Up — RideUp' } },
   { path: '/reset-password', name: 'reset-password', component: ResetPassword, meta: { title: 'Reset Password — RideUp' } },
@@ -75,13 +75,13 @@ const routes = [
   { path: '/saved-places', name: 'saved-places', component: SavedPlaces, meta: { requiresAuth: true, title: 'Saved Places — RideUp' } },
   { path: '/payment-success', name: 'payment-success', component: PaymentSuccess, meta: { title: 'Payment Successful — RideUp' } },
   { path: '/receipt/:rideId', name: 'ride-receipt', component: RideReceipt, meta: { title: 'Receipt — RideUp' } },
-  { path: '/support', name: 'support', component: Support, meta: { title: 'Support — RideUp' } },
+  { path: '/support', name: 'support', component: Support, meta: { title: 'Help — RideUp' } },
   { path: '/trusted-contacts', name: 'trusted-contacts', component: TrustedContacts, meta: { requiresAuth: true, title: 'Trusted Contacts — RideUp' } },
   { path: '/promotions', name: 'promotions', component: Promotions, meta: { requiresAuth: true, title: 'Promotions — RideUp' } },
   { path: '/referrals', name: 'referrals', component: Referrals, meta: { requiresAuth: true, title: 'Invite Friends — RideUp' } },
   { path: '/about', name: 'about', component: About, meta: { title: 'About — RideUp' } },
   { path: '/airport', name: 'airport', component: AirportLanding, meta: { title: 'Nassau Airport Rides — RideUp', public: true } },
-  { path: '/track/:token', name: 'track-trip', component: TrackTrip, meta: { title: 'Live trip — RideUp', public: true } },
+  { path: '/track/:token', name: 'track-trip', component: TrackTrip, meta: { title: 'Live Trip — RideUp', public: true } },
   { path: '/welcome', redirect: '/' },
   // Referral links (rideupnassau.com/r/RIDEXXXXX): remember the code, then sign up. It's applied once the
   // friend has an account (App.vue), giving them $5 off their first ride.
@@ -93,10 +93,10 @@ const routes = [
       return { path: '/signup', query: { ref: '1' } }
     },
   },
-  { path: '/drive', name: 'driver-landing', component: DriverLanding, meta: { title: 'Drive with RideUp Nassau' } },
+  { path: '/drive', name: 'driver-landing', component: DriverLanding, meta: { title: 'Drive with RideUp — Nassau' } },
   { path: '/privacy', name: 'privacy', component: Privacy, meta: { title: 'Privacy Policy — RideUp' } },
   { path: '/terms', name: 'terms', component: Terms, meta: { title: 'Terms of Service — RideUp' } },
-  { path: '/driver/apply', name: 'driver-apply', component: DriverApply, meta: { title: 'Drive with RideUp' } },
+  { path: '/driver/apply', name: 'driver-apply', component: DriverApply, meta: { title: 'Apply to Drive — RideUp' } },
   { path: '/driver/pending', name: 'driver-pending', component: DriverPending, meta: { requiresAuth: true, title: 'Application Status — RideUp' } },
   { path: '/driver/dashboard', name: 'driver-dashboard', component: DriverDashboard, meta: { requiresAuth: true, title: 'Driver Dashboard — RideUp' } },
   { path: '/driver/active-ride', name: 'driver-active-ride', component: DriverActiveRide, meta: { requiresAuth: true, title: 'Active Ride — RideUp' } },

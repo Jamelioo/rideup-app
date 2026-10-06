@@ -25,7 +25,7 @@ const referral = ref(getPendingReferral() || '')
 const redirect = () => safeRedirect(route.query.redirect, '/book')
 
 function goBack() {
-  router.push('/welcome')
+  router.push('/')
 }
 
 async function handleSignup() {
@@ -80,7 +80,7 @@ const inputClass = 'w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] round
   <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top bar -->
     <div class="flex items-center px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
+      <button @click="goBack" class="w-11 h-11 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -120,25 +120,28 @@ const inputClass = 'w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] round
         <h1 class="text-[28px] font-bold leading-tight mb-2">Create your account</h1>
         <p class="text-[var(--color-text-muted)] text-[14px] mb-8">Enter your details to get started</p>
 
-        <div class="space-y-3 mb-4">
-          <label class="block">
-            <span class="sr-only">Full name</span>
-            <input v-model="name" type="text" placeholder="Full name" autocomplete="name" :class="inputClass" />
-          </label>
-          <label class="block">
-            <span class="sr-only">Email address</span>
-            <input v-model="email" type="email" placeholder="Email address" autocomplete="email" inputmode="email" :class="inputClass" />
-          </label>
-          <label class="block relative">
-            <span class="sr-only">Password</span>
-            <input v-model="password" :type="showPassword ? 'text' : 'password'" :placeholder="`Password (at least ${MIN_PASSWORD} characters)`" autocomplete="new-password" :class="inputClass" class="pr-16" />
-            <button type="button" @click="showPassword = !showPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[var(--color-brand)] px-1 py-1"
-                    :aria-pressed="showPassword" :aria-label="showPassword ? 'Hide password' : 'Show password'">{{ showPassword ? 'Hide' : 'Show' }}</button>
-          </label>
-          <label class="block">
-            <span class="sr-only">Friend’s referral code (optional)</span>
-            <input v-model="referral" type="text" autocapitalize="characters" autocomplete="off" placeholder="Friend’s referral code (optional)" :class="inputClass" class="uppercase" />
-          </label>
+        <div class="space-y-4 mb-4">
+          <div>
+            <label for="su-name" class="block text-[14px] font-medium text-[var(--color-text-secondary)] mb-1.5">Full name</label>
+            <input id="su-name" v-model="name" type="text" autocomplete="name" :class="inputClass" />
+          </div>
+          <div>
+            <label for="su-email" class="block text-[14px] font-medium text-[var(--color-text-secondary)] mb-1.5">Email address</label>
+            <input id="su-email" v-model="email" type="email" autocomplete="email" inputmode="email" :class="inputClass" />
+          </div>
+          <div>
+            <label for="su-password" class="block text-[14px] font-medium text-[var(--color-text-secondary)] mb-1.5">Password</label>
+            <div class="relative">
+              <input id="su-password" v-model="password" :type="showPassword ? 'text' : 'password'" aria-describedby="su-password-hint" autocomplete="new-password" :class="inputClass" class="pr-16" />
+              <button type="button" @click="showPassword = !showPassword" class="absolute right-1 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[var(--color-brand)] min-w-[48px] min-h-[44px] px-2"
+                      :aria-pressed="showPassword" :aria-label="showPassword ? 'Hide password' : 'Show password'">{{ showPassword ? 'Hide' : 'Show' }}</button>
+            </div>
+            <p id="su-password-hint" class="text-[12px] text-[var(--color-text-muted)] mt-1.5 px-1">At least {{ MIN_PASSWORD }} characters</p>
+          </div>
+          <div>
+            <label for="su-referral" class="block text-[14px] font-medium text-[var(--color-text-secondary)] mb-1.5">Friend’s referral code <span class="font-normal text-[var(--color-text-muted)]">(optional)</span></label>
+            <input id="su-referral" v-model="referral" type="text" autocapitalize="characters" autocomplete="off" :class="inputClass" class="uppercase" />
+          </div>
           <p v-if="referral" class="text-[12px] text-[var(--color-brand)] px-1">You’ll get $5 off your first ride.</p>
         </div>
 
