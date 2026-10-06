@@ -144,7 +144,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
                       <div class="text-[14px] font-bold font-serif">Ride<span class="text-[#4cc48a]">Up</span> <span class="text-[11px] font-normal text-white/70 ml-0.5">Driver</span></div>
                       <div class="flex items-center gap-1 bg-[#2b8659]/20 px-2 py-0.5 rounded-full">
                         <div class="w-1.5 h-1.5 rounded-full bg-[#2b8659]"></div>
-                        <span class="text-[11px] text-[var(--color-brand)] font-semibold">Online</span>
+                        <span class="text-[11px] text-[#4cc48a] font-semibold">Online</span>
                       </div>
                     </div>
                   </div>
