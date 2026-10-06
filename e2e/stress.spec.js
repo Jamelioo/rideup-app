@@ -41,8 +41,8 @@ const actions = [
   async (page) => {
     await page.goto('/login')
     for (let i = 0; i < 10; i++) {
-      await page.getByPlaceholder('Email address').fill(`garbage${Math.random()}@fake.xxx`)
-      await page.getByPlaceholder('Password').fill(`pwd${Math.random()}`)
+      await page.getByLabel('Email address').fill(`garbage${Math.random()}@fake.xxx`)
+      await page.getByLabel('Password', { exact: true }).fill(`pwd${Math.random()}`)
       await page.getByRole('button', { name: 'Log in' }).click()
       await page.waitForTimeout(100)
     }
@@ -52,9 +52,9 @@ const actions = [
   async (page) => {
     await page.goto('/signup')
     for (let i = 0; i < 5; i++) {
-      await page.getByPlaceholder('Full name').fill(`Bot ${Math.random().toString(36).slice(2)}`)
-      await page.getByPlaceholder('Email address').fill(`bot${Math.random()}@fake.xxx`)
-      await page.getByPlaceholder('Password (at least 8 characters)').fill('ab')
+      await page.getByLabel('Full name').fill(`Bot ${Math.random().toString(36).slice(2)}`)
+      await page.getByLabel('Email address').fill(`bot${Math.random()}@fake.xxx`)
+      await page.getByLabel('Password', { exact: true }).fill('ab')
       await page.getByRole('button', { name: 'Sign up' }).click()
       await page.waitForTimeout(100)
     }

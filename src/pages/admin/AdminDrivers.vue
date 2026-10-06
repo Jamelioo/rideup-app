@@ -3,9 +3,9 @@
     <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6">Driver Management</h1>
 
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-      <div class="flex flex-wrap gap-1 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] p-1" role="tablist">
-        <button v-for="tab in filterTabs" :key="tab" @click="activeFilter = tab" role="tab" :aria-selected="activeFilter === tab"
-                :class="['px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap',
+      <div class="flex flex-wrap gap-1 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] p-1" role="group" aria-label="Filter drivers">
+        <button v-for="tab in filterTabs" :key="tab" @click="activeFilter = tab" :aria-pressed="activeFilter === tab"
+                :class="['px-3.5 py-2 min-w-[44px] text-sm font-medium rounded-md transition-colors whitespace-nowrap',
                          activeFilter === tab ? 'bg-[#2b8659] text-white' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)]']">
           {{ tab }}
           <span v-if="tab === 'Pending' && pendingCount > 0" class="ml-1 bg-yellow-400 text-yellow-900 text-xs px-1.5 py-0.5 rounded-full">{{ pendingCount }}</span>
@@ -15,7 +15,7 @@
              class="px-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[#2b8659]/30 w-full sm:w-64" />
     </div>
 
-    <p v-if="loadError" class="mb-4 text-sm text-red-600" role="alert">{{ loadError }}</p>
+    <p v-if="loadError" class="mb-4 text-sm text-[var(--color-danger)]" role="alert">{{ loadError }}</p>
 
     <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden">
       <div class="overflow-x-auto">
@@ -63,11 +63,11 @@
     </div>
 
     <!-- Review drawer -->
-    <div v-if="review" class="fixed inset-0 z-[200] flex justify-end bg-black/40" @click.self="review = null" role="dialog" aria-modal="true" aria-labelledby="review-title">
+    <div v-if="review" v-modal="() => (review = null)" class="fixed inset-0 z-[200] flex justify-end bg-black/40" @click.self="review = null" role="dialog" aria-modal="true" aria-labelledby="review-title">
       <div class="w-full max-w-lg h-full overflow-y-auto bg-[var(--color-surface)] text-[var(--color-text-primary)] p-6">
         <div class="flex items-center justify-between mb-5">
           <h2 id="review-title" class="text-xl font-bold">{{ review.name }}</h2>
-          <button @click="review = null" class="w-10 h-10 rounded-full hover:bg-[var(--color-surface-secondary)]" aria-label="Close">✕</button>
+          <button @click="review = null" class="w-11 h-11 rounded-full hover:bg-[var(--color-surface-secondary)]" aria-label="Close">✕</button>
         </div>
 
         <div class="flex items-center gap-4 mb-5">
@@ -86,7 +86,7 @@
         <h3 class="text-sm font-bold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">Approval checklist</h3>
         <ul class="mb-5 space-y-1.5 text-sm">
           <li v-for="item in checklist" :key="item.label" class="flex items-center gap-2">
-            <span :class="item.ok ? 'text-[var(--color-brand)]' : 'text-red-500'" aria-hidden="true">{{ item.ok ? '✓' : '✗' }}</span>
+            <span :class="item.ok ? 'text-[var(--color-brand)]' : 'text-[var(--color-danger)]'" aria-hidden="true">{{ item.ok ? '✓' : '✗' }}</span>
             <span>{{ item.label }}</span>
           </li>
         </ul>
@@ -128,7 +128,7 @@
           <textarea v-model="form.review_note" rows="3" class="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]"></textarea>
         </label>
 
-        <p v-if="actionError" class="mb-3 text-sm text-red-600" role="alert">{{ actionError }}</p>
+        <p v-if="actionError" class="mb-3 text-sm text-[var(--color-danger)]" role="alert">{{ actionError }}</p>
         <p v-if="actionDone" class="mb-3 text-sm text-[var(--color-brand)]" role="status">{{ actionDone }}</p>
 
         <div class="flex flex-wrap gap-2">

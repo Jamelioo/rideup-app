@@ -21,7 +21,7 @@
       </div>
     </div>
 
-    <p v-if="error" class="mb-4 text-sm text-red-600" role="alert">{{ error }}</p>
+    <p v-if="error" class="mb-4 text-sm text-[var(--color-danger)]" role="alert">{{ error }}</p>
 
     <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden mb-8">
       <table class="w-full text-sm stack-table">
@@ -74,7 +74,7 @@
             <td data-label="Reference" class="px-4 py-3">{{ p.reference || '—' }}</td>
             <td data-label="Status" class="px-4 py-3">
               <span v-if="p.status === 'void'">Voided</span>
-              <button v-else @click="voidPayout(p)" class="text-xs text-red-600 underline">Void</button>
+              <button v-else @click="voidPayout(p)" class="text-xs text-[var(--color-danger)] underline">Void</button>
             </td>
           </tr>
           <tr v-if="history.length === 0"><td colspan="6" class="px-4 py-8 text-center text-[var(--color-text-muted)]">No payouts recorded yet.</td></tr>
@@ -83,7 +83,7 @@
     </div>
 
     <!-- Record payout -->
-    <div v-if="paying" class="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center px-4" @click.self="paying = null" role="dialog" aria-modal="true" aria-labelledby="pay-title">
+    <div v-if="paying" v-modal="() => (paying = null)" class="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center px-4" @click.self="paying = null" role="dialog" aria-modal="true" aria-labelledby="pay-title">
       <form @submit.prevent="submitPayout" class="w-full max-w-md rounded-2xl bg-[var(--color-surface)] text-[var(--color-text-primary)] p-6">
         <h2 id="pay-title" class="text-lg font-bold mb-1">Record payout to {{ paying.name }}</h2>
         <p class="text-sm text-[var(--color-text-secondary)] mb-4">Balance owed: {{ formatFare(paying.balance_cents) }}. Record the payout after you’ve sent the money.</p>
@@ -101,7 +101,7 @@
         <label class="block text-sm mb-4">Note
           <input v-model="payForm.note" type="text" maxlength="200" class="mt-1 w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]" />
         </label>
-        <p v-if="payError" class="mb-3 text-sm text-red-600" role="alert">{{ payError }}</p>
+        <p v-if="payError" class="mb-3 text-sm text-[var(--color-danger)]" role="alert">{{ payError }}</p>
         <div class="flex gap-2">
           <button type="submit" :disabled="saving" class="flex-1 py-2.5 rounded-lg bg-[#2b8659] text-white font-semibold disabled:opacity-50">{{ saving ? 'Saving…' : 'Record payout' }}</button>
           <button type="button" @click="paying = null" class="px-4 py-2.5 rounded-lg border border-[var(--color-border)]">Cancel</button>

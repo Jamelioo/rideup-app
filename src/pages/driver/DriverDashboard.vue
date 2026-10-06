@@ -173,6 +173,7 @@ const initials = computed(() => {
 
 <template>
   <div class="relative h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)] overflow-hidden">
+    <h1 class="sr-only">Driver home</h1>
     <SideMenu :is-open="menuOpen" @close="menuOpen = false" />
 
     <!-- Incoming ride request overlay -->
@@ -302,10 +303,10 @@ const initials = computed(() => {
       <div class="px-6 pt-8 pb-4 flex items-center justify-between">
         <div class="text-[22px] font-bold tracking-tight">Ride<span class="text-[var(--color-brand)]">Up</span> <span class="text-[12px] font-sans font-normal text-[var(--color-text-muted)] ml-0.5">Driver</span></div>
         <div class="flex items-center gap-2">
-          <button @click="menuOpen = true" class="w-10 h-10 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center transition-colors" aria-label="Open menu">
+          <button @click="menuOpen = true" class="w-11 h-11 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center transition-colors" aria-label="Open menu">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect y="3" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="8.25" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="13.5" width="18" height="1.5" rx="0.75" fill="currentColor"/></svg>
           </button>
-          <button @click="router.push('/driver/profile')" class="w-10 h-10 rounded-full bg-[#2b8659] flex items-center justify-center text-white text-[13px] font-bold">
+          <button @click="router.push('/driver/profile')" class="w-11 h-11 rounded-full bg-[#2b8659] flex items-center justify-center text-white text-[13px] font-bold">
             {{ initials }}
           </button>
         </div>

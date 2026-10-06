@@ -15,7 +15,7 @@ const emit = defineEmits(['send'])
       v-for="msg in messages"
       :key="msg"
       @click="emit('send', msg)"
-      class="flex-shrink-0 px-3.5 py-1.5 rounded-full bg-[#2b8659]/10 text-[#236e49] text-[12px] font-semibold whitespace-nowrap active:bg-[#2b8659]/20 transition-colors"
+      class="flex-shrink-0 px-3.5 py-1.5 rounded-full bg-[#2b8659]/10 text-[var(--color-brand)] text-[12px] font-semibold whitespace-nowrap active:bg-[#2b8659]/20 transition-colors"
     >
       {{ msg }}
     </button>

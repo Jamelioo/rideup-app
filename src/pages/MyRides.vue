@@ -103,7 +103,7 @@ onMounted(async () => {
     <!-- Top Bar -->
     <div class="sticky top-0 z-10 flex items-center bg-[var(--color-surface)] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
       <button
-        class="flex h-10 w-10 items-center justify-center rounded-full transition-colors active:bg-[var(--color-surface-secondary)]"
+        class="flex h-11 w-11 items-center justify-center rounded-full transition-colors active:bg-[var(--color-surface-secondary)]"
         @click="router.back()"
        aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

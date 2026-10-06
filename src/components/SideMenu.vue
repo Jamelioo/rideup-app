@@ -162,7 +162,7 @@ watch(() => props.isOpen, async (open) => {
                 {{ displayName }}
               </p>
               <button
-                class="text-sm font-medium text-[var(--color-brand)] mt-0.5 hover:text-[#236e49] transition-colors"
+                class="text-sm font-medium text-[var(--color-brand)] mt-0.5 hover:text-[var(--color-brand)] transition-colors"
                 @click="handleNavigate('/profile')"
               >
                 Edit profile
@@ -268,7 +268,7 @@ watch(() => props.isOpen, async (open) => {
           <button
             v-if="isLoggedIn"
             @click="handleLogout"
-            class="w-full text-left text-red-500 text-[15px] font-medium py-2"
+            class="w-full text-left text-[var(--color-danger)] text-[15px] font-medium py-2"
           >
             Log out
           </button>

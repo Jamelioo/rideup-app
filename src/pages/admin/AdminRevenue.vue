@@ -10,7 +10,7 @@
       </div>
     </div>
 
-    <p v-if="error" class="mb-4 text-sm text-red-600" role="alert">{{ error }}</p>
+    <p v-if="error" class="mb-4 text-sm text-[var(--color-danger)]" role="alert">{{ error }}</p>
 
     <!-- Headline numbers -->
     <div class="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
@@ -67,7 +67,7 @@
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">− Driver incentives</dt><dd>−{{ money(sum.quest_reward_cents) }}</dd></div>
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">− Card fees (estimate)</dt><dd>−{{ money(sum.est_card_fee_cents) }}</dd></div>
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">− Card refunds (RideUp part)</dt><dd>−{{ money(sum.refund_cents - sum.refund_driver_cents) }}</dd></div>
-          <div class="flex justify-between font-bold text-base border-t border-[var(--color-border)] pt-2"><dt>RideUp net</dt><dd :class="totalNet < 0 && 'text-red-600'">{{ money(totalNet) }}</dd></div>
+          <div class="flex justify-between font-bold text-base border-t border-[var(--color-border)] pt-2"><dt>RideUp net</dt><dd :class="totalNet < 0 && 'text-[var(--color-danger)]'">{{ money(totalNet) }}</dd></div>
         </dl>
         <p class="text-xs text-[var(--color-text-muted)] mt-3">Card fees are estimated at 2.9% + 30¢ per charge; check Stripe for exact amounts. Tips go 100% to drivers.</p>
       </div>
@@ -79,7 +79,7 @@
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">Driver earnings waiting for payout <span class="text-xs text-[var(--color-text-muted)]">({{ owed.drivers_owed }} drivers)</span></dt><dd class="font-semibold">{{ money(owed.driver_balances_cents) }}</dd></div>
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">Unspent rider credit <span class="text-xs text-[var(--color-text-muted)]">({{ money(sum.credit_issued_cents) }} given by support in this period)</span></dt><dd class="font-semibold">{{ money(owed.credit_outstanding_cents) }}</dd></div>
         </dl>
-        <router-link to="/admin/payouts" class="inline-block mt-4 text-sm font-semibold text-[var(--color-brand)]">Record payouts →</router-link>
+        <router-link to="/admin/payouts" class="inline-flex items-center min-h-[44px] mt-2 text-sm font-semibold text-[var(--color-brand)]">Record payouts →</router-link>
         <h2 class="text-sm font-semibold text-[var(--color-text-primary)] mt-6 mb-3">Drivers earned, last {{ days }} days</h2>
         <dl class="text-sm space-y-2">
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">Fares</dt><dd>{{ money(sum.driver_fare_cents) }}</dd></div>
@@ -143,7 +143,7 @@
             <td data-label="Trips" class="px-4 py-2.5 text-right">{{ d.trips }}</td>
             <td data-label="Rider payments" class="px-4 py-2.5 text-right">{{ money(d.rider_paid_cents) }}</td>
             <td data-label="Discounts" class="px-4 py-2.5 text-right">{{ money(d.promo_cents + d.credit_cents) }}</td>
-            <td data-label="RideUp net" class="px-4 py-2.5 text-right font-semibold" :class="net(d) < 0 && 'text-red-600'">{{ money(net(d)) }}</td>
+            <td data-label="RideUp net" class="px-4 py-2.5 text-right font-semibold" :class="net(d) < 0 && 'text-[var(--color-danger)]'">{{ money(net(d)) }}</td>
           </tr>
           <tr v-if="!loading && !tableRows.length"><td colspan="5" class="px-4 py-8 text-center text-[var(--color-text-muted)]">No paid trips in this period yet.</td></tr>
           <tr v-if="loading"><td colspan="5" class="px-4 py-8 text-center text-[var(--color-text-muted)]">Loading…</td></tr>

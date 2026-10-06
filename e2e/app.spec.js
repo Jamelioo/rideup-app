@@ -56,8 +56,8 @@ test('footer has Instagram and WhatsApp links', async ({ page }) => {
 test('login page renders with form fields', async ({ page }) => {
   await page.goto('/login')
   await expect(page.locator('h1')).toContainText('Welcome back')
-  await expect(page.getByPlaceholder('Email address')).toBeVisible()
-  await expect(page.getByPlaceholder('Password')).toBeVisible()
+  await expect(page.getByLabel('Email address')).toBeVisible()
+  await expect(page.getByLabel('Password', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Log in' })).toBeVisible()
 })
 
@@ -81,9 +81,9 @@ test('login page has forgot password', async ({ page }) => {
 
 test('signup page renders with all form fields', async ({ page }) => {
   await page.goto('/signup')
-  await expect(page.getByPlaceholder('Full name')).toBeVisible()
-  await expect(page.getByPlaceholder('Email address')).toBeVisible()
-  await expect(page.getByPlaceholder('Password (at least 8 characters)')).toBeVisible()
+  await expect(page.getByLabel('Full name')).toBeVisible()
+  await expect(page.getByLabel('Email address')).toBeVisible()
+  await expect(page.getByLabel('Password', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sign up' })).toBeVisible()
 })
 
@@ -95,24 +95,24 @@ test('signup validates empty name', async ({ page }) => {
 
 test('signup validates email', async ({ page }) => {
   await page.goto('/signup')
-  await page.getByPlaceholder('Full name').fill('Test User')
-  await page.getByPlaceholder('Email address').fill('not-an-email')
+  await page.getByLabel('Full name').fill('Test User')
+  await page.getByLabel('Email address').fill('not-an-email')
   await page.getByRole('button', { name: 'Sign up' }).click()
   await expect(page.getByText('Please enter a valid email address')).toBeVisible()
 })
 
 test('signup validates short password', async ({ page }) => {
   await page.goto('/signup')
-  await page.getByPlaceholder('Full name').fill('Test User')
-  await page.getByPlaceholder('Email address').fill('test@test.com')
-  await page.getByPlaceholder('Password (at least 8 characters)').fill('1234567')
+  await page.getByLabel('Full name').fill('Test User')
+  await page.getByLabel('Email address').fill('test@test.com')
+  await page.getByLabel('Password', { exact: true }).fill('1234567')
   await page.getByRole('button', { name: 'Sign up' }).click()
   await expect(page.getByText('at least 8 characters.')).toBeVisible()
 })
 
 test('signup password can be shown', async ({ page }) => {
   await page.goto('/signup')
-  const field = page.getByPlaceholder('Password (at least 8 characters)')
+  const field = page.getByLabel('Password', { exact: true })
   await expect(field).toHaveAttribute('type', 'password')
   await page.getByRole('button', { name: 'Show password' }).click()
   await expect(field).toHaveAttribute('type', 'text')

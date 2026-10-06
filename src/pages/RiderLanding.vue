@@ -43,7 +43,7 @@ const popularTrips = POPULAR_TRIPS.map((t) => ({
     <!-- NAV -->
     <header class="sticky top-0 z-40 bg-[var(--color-surface)]/95 backdrop-blur-md border-b border-[var(--color-border)]">
       <nav class="max-w-6xl mx-auto px-5 py-3 flex items-center justify-between gap-3" aria-label="Main">
-        <router-link to="/" class="text-[20px] font-bold py-1" aria-label="RideUp home">Ride<span class="text-[var(--color-brand)]">Up</span></router-link>
+        <router-link to="/" class="text-[20px] font-bold inline-flex items-center min-h-[44px]" aria-label="RideUp home">Ride<span class="text-[var(--color-brand)]">Up</span></router-link>
         <div class="hidden md:flex items-center gap-2 text-[16px] font-medium text-[var(--color-text-muted)]">
           <router-link to="/" aria-current="page" class="px-3 py-2 rounded-full text-[var(--color-text-primary)] font-bold">Ride</router-link>
           <router-link to="/drive" class="px-3 py-2 rounded-full hover:text-[var(--color-text-primary)] transition-colors">Drive</router-link>
@@ -92,7 +92,7 @@ const popularTrips = POPULAR_TRIPS.map((t) => ({
             </button>
           </div>
           <p v-if="!isLoggedIn" class="mt-4 text-[14px] text-[var(--color-text-secondary)]">
-            <router-link to="/login" class="underline underline-offset-2 hover:text-[var(--color-text-primary)]">Log in to see your recent rides</router-link>
+            <router-link to="/login" class="inline-flex items-center min-h-[44px] underline underline-offset-2 hover:text-[var(--color-text-primary)]">Log in to see your recent rides</router-link>
           </p>
         </div>
 
@@ -244,7 +244,7 @@ const popularTrips = POPULAR_TRIPS.map((t) => ({
       <div class="max-w-6xl mx-auto px-5 py-10">
         <div class="md:flex md:justify-between md:gap-10">
           <div class="mb-6 md:mb-0">
-            <router-link to="/" class="text-[20px] font-bold" aria-label="RideUp home">Ride<span class="text-[#4cc48a]">Up</span></router-link>
+            <router-link to="/" class="text-[20px] font-bold inline-flex items-center min-h-[44px]" aria-label="RideUp home">Ride<span class="text-[#4cc48a]">Up</span></router-link>
             <p class="text-[14px] text-white/75 mt-2">Rides across New Providence, Bahamas.</p>
             <p class="text-[14px] text-white/75 mt-3">
               <a href="tel:+12424529911" class="hover:text-white py-1 inline-block">(242) 452-9911</a><br />

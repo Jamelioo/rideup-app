@@ -278,6 +278,7 @@ const endedMessage = computed(() => {
 
 <template>
   <div class="fixed inset-0 bg-[var(--color-surface)] text-[var(--color-text-primary)]">
+    <h1 class="sr-only">Your ride</h1>
     <!-- Top bar -->
     <div class="absolute top-0 left-0 right-0 z-30 bg-[var(--color-surface)]/95 backdrop-blur-sm border-b border-[var(--color-border)]">
       <div class="px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-3 flex items-center gap-3">
@@ -349,7 +350,7 @@ const endedMessage = computed(() => {
           <template v-if="cancelFeeCents > 0">Your driver accepted more than {{ Math.round(CANCEL_GRACE_SECONDS / 60) }} minutes ago{{ rideStatus === 'driver_arrived' ? ' and is waiting for you' : ' and is on the way' }}, so a {{ formatFare(cancelFeeCents) }} cancellation fee applies. Most of it goes to your driver.</template>
           <template v-else>You won’t be charged.</template>
         </p>
-        <p v-if="cancelError" class="text-[13px] text-red-500 mb-3" role="alert">{{ cancelError }}</p>
+        <p v-if="cancelError" class="text-[13px] text-[var(--color-danger)] mb-3" role="alert">{{ cancelError }}</p>
         <button @click="confirmingCancel = false" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mb-2">Keep my ride</button>
         <button @click="doCancel" :disabled="cancelling" class="w-full py-3 text-[var(--color-text-secondary)] font-semibold text-[14px] disabled:opacity-50">
           {{ cancelling ? 'Cancelling…' : cancelFeeCents > 0 ? `Cancel and pay ${formatFare(cancelFeeCents)}` : 'Yes, cancel ride' }}

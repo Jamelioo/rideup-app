@@ -89,9 +89,9 @@ async function handleSave() {
   <div class="min-h-dvh bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top Bar -->
     <div class="flex items-center justify-between px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
-      <button @click="cancel" class="text-[var(--color-brand)] text-base font-medium">Cancel</button>
+      <button @click="cancel" class="text-[var(--color-brand)] text-base font-medium min-h-[44px] -ml-2 px-2">Cancel</button>
       <h1 class="text-base font-bold font-serif">Edit profile</h1>
-      <button @click="handleSave" :disabled="saving" class="text-[var(--color-brand)] text-base font-semibold disabled:opacity-50">{{ saving ? 'Saving...' : 'Save' }}</button>
+      <button @click="handleSave" :disabled="saving" class="text-[var(--color-brand)] text-base font-semibold disabled:opacity-50 min-h-[44px] min-w-[44px] -mr-2 px-2">{{ saving ? 'Saving...' : 'Save' }}</button>
     </div>
 
     <!-- Avatar Upload -->
@@ -163,7 +163,7 @@ async function handleSave() {
       </div>
 
       <!-- Save feedback -->
-      <p v-if="saveMessage" :class="saveError ? 'text-red-500' : 'text-[var(--color-brand)]'" class="text-sm mt-4">
+      <p v-if="saveMessage" :class="saveError ? 'text-[var(--color-danger)]' : 'text-[var(--color-brand)]'" class="text-sm mt-4">
         {{ saveMessage }}
       </p>
     </div>

@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6">Dashboard</h1>
-    <p v-if="loadError" class="mb-4 text-sm text-red-600" role="alert">{{ loadError }}</p>
+    <p v-if="loadError" class="mb-4 text-sm text-[var(--color-danger)]" role="alert">{{ loadError }}</p>
     <router-link v-if="openSafetyReports > 0" to="/admin/safety" class="mb-6 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">
       <span>{{ openSafetyReports }} open safety report{{ openSafetyReports === 1 ? '' : 's' }} need review</span>
       <span aria-hidden="true">→</span>
@@ -12,7 +12,7 @@
       <div v-for="card in metricCards" :key="card.label" class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5 hover:shadow-md transition-shadow">
         <p class="text-sm text-[var(--color-text-muted)] mb-1">{{ card.label }}</p>
         <p class="text-2xl font-bold text-[var(--color-text-primary)]">{{ card.value }}</p>
-        <p v-if="card.change" :class="['text-xs mt-1', card.changePositive ? 'text-[var(--color-brand)]' : 'text-red-500']">
+        <p v-if="card.change" :class="['text-xs mt-1', card.changePositive ? 'text-[var(--color-brand)]' : 'text-[var(--color-danger)]']">
           {{ card.change }} vs yesterday
         </p>
       </div>

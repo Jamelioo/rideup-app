@@ -87,7 +87,7 @@ function confirm() {
 
     <!-- Bottom sheet -->
     <Transition name="sheet">
-      <div v-if="show" class="fixed inset-x-0 bottom-0 z-[9999] bg-[var(--color-surface)] rounded-t-[28px] shadow-[0_-4px_40px_rgba(0,0,0,0.15)]" style="max-height: 85vh; padding-bottom: env(safe-area-inset-bottom, 0px);">
+      <div v-if="show" v-modal="() => emit('close')" aria-label="Schedule ride" class="fixed inset-x-0 bottom-0 z-[9999] bg-[var(--color-surface)] rounded-t-[28px] shadow-[0_-4px_40px_rgba(0,0,0,0.15)]" style="max-height: 85vh; padding-bottom: env(safe-area-inset-bottom, 0px);">
         <!-- Handle -->
         <div class="flex justify-center pt-3 pb-1">
           <div class="w-9 h-[5px] rounded-full bg-[var(--color-surface-secondary)]"></div>
@@ -97,7 +97,7 @@ function confirm() {
           <!-- Header -->
           <div class="flex items-center justify-between mb-5">
             <h2 class="text-[22px] font-bold text-[var(--color-text-primary)] tracking-tight">Schedule ride</h2>
-            <button @click="emit('close')" class="w-9 h-9 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center transition-colors" aria-label="Close">
+            <button @click="emit('close')" class="w-11 h-11 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center transition-colors" aria-label="Close">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
           </div>

@@ -179,7 +179,7 @@ function goBack() {
   <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top bar -->
     <div class="flex items-center px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
+      <button @click="goBack" class="w-11 h-11 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -220,26 +220,26 @@ function goBack() {
         <div class="space-y-5">
           <!-- Personal Info -->
           <div>
-            <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Personal Info</p>
-            <div class="space-y-2">
+            <h2 class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Personal Info</h2>
+            <div class="space-y-3">
               <label class="block">
-                <span class="sr-only">Full name</span>
-                <input v-model="form.name" type="text" placeholder="Full name" autocomplete="name"
+                <span class="block text-[13px] font-medium text-[var(--color-text-secondary)] mb-1.5">Full name</span>
+                <input v-model="form.name" type="text" autocomplete="name"
                        class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all placeholder:text-[var(--color-text-muted)]" />
               </label>
               <label class="block">
-                <span class="sr-only">Email</span>
-                <input v-model="form.email" type="email" placeholder="Email address" autocomplete="email" :readonly="hasAccount" :aria-readonly="hasAccount"
+                <span class="block text-[13px] font-medium text-[var(--color-text-secondary)] mb-1.5">Email address</span>
+                <input v-model="form.email" type="email" autocomplete="email" :readonly="hasAccount" :aria-readonly="hasAccount"
                        class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all placeholder:text-[var(--color-text-muted)]" />
               </label>
               <label class="block">
-                <span class="sr-only">Phone</span>
-                <input v-model="form.phone" type="tel" placeholder="Phone number" autocomplete="tel"
+                <span class="block text-[13px] font-medium text-[var(--color-text-secondary)] mb-1.5">Phone number</span>
+                <input v-model="form.phone" type="tel" placeholder="242 555 1234" autocomplete="tel"
                        class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all placeholder:text-[var(--color-text-muted)]" />
               </label>
               <label v-if="!hasAccount" class="block">
-                <span class="sr-only">Password</span>
-                <input v-model="password" type="password" :placeholder="`Create a password (at least ${MIN_PASSWORD} characters)`" autocomplete="new-password"
+                <span class="block text-[13px] font-medium text-[var(--color-text-secondary)] mb-1.5">Create a password</span>
+                <input v-model="password" type="password" :placeholder="`At least ${MIN_PASSWORD} characters`" autocomplete="new-password"
                        class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all placeholder:text-[var(--color-text-muted)]" />
               </label>
             </div>
@@ -247,39 +247,39 @@ function goBack() {
 
           <!-- Vehicle Info -->
           <div>
-            <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Vehicle Info</p>
-            <div class="space-y-2">
+            <h2 class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Vehicle Info</h2>
+            <div class="space-y-3">
               <div class="grid grid-cols-2 gap-2">
                 <label class="block">
-                  <span class="sr-only">Vehicle make</span>
-                  <input v-model="form.vehicleMake" type="text" placeholder="Make"
+                  <span class="block text-[13px] font-medium text-[var(--color-text-secondary)] mb-1.5">Make</span>
+                  <input v-model="form.vehicleMake" type="text" placeholder="e.g. Toyota"
                          class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all placeholder:text-[var(--color-text-muted)]" />
                 </label>
                 <label class="block">
-                  <span class="sr-only">Vehicle model</span>
-                  <input v-model="form.vehicleModel" type="text" placeholder="Model"
+                  <span class="block text-[13px] font-medium text-[var(--color-text-secondary)] mb-1.5">Model</span>
+                  <input v-model="form.vehicleModel" type="text" placeholder="e.g. Corolla"
                          class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all placeholder:text-[var(--color-text-muted)]" />
                 </label>
               </div>
               <div class="grid grid-cols-2 gap-2">
                 <label class="block">
-                  <span class="sr-only">Vehicle year</span>
-                  <input v-model="form.vehicleYear" type="number" inputmode="numeric" min="1990" :max="maxYear" placeholder="Year"
+                  <span class="block text-[13px] font-medium text-[var(--color-text-secondary)] mb-1.5">Year</span>
+                  <input v-model="form.vehicleYear" type="number" inputmode="numeric" min="1990" :max="maxYear" placeholder="e.g. 2019"
                          class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all placeholder:text-[var(--color-text-muted)]" />
                 </label>
                 <label class="block">
-                  <span class="sr-only">Vehicle color</span>
-                  <input v-model="form.vehicleColor" type="text" placeholder="Color"
+                  <span class="block text-[13px] font-medium text-[var(--color-text-secondary)] mb-1.5">Colour</span>
+                  <input v-model="form.vehicleColor" type="text" placeholder="e.g. Silver"
                          class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all placeholder:text-[var(--color-text-muted)]" />
                 </label>
               </div>
               <label class="block">
-                <span class="sr-only">License plate</span>
-                <input v-model="form.vehiclePlate" type="text" placeholder="License plate number"
+                <span class="block text-[13px] font-medium text-[var(--color-text-secondary)] mb-1.5">Licence plate</span>
+                <input v-model="form.vehiclePlate" type="text" placeholder="e.g. AB 1234"
                        class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all placeholder:text-[var(--color-text-muted)] uppercase" />
               </label>
               <label class="block">
-                <span class="sr-only">Vehicle type</span>
+                <span class="block text-[13px] font-medium text-[var(--color-text-secondary)] mb-1.5">Vehicle type</span>
                 <select v-model="form.vehicleType"
                         class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all text-[var(--color-text-primary)]">
                   <option value="standard">Standard (4 seats)</option>
@@ -291,10 +291,10 @@ function goBack() {
 
           <!-- License -->
           <div>
-            <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">License</p>
+            <h2 class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Licence</h2>
             <label class="block">
-              <span class="sr-only">Driver's license number</span>
-              <input v-model="form.licenseNumber" type="text" placeholder="Driver's license number"
+              <span class="block text-[13px] font-medium text-[var(--color-text-secondary)] mb-1.5">Driver’s licence number</span>
+              <input v-model="form.licenseNumber" type="text" 
                      class="w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border-2 border-transparent text-[15px] outline-none focus:border-[#2b8659] focus:bg-[var(--color-surface)] transition-all placeholder:text-[var(--color-text-muted)]" />
             </label>
           </div>

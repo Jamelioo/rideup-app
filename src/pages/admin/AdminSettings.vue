@@ -3,7 +3,7 @@
     <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-2">Settings</h1>
     <p class="text-sm text-[var(--color-text-secondary)] mb-6">Trip policies. Changes take effect for new trips immediately.</p>
 
-    <p v-if="error" class="mb-4 text-sm text-red-600" role="alert">{{ error }}</p>
+    <p v-if="error" class="mb-4 text-sm text-[var(--color-danger)]" role="alert">{{ error }}</p>
 
     <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)]">
       <div v-for="item in toggles" :key="item.key" class="flex items-start justify-between gap-4 p-5">

@@ -91,7 +91,7 @@ function handleDeleteAccount() {
 async function handleLogout() {
   if (needsLogin.value && !window.confirm('You’re using a guest account. If you log out you won’t be able to get back to your trips and receipts. Log out anyway?')) return
   await signOut()
-  router.push('/welcome')
+  router.push('/')
 }
 </script>
 
@@ -99,12 +99,12 @@ async function handleLogout() {
   <div class="min-h-dvh bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top Bar -->
     <div class="flex items-center justify-between px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center" aria-label="Back">
+      <button @click="goBack" class="w-11 h-11 flex items-center justify-center" aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
-      <button @click="router.push('/edit-profile')" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Edit profile">
+      <button @click="router.push('/edit-profile')" class="w-11 h-11 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Edit profile">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
         </svg>
@@ -175,7 +175,7 @@ async function handleLogout() {
             <div v-if="homeAddress" class="text-[13px] text-[var(--color-text-muted)] truncate">{{ homeAddress }}</div>
           </div>
         </div>
-        <button @click="goToSavedPlaces" class="text-[var(--color-brand)] text-sm font-bold uppercase tracking-wide flex-shrink-0 pl-3">{{ homeAddress ? 'Edit' : 'Add' }}</button>
+        <button @click="goToSavedPlaces" class="text-[var(--color-brand)] text-sm font-bold uppercase tracking-wide flex-shrink-0 pl-3 min-h-[44px] min-w-[44px]">{{ homeAddress ? 'Edit' : 'Add' }}</button>
       </div>
 
       <div class="flex items-center justify-between py-4 border-b border-[var(--color-border)]">
@@ -188,7 +188,7 @@ async function handleLogout() {
             <div v-if="workAddress" class="text-[13px] text-[var(--color-text-muted)] truncate">{{ workAddress }}</div>
           </div>
         </div>
-        <button @click="goToSavedPlaces" class="text-[var(--color-brand)] text-sm font-bold uppercase tracking-wide flex-shrink-0 pl-3">{{ workAddress ? 'Edit' : 'Add' }}</button>
+        <button @click="goToSavedPlaces" class="text-[var(--color-brand)] text-sm font-bold uppercase tracking-wide flex-shrink-0 pl-3 min-h-[44px] min-w-[44px]">{{ workAddress ? 'Edit' : 'Add' }}</button>
       </div>
     </div>
 
@@ -258,12 +258,12 @@ async function handleLogout() {
 
     <!-- Log Out -->
     <div class="px-5 mt-4">
-      <button @click="handleLogout" class="text-red-600 text-base font-medium">Log out</button>
+      <button @click="handleLogout" class="text-[var(--color-danger)] text-base font-medium">Log out</button>
     </div>
 
     <!-- Delete Account -->
     <div class="px-5 mt-3 mb-8">
-      <button @click="handleDeleteAccount" class="text-[var(--color-text-muted)] text-sm">Delete account</button>
+      <button @click="handleDeleteAccount" class="text-[var(--color-text-muted)] text-sm min-h-[44px] px-2 -mx-2">Delete account</button>
     </div>
 
     <DeleteAccountSheet :open="showDeleteConfirm" role="rider" @close="showDeleteConfirm = false" />

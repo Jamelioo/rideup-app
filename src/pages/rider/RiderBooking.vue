@@ -801,12 +801,12 @@ async function scheduleRide({ date, time, summary }) {
           <div class="flex-1 space-y-2">
             <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 border-2 transition-all duration-200"
                  :class="activeInput === 'pickup' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
-              <input v-if="!DEMO_MODE" ref="pickupInput" data-field="pickup" type="text" placeholder="Pickup location"
+              <input v-if="!DEMO_MODE" ref="pickupInput" data-field="pickup" aria-label="Pickup location" type="text" placeholder="Pickup location"
                      @focus="activeInput = 'pickup'"
-                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
-              <input v-else v-model="pickupText" data-field="pickup" list="demo-locations" type="text" placeholder="Pickup — try Cable Beach"
+                     class="bg-transparent outline-none w-full py-3 -my-3 text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
+              <input v-else v-model="pickupText" data-field="pickup" aria-label="Pickup location" list="demo-locations" type="text" placeholder="Pickup — try Cable Beach"
                      @focus="activeInput = 'pickup'"
-                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
+                     class="bg-transparent outline-none w-full py-3 -my-3 text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
             <button
               @click="useCurrentLocation"
@@ -827,17 +827,17 @@ async function scheduleRide({ date, time, summary }) {
                  :class="activeInput === 'stop' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
               <input ref="stopInput" type="text" placeholder="Add a stop" aria-label="Stop on the way"
                      @focus="activeInput = 'stop'"
-                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
-              <button type="button" @click="removeStop" class="ml-2 w-8 h-8 -mr-2 flex items-center justify-center text-[var(--color-text-muted)]" aria-label="Remove stop">✕</button>
+                     class="bg-transparent outline-none w-full py-3 -my-3 text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
+              <button type="button" @click="removeStop" class="ml-1 w-11 h-11 -mr-3 flex items-center justify-center text-[var(--color-text-muted)]" aria-label="Remove stop">✕</button>
             </div>
             <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 border-2 transition-all duration-200"
                  :class="activeInput === 'dropoff' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
-              <input v-if="!DEMO_MODE" ref="dropoffInput" data-field="dropoff" type="text" placeholder="Where to?"
+              <input v-if="!DEMO_MODE" ref="dropoffInput" data-field="dropoff" aria-label="Destination" type="text" placeholder="Where to?"
                      @focus="activeInput = 'dropoff'"
-                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
-              <input v-else v-model="dropoffText" data-field="dropoff" list="demo-locations" type="text" placeholder="Destination — try Airport"
+                     class="bg-transparent outline-none w-full py-3 -my-3 text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
+              <input v-else v-model="dropoffText" data-field="dropoff" aria-label="Destination" list="demo-locations" type="text" placeholder="Destination — try Airport"
                      @focus="activeInput = 'dropoff'"
-                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
+                     class="bg-transparent outline-none w-full py-3 -my-3 text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
             <button v-if="!DEMO_MODE && !stopOpen" type="button" @click="openStop"
                     class="flex items-center gap-2 px-3 py-2 text-[13px] font-medium text-[var(--color-brand)] rounded-lg min-h-[44px]">
@@ -849,7 +849,7 @@ async function scheduleRide({ date, time, summary }) {
 
         <p v-if="DEMO_MODE && !hasRoute" class="text-[var(--color-brand)] text-[12px] mt-3 ml-[22px] font-medium">Demo mode — enter any two spots to see live pricing</p>
         <div v-if="!mapsReady && !error && !DEMO_MODE" class="text-[var(--color-text-muted)] text-sm text-center py-10">Loading map...</div>
-        <div v-if="error" class="bg-red-50 border border-red-200 text-red-600 text-[13px] rounded-xl px-4 py-3 mt-3">{{ error }}</div>
+        <div v-if="error" class="bg-red-50 border border-red-200 text-[var(--color-danger)] text-[13px] rounded-xl px-4 py-3 mt-3">{{ error }}</div>
         <div v-if="isCalculating" class="flex items-center gap-2.5 text-[var(--color-text-muted)] text-[13px] mt-4 ml-[22px]">
           <span class="w-4 h-4 border-2 border-[var(--color-border)] border-t-[#2b8659] rounded-full animate-spin"></span>
           Calculating route...
@@ -955,7 +955,7 @@ async function scheduleRide({ date, time, summary }) {
       <!-- Panel header -->
       <div class="px-6 pt-8 pb-2 flex items-center justify-between">
         <div class="text-[22px] font-bold tracking-tight">Ride<span class="text-[var(--color-brand)]">Up</span></div>
-        <button @click="menuOpen = true" class="w-10 h-10 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center transition-colors" aria-label="Open menu">
+        <button @click="menuOpen = true" class="w-11 h-11 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center transition-colors" aria-label="Open menu">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect y="3" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="8.25" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="13.5" width="18" height="1.5" rx="0.75" fill="currentColor"/></svg>
         </button>
       </div>
@@ -976,12 +976,12 @@ async function scheduleRide({ date, time, summary }) {
           <div class="flex-1 space-y-2">
             <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3.5 border-2 transition-all duration-200"
                  :class="activeInput === 'pickup' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
-              <input v-if="!DEMO_MODE" ref="pickupInputDesktop" data-field="pickup" type="text" placeholder="Pickup location"
+              <input v-if="!DEMO_MODE" ref="pickupInputDesktop" data-field="pickup" aria-label="Pickup location" type="text" placeholder="Pickup location"
                      @focus="activeInput = 'pickup'"
-                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
-              <input v-else v-model="pickupText" data-field="pickup" list="demo-locations-desktop" type="text" placeholder="Pickup — try Cable Beach"
+                     class="bg-transparent outline-none w-full py-3 -my-3 text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
+              <input v-else v-model="pickupText" data-field="pickup" aria-label="Pickup location" list="demo-locations-desktop" type="text" placeholder="Pickup — try Cable Beach"
                      @focus="activeInput = 'pickup'"
-                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
+                     class="bg-transparent outline-none w-full py-3 -my-3 text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
             <button
               @click="useCurrentLocation"
@@ -1002,17 +1002,17 @@ async function scheduleRide({ date, time, summary }) {
                  :class="activeInput === 'stop' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
               <input ref="stopInputDesktop" type="text" placeholder="Add a stop" aria-label="Stop on the way"
                      @focus="activeInput = 'stop'"
-                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
-              <button type="button" @click="removeStop" class="ml-2 w-8 h-8 -mr-2 flex items-center justify-center text-[var(--color-text-muted)]" aria-label="Remove stop">✕</button>
+                     class="bg-transparent outline-none w-full py-3 -my-3 text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
+              <button type="button" @click="removeStop" class="ml-1 w-11 h-11 -mr-3 flex items-center justify-center text-[var(--color-text-muted)]" aria-label="Remove stop">✕</button>
             </div>
             <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3.5 border-2 transition-all duration-200"
                  :class="activeInput === 'dropoff' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
-              <input v-if="!DEMO_MODE" ref="dropoffInputDesktop" data-field="dropoff" type="text" placeholder="Where to?"
+              <input v-if="!DEMO_MODE" ref="dropoffInputDesktop" data-field="dropoff" aria-label="Destination" type="text" placeholder="Where to?"
                      @focus="activeInput = 'dropoff'"
-                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
-              <input v-else v-model="dropoffText" data-field="dropoff" list="demo-locations-desktop" type="text" placeholder="Destination — try Airport"
+                     class="bg-transparent outline-none w-full py-3 -my-3 text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
+              <input v-else v-model="dropoffText" data-field="dropoff" aria-label="Destination" list="demo-locations-desktop" type="text" placeholder="Destination — try Airport"
                      @focus="activeInput = 'dropoff'"
-                     class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
+                     class="bg-transparent outline-none w-full py-3 -my-3 text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
             <button v-if="!DEMO_MODE && !stopOpen" type="button" @click="openStop"
                     class="flex items-center gap-2 px-3 py-2 text-[13px] font-medium text-[var(--color-brand)] rounded-lg min-h-[44px]">
@@ -1024,7 +1024,7 @@ async function scheduleRide({ date, time, summary }) {
 
         <p v-if="DEMO_MODE && !hasRoute" class="text-[var(--color-brand)] text-[12px] mt-3 ml-[22px] font-medium">Demo mode — enter any two spots to see live pricing</p>
         <div v-if="!mapsReady && !error && !DEMO_MODE" class="text-[var(--color-text-muted)] text-sm text-center py-10">Loading map...</div>
-        <div v-if="error" class="bg-red-50 border border-red-200 text-red-600 text-[13px] rounded-xl px-4 py-3 mt-3">{{ error }}</div>
+        <div v-if="error" class="bg-red-50 border border-red-200 text-[var(--color-danger)] text-[13px] rounded-xl px-4 py-3 mt-3">{{ error }}</div>
         <div v-if="isCalculating" class="flex items-center gap-2.5 text-[var(--color-text-muted)] text-[13px] mt-4 ml-[22px]">
           <span class="w-4 h-4 border-2 border-[var(--color-border)] border-t-[#2b8659] rounded-full animate-spin"></span>
           Calculating route...

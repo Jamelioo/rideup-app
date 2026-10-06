@@ -52,6 +52,8 @@ function callEmergency() {
     <Transition name="sheet">
       <div
         v-if="isOpen"
+        v-modal="close"
+        aria-label="Safety"
         class="fixed bottom-0 left-0 right-0 z-[9999] bg-[var(--color-surface)] rounded-t-3xl shadow-2xl max-w-lg mx-auto"
       >
         <!-- Handle -->
@@ -63,7 +65,7 @@ function callEmergency() {
         <div v-if="activePanel === 'main'" class="px-5 pt-2 pb-8">
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-lg font-bold text-[var(--color-text-primary)]">Safety</h2>
-            <button @click="close" class="w-8 h-8 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Close">
+            <button @click="close" class="w-11 h-11 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Close">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -96,7 +98,7 @@ function callEmergency() {
             class="w-full flex items-center gap-4 py-4 border-b border-[var(--color-border)] active:bg-[var(--color-surface-secondary)] transition-colors"
           >
             <div class="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--color-danger)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
               </svg>
             </div>

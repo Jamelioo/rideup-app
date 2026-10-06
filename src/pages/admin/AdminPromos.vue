@@ -23,16 +23,16 @@
       <label class="flex flex-col gap-1 sm:col-span-2">Description (shown to riders)
         <input v-model="form.description" maxlength="120" placeholder="$5 off your first RideUp ride" class="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]" />
       </label>
-      <label class="flex items-center gap-2 sm:col-span-2">
-        <input v-model="form.firstRideOnly" type="checkbox" class="w-4 h-4" /> First ride only (new riders)
+      <label class="flex items-center gap-3 min-h-[44px] sm:col-span-2">
+        <input v-model="form.firstRideOnly" type="checkbox" class="w-5 h-5 accent-[#2b8659]" /> First ride only (new riders)
       </label>
-      <p v-if="formError" class="sm:col-span-2 text-red-600" role="alert">{{ formError }}</p>
+      <p v-if="formError" class="sm:col-span-2 text-[var(--color-danger)]" role="alert">{{ formError }}</p>
       <div class="sm:col-span-2">
         <button type="submit" :disabled="saving" class="px-4 py-2 rounded-lg bg-[#2b8659] text-white font-semibold disabled:opacity-50">{{ saving ? 'Saving…' : 'Create code' }}</button>
       </div>
     </form>
 
-    <p v-if="error" class="mb-4 text-sm text-red-600" role="alert">{{ error }}</p>
+    <p v-if="error" class="mb-4 text-sm text-[var(--color-danger)]" role="alert">{{ error }}</p>
     <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden">
       <table class="w-full text-sm stack-table">
         <thead>

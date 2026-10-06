@@ -66,14 +66,14 @@ async function submit() {
 <template>
   <Transition name="fade">
     <div v-if="ride" class="fixed inset-0 z-50 flex justify-end bg-black/40" @click.self="emit('close')">
-      <div role="dialog" aria-modal="true" aria-labelledby="ride-sheet-title"
+      <div v-modal="() => emit('close')" role="dialog" aria-modal="true" aria-labelledby="ride-sheet-title"
            class="w-full max-w-md h-full overflow-y-auto bg-[var(--color-surface)] text-[var(--color-text-primary)] p-6 shadow-xl">
         <div class="flex items-start justify-between mb-4">
           <div>
             <h2 id="ride-sheet-title" class="text-lg font-bold">Ride</h2>
             <p class="text-xs font-mono text-[var(--color-text-muted)]">{{ ride.id }}</p>
           </div>
-          <button @click="emit('close')" class="w-9 h-9 flex items-center justify-center text-[var(--color-text-muted)]" aria-label="Close">✕</button>
+          <button @click="emit('close')" class="w-11 h-11 flex items-center justify-center text-[var(--color-text-muted)]" aria-label="Close">✕</button>
         </div>
 
         <dl class="text-sm space-y-2 mb-5">
@@ -128,13 +128,13 @@ async function submit() {
               <span>The driver was at fault: take the driver’s share of this refund out of their earnings.</span>
             </label>
             <p v-else-if="form.target === 'tip'" class="text-xs text-[var(--color-text-muted)]">Tips are 100% the driver’s, so a tip refund comes out of their earnings.</p>
-            <p v-if="error" class="text-red-600" role="alert">{{ error }}</p>
+            <p v-if="error" class="text-[var(--color-danger)]" role="alert">{{ error }}</p>
             <p v-if="notice" class="text-[var(--color-brand)]" aria-live="polite">{{ notice }}</p>
             <button type="submit" :disabled="busy" class="w-full py-2.5 rounded-lg bg-[#2b8659] text-white font-semibold disabled:opacity-50">{{ busy ? 'Working…' : 'Issue refund' }}</button>
           </form>
           <p v-else class="text-sm text-[var(--color-text-muted)]">Nothing left to refund on this ride.<span v-if="notice" class="block text-[var(--color-brand)] mt-1">{{ notice }}</span></p>
         </template>
-        <p v-else-if="error" class="text-sm text-red-600" role="alert">{{ error }}</p>
+        <p v-else-if="error" class="text-sm text-[var(--color-danger)]" role="alert">{{ error }}</p>
       </div>
     </div>
   </Transition>

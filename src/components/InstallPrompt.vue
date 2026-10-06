@@ -72,7 +72,7 @@ function dismiss() {
           <button @click="dismiss" class="px-2 py-2 text-[14px] font-semibold text-[var(--color-text-muted)]">{{ deferred ? 'Not now' : 'Got it' }}</button>
         </div>
       </div>
-      <button @click="dismiss" class="w-8 h-8 -mr-1 -mt-1 flex items-center justify-center text-[var(--color-text-muted)]" aria-label="Close">✕</button>
+      <button @click="dismiss" class="w-11 h-11 -mr-1 -mt-1 flex items-center justify-center text-[var(--color-text-muted)]" aria-label="Close">✕</button>
     </div>
   </div>
 </template>

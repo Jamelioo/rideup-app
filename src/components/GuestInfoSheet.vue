@@ -98,7 +98,7 @@ defineExpose({ reset })
     </Transition>
 
     <Transition name="sheet">
-      <div v-if="show" class="fixed inset-x-0 bottom-0 z-[9999] bg-[var(--color-surface)] rounded-t-[28px] shadow-[0_-4px_40px_rgba(0,0,0,0.15)]" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
+      <div v-if="show" v-modal="() => emit('close')" aria-label="Enter your details" class="fixed inset-x-0 bottom-0 z-[9999] bg-[var(--color-surface)] rounded-t-[28px] shadow-[0_-4px_40px_rgba(0,0,0,0.15)]" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
         <div class="flex justify-center pt-3 pb-1">
           <div class="w-10 h-1 rounded-full bg-[var(--color-text-muted)]/30"></div>
         </div>
@@ -106,17 +106,17 @@ defineExpose({ reset })
         <div class="px-6 pb-6">
           <div class="flex items-center justify-between mb-1">
             <h2 class="text-[18px] font-bold">Enter your details</h2>
-            <button @click="emit('close')" class="w-8 h-8 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center text-[var(--color-text-muted)]" aria-label="Close">
+            <button @click="emit('close')" class="w-11 h-11 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center text-[var(--color-text-muted)]" aria-label="Close">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>
           <p class="text-[13px] text-[var(--color-text-muted)] mb-5">Name, phone, and payment to request a ride.</p>
 
-          <div v-if="error" class="bg-red-500/10 border border-red-500/20 text-red-400 text-[13px] px-4 py-2.5 rounded-xl mb-4">{{ error }}</div>
+          <div v-if="error" role="alert" class="bg-red-500/10 border border-red-500/20 text-[var(--color-danger)] text-[13px] px-4 py-2.5 rounded-xl mb-4">{{ error }}</div>
 
           <label class="block mb-3">
             <span class="text-[12px] font-medium text-[var(--color-text-muted)] mb-1 block">Your name</span>
-            <input v-model="name" type="text" placeholder="e.g. Marcus"
+            <input v-model="name" type="text" autocomplete="name" placeholder="e.g. Marcus"
                    class="w-full bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 text-[14px] font-medium outline-none focus:ring-2 focus:ring-[#2b8659] transition-all min-h-[44px]" />
           </label>
 
@@ -124,7 +124,7 @@ defineExpose({ reset })
             <span class="text-[12px] font-medium text-[var(--color-text-muted)] mb-1 block">Phone number</span>
             <div class="flex items-center gap-2">
               <span class="text-[14px] text-[var(--color-text-muted)] font-medium px-3 py-3 bg-[var(--color-surface-secondary)] rounded-xl min-h-[44px] flex items-center">+1</span>
-              <input v-model="phone" type="tel" placeholder="(242) 555-1234"
+              <input v-model="phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="(242) 555-1234"
                      class="flex-1 bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 text-[14px] font-medium outline-none focus:ring-2 focus:ring-[#2b8659] transition-all min-h-[44px]" />
             </div>
           </label>
@@ -135,7 +135,7 @@ defineExpose({ reset })
                  class="bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3.5 min-h-[44px]">
               <span v-if="stripeLoading" class="text-[13px] text-[var(--color-text-muted)]">Loading payment...</span>
             </div>
-            <p v-if="cardError" class="text-red-400 text-[12px] mt-1">{{ cardError }}</p>
+            <p v-if="cardError" role="alert" class="text-[var(--color-danger)] text-[12px] mt-1">{{ cardError }}</p>
           </label>
 
           <button @click="handleSubmit" :disabled="!isValid || submitting"

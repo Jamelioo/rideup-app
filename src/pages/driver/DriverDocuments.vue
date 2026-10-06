@@ -108,7 +108,7 @@ function goBack() {
   <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)]">
     <!-- Top bar -->
     <div class="flex items-center justify-between px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
-      <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
+      <button @click="goBack" class="w-11 h-11 flex items-center justify-center rounded-full active:bg-[var(--color-surface-secondary)]" aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -164,7 +164,7 @@ function goBack() {
                  :class="uploading === doc.key
                    ? 'border-[var(--color-border)] text-[var(--color-text-muted)]'
                    : doc.status === 'expired'
-                     ? 'border-red-200 text-red-500 active:bg-red-50'
+                     ? 'border-red-200 text-[var(--color-danger)] active:bg-red-50'
                      : 'border-[var(--color-border)] text-[var(--color-text-muted)] active:bg-[var(--color-surface-secondary)]'">
               <!-- Loading spinner -->
               <svg v-if="uploading === doc.key" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
