@@ -59,7 +59,7 @@ const AdminIncentives = () => import('../pages/admin/AdminIncentives.vue')
 const AdminSettings = () => import('../pages/admin/AdminSettings.vue')
 
 const routes = [
-  { path: '/', name: 'home', component: RiderLanding, meta: { title: 'RideUp — Ride in Nassau' } },
+  { path: '/', name: 'home', component: RiderLanding, meta: { title: 'RideUp Nassau — Book a ride with upfront prices' } },
   { path: '/book', name: 'book', component: RiderFlow, meta: { title: 'RideUp Nassau' } },
   { path: '/login', name: 'login', component: Login, meta: { guestOnly: true, title: 'Log In — RideUp' } },
   { path: '/signup', name: 'signup', component: Signup, meta: { guestOnly: true, title: 'Sign Up — RideUp' } },
@@ -195,8 +195,18 @@ router.beforeEach(async (to) => {
 // Full-screen app screens: lock the page so only their inner panels scroll (see html.app-shell in style.css).
 const APP_SHELL_ROUTES = ['/book', '/ride/', '/driver/dashboard', '/driver/active-ride']
 
+const SITE = 'https://www.rideupnassau.com'
+
 router.afterEach((to) => {
   document.title = to.meta.title || 'RideUp Nassau'
+  // One canonical address per page (www, no query string), so ad and promo links don't split search results.
+  let canonical = document.querySelector('link[rel="canonical"]')
+  if (!canonical) {
+    canonical = document.createElement('link')
+    canonical.rel = 'canonical'
+    document.head.appendChild(canonical)
+  }
+  canonical.href = SITE + to.path
   const shell = APP_SHELL_ROUTES.some((p) => to.path === p || (p.endsWith('/') && to.path.startsWith(p)))
   document.documentElement.classList.toggle('app-shell', shell)
   if (shell) window.scrollTo(0, 0)

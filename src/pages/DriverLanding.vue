@@ -3,7 +3,7 @@ import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
 import { DEMO_MODE } from '../lib/demoMode'
-import { calculateFare, driverPayout, formatFare } from '../lib/pricing'
+import { calculateFare, driverPayout, formatFare, AIRPORT, BOOKING_FEE_CENTS } from '../lib/pricing'
 
 const router = useRouter()
 const whatsappLink = 'https://wa.me/12424529911?text=' + encodeURIComponent("Hi! I'd like to apply to drive for RideUp Nassau.")
@@ -40,11 +40,13 @@ const requirements = [
 // Trip time is assumed at 3 minutes per mile; real trips vary with traffic.
 const routeExamples = [
   { route: 'Cable Beach → Downtown', miles: 4.2 },
-  { route: 'LPIA Airport → Baha Mar', miles: 7.8 },
+  { route: 'LPIA Airport → Baha Mar', miles: 7.8, airport: true },
   { route: 'Paradise Island → Bay St', miles: 5.1 },
 ].map((r) => {
-  const fare = calculateFare(r.miles, r.miles * 3, 'standard')
-  return { route: r.route, distance: `${r.miles} mi`, fare: formatFare(fare), yourCut: formatFare(driverPayout({ fare_cents: fare })), cents: driverPayout({ fare_cents: fare }) }
+  const fare = calculateFare(r.miles, r.miles * 3, 'standard', r.airport ? { pickup: AIRPORT } : {})
+  // The driver keeps 80% of the fare excluding the rider's booking fee (same as the database).
+  const cents = driverPayout({ fare_cents: fare, booking_fee_cents: BOOKING_FEE_CENTS })
+  return { route: r.route, distance: `${r.miles} mi`, fare: formatFare(fare), yourCut: formatFare(cents), cents }
 })
 const earningsExamples = routeExamples
 const avgCut = routeExamples.reduce((sum, r) => sum + r.cents, 0) / routeExamples.length
@@ -103,7 +105,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
               <span class="block text-[32px] sm:text-[40px] lg:text-[46px] text-white/80">of Every Fare.</span>
             </h1>
             <p class="text-white/55 text-[16px] leading-relaxed max-w-md mb-6">
-              Drive with RideUp across New Providence. Your car, your hours, your money. We take 20% — you keep the rest.
+              Drive with RideUp across New Providence. Your car, your hours, your money. We take 20% of the trip fare — you keep the rest.
             </p>
 
             <!-- CTA -->
@@ -238,7 +240,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 class="text-[16px] font-bold mb-1.5">80% of every fare</h3>
+            <h3 class="text-[16px] font-bold mb-1.5">80% of every trip fare</h3>
             <p class="text-[var(--color-text-secondary)] text-[14px] leading-relaxed">Keep more of what you earn. We only take 20%.</p>
           </div>
 
@@ -328,7 +330,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
 
       <div class="relative max-w-6xl mx-auto px-6 py-20 md:py-28">
         <h2 class="text-[28px] sm:text-[36px] font-medium mb-3">What you actually earn</h2>
-        <p class="text-[var(--color-text-muted)] text-[15px] mb-10 max-w-lg">Example routes priced with our standard-car rates. You keep 80% of every fare — here's what that looks like.</p>
+        <p class="text-[var(--color-text-muted)] text-[15px] mb-10 max-w-lg">Example routes priced with our standard-car rates. You keep 80% of every trip fare (the rider’s booking fee goes to RideUp) — here’s what that looks like.</p>
 
         <!-- Earnings table -->
         <div class="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] overflow-x-auto shadow-sm mb-8">
@@ -337,7 +339,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
             <div class="grid grid-cols-[1fr_auto_auto_auto] gap-3 sm:gap-4 px-4 sm:px-6 py-3 bg-[var(--color-surface-secondary)] text-[12px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
               <span>Route</span>
               <span class="text-right">Distance</span>
-              <span class="text-right">Fare</span>
+              <span class="text-right">Rider pays</span>
               <span class="text-right text-[#236e49]">You keep</span>
             </div>
             <!-- Rows -->
