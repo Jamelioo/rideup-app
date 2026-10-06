@@ -183,10 +183,11 @@ async function changePassword() {
     <div class="max-w-lg mx-auto px-5 pb-8">
       <!-- Avatar + name -->
       <div class="text-center mb-8">
-        <button type="button" @click="choosePhoto" :disabled="uploadingPhoto" class="relative w-24 h-24 rounded-full mx-auto mb-3 block" :aria-label="driver?.photo_url ? 'Change your photo' : 'Add your photo'">
+        <button type="button" @click="choosePhoto" :disabled="uploadingPhoto" class="relative w-24 h-24 rounded-full mx-auto mb-3 block">
+          <span class="sr-only">{{ driver?.photo_url ? 'Change your photo' : 'Add your photo' }}</span>
           <span class="w-24 h-24 rounded-full overflow-hidden bg-[#2b8659] flex items-center justify-center text-white text-2xl font-bold">
             <img v-if="driver?.photo_url" :src="driver.photo_url" alt="" class="w-full h-full object-cover" />
-            <span v-else>{{ initials }}</span>
+            <span v-else aria-hidden="true">{{ initials }}</span>
           </span>
           <span class="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-center shadow" aria-hidden="true">
             <svg v-if="!uploadingPhoto" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
