@@ -4,7 +4,7 @@ export default { name: 'RiderBooking' }
 
 <script setup>
 import { ref, onMounted, onUnmounted, onActivated, computed, nextTick, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { apiPost } from '../../lib/api'
 import { loadSettings, useSettings } from '../../lib/settings'
@@ -26,6 +26,7 @@ import { useAvailability } from '../../lib/useAvailability'
 import { availabilityFor, canBook, unavailableNotice, optionStatus } from '../../lib/availability'
 
 const router = useRouter()
+const route = useRoute()
 const menuOpen = ref(false)
 const pickupInput = ref(null)
 const dropoffInput = ref(null)
@@ -232,6 +233,21 @@ function removeStop() {
   maybeCalculateRoute()
 }
 onActivated(() => nextTick(syncAddressFields))
+// Opened from the landing page's "Pickup location" / "Where to?" (/book?focus=pickup|dropoff): put the cursor
+// in that field, like Uber. Only the visible copy (phone or desktop layout) is focused; the hint is then removed
+// from the address so going back doesn't refocus.
+function focusRequestedField() {
+  const field = route.query.focus
+  if (field !== 'pickup' && field !== 'dropoff') return
+  nextTick(() => {
+    const input = [...document.querySelectorAll(`input[data-field="${field}"]`)].find((el) => el.offsetParent !== null)
+    if (input && !input.value) input.focus()
+    const { focus, ...rest } = route.query
+    router.replace({ query: rest })
+  })
+}
+onMounted(focusRequestedField)
+onActivated(focusRequestedField)
 
 async function handleMapTap(latlng) {
   const address = await reverseGeocode(latlng.lat, latlng.lng)
@@ -785,10 +801,10 @@ async function scheduleRide({ date, time, summary }) {
           <div class="flex-1 space-y-2">
             <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 border-2 transition-all duration-200"
                  :class="activeInput === 'pickup' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
-              <input v-if="!DEMO_MODE" ref="pickupInput" type="text" placeholder="Pickup location"
+              <input v-if="!DEMO_MODE" ref="pickupInput" data-field="pickup" type="text" placeholder="Pickup location"
                      @focus="activeInput = 'pickup'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
-              <input v-else v-model="pickupText" list="demo-locations" type="text" placeholder="Pickup — try Cable Beach"
+              <input v-else v-model="pickupText" data-field="pickup" list="demo-locations" type="text" placeholder="Pickup — try Cable Beach"
                      @focus="activeInput = 'pickup'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
@@ -816,10 +832,10 @@ async function scheduleRide({ date, time, summary }) {
             </div>
             <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 border-2 transition-all duration-200"
                  :class="activeInput === 'dropoff' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
-              <input v-if="!DEMO_MODE" ref="dropoffInput" type="text" placeholder="Where to?"
+              <input v-if="!DEMO_MODE" ref="dropoffInput" data-field="dropoff" type="text" placeholder="Where to?"
                      @focus="activeInput = 'dropoff'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
-              <input v-else v-model="dropoffText" list="demo-locations" type="text" placeholder="Destination — try Airport"
+              <input v-else v-model="dropoffText" data-field="dropoff" list="demo-locations" type="text" placeholder="Destination — try Airport"
                      @focus="activeInput = 'dropoff'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
@@ -960,10 +976,10 @@ async function scheduleRide({ date, time, summary }) {
           <div class="flex-1 space-y-2">
             <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3.5 border-2 transition-all duration-200"
                  :class="activeInput === 'pickup' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
-              <input v-if="!DEMO_MODE" ref="pickupInputDesktop" type="text" placeholder="Pickup location"
+              <input v-if="!DEMO_MODE" ref="pickupInputDesktop" data-field="pickup" type="text" placeholder="Pickup location"
                      @focus="activeInput = 'pickup'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
-              <input v-else v-model="pickupText" list="demo-locations-desktop" type="text" placeholder="Pickup — try Cable Beach"
+              <input v-else v-model="pickupText" data-field="pickup" list="demo-locations-desktop" type="text" placeholder="Pickup — try Cable Beach"
                      @focus="activeInput = 'pickup'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
@@ -991,10 +1007,10 @@ async function scheduleRide({ date, time, summary }) {
             </div>
             <div class="flex items-center bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3.5 border-2 transition-all duration-200"
                  :class="activeInput === 'dropoff' ? 'border-[#2b8659] bg-[var(--color-surface)] shadow-[0_0_0_3px_rgba(43,134,89,0.12)]' : 'border-transparent'">
-              <input v-if="!DEMO_MODE" ref="dropoffInputDesktop" type="text" placeholder="Where to?"
+              <input v-if="!DEMO_MODE" ref="dropoffInputDesktop" data-field="dropoff" type="text" placeholder="Where to?"
                      @focus="activeInput = 'dropoff'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
-              <input v-else v-model="dropoffText" list="demo-locations-desktop" type="text" placeholder="Destination — try Airport"
+              <input v-else v-model="dropoffText" data-field="dropoff" list="demo-locations-desktop" type="text" placeholder="Destination — try Airport"
                      @focus="activeInput = 'dropoff'"
                      class="bg-transparent outline-none w-full text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>

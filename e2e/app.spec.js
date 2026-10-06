@@ -10,10 +10,27 @@ test('landing page loads with headline and booking widget', async ({ page }) => 
   await expect(page.getByRole('button', { name: 'See prices' })).toBeVisible()
 })
 
-test('landing page nav has Ride, Drive, Log in, Sign up links', async ({ page }) => {
+test('landing page nav has Log in and Sign up, on phones too', async ({ page }) => {
+  for (const width of [1280, 360]) {
+    await page.setViewportSize({ width, height: 800 })
+    await page.goto('/')
+    const nav = page.getByRole('navigation', { name: 'Main' })
+    await expect(nav.getByRole('link', { name: 'Log in', exact: true })).toBeVisible()
+    await expect(nav.getByRole('link', { name: 'Sign up', exact: true })).toBeVisible()
+  }
+})
+
+test('landing fields open booking with that field ready to type in', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('link', { name: 'Log in' })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Sign up' })).toBeVisible()
+  await page.getByRole('button', { name: 'Where to?' }).click()
+  await expect(page).toHaveURL('/book')
+  await expect(page.locator('input[data-field="dropoff"]:visible')).toBeFocused()
+})
+
+test('landing shows popular trip prices', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'Popular trips' })).toBeVisible()
+  await expect(page.getByText(/^about \$\d+\.\d{2}$/).first()).toBeVisible()
 })
 
 test('"See prices" button navigates to /book', async ({ page }) => {
@@ -22,9 +39,9 @@ test('"See prices" button navigates to /book', async ({ page }) => {
   await expect(page).toHaveURL('/book')
 })
 
-test('"Book a ride now" CTA navigates to /book', async ({ page }) => {
+test('"Book a ride" CTA navigates to /book', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Book a ride now' }).click()
+  await page.getByRole('button', { name: 'Book a ride', exact: true }).click()
   await expect(page).toHaveURL('/book')
 })
 
@@ -193,13 +210,13 @@ test('booking explains when every driver is on a trip', async ({ page }) => {
 
 test('Sign up link from landing navigates to /signup', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('link', { name: 'Sign up' }).click()
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Sign up', exact: true }).click()
   await expect(page).toHaveURL('/signup')
 })
 
 test('Log in link from landing navigates to /login', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('link', { name: 'Log in' }).click()
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Log in', exact: true }).click()
   await expect(page).toHaveURL('/login')
 })
 
