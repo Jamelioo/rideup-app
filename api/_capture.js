@@ -36,10 +36,13 @@ export async function captureRide(rideId) {
       { idempotencyKey: split.paid ? `capture-ride-${rideId}-${amount}` : `capture-ride-${rideId}` }
     )
   } catch (err) {
-    // Already captured elsewhere, or the hold expired (Stripe drops uncaptured holds after 7 days).
-    const pi = await stripe.paymentIntents.retrieve(ride.payment_intent_id).catch(() => null)
+    // Already captured elsewhere, or the hold expired (Stripe drops uncaptured holds after 7 days), or the
+    // hold doesn't exist under this Stripe key (made in test mode before the switch to live keys).
+    let missing = false
+    const pi = await stripe.paymentIntents.retrieve(ride.payment_intent_id)
+      .catch((e) => { missing = e?.code === 'resource_missing'; return null })
     if (pi?.status !== 'succeeded') {
-      if (pi?.status === 'canceled') {
+      if (pi?.status === 'canceled' || missing) {
         await admin.from('rides').update({ payment_status: 'failed' }).eq('id', rideId).eq('payment_status', 'authorized')
       }
       throw err
