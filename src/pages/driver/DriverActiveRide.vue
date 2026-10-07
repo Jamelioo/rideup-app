@@ -1,4 +1,5 @@
 <script setup>
+import BrandLogo from '../../components/BrandLogo.vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDriver } from '../../lib/useDriver'
@@ -327,7 +328,7 @@ onUnmounted(() => {
       </div>
 
       <div class="px-5 pb-6 md:pt-8">
-        <div class="hidden md:block text-[22px] font-bold mb-6">Ride<span class="text-[var(--color-brand)]">Up</span> <span class="text-[13px] font-medium text-[var(--color-text-muted)]">Driver</span></div>
+        <div class="hidden md:block text-[22px] font-bold mb-6"><BrandLogo /> <span class="text-[13px] font-medium text-[var(--color-text-muted)]">Driver</span></div>
 
         <!-- Completed -->
         <div v-if="phase === 'completed'" class="text-center py-4">

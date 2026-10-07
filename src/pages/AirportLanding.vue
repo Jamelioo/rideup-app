@@ -1,4 +1,5 @@
 <script setup>
+import BrandLogo from '../components/BrandLogo.vue'
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { calculateFare, formatFare, AIRPORT, AIRPORT_FEE_CENTS, BOOKING_FEE_CENTS } from '../lib/pricing'
@@ -30,7 +31,7 @@ onUnmounted(() => document.querySelector('meta[name="description"]')?.setAttribu
 <template>
   <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)]">
     <nav class="max-w-5xl mx-auto px-5 py-4 flex items-center justify-between">
-      <router-link to="/" class="text-[20px] font-bold">Ride<span class="text-[var(--color-brand)]">Up</span></router-link>
+      <router-link to="/" class="text-[20px] font-bold"><BrandLogo /></router-link>
       <router-link to="/book" class="inline-flex items-center min-h-[44px] px-2 -mr-2 text-[14px] font-semibold text-[var(--color-brand)]">Book a ride</router-link>
     </nav>
 

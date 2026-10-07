@@ -1,4 +1,5 @@
 <script setup>
+import BrandLogo from '../components/BrandLogo.vue'
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
@@ -59,7 +60,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
     <!-- Nav Bar — simplified for conversion -->
     <nav class="sticky top-0 z-40 bg-[var(--color-surface)]/95 backdrop-blur-md border-b border-[var(--color-border)]">
       <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        <router-link to="/" class="text-xl font-semibold">Ride<span class="text-[var(--color-brand)]">Up</span></router-link>
+        <router-link to="/" class="text-xl font-semibold"><BrandLogo /></router-link>
         <router-link to="/driver/dashboard" class="inline-flex items-center min-h-[44px] text-[14px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">Already a driver? <span class="text-[var(--color-text-primary)] font-semibold">Log in</span></router-link>
       </div>
     </nav>
@@ -141,7 +142,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
                       </div>
                     </div>
                     <div class="flex items-center justify-between">
-                      <div class="text-[14px] font-bold font-serif">Ride<span class="text-[#4cc48a]">Up</span> <span class="text-[11px] font-normal text-white/70 ml-0.5">Driver</span></div>
+                      <div class="text-[14px] font-bold font-serif"><BrandLogo on-dark /> <span class="text-[11px] font-normal text-white/70 ml-0.5">Driver</span></div>
                       <div class="flex items-center gap-1 bg-[#2b8659]/20 px-2 py-0.5 rounded-full">
                         <div class="w-1.5 h-1.5 rounded-full bg-[#2b8659]"></div>
                         <span class="text-[11px] text-[#4cc48a] font-semibold">Online</span>
@@ -494,7 +495,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
     <footer class="bg-[#191f1c] text-white">
       <div class="max-w-6xl mx-auto px-6 py-14 grid sm:grid-cols-4 gap-8">
         <div>
-          <div class="text-lg font-semibold mb-3">Ride<span class="text-[#4cc48a]">Up</span></div>
+          <div class="text-lg font-semibold mb-3"><BrandLogo on-dark /></div>
           <p class="text-white/70 text-[13px] leading-relaxed">Nassau's on-demand ride service across New Providence.</p>
         </div>
         <div>

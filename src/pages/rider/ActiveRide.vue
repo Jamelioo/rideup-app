@@ -1,4 +1,5 @@
 <script setup>
+import BrandLogo from '../../components/BrandLogo.vue'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import GoogleMap from '../../components/GoogleMap.vue'
@@ -282,7 +283,7 @@ const endedMessage = computed(() => {
     <!-- Top bar -->
     <div class="absolute top-0 left-0 right-0 z-30 bg-[var(--color-surface)]/95 backdrop-blur-sm border-b border-[var(--color-border)]">
       <div class="px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-3 flex items-center gap-3">
-        <div class="text-lg font-semibold">Ride<span class="text-[var(--color-brand)]">Up</span></div>
+        <div class="text-lg font-semibold"><BrandLogo /></div>
         <div class="flex-1 text-[15px] font-semibold truncate">{{ statusBarText }}</div>
         <button @click="safetyOpen = true"
                 class="flex items-center gap-1.5 h-10 px-3 rounded-full bg-[var(--color-surface-secondary)] border border-[var(--color-border)] text-[13px] font-semibold"

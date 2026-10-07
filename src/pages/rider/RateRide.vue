@@ -1,4 +1,5 @@
 <script setup>
+import DotMascot from '../../components/DotMascot.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import StarRating from '../../components/StarRating.vue'
@@ -203,11 +204,7 @@ function done() {
 
     <!-- Thanks -->
     <div v-else-if="step === 'thanks'" class="flex-1 flex flex-col items-center justify-center px-6 max-w-lg mx-auto w-full">
-      <div class="w-16 h-16 rounded-full bg-[#2b8659] flex items-center justify-center mb-5" aria-hidden="true">
-        <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
-      </div>
+      <DotMascot pose="arrived" class="w-32 h-32 mb-4" />
       <h2 class="text-xl font-bold mb-1" aria-live="polite">Thanks for your feedback</h2>
       <p class="text-[var(--color-text-muted)] text-sm text-center mb-6">
         <template v-if="tipSaved && tipCents">{{ driverName }} gets 100% of your {{ formatFare(tipCents) }} tip. </template>

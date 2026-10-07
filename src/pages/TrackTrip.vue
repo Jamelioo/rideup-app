@@ -1,4 +1,5 @@
 <script setup>
+import BrandLogo from '../components/BrandLogo.vue'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { supabase, supabaseConfigured } from '../lib/supabase'
@@ -75,7 +76,7 @@ const updatedText = computed(() => updated.value ? new Date(updated.value).toLoc
 <template>
   <div class="min-h-dvh flex flex-col bg-[var(--color-surface)] text-[var(--color-text-primary)]">
     <header class="px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-3 flex items-center justify-between border-b border-[var(--color-border)]">
-      <div class="text-lg font-semibold">Ride<span class="text-[var(--color-brand)]">Up</span></div>
+      <div class="text-lg font-semibold"><BrandLogo /></div>
       <span class="text-[12px] text-[var(--color-text-muted)]">Shared trip</span>
     </header>
 

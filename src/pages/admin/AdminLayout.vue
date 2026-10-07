@@ -16,8 +16,8 @@
     >
       <!-- Logo -->
       <div class="flex items-center gap-3 px-6 py-5 border-b border-white/10">
-        <div class="w-8 h-8 rounded-lg bg-[#2b8659] flex items-center justify-center text-white font-bold text-sm">R</div>
-        <span class="text-lg font-semibold tracking-tight">RideUp Admin</span>
+        <BrandLogo on-dark class="h-7" />
+        <span class="text-sm font-semibold text-white/70 mt-1">Admin</span>
       </div>
 
       <!-- Nav -->
@@ -86,6 +86,7 @@
 </template>
 
 <script setup>
+import BrandLogo from '../../components/BrandLogo.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { supabase, supabaseConfigured } from '../../lib/supabase'

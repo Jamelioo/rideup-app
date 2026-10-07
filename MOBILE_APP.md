@@ -29,8 +29,8 @@ Commit the new `ios/` and `android/` folders.
 
 ```bash
 npm install -D @capacitor/assets
-# put a 1024x1024 icon at assets/icon.png and a 2732x2732 splash at assets/splash.png
-npx capacitor-assets generate --iconBackgroundColor '#2b8659' --splashBackgroundColor '#ffffff'
+# assets/icon.png (1024x1024) and assets/splash.png (2732x2732) are in the repo; see docs/BRAND.md
+npx capacitor-assets generate --iconBackgroundColor '#17603D' --splashBackgroundColor '#17603D'
 ```
 
 ### Location permission text (iOS)
