@@ -1,4 +1,6 @@
 <script setup>
+import DotMascot from '../../components/DotMascot.vue'
+import BrandLogo from '../../components/BrandLogo.vue'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase'
@@ -250,18 +252,14 @@ async function cancelRequest() {
     <HarborBackdrop />
     <div class="relative px-6 pt-[max(2rem,env(safe-area-inset-top))] pb-4 flex items-center gap-3">
       <button @click="cancelRequest" class="w-11 h-11 rounded-full bg-[var(--color-surface-secondary)] border border-[var(--color-border)] flex items-center justify-center text-base" aria-label="Cancel">←</button>
-      <div class="text-lg font-semibold">Ride<span class="text-[var(--color-brand)]">Up</span></div>
+      <div class="text-lg font-semibold"><BrandLogo /></div>
     </div>
     <div class="relative flex-1 flex flex-col items-center justify-center gap-6 px-6">
       <template v-if="!timedOut && !paymentFailed">
         <div class="relative w-28 h-28 rounded-full border border-[#2b8659]/35 flex items-center justify-center">
           <div class="absolute -inset-4 rounded-full border border-[#2b8659]/20"></div>
           <div class="absolute -inset-8 rounded-full border border-[#2b8659]/10"></div>
-          <div class="w-12 h-12 bg-[#2b8659] rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(43,134,89,0.35)] animate-pulse">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8 17h.01M16 17h.01M3 11l1.5-5A2 2 0 016.4 4h11.2a2 2 0 011.9 1.38L21 11M3 11v5a1 1 0 001 1h1m16-6v5a1 1 0 01-1 1h-1M3 11h18" />
-            </svg>
-          </div>
+          <DotMascot :pose="driverFound ? 'hi' : 'finding'" class="w-24 h-24" />
         </div>
         <div v-if="notice" class="w-full max-w-sm rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-4 py-3 text-[13px] text-[var(--color-text-primary)] text-center" role="status">{{ notice }}</div>
         <div class="text-center">
@@ -275,11 +273,7 @@ async function cancelRequest() {
         <p v-if="cancelError" class="text-[13px] text-[var(--color-danger)]" role="alert">{{ cancelError }}</p>
       </template>
       <div v-if="timedOut" class="text-center px-6">
-        <div class="w-16 h-16 rounded-full bg-[var(--color-surface-secondary)] flex items-center justify-center mx-auto mb-4">
-          <svg class="w-8 h-8 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
+        <DotMascot pose="sleepy" class="w-28 h-28 mx-auto mb-3" />
         <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-2">No drivers available</h2>
         <p class="text-[var(--color-text-muted)] text-sm mb-6">We couldn’t find a driver near you right now. You haven’t been charged.</p>
         <button @click="retrySearch" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mb-3">

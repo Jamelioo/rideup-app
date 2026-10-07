@@ -1,4 +1,5 @@
 <script setup>
+import BrandLogo from '../../components/BrandLogo.vue'
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDriver } from '../../lib/useDriver'
@@ -205,7 +206,7 @@ const initials = computed(() => {
       <button @click="menuOpen = true" class="pointer-events-auto w-11 h-11 rounded-full bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.1)] flex items-center justify-center active:scale-95 transition-transform" aria-label="Open menu">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect y="3" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="8.25" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="13.5" width="18" height="1.5" rx="0.75" fill="currentColor"/></svg>
       </button>
-      <div class="pointer-events-auto bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.1)] rounded-full px-5 py-2 text-[17px] font-bold tracking-tight">Ride<span class="text-[var(--color-brand)]">Up</span> <span class="text-[11px] font-sans font-normal text-[var(--color-text-muted)] ml-0.5">Driver</span></div>
+      <div class="pointer-events-auto bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.1)] rounded-full px-5 py-2 text-[17px] font-bold tracking-tight"><BrandLogo /> <span class="text-[11px] font-sans font-normal text-[var(--color-text-muted)] ml-0.5">Driver</span></div>
       <button @click="router.push('/driver/profile')" class="pointer-events-auto w-11 h-11 rounded-full bg-[#2b8659] shadow-[0_2px_12px_rgba(0,0,0,0.1)] flex items-center justify-center text-white text-[13px] font-bold">
         {{ initials }}
       </button>
@@ -301,7 +302,7 @@ const initials = computed(() => {
     <!-- DESKTOP: Side panel -->
     <div class="hidden md:flex absolute inset-y-0 left-0 z-10 w-[400px] bg-[var(--color-surface)] shadow-[4px_0_24px_rgba(0,0,0,0.08)] flex-col">
       <div class="px-6 pt-8 pb-4 flex items-center justify-between">
-        <div class="text-[22px] font-bold tracking-tight">Ride<span class="text-[var(--color-brand)]">Up</span> <span class="text-[12px] font-sans font-normal text-[var(--color-text-muted)] ml-0.5">Driver</span></div>
+        <div class="text-[22px] font-bold tracking-tight"><BrandLogo /> <span class="text-[12px] font-sans font-normal text-[var(--color-text-muted)] ml-0.5">Driver</span></div>
         <div class="flex items-center gap-2">
           <button @click="menuOpen = true" class="w-11 h-11 rounded-full hover:bg-[var(--color-surface-secondary)] flex items-center justify-center transition-colors" aria-label="Open menu">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect y="3" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="8.25" width="18" height="1.5" rx="0.75" fill="currentColor"/><rect y="13.5" width="18" height="1.5" rx="0.75" fill="currentColor"/></svg>

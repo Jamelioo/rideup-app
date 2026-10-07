@@ -1,4 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="8" fill="#2b8659"/>
-  <text x="16" y="22" text-anchor="middle" font-family="serif" font-weight="700" font-size="18" fill="white">R</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="RideUp"><rect width="64" height="64" rx="14" fill="#17603D"/><g transform="translate(10.15 47.47) scale(0.04421 0.04421)"><path d="M60 0V-700H350Q429 -700 490 -669.5Q551 -639 585.5 -585.5Q620 -532 620 -462Q620 -393 586 -339Q552 -285 494 -255L648 0H436L310 -222H245V0ZM245 -392H340Q365 -392 384 -401Q403 -410 414 -426Q425 -442 425 -462Q425 -492 401.5 -511.5Q378 -531 340 -531H245Z" fill="#FFFFFF"/><path d="M928.5 -590C928.5 -650.75 879.25 -700 818.5 -700C757.75 -700 708.5 -650.75 708.5 -590C708.5 -529.25 757.75 -480 818.5 -480C879.25 -480 928.5 -529.25 928.5 -590Z" fill="#FFC83D"/></g></svg>

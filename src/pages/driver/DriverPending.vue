@@ -1,4 +1,5 @@
 <script setup>
+import BrandLogo from '../../components/BrandLogo.vue'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
@@ -45,7 +46,7 @@ async function checkStatus() {
   <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)] flex flex-col items-center justify-center px-6 pt-[max(1.5rem,env(safe-area-inset-top))]">
     <div class="max-w-sm w-full text-center">
       <!-- Logo -->
-      <div class="text-2xl font-bold mb-10">Ride<span class="text-[var(--color-brand)]">Up</span></div>
+      <div class="text-2xl font-bold mb-10"><BrandLogo /></div>
 
       <!-- Icon -->
       <div class="w-20 h-20 rounded-full bg-[#2b8659]/10 flex items-center justify-center mx-auto mb-6">

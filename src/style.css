@@ -13,6 +13,9 @@
   --color-text-muted: rgba(25, 31, 28, 0.68);
   --color-border: rgba(25, 31, 28, 0.08);
   --color-brand: #23744c;
+  /* Logo colours (BrandLogo.vue); see docs/BRAND.md */
+  --logo-ride: #0f3d2a;
+  --logo-up: #1f8a55;
   --color-brand-light: #f0fdf4;
   --color-brand-tint: #f0f9e8;
   --color-overlay: rgba(0, 0, 0, 0.4);
@@ -64,6 +67,8 @@ html.dark {
   --color-text-muted: rgba(232, 233, 235, 0.66);
   --color-border: rgba(232, 233, 235, 0.1);
   --color-brand: #34a065;
+  --logo-ride: #ffffff;
+  --logo-up: #ffc83d;
   --color-brand-light: rgba(43, 134, 89, 0.15);
   --color-brand-tint: #15231c;
   --color-overlay: rgba(0, 0, 0, 0.6);

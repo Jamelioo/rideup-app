@@ -1,4 +1,5 @@
 <script setup>
+import BrandLogo from '../components/BrandLogo.vue'
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
@@ -43,7 +44,7 @@ const popularTrips = POPULAR_TRIPS.map((t) => ({
     <!-- NAV -->
     <header class="sticky top-0 z-40 bg-[var(--color-surface)]/95 backdrop-blur-md border-b border-[var(--color-border)]">
       <nav class="max-w-6xl mx-auto px-5 py-3 flex items-center justify-between gap-3" aria-label="Main">
-        <router-link to="/" class="text-[20px] font-bold inline-flex items-center min-h-[44px]" aria-label="RideUp home">Ride<span class="text-[var(--color-brand)]">Up</span></router-link>
+        <router-link to="/" class="text-[20px] font-bold inline-flex items-center min-h-[44px]" aria-label="RideUp home"><BrandLogo decorative /></router-link>
         <div class="hidden md:flex items-center gap-2 text-[16px] font-medium text-[var(--color-text-muted)]">
           <router-link to="/" aria-current="page" class="px-3 py-2 rounded-full text-[var(--color-text-primary)] font-bold">Ride</router-link>
           <router-link to="/drive" class="px-3 py-2 rounded-full hover:text-[var(--color-text-primary)] transition-colors">Drive</router-link>
@@ -108,7 +109,7 @@ const popularTrips = POPULAR_TRIPS.map((t) => ({
                       <div class="w-3.5 h-1.5 border border-white/60 rounded-sm"><div class="w-2.5 h-0.5 bg-[var(--color-surface)]/60 rounded-sm m-px"></div></div>
                     </div>
                   </div>
-                  <div class="text-[13px] font-bold">Ride<span class="text-[#4cc48a]">Up</span></div>
+                  <div class="text-[13px] font-bold"><BrandLogo on-dark /></div>
                 </div>
                 <div class="p-3.5 bg-[var(--color-surface)]">
                   <div class="text-[11px] font-bold text-[var(--color-text-primary)] mb-2.5">Where are you going?</div>
@@ -244,7 +245,7 @@ const popularTrips = POPULAR_TRIPS.map((t) => ({
       <div class="max-w-6xl mx-auto px-5 py-10">
         <div class="md:flex md:justify-between md:gap-10">
           <div class="mb-6 md:mb-0">
-            <router-link to="/" class="text-[20px] font-bold inline-flex items-center min-h-[44px]" aria-label="RideUp home">Ride<span class="text-[#4cc48a]">Up</span></router-link>
+            <router-link to="/" class="text-[20px] font-bold inline-flex items-center min-h-[44px]" aria-label="RideUp home"><BrandLogo on-dark decorative /></router-link>
             <p class="text-[14px] text-white/75 mt-2">Rides across New Providence, Bahamas.</p>
             <p class="text-[14px] text-white/75 mt-3">
               <a href="tel:+12424529911" class="hover:text-white py-1 inline-block">(242) 452-9911</a><br />

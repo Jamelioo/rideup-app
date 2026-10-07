@@ -1,4 +1,5 @@
 <script setup>
+import BrandLogo from '../../components/BrandLogo.vue'
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { supabase } from '../../lib/supabase'
@@ -152,7 +153,7 @@ async function shareReceipt() {
       <div class="rounded-2xl bg-[var(--color-surface)] px-6 py-8 shadow-sm">
         <!-- Logo -->
         <div class="mb-6 text-center">
-          <span class="text-xl font-bold text-[var(--color-brand)]">RideUp</span>
+          <span class="text-2xl"><BrandLogo /></span>
           <p class="mt-1 text-xs text-[var(--color-text-muted)]">Nassau, Bahamas</p>
         </div>
 
