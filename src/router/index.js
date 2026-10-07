@@ -4,6 +4,7 @@ import { useAuth } from '../lib/useAuth'
 import { useDriver } from '../lib/useDriver'
 import { DEMO_MODE } from '../lib/demoMode'
 import { setPendingReferral } from '../lib/rewards'
+import { SITE, seoPageFor } from '../lib/seoPages.js'
 
 // Eager: landing + main booking (first paint)
 import RiderLanding from '../pages/RiderLanding.vue'
@@ -195,7 +196,6 @@ router.beforeEach(async (to) => {
 // Full-screen app screens: lock the page so only their inner panels scroll (see html.app-shell in style.css).
 const APP_SHELL_ROUTES = ['/book', '/ride/', '/driver/dashboard', '/driver/active-ride']
 
-const SITE = 'https://www.rideupnassau.com'
 
 router.afterEach((to) => {
   document.title = to.meta.title || 'RideUp Nassau'
@@ -207,6 +207,10 @@ router.afterEach((to) => {
     document.head.appendChild(canonical)
   }
   canonical.href = SITE + to.path
+  // Public pages carry their own description (see src/lib/seoPages.js); app screens keep the default.
+  const seo = seoPageFor(to.path)
+  const desc = document.querySelector('meta[name="description"]')
+  if (desc) desc.content = (seo || seoPageFor('/')).description
   const shell = APP_SHELL_ROUTES.some((p) => to.path === p || (p.endsWith('/') && to.path.startsWith(p)))
   document.documentElement.classList.toggle('app-shell', shell)
   if (shell) window.scrollTo(0, 0)

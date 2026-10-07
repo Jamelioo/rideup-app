@@ -1,8 +1,36 @@
 {
   "rewrites": [
     {
+      "source": "/airport",
+      "destination": "/airport/index.html"
+    },
+    {
+      "source": "/drive",
+      "destination": "/drive/index.html"
+    },
+    {
+      "source": "/driver/apply",
+      "destination": "/driver/apply/index.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/about/index.html"
+    },
+    {
+      "source": "/support",
+      "destination": "/support/index.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/terms/index.html"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/privacy/index.html"
+    },
+    {
       "source": "/((?!api/).*)",
-      "destination": "/index.html"
+      "destination": "/app.html"
     }
   ],
   "headers": [
