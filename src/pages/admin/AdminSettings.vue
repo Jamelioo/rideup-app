@@ -45,7 +45,7 @@ const toggles = [
   {
     key: 'surge_pricing',
     title: 'Busy-time pricing',
-    description: 'When ride requests near a pickup outnumber free drivers, fares go up automatically (1.2× to at most 1.5×, trip part only). Riders see the price and a “Busy” note before booking; drivers keep 80% of the extra.',
+    description: 'When ride requests near a pickup outnumber free drivers, fares go up automatically (1.2× to at most 1.5×, trip part only). Riders see the price and a “Busy” note before booking; drivers keep 70% of the extra.',
     note: 'Turn off during emergencies such as hurricanes or island-wide outages.',
   },
   {

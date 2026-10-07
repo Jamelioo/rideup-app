@@ -216,7 +216,7 @@ const popularTrips = POPULAR_TRIPS.map((t) => ({
         </div>
         <div>
           <p class="inline-block bg-[#2b8659]/20 text-[#6fdca6] text-[12px] font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wide">Drive with us</p>
-          <h2 id="drive-title" class="text-[28px] sm:text-[35px] font-bold leading-[1.14] text-white mb-3">Keep 80% of every trip fare</h2>
+          <h2 id="drive-title" class="text-[28px] sm:text-[35px] font-bold leading-[1.14] text-white mb-3">Keep 70% of every trip fare</h2>
           <p class="text-white/75 text-[16px] leading-[1.5] mb-5">Drive with RideUp on your own schedule. No shifts, no minimums. Apply today and start earning once you’re approved.</p>
           <ul class="flex flex-wrap gap-x-5 gap-y-2 mb-6 text-[14px] text-white/80">
             <li class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[#4cc48a]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Flexible hours</li>

@@ -337,7 +337,7 @@ onUnmounted(() => {
           </div>
           <h2 class="text-2xl font-bold mb-1">Trip complete</h2>
           <div class="text-[34px] font-extrabold text-[var(--color-brand)] mt-3">+{{ formatFare(earnings) }}</div>
-          <div class="text-[13px] text-[var(--color-text-secondary)] mt-1">Your 80% of the {{ formatFare(currentRide?.fare_cents) }} fare</div>
+          <div class="text-[13px] text-[var(--color-text-secondary)] mt-1">Your 70% of the {{ formatFare(currentRide?.fare_cents) }} fare</div>
           <div class="text-[13px] text-[var(--color-text-muted)] mt-2">
             {{ currentRide?.distance_miles != null ? Number(currentRide.distance_miles).toFixed(1) : '0.0' }} mi · {{ Math.round(currentRide?.duration_minutes || 0) }} min
           </div>

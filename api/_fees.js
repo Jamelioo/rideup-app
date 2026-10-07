@@ -1,3 +1,4 @@
+import { DRIVER_SHARE } from '../src/lib/pricing.js'
 // Cancellation rules, kept pure so they can be tested. Uber-style:
 //  * Rider cancels after the free grace period once a driver has accepted → flat fee.
 //  * Driver arrives and waits; after the free wait the driver may cancel as a rider no-show → same flat fee.
@@ -25,8 +26,8 @@ export function noShowAllowed({ status, arrivedAt, waitSeconds, now = Date.now()
   return status === 'driver_arrived' && !!arrivedAt && now - new Date(arrivedAt).getTime() >= waitSeconds * 1000
 }
 
-// Driver keeps 80% of any fee, like a fare.
+// Driver keeps 70% of any fee, like a fare.
 export function splitFee(cents) {
-  const platform = Math.round(cents * 0.2)
+  const platform = Math.round(cents * (1 - DRIVER_SHARE))
   return { platform_fee_cents: platform, driver_payout_cents: cents - platform }
 }

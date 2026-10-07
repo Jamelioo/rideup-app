@@ -2,7 +2,7 @@
   <div>
     <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-2">Driver Payouts</h1>
     <p class="text-sm text-[var(--color-text-secondary)] mb-6">
-      What each driver has earned (their 80% of paid trips, their share of cancellation and no-show fees, and 100% of tips) minus what you’ve already paid them.
+      What each driver has earned (their 70% of paid trips, their share of cancellation and no-show fees, and 100% of tips) minus what you’ve already paid them.
       Pay drivers by bank transfer, cash or mobile money, then record it here so balances and the driver’s earnings page stay correct.
     </p>
 

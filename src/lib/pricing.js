@@ -8,13 +8,15 @@ export const RATES = {
   premium:  { base: 700, perMile: 320, perMinute: 40, minimum: 2000 },
 }
 
-// $2.50 per trip kept by RideUp (covers card processing and maps); drivers keep 80% of everything else.
+// $2.50 per trip kept by RideUp (covers card processing and maps); drivers keep 70% of everything else.
 export const BOOKING_FEE_CENTS = 250
+// Driver share of the fare after the booking fee. Must match set_ride_fee() (migration 015).
+export const DRIVER_SHARE = 0.7
 // Never price a trip faster than 30 mph average (2 min per mile), whatever trip time the app sends.
 export const MIN_MINUTES_PER_MILE = 2
 
 // $3.00 for pickups at Lynden Pindling International Airport (about 1 mile around the terminals).
-// Part of the fare, so the driver keeps 80% of it. Must match is_airport_pickup() (migration 009).
+// Part of the fare, so the driver keeps 70% of it. Must match is_airport_pickup() (migration 009).
 export const AIRPORT = { lat: 25.039, lng: -77.4662, radiusMiles: 1 }
 export const AIRPORT_FEE_CENTS = 300
 
@@ -45,12 +47,12 @@ export function calculateFare(distanceMiles, durationMinutes, vehicleType = 'sta
   return Math.round(Math.max(Math.round(trip), rate.minimum) * normalizeSurge(surge)) + airport + BOOKING_FEE_CENTS
 }
 
-// What the driver keeps: 80% of the fare excluding the booking fee. Rides store it; older rows fall back
+// What the driver keeps: 70% of the fare excluding the booking fee. Rides store it; older rows fall back
 // to the same rule.
 export function driverPayout(ride) {
   if (ride?.driver_payout_cents != null) return ride.driver_payout_cents
   const fare = ride?.fare_cents || 0
-  return Math.round((fare - (ride?.booking_fee_cents || 0)) * 0.8)
+  return Math.round((fare - (ride?.booking_fee_cents || 0)) * DRIVER_SHARE)
 }
 
 export function formatFare(cents) {
