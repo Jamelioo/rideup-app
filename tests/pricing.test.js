@@ -13,9 +13,9 @@ test('minimum fare applies to very short trips', () => {
 })
 test('unknown vehicle type falls back to standard', () => assert.equal(calculateFare(5, 15, 'spaceship'), 1600))
 
-test('driver keeps 80%, stored value wins, old rows fall back to 80%', () => {
+test('driver keeps 70%, stored value wins, old rows fall back to 70%', () => {
   assert.equal(driverPayout({ fare_cents: 1375, driver_payout_cents: 1100 }), 1100)
-  assert.equal(driverPayout({ fare_cents: 1000 }), 800)
+  assert.equal(driverPayout({ fare_cents: 1000 }), 700)
   assert.equal(driverPayout(null), 0)
 })
 
@@ -31,8 +31,8 @@ test('minimum fares: standard $10, xl $15, premium $20', () => {
   assert.equal(calculateFare(0.5, 2, 'standard'), 1250)
 })
 
-test('booking fee goes to RideUp; driver keeps 80% of the rest', () => {
-  assert.equal(driverPayout({ fare_cents: 1410, booking_fee_cents: 100 }), 1048)
+test('booking fee goes to RideUp; driver keeps 70% of the rest', () => {
+  assert.equal(driverPayout({ fare_cents: 1560, booking_fee_cents: 250 }), 917)
 })
 test('trip time is never priced faster than 2 min per mile', () => {
   // 10 mi claimed in 5 min is priced as 20 min

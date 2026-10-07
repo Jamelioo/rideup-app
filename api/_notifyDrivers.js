@@ -1,3 +1,4 @@
+import { driverPayout } from '../src/lib/pricing.js'
 import { admin } from './_auth.js'
 import { pushToUser, usersWithPush } from './_push.js'
 
@@ -127,7 +128,7 @@ export async function notifyNearbyDrivers(rideId, { exclude = [] } = {}) {
       skip: [...(ride.declined_by || []), ...exclude],
     }).slice(0, MAX_DRIVERS)
 
-    const payout = ride.driver_payout_cents ?? Math.round((ride.fare_cents || 0) * 0.8)
+    const payout = driverPayout(ride)
     await Promise.all(nearby.map((d) => pushToUser(d.auth_user_id, {
       title: 'New trip request',
       body: `${d.miles != null ? `${d.miles.toFixed(1)} mi away · ` : ''}Earn about $${(payout / 100).toFixed(2)}`,

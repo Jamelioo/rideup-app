@@ -16,7 +16,7 @@ const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const METHODS = { bank_transfer: 'Bank transfer', cash: 'Cash', mobile_money: 'Mobile money', other: 'Payout' }
 const PAID = ['captured', 'paid', 'partially_refunded']
 
-// Every earning line: completed trips (your 80% + 100% of tips) and your share of cancellation/no-show fees.
+// Every earning line: completed trips (your 70% + 100% of tips) and your share of cancellation/no-show fees.
 const items = ref([])
 const summary = ref(null) // driver_earnings_summary: balance, paid out, tips
 const payouts = ref([])

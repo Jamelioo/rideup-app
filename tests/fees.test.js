@@ -34,8 +34,8 @@ test('no-show: only after arriving, and never more than the fare', () => {
   assert.equal(noShowFeeCents({ ...arrived, fareCents: 300, arrivedAt: acceptedAgo(900) }), 300)
   assert.equal(noShowFeeCents({ ...arrived, paymentStatus: null, arrivedAt: acceptedAgo(900) }), 0)
 })
-test('fees split 80/20 like fares and add up exactly', () => {
-  assert.deepEqual(splitFee(500), { platform_fee_cents: 100, driver_payout_cents: 400 })
+test('fees split 70/30 like fares and add up exactly', () => {
+  assert.deepEqual(splitFee(500), { platform_fee_cents: 150, driver_payout_cents: 350 })
   const odd = splitFee(333)
   assert.equal(odd.platform_fee_cents + odd.driver_payout_cents, 333)
 })

@@ -21,7 +21,7 @@ function goBack() {
     </div>
 
     <div class="max-w-2xl mx-auto px-5 py-8 space-y-6 text-[15px] leading-relaxed text-[var(--color-text-secondary)]">
-      <p class="text-[13px] text-[var(--color-text-muted)]">Last updated: October 5, 2026</p>
+      <p class="text-[13px] text-[var(--color-text-muted)]">Last updated: October 7, 2026</p>
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Acceptance of Terms</h2>
@@ -50,7 +50,7 @@ function goBack() {
 
       <section>
         <h2 class="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Drivers</h2>
-        <p>Drivers must apply and be approved before accepting rides, and must keep their photo, documents and vehicle information accurate; changing these sends the profile back for review, and expired licence or insurance documents must be renewed before going online. Drivers keep 80% of each fare (excluding the booking fee, and including any busy-time pricing) and of any cancellation or no-show fee, and 100% of tips; RideUp retains a 20% platform fee. Incentive rewards announced in the app are added to the driver’s balance once the stated number of trips is completed within the stated time; RideUp may withhold rewards earned through fraudulent trips. When a rider is refunded because of the driver’s conduct (for example, a much longer route than needed), RideUp may deduct the driver’s share of that refund from their balance. Ratings are averaged over recent trips, and a sustained low rating may lead to a quality review. RideUp may suspend or remove drivers who break these terms or the law.</p>
+        <p>Drivers must apply and be approved before accepting rides, and must keep their photo, documents and vehicle information accurate; changing these sends the profile back for review, and expired licence or insurance documents must be renewed before going online. Drivers keep 70% of each fare (excluding the booking fee, and including any busy-time pricing) and of any cancellation or no-show fee, and 100% of tips; RideUp retains a 30% platform fee. Incentive rewards announced in the app are added to the driver’s balance once the stated number of trips is completed within the stated time; RideUp may withhold rewards earned through fraudulent trips. When a rider is refunded because of the driver’s conduct (for example, a much longer route than needed), RideUp may deduct the driver’s share of that refund from their balance. Ratings are averaged over recent trips, and a sustained low rating may lead to a quality review. RideUp may suspend or remove drivers who break these terms or the law.</p>
       </section>
 
       <section>

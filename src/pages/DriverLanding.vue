@@ -45,7 +45,7 @@ const routeExamples = [
   { route: 'Paradise Island → Bay St', miles: 5.1 },
 ].map((r) => {
   const fare = calculateFare(r.miles, r.miles * 3, 'standard', r.airport ? { pickup: AIRPORT } : {})
-  // The driver keeps 80% of the fare excluding the rider's booking fee (same as the database).
+  // The driver keeps 70% of the fare excluding the rider's booking fee (same as the database).
   const cents = driverPayout({ fare_cents: fare, booking_fee_cents: BOOKING_FEE_CENTS })
   return { route: r.route, distance: `${r.miles} mi`, fare: formatFare(fare), yourCut: formatFare(cents), cents }
 })
@@ -92,7 +92,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
 
       <div class="relative max-w-6xl mx-auto px-6 pt-12 pb-16 md:pt-14 md:pb-24">
         <div class="grid md:grid-cols-[1.15fr_0.85fr] gap-10 items-center">
-          <!-- Left: hero copy — 80% is the headline -->
+          <!-- Left: hero copy — 70% is the headline -->
           <div>
             <div class="inline-flex items-center gap-2 bg-[var(--color-surface)]/10 text-white/80 text-[13px] font-medium px-4 py-1.5 rounded-full mb-5">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -102,11 +102,11 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
               Now recruiting drivers in Nassau
             </div>
             <h1 class="text-white leading-[1.05] font-medium tracking-tight mb-4">
-              <span class="block text-[44px] sm:text-[56px] lg:text-[68px]">Keep <span class="text-[var(--color-brand)]">80%</span></span>
+              <span class="block text-[44px] sm:text-[56px] lg:text-[68px]">Keep <span class="text-[var(--color-brand)]">70%</span></span>
               <span class="block text-[32px] sm:text-[40px] lg:text-[46px] text-white/80">of Every Fare.</span>
             </h1>
             <p class="text-white/55 text-[16px] leading-relaxed max-w-md mb-6">
-              Drive with RideUp across New Providence. Your car, your hours, your money. We take 20% of the trip fare — you keep the rest.
+              Drive with RideUp across New Providence. Your car, your hours, your money. We take 30% of the trip fare — you keep the rest.
             </p>
 
             <!-- CTA -->
@@ -202,7 +202,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
         <!-- Trust bar -->
         <div class="mt-10 pt-8 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
           <div>
-            <div class="text-[22px] font-semibold text-white">80%</div>
+            <div class="text-[22px] font-semibold text-white">70%</div>
             <div class="text-white/70 text-[12px]">Driver payout</div>
           </div>
           <div>
@@ -241,8 +241,8 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 class="text-[16px] font-bold mb-1.5">80% of every trip fare</h3>
-            <p class="text-[var(--color-text-secondary)] text-[14px] leading-relaxed">Keep more of what you earn. We only take 20%.</p>
+            <h3 class="text-[16px] font-bold mb-1.5">70% of every trip fare</h3>
+            <p class="text-[var(--color-text-secondary)] text-[14px] leading-relaxed">Keep more of what you earn. We take 30% and you keep the rest.</p>
           </div>
 
           <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] text-center hover:border-[#2b8659]/20 transition-colors">
@@ -262,7 +262,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
               </svg>
             </div>
             <h3 class="text-[16px] font-bold mb-1.5">Clear payouts</h3>
-            <p class="text-[var(--color-text-secondary)] text-[14px] leading-relaxed">Your earnings show up in the app for every trip, with your 80% share calculated for you.</p>
+            <p class="text-[var(--color-text-secondary)] text-[14px] leading-relaxed">Your earnings show up in the app for every trip, with your 70% share calculated for you.</p>
           </div>
 
           <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] text-center hover:border-[#2b8659]/20 transition-colors">
@@ -331,7 +331,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
 
       <div class="relative max-w-6xl mx-auto px-6 py-20 md:py-28">
         <h2 class="text-[28px] sm:text-[36px] font-medium mb-3">What you actually earn</h2>
-        <p class="text-[var(--color-text-muted)] text-[15px] mb-10 max-w-lg">Example routes priced with our standard-car rates. You keep 80% of every trip fare (the rider’s booking fee goes to RideUp) — here’s what that looks like.</p>
+        <p class="text-[var(--color-text-muted)] text-[15px] mb-10 max-w-lg">Example routes priced with our standard-car rates. You keep 70% of every trip fare (the rider’s booking fee goes to RideUp) — here’s what that looks like.</p>
 
         <!-- Earnings table -->
         <div class="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] overflow-x-auto shadow-sm mb-8">
@@ -379,7 +379,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
           </div>
           <div class="bg-[#2b8659] rounded-2xl p-6 text-white shadow-lg shadow-[#2b8659]/15">
             <div class="text-white text-[13px] font-medium mb-1">You keep</div>
-            <div class="text-[30px] font-semibold">80%</div>
+            <div class="text-[30px] font-semibold">70%</div>
             <div class="text-[12px] text-white mt-1">of every trip fare</div>
           </div>
         </div>

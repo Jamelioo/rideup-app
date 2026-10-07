@@ -47,7 +47,7 @@ set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-00000000
 insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, distance_miles, duration_minutes)
 values ('70000000-0000-0000-0000-000000000001', :'ra', 25.04, -77.35, 25.08, -77.33, 'a', 'b', 4.4, 16);
 reset role; select pg_temp.as_server();
-select pg_temp.check(fare_cents = 1560 and driver_payout_cents = 1048 and booking_fee_cents = 250, 'Go 4.4 mi / 16 min = $15.60 (incl. $2.50 booking fee), driver $10.48')
+select pg_temp.check(fare_cents = 1560 and driver_payout_cents = 917 and booking_fee_cents = 250, 'Go 4.4 mi / 16 min = $15.60 (incl. $2.50 booking fee), driver $9.17 (70%)')
   from rides where id = '70000000-0000-0000-0000-000000000001';
 update rides set status = 'cancelled' where id = '70000000-0000-0000-0000-000000000001';
 
@@ -64,7 +64,7 @@ set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-00000000
 insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, distance_miles, duration_minutes, promo_code)
 values ('70000000-0000-0000-0000-000000000003', :'ra', 25.04, -77.35, 25.08, -77.33, 'a', 'b', 4.4, 16, 'big');
 reset role; select pg_temp.as_server();
-select pg_temp.check(fare_cents - promo_discount_cents - credit_applied_cents = 100 and driver_payout_cents = 1048,
+select pg_temp.check(fare_cents - promo_discount_cents - credit_applied_cents = 100 and driver_payout_cents = 917,
   'a promo bigger than the fare leaves the rider paying $1; driver still paid on the full fare')
   from rides where id = '70000000-0000-0000-0000-000000000003';
 update rides set status = 'cancelled' where id = '70000000-0000-0000-0000-000000000003';
@@ -116,8 +116,8 @@ end $$;
 insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, distance_miles, duration_minutes, surge_multiplier)
 values ('70000000-0000-0000-0000-000000000005', :'ra', 25.04, -77.35, 25.08, -77.33, 'a', 'b', 4.4, 16, 1.5);
 reset role; select pg_temp.as_server();
-select pg_temp.check(fare_cents = 1953 and surge_multiplier = 1.30 and driver_payout_cents = 1362,
-  'busy fare $19.53 at the server''s 1.3× (not the 1.5× the app sent); driver keeps 80%')
+select pg_temp.check(fare_cents = 1953 and surge_multiplier = 1.30 and driver_payout_cents = 1192,
+  'busy fare $19.53 at the server''s 1.3× (not the 1.5× the app sent); driver keeps 70%')
   from rides where id = '70000000-0000-0000-0000-000000000005';
 update rides set status = 'cancelled' where status = 'requested' or id = '70000000-0000-0000-0000-000000000005';
 
@@ -156,11 +156,11 @@ select pg_temp.check(safety_checkin_ok_at is not null and last_moved_at is not n
 insert into driver_quests (title, trips_required, reward_cents, starts_at, ends_at) values ('Test boost', 1, 2000, now() - interval '1 hour', now() + interval '1 day');
 select balance_cents as before_balance from public.driver_earnings_summary('20000000-0000-0000-0000-0000000000d1') \gset
 update rides set status = 'completed', payment_status = 'captured' where id = '70000000-0000-0000-0000-000000000006';
-select pg_temp.check(balance_cents = :before_balance + 1239 + 2000, 'trip ($12.39 driver share) and the $20 incentive added to the balance')
+select pg_temp.check(balance_cents = :before_balance + 1084 + 2000, 'trip ($10.84 driver share) and the $20 incentive added to the balance')
   from public.driver_earnings_summary('20000000-0000-0000-0000-0000000000d1');
 insert into ride_refunds (ride_id, target, method, amount_cents, driver_deduction_cents, reason)
 values ('70000000-0000-0000-0000-000000000006', 'fare', 'card', 500, 400, 'Longer route');
-select pg_temp.check(balance_cents = :before_balance + 1239 + 2000 - 400, 'a driver-fault refund takes the driver''s share off the balance')
+select pg_temp.check(balance_cents = :before_balance + 1084 + 2000 - 400, 'a driver-fault refund takes the driver''s share off the balance')
   from public.driver_earnings_summary('20000000-0000-0000-0000-0000000000d1');
 
 \echo '== Who can see what'
