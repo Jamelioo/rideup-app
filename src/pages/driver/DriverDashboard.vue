@@ -22,7 +22,7 @@ const { user } = useAuth()
 const { driver, isOnline, incomingRequest, currentRide, loading: driverLoading, acceptError, onlineError, myPosition, fetchDriver, goOnline, goOffline } = useDriver()
 
 const menuOpen = ref(false)
-// Screen stays on while online, so requests keep coming (a sleeping phone is taken offline after 3 minutes).
+// Screen stays on while online, so requests keep coming (a phone that stops checking in is taken offline after 30 minutes).
 useWakeLock(computed(() => !DEMO_MODE && isOnline.value))
 // Whether this phone can get trip alerts while RideUp is in the background ('on' | 'off' | 'blocked' | 'unavailable').
 const notifyState = ref('')
@@ -250,7 +250,7 @@ const initials = computed(() => {
         </div>
         <p v-if="isOnline && !currentRide && !incomingRequest && notifyState" class="-mt-2 mb-4 px-1 text-[12px] leading-snug text-[var(--color-text-muted)]">
           <template v-if="notifyState === 'on'">You can switch apps. We’ll send you a notification for new trips, and keep you online for 30 minutes while RideUp isn’t open.</template>
-          <template v-else>Keep RideUp open to get trips. If you switch apps you’ll go offline after 3 minutes.
+          <template v-else>Keep RideUp open to get trips. If you switch apps you’ll stay online for 30 minutes, but new trips only show when you come back.
             <button v-if="notifyState === 'off'" @click="turnOnNotifications" class="font-semibold text-[var(--color-brand)] underline">Turn on notifications</button>
             <span v-else-if="notifyState === 'blocked'">Notifications are blocked for RideUp in your phone’s settings.</span>
           </template>
@@ -346,7 +346,7 @@ const initials = computed(() => {
         </div>
         <p v-if="isOnline && !currentRide && !incomingRequest && notifyState" class="-mt-2 mb-4 px-1 text-[12px] leading-snug text-[var(--color-text-muted)]">
           <template v-if="notifyState === 'on'">You can switch apps. We’ll send you a notification for new trips, and keep you online for 30 minutes while RideUp isn’t open.</template>
-          <template v-else>Keep RideUp open to get trips. If you switch apps you’ll go offline after 3 minutes.
+          <template v-else>Keep RideUp open to get trips. If you switch apps you’ll stay online for 30 minutes, but new trips only show when you come back.
             <button v-if="notifyState === 'off'" @click="turnOnNotifications" class="font-semibold text-[var(--color-brand)] underline">Turn on notifications</button>
             <span v-else-if="notifyState === 'blocked'">Notifications are blocked for RideUp in your phone’s settings.</span>
           </template>

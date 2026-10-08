@@ -22,11 +22,10 @@ test('a driver using the app nearby can take a trip', () => {
   assert.ok(d.miles > 2 && d.miles < 4)
 })
 
-test('a driver in another app counts only while we can notify them, for up to 30 minutes', () => {
+test('a driver in another app still counts for up to 30 minutes, with or without notifications', () => {
   const away = driver({ last_seen_at: ago(10) })
-  assert.deepEqual(eligible(pool([away]), CABLE_BEACH), [])
-  const [d] = eligible(pool([away], { reachable: ['u1'] }), CABLE_BEACH)
-  assert.equal(d.inBackground, true)
+  assert.equal(eligible(pool([away]), CABLE_BEACH).length, 1)
+  assert.equal(eligible(pool([away], { reachable: ['u1'] }), CABLE_BEACH).length, 1)
   assert.deepEqual(eligible(pool([driver({ last_seen_at: ago(31) })], { reachable: ['u1'] }), CABLE_BEACH), [])
 })
 

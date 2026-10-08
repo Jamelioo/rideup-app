@@ -7,7 +7,9 @@ const MAX_DRIVERS = 10
 // A driver's app checks in every few seconds while it is open. Once it stops (closed, or the driver switched
 // to another app), they stay online for DRIVER_IDLE_MIN, or for DRIVER_BACKGROUND_MIN if we can still reach
 // them with a notification (like Uber's app, which keeps alerting drivers while it runs in the background).
-export const DRIVER_IDLE_MIN = 3
+// Both are 30 minutes for now, so every driver stays online that long; set DRIVER_IDLE_MIN back to 3 to
+// take drivers without notifications offline sooner.
+export const DRIVER_IDLE_MIN = 30
 export const DRIVER_BACKGROUND_MIN = 30
 export const TRIP_TYPES = ['standard', 'xl', 'premium']
 // Which driver vehicle classes can take each trip type (same rule as open_ride_requests).
