@@ -205,13 +205,30 @@ async function pollRequests() {
   }
 }
 
+// While online, follow GPS continuously so the driver's car moves on the home map as they drive (a one-off
+// read every 30 seconds left it frozen on iPhones until the app was reopened). Nearby requests use it too.
+let positionWatch = null
+function watchMyPosition() {
+  if (positionWatch !== null || !('geolocation' in navigator)) return
+  positionWatch = navigator.geolocation.watchPosition(
+    (pos) => {
+      lastPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude, at: Date.now() }
+      myPosition.value = { lat: lastPosition.lat, lng: lastPosition.lng }
+    },
+    () => {},
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 }
+  )
+}
+
 function startPolling() {
   stopPolling()
   pollInterval = setInterval(pollRequests, REQUEST_POLL_MS)
+  watchMyPosition()
 }
 
 function stopPolling() {
   if (pollInterval) { clearInterval(pollInterval); pollInterval = null }
+  if (positionWatch !== null) { navigator.geolocation.clearWatch(positionWatch); positionWatch = null }
 }
 
 function startFakeRequests() {
