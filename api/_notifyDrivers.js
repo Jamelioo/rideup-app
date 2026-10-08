@@ -1,8 +1,8 @@
 import { driverPayout } from '../src/lib/pricing.js'
+import { MAX_PICKUP_MILES } from '../src/lib/dispatch.js'
 import { admin } from './_auth.js'
 import { pushToUser, usersWithPush } from './_push.js'
 
-const MAX_PICKUP_MILES = 10 // same radius the driver app uses for requests (open_ride_requests)
 const MAX_DRIVERS = 10
 // A driver's app checks in every few seconds while it is open. Once it stops (closed, or the driver switched
 // to another app), they stay online for DRIVER_IDLE_MIN, or for DRIVER_BACKGROUND_MIN if we can still reach

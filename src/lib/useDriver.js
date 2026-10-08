@@ -6,6 +6,7 @@ import { apiPost } from './api'
 import { loadSettings } from './settings'
 import { enablePushNotifications } from './push'
 import { DEMO_DRIVER_PROFILE, generateFakeRideRequest } from './demoDriverMode'
+import { MAX_PICKUP_MILES } from './dispatch'
 
 const driver = ref(null)
 const isOnline = ref(false)
@@ -17,7 +18,6 @@ const onlineError = ref('')
 
 const ACTIVE_STATUSES = ['pending_driver_response', 'accepted', 'driver_arrived', 'in_progress']
 const REQUEST_POLL_MS = 4000
-const MAX_PICKUP_DISTANCE_MILES = 10
 
 let initialized = false
 let fakeRequestTimer = null
@@ -178,7 +178,7 @@ async function pollRequests() {
   const { data, error } = await supabase.rpc('open_ride_requests', {
     p_lat: pos?.lat ?? null,
     p_lng: pos?.lng ?? null,
-    p_radius_miles: MAX_PICKUP_DISTANCE_MILES,
+    p_radius_miles: MAX_PICKUP_MILES,
   })
   if (error) {
     // The server took us offline because the app stopped checking in (closed, asleep, no signal).
