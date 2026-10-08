@@ -19,7 +19,7 @@ import { pushStatus, enablePushNotifications } from '../../lib/push'
 
 const router = useRouter()
 const { user } = useAuth()
-const { driver, isOnline, incomingRequest, currentRide, loading: driverLoading, acceptError, onlineError, fetchDriver, goOnline, goOffline } = useDriver()
+const { driver, isOnline, incomingRequest, currentRide, loading: driverLoading, acceptError, onlineError, myPosition, fetchDriver, goOnline, goOffline } = useDriver()
 
 const menuOpen = ref(false)
 // Screen stays on while online, so requests keep coming (a sleeping phone is taken offline after 3 minutes).
@@ -191,7 +191,7 @@ const initials = computed(() => {
 
     <!-- Map fills right side on desktop, top on mobile -->
     <div class="absolute inset-0 md:left-[400px]">
-      <GoogleMap v-if="!DEMO_MODE && !mapFailed" class="absolute inset-0 z-0" :hotspots="hotspots" @error="mapFailed = true" />
+      <GoogleMap v-if="!DEMO_MODE && !mapFailed" class="absolute inset-0 z-0" :hotspots="hotspots" :driver-location="isOnline ? myPosition : null" @error="mapFailed = true" />
       <HarborBackdrop v-else />
       <div v-if="isOnline && hotspots.length" class="absolute left-1/2 -translate-x-1/2 top-[max(6.5rem,calc(env(safe-area-inset-top)+5.5rem))] md:top-6 z-10 pointer-events-none">
         <div class="flex items-center gap-3 rounded-full bg-[var(--color-surface)] shadow-[0_2px_12px_rgba(0,0,0,0.12)] px-4 py-2 text-[12px] font-semibold">

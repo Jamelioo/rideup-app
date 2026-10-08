@@ -43,3 +43,23 @@ Dot is the gold dot from the logo with a face. It floats with a soft shadow, lik
 - Dot is decorative: the text next to it must say what's happening. Animations stop when the device asks for
   reduced motion.
 - Dot appears next to the logo, never inside it or in the app icon.
+
+## Map
+
+The app's map (`src/components/GoogleMap.vue`, colours and artwork in `src/lib/mapTheme.js`) uses its own look
+instead of Google's default.
+
+| Element | Day | Night |
+| --- | --- | --- |
+| Land | `#EEF2EE` soft green-grey | `#0E1813` green-black |
+| Water | `#A5E0DA` Bahamas turquoise | `#0A3037` deep teal |
+| Highways | `#FFE49A` soft gold | `#335A45` green |
+| Route | `#1F8A55` on a `#0F3D2A` casing | `#3CCF8E` on a `#03110B` casing |
+
+- **Pickup:** Dot on a short pin. The tip marks the exact spot, with a ripple on the ground.
+- **Drop-off:** a deep green square. **Extra stop:** a small hollow square.
+- **Driver:** a RideUp green car seen from above, with gold headlights and the gold dot on its roof. It turns to
+  face the way it's driving.
+- **Busy areas:** soft glows, green for riders requesting and orange for higher fares.
+- Business pins are hidden. Parks, neighbourhood names and the airport stay, for finding your way.
+- Animations stop when the device asks for reduced motion.

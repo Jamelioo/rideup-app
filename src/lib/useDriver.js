@@ -157,6 +157,7 @@ async function goOffline() {
 // --- Nearby requests ------------------------------------------------------------------------------------
 // The server returns only open requests near the driver, with an approximate pickup and the rider's first name.
 let lastPosition = null
+const myPosition = ref(null) // { lat, lng } for the driver's own car on the home screen map
 function currentPosition() {
   if (lastPosition && Date.now() - lastPosition.at < 30_000) return Promise.resolve(lastPosition)
   if (!('geolocation' in navigator)) return Promise.resolve(null)
@@ -164,6 +165,7 @@ function currentPosition() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         lastPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude, at: Date.now() }
+        myPosition.value = { lat: lastPosition.lat, lng: lastPosition.lng }
         resolve(lastPosition)
       },
       () => resolve(lastPosition),
@@ -412,6 +414,7 @@ export function useDriver() {
     loading: readonly(loading),
     acceptError,
     onlineError,
+    myPosition: readonly(myPosition),
     fetchDriver,
     restoreActiveRide,
     refreshCurrentRide,

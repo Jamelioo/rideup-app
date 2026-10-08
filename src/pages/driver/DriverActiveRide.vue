@@ -199,6 +199,7 @@ let pollTimer = null
 let lastDbWrite = 0
 let lastPosition = null
 let pingTimer = null
+const myLocation = ref(null) // the driver's own car on the map, from the same GPS fixes
 
 // Position for the rider's map fallback and for trip check-ins. Also sent while standing still (every 20 s),
 // so the server can tell "stopped" from "app closed".
@@ -225,6 +226,7 @@ function startLive() {
         const { latitude, longitude } = pos.coords
         locationChannel?.send({ type: 'broadcast', event: 'driver-location', payload: { lat: latitude, lng: longitude } })
         lastPosition = { lat: latitude, lng: longitude }
+        myLocation.value = lastPosition
         if (Date.now() - lastDbWrite >= 10_000) sendPing()
       },
       () => {},
@@ -304,6 +306,7 @@ onUnmounted(() => {
                  :pickup="currentRide?.pickup_lat != null ? { lat: currentRide.pickup_lat, lng: currentRide.pickup_lng } : null"
                  :dropoff="['in_progress', 'completed'].includes(phase) && currentRide?.dropoff_lat != null ? { lat: currentRide.dropoff_lat, lng: currentRide.dropoff_lng } : null"
                  :stop="stopPoint"
+                 :driver-location="phase === 'completed' ? null : myLocation"
                  @error="mapFailed = true" />
       <HarborBackdrop v-else show-route />
     </div>

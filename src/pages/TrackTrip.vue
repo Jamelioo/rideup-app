@@ -91,7 +91,7 @@ const updatedText = computed(() => updated.value ? new Date(updated.value).toLoc
 
     <template v-else-if="trip">
       <div class="relative h-[42dvh] min-h-[240px]">
-        <GoogleMap v-if="!mapFailed" :pickup="pickup" :dropoff="dropoff" :driver-location="driverLocation" @error="mapFailed = true" />
+        <GoogleMap v-if="!mapFailed" :pickup="pickup" :dropoff="dropoff" :driver-location="driverLocation" :fit-padding="{ top: 48, right: 48, bottom: 48, left: 48 }" @error="mapFailed = true" />
         <HarborBackdrop v-else show-route />
       </div>
 

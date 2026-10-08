@@ -759,6 +759,7 @@ async function scheduleRide({ date, time, summary }) {
         :dropoff="dropoff"
         :stop="stop"
         show-traffic
+        editable
         class="absolute inset-0 z-0"
         @map-tap="handleMapTap"
         @marker-drag="handleMarkerDrag"
