@@ -7,7 +7,8 @@ const NOW = Date.parse('2026-10-04T15:00:00Z')
 const ago = (min) => new Date(NOW - min * 60_000).toISOString()
 const CABLE_BEACH = { lat: 25.0663, lng: -77.3962 }
 const CLIFTON = { lat: 25.0050, lng: -77.5420 } // far west end of the island
-const PARADISE_ISLAND = { lat: 25.0840, lng: -77.3170 } // ~13 miles from Clifton
+const PARADISE_ISLAND = { lat: 25.0840, lng: -77.3170 } // ~15 miles from Clifton, the island's two ends
+const FREEPORT = { lat: 26.5285, lng: -78.6967 } // Grand Bahama, another island
 const driver = (over = {}) => ({
   id: 'd1', auth_user_id: 'u1', vehicle_type: 'standard', last_lat: 25.07, last_lng: -77.35, last_seen_at: ago(1), ...over,
 })
@@ -45,8 +46,9 @@ test('drivers on a trip are left out, and the answer is "busy" rather than "none
   assert.deepEqual(summary.xl, { state: 'none' }) // a busy Go car could never take an XL trip
 })
 
-test('drivers more than 10 miles away, or who declined, are left out; the nearest comes first', () => {
-  assert.deepEqual(eligible(pool([driver({ last_lat: PARADISE_ISLAND.lat, last_lng: PARADISE_ISLAND.lng })]), CLIFTON), [])
+test('a driver anywhere on the island is offered the trip; off-island or declined drivers are not; nearest first', () => {
+  assert.equal(eligible(pool([driver({ last_lat: PARADISE_ISLAND.lat, last_lng: PARADISE_ISLAND.lng })]), CLIFTON).length, 1)
+  assert.deepEqual(eligible(pool([driver({ last_lat: FREEPORT.lat, last_lng: FREEPORT.lng })]), CLIFTON), [])
   const near = driver({ id: 'near', auth_user_id: 'u2', last_lat: 25.067, last_lng: -77.39 })
   const far = driver({ id: 'far', auth_user_id: 'u3', last_lat: 25.08, last_lng: -77.32 })
   assert.deepEqual(eligible(pool([far, near]), CABLE_BEACH).map((d) => d.id), ['near', 'far'])
