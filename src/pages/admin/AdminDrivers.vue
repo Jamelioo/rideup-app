@@ -77,7 +77,7 @@
           </div>
           <div class="text-sm space-y-0.5">
             <div><span :class="badge(review.status)">{{ review.status }}</span></div>
-            <div class="text-[var(--color-text-secondary)]">{{ review.raw.phone || 'No phone' }} · {{ review.raw.email || 'No email' }}</div>
+            <div class="text-[var(--color-text-secondary)]">{{ formatPhone(review.raw.phone) || 'No phone' }} · {{ review.raw.email || 'No email' }}</div>
             <div class="text-[var(--color-text-secondary)]">{{ review.vehicle }} · {{ review.raw.vehicle_type === 'xl' ? 'XL' : 'Standard' }}</div>
             <div class="text-[var(--color-text-secondary)]">Plate <strong>{{ review.raw.license_plate || '—' }}</strong> · Licence # {{ review.raw.license_number || '—' }}</div>
           </div>
@@ -98,6 +98,35 @@
             <a v-if="docs[doc.key]" :href="docs[doc.key]" target="_blank" rel="noopener" class="font-semibold text-[var(--color-brand)]">View</a>
             <span v-else class="text-[var(--color-text-muted)]">{{ docsLoading ? 'Checking…' : 'Not uploaded' }}</span>
           </div>
+        </div>
+
+        <h3 class="text-sm font-bold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">Driver and vehicle</h3>
+        <p class="text-[12px] text-[var(--color-text-muted)] mb-2">What riders see when this driver is on the way. Your changes don’t send the driver back for review.</p>
+        <div class="grid grid-cols-2 gap-3 mb-5 text-sm">
+          <label class="flex flex-col gap-1 col-span-2">Name
+            <input v-model="form.name" autocomplete="off" maxlength="80" class="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]" />
+          </label>
+          <label class="flex flex-col gap-1">Phone
+            <input v-model="form.phone" type="tel" inputmode="tel" autocomplete="off" placeholder="(242) 555-0100" class="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]" />
+          </label>
+          <label class="flex flex-col gap-1">Licence number
+            <input v-model="form.license_number" autocomplete="off" maxlength="40" class="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]" />
+          </label>
+          <label class="flex flex-col gap-1">Make
+            <input v-model="form.vehicle_make" autocomplete="off" maxlength="40" placeholder="Toyota" class="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]" />
+          </label>
+          <label class="flex flex-col gap-1">Model
+            <input v-model="form.vehicle_model" autocomplete="off" maxlength="40" placeholder="Corolla" class="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]" />
+          </label>
+          <label class="flex flex-col gap-1">Year
+            <input v-model="form.vehicle_year" type="number" inputmode="numeric" min="1990" :max="maxYear" class="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]" />
+          </label>
+          <label class="flex flex-col gap-1">Colour
+            <input v-model="form.vehicle_color" autocomplete="off" maxlength="30" placeholder="Grey" class="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]" />
+          </label>
+          <label class="flex flex-col gap-1 col-span-2">Licence plate
+            <input v-model="form.license_plate" autocomplete="off" maxlength="15" placeholder="NP 1234" class="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] uppercase" />
+          </label>
         </div>
 
         <h3 class="text-sm font-bold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">Verification</h3>
@@ -154,6 +183,7 @@ import { apiPost } from '../../lib/api'
 import { formatFare } from '../../lib/pricing'
 import { DEMO_MODE } from '../../lib/demoMode'
 import { listDriverDocs } from '../../lib/driverDocs'
+import { toE164, formatPhone } from '../../lib/phone'
 
 // Like Uber, a sustained low average (recent trips) flags a driver for a quality review.
 const LOW_RATING = 4.6
@@ -172,9 +202,9 @@ const loadError = ref('')
 
 // Sample rows only in demo mode; a real backend never shows invented drivers.
 const drivers = ref(DEMO_MODE ? [
-  { id: 'd1', name: 'Deon Rolle', vehicle: '2024 Toyota Camry — White', plate: 'NP 2041', status: 'Approved', rating: 4.9, trips: 312, balance: 18450, expired: false, raw: {} },
-  { id: 'd2', name: 'Terrence Knowles', vehicle: '2025 Kia K5 — Blue', plate: 'NP 7710', status: 'Pending', rating: 5, trips: 0, balance: 0, expired: false, raw: {} },
-  { id: 'd3', name: 'Lionel Forbes', vehicle: '2021 Nissan Sentra — Silver', plate: 'NP 1185', status: 'Suspended', rating: 3.1, trips: 42, balance: 2100, expired: true, raw: {} },
+  { id: 'd1', name: 'Deon Rolle', vehicle: '2024 Toyota Camry — White', plate: 'NP 2041', status: 'Approved', rating: 4.9, trips: 312, balance: 18450, expired: false, raw: { name: 'Deon Rolle', phone: '+12425550141', vehicle_year: 2024, vehicle_make: 'Toyota', vehicle_model: 'Camry', vehicle_color: 'White', license_plate: 'NP 2041', license_number: 'BH-448812', vehicle_type: 'standard' } },
+  { id: 'd2', name: 'Terrence Knowles', vehicle: '2025 Kia K5 — Blue', plate: 'NP 7710', status: 'Pending', rating: 5, trips: 0, balance: 0, expired: false, raw: { name: 'Terrence Knowles', phone: '+12425550177', vehicle_year: 2025, vehicle_make: 'Kia', vehicle_model: 'K5', vehicle_color: 'Blue', license_plate: 'NP 7710', license_number: 'BH-902231', vehicle_type: 'standard' } },
+  { id: 'd3', name: 'Lionel Forbes', vehicle: '2021 Nissan Sentra — Silver', plate: 'NP 1185', status: 'Suspended', rating: 3.1, trips: 42, balance: 2100, expired: true, raw: { name: 'Lionel Forbes', phone: '+12425550119', vehicle_year: 2021, vehicle_make: 'Nissan', vehicle_model: 'Sentra', vehicle_color: 'Silver', license_plate: 'NP 1185', license_number: 'BH-117450', vehicle_type: 'standard' } },
 ] : [])
 
 const today = () => new Date().toISOString().slice(0, 10)
@@ -241,7 +271,11 @@ const docsLoading = ref(false)
 const saving = ref(false)
 const actionError = ref('')
 const actionDone = ref('')
-const form = reactive({ license_expires_on: '', insurance_expires_on: '', background_check_status: 'not_started', review_note: '', vehicle_type: 'standard' })
+const form = reactive({
+  license_expires_on: '', insurance_expires_on: '', background_check_status: 'not_started', review_note: '', vehicle_type: 'standard',
+  name: '', phone: '', license_number: '', vehicle_make: '', vehicle_model: '', vehicle_year: '', vehicle_color: '', license_plate: '',
+})
+const maxYear = new Date().getFullYear() + 1
 
 async function openReview(d) {
   review.value = d
@@ -253,6 +287,14 @@ async function openReview(d) {
     background_check_status: d.raw.background_check_status || 'not_started',
     review_note: d.raw.review_note || '',
     vehicle_type: d.raw.vehicle_type || 'standard',
+    name: d.raw.name || d.name || '',
+    phone: formatPhone(d.raw.phone) || '',
+    license_number: d.raw.license_number || '',
+    vehicle_make: d.raw.vehicle_make || '',
+    vehicle_model: d.raw.vehicle_model || '',
+    vehicle_year: d.raw.vehicle_year || '',
+    vehicle_color: d.raw.vehicle_color || '',
+    license_plate: d.raw.license_plate || d.plate || '',
   })
   for (const k of Object.keys(docs)) delete docs[k]
   if (DEMO_MODE || !d.raw.auth_user_id) return
@@ -279,14 +321,37 @@ const checklist = computed(() => [
 const checklistComplete = computed(() => checklist.value.every((c) => c.ok))
 
 async function update(fields) {
+  if ('name' in fields) {
+    const problem = detailsProblem()
+    if (problem) { actionError.value = problem; return false }
+  }
   if (DEMO_MODE) return true
   const { error } = await supabase.from('drivers').update(fields).eq('id', review.value.id)
   if (error) { actionError.value = error.message; return false }
   return true
 }
 
+// Checks the driver and vehicle fields; returns an error message or ''.
+function detailsProblem() {
+  if (!form.name.trim()) return 'Enter the driver’s name.'
+  if (form.phone.trim() && !toE164(form.phone)) return 'Enter a valid phone number, for example (242) 555-0100.'
+  const year = String(form.vehicle_year).trim()
+  if (year && !(Number.isInteger(+year) && +year >= 1990 && +year <= maxYear)) return `Enter a vehicle year between 1990 and ${maxYear}.`
+  return ''
+}
+
+const clean = (v) => String(v ?? '').trim() || null
+
 function detailFields() {
   return {
+    name: form.name.trim(),
+    phone: form.phone.trim() ? toE164(form.phone) : null,
+    license_number: clean(form.license_number),
+    vehicle_make: clean(form.vehicle_make),
+    vehicle_model: clean(form.vehicle_model),
+    vehicle_year: String(form.vehicle_year).trim() ? +form.vehicle_year : null,
+    vehicle_color: clean(form.vehicle_color),
+    license_plate: clean(form.license_plate)?.toUpperCase().replace(/\s+/g, ' ') ?? null,
     license_expires_on: form.license_expires_on || null,
     insurance_expires_on: form.insurance_expires_on || null,
     background_check_status: form.background_check_status,
