@@ -10,14 +10,23 @@ test('landing page loads with headline and booking widget', async ({ page }) => 
   await expect(page.getByRole('button', { name: 'See prices' })).toBeVisible()
 })
 
-test('landing page nav has Log in and Sign up, on phones too', async ({ page }) => {
+test('landing page nav leads with booking, then Log in and Sign up, on phones too', async ({ page }) => {
   for (const width of [1280, 360]) {
     await page.setViewportSize({ width, height: 800 })
     await page.goto('/')
     const nav = page.getByRole('navigation', { name: 'Main' })
+    await expect(nav.getByRole('link', { name: 'Book a ride', exact: true })).toBeVisible()
     await expect(nav.getByRole('link', { name: 'Log in', exact: true })).toBeVisible()
-    await expect(nav.getByRole('link', { name: 'Sign up', exact: true })).toBeVisible()
+    // Sign up is in the header on wider screens, and under the booking box on phones (no room for three).
+    const signUp = width >= 640 ? nav.getByRole('link', { name: 'Sign up', exact: true }) : page.getByRole('link', { name: 'Sign up', exact: true })
+    await expect(signUp).toBeVisible()
   }
+})
+
+test('the header Book a ride button opens booking', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Book a ride', exact: true }).click()
+  await expect(page).toHaveURL('/book')
 })
 
 test('landing fields open booking with that field ready to type in', async ({ page }) => {

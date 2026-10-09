@@ -56,9 +56,11 @@ const popularTrips = POPULAR_TRIPS.map((t) => ({
             <router-link to="/profile" class="hidden sm:flex items-center px-3 py-2 min-h-[44px] text-[16px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors">{{ firstName }}</router-link>
             <router-link to="/book" class="text-[16px] font-bold bg-[var(--color-text-primary)] text-[var(--color-surface)] px-5 py-2.5 rounded-full hover:opacity-90 transition-opacity">Book a ride</router-link>
           </template>
+          <!-- Booking first: no account is needed to ride. On phones, Sign up is under the booking box instead. -->
           <template v-else>
             <router-link to="/login" class="flex items-center px-3 py-2 min-h-[44px] text-[16px] font-medium text-[var(--color-text-primary)] hover:opacity-70 transition-opacity">Log in</router-link>
-            <router-link to="/signup" class="text-[16px] font-bold bg-[var(--color-text-primary)] text-[var(--color-surface)] px-5 py-2.5 rounded-full hover:opacity-90 transition-opacity">Sign up</router-link>
+            <router-link to="/signup" class="hidden sm:flex items-center px-3 py-2 min-h-[44px] text-[16px] font-medium text-[var(--color-text-primary)] hover:opacity-70 transition-opacity">Sign up</router-link>
+            <router-link to="/book" class="text-[16px] font-bold bg-[var(--color-text-primary)] text-[var(--color-surface)] px-5 py-2.5 rounded-full hover:opacity-90 transition-opacity whitespace-nowrap">Book a ride</router-link>
           </template>
         </div>
       </nav>
@@ -93,7 +95,12 @@ const popularTrips = POPULAR_TRIPS.map((t) => ({
             </button>
           </div>
           <p v-if="!isLoggedIn" class="mt-4 text-[14px] text-[var(--color-text-secondary)]">
-            <router-link to="/login" class="inline-flex items-center min-h-[44px] underline underline-offset-2 hover:text-[var(--color-text-primary)]">Log in to see your recent rides</router-link>
+            No account needed to book.
+            <!-- py-3 -my-3: a 44px tap target that doesn't push the lines apart when the sentence wraps -->
+            <router-link to="/signup" class="inline-block py-3 -my-3 font-semibold underline underline-offset-2 hover:text-[var(--color-text-primary)]">Sign up</router-link>
+            or
+            <router-link to="/login" class="inline-block py-3 -my-3 font-semibold underline underline-offset-2 hover:text-[var(--color-text-primary)]">log in</router-link>
+            to see your trips.
           </p>
         </div>
 
