@@ -98,11 +98,17 @@
         <p v-if="notice" class="mb-4 text-sm text-[var(--color-brand)]" role="status">{{ notice }}</p>
 
         <!-- Contact -->
-        <div class="grid grid-cols-2 gap-2 mb-2">
+        <div class="grid grid-cols-3 gap-2 mb-2">
           <a :href="open.phone ? `tel:${open.phone}` : undefined" :aria-disabled="!open.phone" :class="contactClass(open.phone)">📞 Call</a>
+          <a :href="openWhatsApp || undefined" target="_blank" rel="noopener noreferrer" :aria-disabled="!openWhatsApp" :class="contactClass(openWhatsApp)">💬 WhatsApp</a>
           <a :href="open.email ? `mailto:${open.email}` : undefined" :aria-disabled="!open.email" :class="contactClass(open.email)">✉️ Email</a>
         </div>
-        <a v-if="!open.booked && open.email" :href="welcomeMail(open)" class="mb-5 flex items-center justify-center h-11 rounded-xl bg-[#2b8659] text-white text-sm font-semibold">Send welcome offer (WELCOME5)</a>
+        <div v-if="!open.booked && (openWhatsApp || open.email)" class="mb-5">
+          <a v-if="openWhatsApp" :href="whatsappUrl(open.phone, welcomeText(open))" target="_blank" rel="noopener noreferrer"
+             class="flex items-center justify-center h-11 rounded-xl bg-[#2b8659] text-white text-sm font-semibold">Send welcome offer on WhatsApp (WELCOME5)</a>
+          <a v-if="openWhatsApp && open.email" :href="welcomeMail(open)" class="mt-1 flex items-center justify-center min-h-[44px] text-sm font-semibold text-[var(--color-brand)]">Or send it by email</a>
+          <a v-else-if="open.email" :href="welcomeMail(open)" class="flex items-center justify-center h-11 rounded-xl bg-[#2b8659] text-white text-sm font-semibold">Send welcome offer (WELCOME5)</a>
+        </div>
         <div v-else class="mb-5"></div>
 
         <!-- Account -->
@@ -178,7 +184,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
 import { apiPost } from '../../lib/api'
 import { formatFare } from '../../lib/pricing'
-import { formatPhone } from '../../lib/phone'
+import { formatPhone, whatsappUrl } from '../../lib/phone'
 import { useStaffRole } from '../../lib/staff'
 import AdminNotes from '../../components/AdminNotes.vue'
 
@@ -232,6 +238,9 @@ function welcomeMail(u) {
     'Book here: https://www.rideupnassau.com/book\n\nLet’s ride,\nRideUp'
   return `mailto:${u.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 }
+// Typed into WhatsApp for you to check and send.
+const welcomeText = (u) => `Hi ${firstName(u.name)}, it's RideUp. Thanks for signing up! Your first ride is $5 off with the code WELCOME5. ` +
+  'You see the price before you book and pay by card: https://www.rideupnassau.com/book'
 
 const when = (iso) => new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 const short = (address) => String(address || '—').split(',')[0]
@@ -243,6 +252,7 @@ const rideStatus = (s) => RIDE_STATUS[s] || s
 
 // --- Detail panel ---------------------------------------------------------------------------------------------
 const open = ref(null)
+const openWhatsApp = computed(() => (open.value ? whatsappUrl(open.value.phone) : ''))
 const rides = ref([])
 const ridesLoading = ref(false)
 const busy = ref(false)

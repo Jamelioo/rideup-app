@@ -3,7 +3,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import { friendlyAuthError } from '../lib/useAuth'
-import { toE164, formatPhone } from '../lib/phone'
+import { toE164, formatPhone, phoneIsVerified } from '../lib/phone'
 import { safeRedirect } from '../lib/safeRedirect'
 import { DEMO_MODE } from '../lib/demoMode'
 
@@ -33,12 +33,13 @@ onMounted(async () => {
     step.value = 'phone'
     return
   }
-  if (user.phone && user.phone_confirmed_at) {
+  const { data: rider } = await supabase.from('riders').select('phone').eq('auth_user_id', user.id).maybeSingle()
+  // Already verified, unless they've since changed the number on their profile.
+  if (phoneIsVerified(user, rider?.phone)) {
     e164.value = `+${user.phone.replace(/^\+/, '')}`
     step.value = 'done'
     return
   }
-  const { data: rider } = await supabase.from('riders').select('phone').eq('auth_user_id', user.id).maybeSingle()
   phone.value = formatPhone(rider?.phone || user.phone || '')
   step.value = 'phone'
 })

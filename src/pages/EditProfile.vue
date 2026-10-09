@@ -1,8 +1,9 @@
 <script setup>
 import { useRouter } from 'vue-router'
-import { ref, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useAuth } from '../lib/useAuth'
 import { supabase } from '../lib/supabase'
+import { toE164, formatPhone, tidyPhone, PHONE_HINT } from '../lib/phone'
 
 const router = useRouter()
 const { user } = useAuth()
@@ -13,7 +14,15 @@ const nameParts = fullName.split(' ')
 const firstName = ref(nameParts[0] || '')
 const lastName = ref(nameParts.slice(1).join(' ') || '')
 const email = ref(user.value?.email || '')
-const phoneNumber = ref(user.value?.user_metadata?.phone || '')
+const initialPhone = formatPhone(user.value?.user_metadata?.phone || '')
+const phoneNumber = ref(initialPhone)
+
+// The rider profile holds the number drivers and the team use; show that one unless they've started typing.
+onMounted(async () => {
+  if (!user.value) return
+  const { data } = await supabase.from('riders').select('phone').eq('auth_user_id', user.value.id).maybeSingle()
+  if (data?.phone && phoneNumber.value === initialPhone) phoneNumber.value = formatPhone(data.phone)
+})
 
 const saving = ref(false)
 const saveMessage = ref('')
@@ -40,9 +49,15 @@ function cancel() {
 }
 
 async function handleSave() {
-  saving.value = true
   saveMessage.value = ''
   saveError.value = false
+  const phone = toE164(phoneNumber.value)
+  if (!phone) {
+    saveMessage.value = PHONE_HINT
+    saveError.value = true
+    return
+  }
+  saving.value = true
 
   let uploadedAvatarUrl = avatarUrl.value
 
@@ -64,13 +79,19 @@ async function handleSave() {
     uploadedAvatarUrl = urlData.publicUrl + '?t=' + Date.now()
   }
 
-  const { error } = await supabase.auth.updateUser({
+  const name = (firstName.value + ' ' + lastName.value).trim()
+  const { error: authErr } = await supabase.auth.updateUser({
     data: {
-      name: (firstName.value + ' ' + lastName.value).trim(),
-      phone: phoneNumber.value,
+      name,
+      phone,
       avatar_url: uploadedAvatarUrl,
     },
   })
+  // Drivers and the team see the rider profile, not the login, so it gets the new name and number too.
+  const { error: riderErr } = authErr
+    ? { error: null }
+    : await supabase.from('riders').update({ phone, ...(name ? { name } : {}) }).eq('auth_user_id', user.value.id)
+  const error = authErr || riderErr
 
   saving.value = false
 
@@ -152,14 +173,19 @@ async function handleSave() {
 
       <!-- Phone Number -->
       <div class="mb-2">
-        <label for="ep-phone" class="block text-xs text-[var(--color-text-muted)] mb-1">Phone number</label>
+        <label for="ep-phone" class="block text-xs text-[var(--color-text-muted)] mb-1">Mobile number</label>
         <input
           id="ep-phone"
           v-model="phoneNumber"
           type="tel"
+          inputmode="tel"
           autocomplete="tel"
-          class="w-full bg-transparent text-base text-[var(--color-text-primary)] pb-2 border-b border-[var(--color-border)] outline-none focus:border-[#2b8659] transition-colors"
+          placeholder="(242) 555-0100"
+          aria-describedby="ep-phone-hint"
+          @blur="phoneNumber = tidyPhone(phoneNumber)"
+          class="w-full bg-transparent text-base text-[var(--color-text-primary)] pb-2 border-b border-[var(--color-border)] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[var(--color-text-muted)]"
         />
+        <p id="ep-phone-hint" class="text-xs text-[var(--color-text-muted)] mt-1.5">Your driver calls or texts this number at pickup.</p>
       </div>
 
       <!-- Save feedback -->
