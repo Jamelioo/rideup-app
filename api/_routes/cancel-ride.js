@@ -6,6 +6,8 @@ import { cancellationFeeCents, noShowFeeCents, noShowAllowed, splitFee } from '.
 import { sendEmail, cancellationFeeEmail } from '../_email.js'
 import { pushToUser, rideParticipants } from '../_push.js'
 import { notifyNearbyDrivers } from '../_notifyDrivers.js'
+import { alertRideRequest } from '../_staffAlerts.js'
+import { logAdminAction } from '../_audit.js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
@@ -21,7 +23,7 @@ const CANCELLABLE = ['requested', 'pending_driver_response', 'accepted', 'driver
 //   body: { rideId, preview?: boolean, noShow?: boolean }
 //   rider  → free until GRACE_SECONDS after a driver accepts, then FEE_CENTS
 //   driver → free for the rider, or (noShow) FEE_CENTS once the driver has waited FREE_WAIT_SECONDS at pickup
-//   admin  → free
+//   admin  → free (admins and support staff; the rider and driver are both told)
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
@@ -46,7 +48,7 @@ export default async function handler(req, res) {
     if (!ride) return res.status(404).json({ error: 'Ride not found' })
 
     const roles = await rideRoles(ride, user)
-    const actor = roles.admin ? 'admin' : roles.driver ? 'driver' : roles.rider ? 'rider' : null
+    const actor = roles.staff ? 'admin' : roles.driver ? 'driver' : roles.rider ? 'rider' : null
     if (!actor) return res.status(403).json({ error: 'Not allowed' })
 
     if (!CANCELLABLE.includes(ride.status) && !(actor === 'admin' && ride.status === 'in_progress')) {
@@ -133,8 +135,14 @@ export default async function handler(req, res) {
           : 'Your ride was cancelled. You weren’t charged. Request again and we’ll find you a driver.'
       await pushToUser(people.riderUserId, { title: rebookedRideId ? 'Finding you a new driver' : 'Ride cancelled', body, url: '/book', tag: `ride-${rideId}` })
     }
+    if (actor === 'admin' && people.driverUserId) {
+      await pushToUser(people.driverUserId, { title: 'Trip cancelled', body: 'RideUp support cancelled this trip. You’re free for your next ride.', url: '/driver/dashboard', tag: `ride-${rideId}` })
+    }
     if (feeCents > 0 && people.riderEmail) {
       await sendEmail({ to: people.riderEmail, ...cancellationFeeEmail({ ride, feeCents, noShow: !!noShow }) })
+    }
+    if (actor === 'admin') {
+      await logAdminAction(user, { action: 'ride.cancel', targetType: 'ride', targetId: rideId, summary: `Cancelled a ${ride.status.replace(/_/g, ' ')} trip (no charge)` })
     }
 
     return res.status(200).json({ success: true, fee_cents: feeCents, rebooked_ride_id: rebookedRideId })
@@ -163,7 +171,8 @@ async function rebook(rideId, cancellingDriverId) {
       return null
     }
     await admin.from('rides').update({ replaced_by_ride_id: fresh.id }).eq('id', rideId)
-    await notifyNearbyDrivers(fresh.id)
+    const notified = await notifyNearbyDrivers(fresh.id)
+    await alertRideRequest(fresh.id, { notified })
     return fresh.id
   } catch (err) {
     console.error('Rebook after driver cancel failed:', err.message)

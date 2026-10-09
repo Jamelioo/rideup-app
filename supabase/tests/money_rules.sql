@@ -221,4 +221,40 @@ select public.erase_account_data('00000000-0000-0000-0000-0000000000a4');
 select pg_temp.check(name = 'Deleted rider' and email is null and phone is null and auth_user_id is null and card_fingerprint = 'fpF',
   'personal data erased; card fingerprint kept against promo abuse') from riders where id = :'rf';
 
+\echo '== Admin operations: support staff, notes and the action log'
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000e1', 'support@test');
+set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000e1', '{"role":"support"}');
+select pg_temp.check((select count(*) from riders) > 0 and (select count(*) from rides) > 0, 'support staff can see riders and rides');
+select pg_temp.check((select count(*) from admin_actions) = 0, 'support staff can''t read the action log');
+update riders set suspended = true where id = :'ra';
+insert into admin_notes (subject_type, subject_id, body, author_id) values ('rider', :'ra', 'Called about a late pickup', '00000000-0000-0000-0000-0000000000ad');
+reset role; select pg_temp.as_server();
+select pg_temp.check(suspended is not true, 'support staff can''t suspend riders') from riders where id = :'ra';
+select pg_temp.check(author_id = '00000000-0000-0000-0000-0000000000e1', 'a note is signed by whoever wrote it') from admin_notes where subject_id = :'ra';
+set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+select pg_temp.check((select count(*) from admin_notes) = 0, 'riders can''t read staff notes');
+do $$ begin
+  insert into admin_notes (subject_type, subject_id, body) values ('rider', gen_random_uuid(), 'x');
+  raise exception 'FAIL: a rider added a staff note';
+exception when insufficient_privilege then raise notice 'ok  riders can''t add staff notes';
+end $$;
+reset role; select pg_temp.as_server();
+select count(*) as log0 from admin_actions \gset
+set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000d1');
+update drivers set status = 'offline' where auth_user_id = '00000000-0000-0000-0000-0000000000d1';
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000ad', '{"role":"admin"}');
+update riders set suspended = true where id = :'ra';
+reset role; select pg_temp.as_server();
+select pg_temp.check((select count(*) from admin_actions) = :log0 + 1, 'an admin''s change is logged; a driver''s own change isn''t');
+select pg_temp.check(action = 'riders.update' and target_id = :'ra' and details ? 'suspended' and not details ? 'name'
+  and actor_id = '00000000-0000-0000-0000-0000000000ad', 'the log records who changed what on which rider')
+  from admin_actions order by id desc limit 1;
+update riders set suspended = false where id = :'ra';
+select count(*) as log1 from admin_actions \gset
+update drivers set status = 'online' where id = '20000000-0000-0000-0000-0000000000d1';
+set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000d1', '{"role":"admin"}');
+update drivers set status = 'offline' where auth_user_id = '00000000-0000-0000-0000-0000000000d1';
+reset role; select pg_temp.as_server();
+select pg_temp.check((select count(*) from admin_actions) = :log1, 'an admin who also drives: going online/offline isn''t logged as admin work');
+
 \echo 'All money and safety rules passed.'

@@ -27,12 +27,18 @@ Without Supabase keys the app runs in **demo mode** (sample data, no backend) so
   or decline, navigate, arrive, start (with PIN if required), complete, rate the rider.
 - No-show: after 5 minutes waiting at pickup the driver can cancel and the rider pays the no-show fee.
 - Earnings: today and this week, balance, tips and payouts received.
-- Drivers whose app has been closed for 3 minutes are set offline automatically.
+- Drivers whose app has been closed for 30 minutes are set offline automatically.
 
 **Admins** (`/admin`, needs the admin role)
-- Dashboard, rides, riders (suspend), drivers (document review with checklist, expiry dates, background check,
-  vehicle class, approve / reject with a note, low-rating flags), revenue, support, safety reports (with reporter,
-  trip and phone numbers), payouts ledger, and trip settings (pickup PIN, Premium, required phone verification).
+- Live: requests waiting for a driver, trips under way, requests nobody took today (call them back) and who's
+  online, updating instantly. Assign a request to a driver, cancel a trip, or complete a stuck one and charge it.
+- Ride alerts: a push notification and an email to the team for every request, and when one goes unanswered.
+- Dashboard, rides (CSV download), riders (contact, credit, suspend), drivers (document review with checklist,
+  expiry dates, background check, vehicle class, approve / reject with a note, low-rating flags), money and payouts
+  (CSV downloads), support, safety reports (with reporter, trip and phone numbers), and trip settings.
+- Private team notes on riders, drivers and rides; Messages (a push to all riders or drivers); Activity (who did
+  what); Team (give someone Admin or Support access; Support runs day-to-day operations without money, settings,
+  approvals or refunds).
 
 ## Setup
 
@@ -46,13 +52,13 @@ npm install
 
 1. Create a project at [supabase.com/dashboard](https://supabase.com/dashboard).
 2. In **SQL Editor**, run these files **in order**: `supabase-schema.sql`, then everything in
-   `supabase/migrations/` (`001` … `015`). Each migration can be re-run safely.
+   `supabase/migrations/` (`001` … `016`). Each migration can be re-run safely.
 3. Make yourself an admin (SQL Editor, use your account's email):
    ```sql
    update auth.users set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb
    where email = 'you@example.com';
    ```
-   Log out and back in for it to take effect.
+   Log out and back in for it to take effect. After that, add the rest of the team from Admin → Team.
 4. **Authentication → URL Configuration**: set **Site URL** to your domain and add these **Redirect URLs**
    (they're where emailed links land):
    `https://YOUR_DOMAIN/reset-password`, `https://YOUR_DOMAIN/set-password`, `https://YOUR_DOMAIN/driver/apply`,

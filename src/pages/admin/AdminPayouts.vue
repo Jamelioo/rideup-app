@@ -1,6 +1,12 @@
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-2">Driver Payouts</h1>
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+      <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">Driver Payouts</h1>
+      <div class="flex flex-wrap gap-2">
+        <button @click="exportBalances" :disabled="!balances.length" class="h-9 px-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm font-semibold disabled:opacity-50">Balances CSV</button>
+        <button @click="exportHistory" :disabled="!history.length" class="h-9 px-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm font-semibold disabled:opacity-50">Payouts CSV</button>
+      </div>
+    </div>
     <p class="text-sm text-[var(--color-text-secondary)] mb-6">
       What each driver has earned (their 70% of paid trips, their share of cancellation and no-show fees, and 100% of tips) minus what you’ve already paid them.
       Pay drivers by bank transfer, cash or mobile money, then record it here so balances and the driver’s earnings page stay correct.
@@ -116,6 +122,7 @@ import { ref, computed, reactive, onMounted } from 'vue'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
 import { formatFare } from '../../lib/pricing'
 import { DEMO_MODE } from '../../lib/demoMode'
+import { toCsv, downloadCsv, dollars, nassauDate } from '../../lib/csv'
 
 const METHODS = { bank_transfer: 'Bank transfer', cash: 'Cash', mobile_money: 'Mobile money', other: 'Other' }
 const balances = ref(DEMO_MODE ? [{ driver_id: 'd1', name: 'Deon Rolle', phone: '(242) 555-0100', paid_trips: 12, earned_cents: 14420, paid_out_cents: 9600, balance_cents: 4820 }] : [])
@@ -126,6 +133,29 @@ const error = ref('')
 const totalOwed = computed(() => balances.value.reduce((s, b) => s + Math.max(0, Number(b.balance_cents) || 0), 0))
 const totalPaid = computed(() => balances.value.reduce((s, b) => s + (Number(b.paid_out_cents) || 0), 0))
 const nameFor = (id) => balances.value.find((b) => b.driver_id === id)?.name || 'Driver'
+const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Nassau' })
+
+function exportBalances() {
+  downloadCsv(`rideup-driver-balances-${today()}.csv`, toCsv(balances.value, [
+    { label: 'Driver', value: (b) => b.name },
+    { label: 'Phone', value: (b) => b.phone || '' },
+    { label: 'Paid trips', value: (b) => b.paid_trips },
+    { label: 'Earned', value: (b) => dollars(b.earned_cents) },
+    { label: 'Paid out', value: (b) => dollars(b.paid_out_cents) },
+    { label: 'Balance owed', value: (b) => dollars(b.balance_cents) },
+  ]))
+}
+function exportHistory() {
+  downloadCsv(`rideup-payouts-${today()}.csv`, toCsv(history.value, [
+    { label: 'Date (Nassau)', value: (p) => nassauDate(p.created_at) },
+    { label: 'Driver', value: (p) => nameFor(p.driver_id) },
+    { label: 'Amount', value: (p) => dollars(p.amount_cents) },
+    { label: 'Method', value: (p) => METHODS[p.method] || p.method || '' },
+    { label: 'Reference', value: (p) => p.reference || '' },
+    { label: 'Note', value: (p) => p.note || '' },
+    { label: 'Status', value: (p) => p.status || 'paid' },
+  ]))
+}
 
 async function load() {
   if (!supabaseConfigured || DEMO_MODE) return

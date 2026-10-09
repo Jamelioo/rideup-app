@@ -2,11 +2,14 @@
   <div class="max-w-5xl">
     <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
       <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">Money</h1>
+      <div class="flex flex-wrap items-center gap-2">
+      <button @click="exportCsv" :disabled="!rows.length" class="h-9 px-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm font-semibold disabled:opacity-50">Download CSV</button>
       <div class="inline-flex rounded-lg border border-[var(--color-border)] overflow-hidden text-sm" role="group" aria-label="Date range">
         <button v-for="r in RANGES" :key="r.days" @click="setRange(r.days)"
                 class="px-3 py-1.5 font-semibold"
                 :class="days === r.days ? 'bg-[#2b8659] text-white' : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)]'"
                 :aria-pressed="days === r.days">{{ r.label }}</button>
+      </div>
       </div>
     </div>
 
@@ -155,6 +158,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { toCsv, downloadCsv, dollars } from '../../lib/csv'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
 import { DEMO_MODE } from '../../lib/demoMode'
 
@@ -215,6 +219,23 @@ async function load() {
   acquisition.value = (acqRows || []).map((a) => ({ ...a, signups: Number(a.signups), riders_with_trip: Number(a.riders_with_trip), trips: Number(a.trips), rider_paid_cents: Number(a.rider_paid_cents) }))
   const o = Array.isArray(owedRes.data) ? owedRes.data[0] : owedRes.data
   if (o) owed.value = { credit_outstanding_cents: Number(o.credit_outstanding_cents) || 0, driver_balances_cents: Number(o.driver_balances_cents) || 0, drivers_owed: Number(o.drivers_owed) || 0 }
+}
+
+// One row per day, for the accountant: money amounts in dollars, Nassau dates.
+function exportCsv() {
+  const COLUMNS = [
+    ['Trips', 'trips'], ['Fares', 'gross_fare_cents'], ['RideUp share of fares', 'platform_fee_cents'], ['Drivers share of fares', 'driver_fare_cents'],
+    ['Booking fees', 'booking_fee_cents'], ['Airport fees', 'airport_fee_cents'], ['Busy-time extra', 'busy_extra_cents'],
+    ['Promo discounts (RideUp paid)', 'promo_cents'], ['Ride credit used (RideUp paid)', 'credit_cents'], ['Tips', 'tips_cents'],
+    ['Cancellation fees', 'cancel_fee_cents'], ['RideUp share of cancellation fees', 'cancel_platform_cents'], ['Incentive rewards', 'quest_reward_cents'],
+    ['Riders paid', 'rider_paid_cents'], ['Estimated card fees', 'est_card_fee_cents'], ['Cancelled trips', 'cancelled_trips'],
+    ['Refunds', 'refund_cents'], ['Refunds taken from drivers', 'refund_driver_cents'], ['Credit given', 'credit_issued_cents'],
+  ]
+  const csv = toCsv(rows.value, [
+    { label: 'Date', value: (d) => d.day },
+    ...COLUMNS.map(([label, key]) => ({ label, value: (d) => (key.endsWith('_cents') ? dollars(d[key]) : d[key]) })),
+  ])
+  downloadCsv(`rideup-money-${rows.value[0]?.day || 'start'}-to-${rows.value[rows.value.length - 1]?.day || 'end'}.csv`, csv)
 }
 
 function setRange(n) {

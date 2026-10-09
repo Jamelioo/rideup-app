@@ -292,3 +292,45 @@ test('phone mockup visible on desktop', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByText('Choose RideUp Go', { exact: true })).toBeVisible()
 })
+
+// ─── Admin operations (demo data) ───
+
+test('admin Live shows waiting requests, trips under way, missed rides and drivers', async ({ page }) => {
+  await page.goto('/admin/live')
+  await expect(page.getByRole('heading', { name: 'Live', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Waiting for a driver' })).toBeVisible()
+  await expect(page.getByText('Ienka Johnson')).toBeVisible()
+  await expect(page.getByRole('link', { name: /Call back/ })).toBeVisible()
+  await expect(page.getByRole('switch', { name: 'Ride alerts' })).toBeVisible()
+})
+
+test('admin can give a waiting request to a driver', async ({ page }) => {
+  page.on('dialog', (d) => d.accept())
+  await page.goto('/admin/live')
+  await page.getByRole('button', { name: 'Assign driver' }).click()
+  await page.getByRole('radio', { name: /Deon Rolle/ }).check()
+  await page.getByRole('button', { name: 'Assign', exact: true }).click()
+  await expect(page.getByText('Assigned to Deon Rolle')).toBeVisible()
+})
+
+test('admin can add a private note to a ride', async ({ page }) => {
+  await page.goto('/admin/live')
+  await page.getByRole('button', { name: 'Details' }).first().click()
+  await page.getByLabel('Add a note').fill('Called the rider')
+  await page.getByRole('button', { name: 'Add note' }).click()
+  await expect(page.getByText('Called the rider')).toBeVisible()
+})
+
+test('admin Messages previews a broadcast before sending', async ({ page }) => {
+  await page.goto('/admin/messages')
+  await page.getByRole('button', { name: /\$5 off this weekend/ }).click()
+  await expect(page.getByLabel('Preview')).toContainText('WELCOME5')
+  await expect(page.getByRole('button', { name: 'Send a test to me' })).toBeEnabled()
+})
+
+test('admin Team and Activity pages load', async ({ page }) => {
+  await page.goto('/admin/team')
+  await expect(page.getByRole('heading', { name: 'Add someone' })).toBeVisible()
+  await page.goto('/admin/activity')
+  await expect(page.getByText('Suspended a rider')).toBeVisible()
+})

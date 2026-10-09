@@ -121,8 +121,10 @@
           </dl>
         </section>
 
+        <AdminNotes subject-type="rider" :subject-id="open.id" />
+
         <!-- Credit -->
-        <section class="rounded-2xl border border-[var(--color-border)] p-4 mb-5">
+        <section v-if="isAdmin" class="rounded-2xl border border-[var(--color-border)] p-4 mb-5">
           <h3 class="font-semibold text-sm mb-1">Add RideUp credit</h3>
           <p class="text-[12px] text-[var(--color-text-muted)] mb-3">Used automatically on their next rides. To refund a specific trip, open it in Rides.</p>
           <div class="flex gap-2 mb-2">
@@ -157,13 +159,15 @@
         </section>
 
         <!-- Suspend -->
+        <template v-if="isAdmin">
         <button
           @click="toggleUserStatus(open)"
-          :class="['w-full h-11 rounded-xl text-sm font-semibold', open.status === 'Active' ? 'text-[var(--color-danger)] bg-red-50 hover:bg-red-100' : 'text-[var(--color-brand)] bg-green-50 hover:bg-green-100']"
+          :class="['w-full h-11 rounded-xl text-sm font-semibold', open.status === 'Active' ? 'text-red-700 bg-red-50 hover:bg-red-100' : 'text-[var(--color-brand)] bg-green-50 hover:bg-green-100']"
         >
           {{ open.status === 'Active' ? 'Suspend rider' : 'Unsuspend rider' }}
         </button>
         <p class="mt-2 text-[12px] text-[var(--color-text-muted)]">Suspended riders can't request rides. Use this for abuse, and for old test accounts you want out of the way.</p>
+        </template>
       </div>
     </div>
   </div>
@@ -175,6 +179,10 @@ import { supabase, supabaseConfigured } from '../../lib/supabase'
 import { apiPost } from '../../lib/api'
 import { formatFare } from '../../lib/pricing'
 import { formatPhone } from '../../lib/phone'
+import { useStaffRole } from '../../lib/staff'
+import AdminNotes from '../../components/AdminNotes.vue'
+
+const { isAdmin } = useStaffRole()
 
 const filterTabs = ['All', 'Never booked', 'Active', 'Suspended']
 const activeFilter = ref('All')

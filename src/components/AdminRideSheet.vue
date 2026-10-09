@@ -4,10 +4,21 @@ import { apiPost } from '../lib/api'
 import { formatFare } from '../lib/pricing'
 import { chargeOf } from '../lib/discounts'
 import { DEMO_MODE } from '../lib/demoMode'
+import { formatPhone } from '../lib/phone'
+import { useStaffRole } from '../lib/staff'
+import AdminRideActions from './AdminRideActions.vue'
+import AdminNotes from './AdminNotes.vue'
 
-// Admin › Rides › a ride: details, earlier refunds and the refund / credit form.
+// Admin › Rides / Live › a ride: details, live actions (assign, cancel, complete), team notes, and for admins
+// earlier refunds and the refund / credit form.
 const props = defineProps({ ride: { type: Object, default: null } })
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'changed'])
+const { isAdmin } = useStaffRole()
+const STATUS = {
+  requested: 'Waiting for a driver', pending_driver_response: 'Holding the card', accepted: 'Driver on the way',
+  driver_arrived: 'Driver at pickup', in_progress: 'On trip', completed: 'Completed', cancelled: 'Cancelled', scheduled: 'Scheduled',
+}
+const tel = (p) => `tel:${String(p).replace(/[^\d+]/g, '')}`
 
 const limits = ref(null)
 const loading = ref(false)
@@ -24,7 +35,7 @@ async function load() {
   notice.value = ''
   limits.value = null
   form.value = { target: 'fare', method: 'card', amount: '', reason: '', chargeDriver: false }
-  if (!props.ride || DEMO_MODE) return
+  if (!props.ride || DEMO_MODE || !isAdmin.value) return
   loading.value = true
   const res = await apiPost('/api/admin-refund', { rideId: props.ride.id, preview: true })
   const body = await res.json().catch(() => ({}))
@@ -77,8 +88,13 @@ async function submit() {
         </div>
 
         <dl class="text-sm space-y-2 mb-5">
-          <div class="flex justify-between gap-4"><dt class="text-[var(--color-text-muted)]">Rider</dt><dd>{{ ride.rider_name || 'Rider' }}</dd></div>
-          <div class="flex justify-between gap-4"><dt class="text-[var(--color-text-muted)]">Status</dt><dd>{{ ride.status }} · {{ ride.payment_status || 'no payment' }}</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-[var(--color-text-muted)]">Rider</dt>
+            <dd class="text-right">{{ ride.riders?.name || ride.rider_name || 'Rider' }}<a v-if="ride.riders?.phone" :href="tel(ride.riders.phone)" class="block text-[var(--color-brand)] font-medium">📞 {{ formatPhone(ride.riders.phone) || ride.riders.phone }}</a></dd></div>
+          <div v-if="ride.passenger_name" class="flex justify-between gap-4"><dt class="text-[var(--color-text-muted)]">Passenger</dt>
+            <dd class="text-right">{{ ride.passenger_name }}<a v-if="ride.passenger_phone" :href="tel(ride.passenger_phone)" class="block text-[var(--color-brand)] font-medium">📞 {{ ride.passenger_phone }}</a></dd></div>
+          <div v-if="ride.drivers" class="flex justify-between gap-4"><dt class="text-[var(--color-text-muted)]">Driver</dt>
+            <dd class="text-right">{{ ride.drivers.name }}<a v-if="ride.drivers.phone" :href="tel(ride.drivers.phone)" class="block text-[var(--color-brand)] font-medium">📞 {{ formatPhone(ride.drivers.phone) || ride.drivers.phone }}</a></dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-[var(--color-text-muted)]">Status</dt><dd>{{ STATUS[ride.status] || ride.status }} · {{ ride.payment_status || 'no payment' }}</dd></div>
           <div><dt class="text-[var(--color-text-muted)]">From</dt><dd>{{ ride.pickup_address }}</dd></div>
           <div v-if="ride.stop_address"><dt class="text-[var(--color-text-muted)]">Stop</dt><dd>{{ ride.stop_address }}</dd></div>
           <div><dt class="text-[var(--color-text-muted)]">To</dt><dd>{{ ride.dropoff_address }}</dd></div>
@@ -89,6 +105,9 @@ async function submit() {
           <div class="flex justify-between gap-4"><dt class="text-[var(--color-text-muted)]">Driver earns</dt><dd>{{ formatFare(ride.driver_payout_cents) }}</dd></div>
           <div v-if="ride.safety_checkin_at" class="flex justify-between gap-4"><dt class="text-[var(--color-text-muted)]">Trip check-in</dt><dd>{{ ride.safety_checkin_reason }} · {{ ride.safety_checkin_ok_at ? 'answered OK' : 'no answer' }}</dd></div>
         </dl>
+
+        <AdminRideActions :ride="ride" @done="emit('changed')" class="mb-5" />
+        <AdminNotes subject-type="ride" :subject-id="ride.id" />
 
         <p v-if="loading" class="text-sm text-[var(--color-text-muted)]" aria-live="polite">Loading payment…</p>
         <template v-else-if="limits">
