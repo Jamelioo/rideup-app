@@ -44,7 +44,7 @@
                 <span v-if="d.trips >= 10 && Number(d.rating) < LOW_RATING" class="ml-1 text-[11px] font-semibold px-1.5 py-0.5 rounded bg-red-50 text-red-700" title="Average of recent ratings is below the review threshold">Review</span>
               </td>
               <td data-label="Trips" class="px-4 py-3 text-[var(--color-text-primary)]">{{ d.trips }}</td>
-              <td data-label="Balance owed" class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ formatFare(d.balance) }}</td>
+              <td data-label="Balance owed" class="px-4 py-3 text-[var(--color-text-primary)] font-medium">{{ isAdmin ? formatFare(d.balance) : '—' }}</td>
               <td data-label="Actions" class="px-4 py-3">
                 <button @click="openReview(d)" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#2b8659] text-white hover:bg-[#236e49]">
                   {{ d.status === 'Pending' ? 'Review' : 'Details' }}
@@ -91,6 +91,10 @@
           </li>
         </ul>
 
+        <AdminNotes subject-type="driver" :subject-id="review.id" />
+        <p v-if="!isAdmin" class="text-sm text-[var(--color-text-muted)]">Only admins can see documents, edit, approve or suspend drivers.</p>
+
+        <template v-if="isAdmin">
         <h3 class="text-sm font-bold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">Documents</h3>
         <div class="mb-5 space-y-2 text-sm">
           <div v-for="doc in DOCS" :key="doc.key" class="flex items-center justify-between rounded-lg border border-[var(--color-border)] px-3 py-2">
@@ -171,6 +175,7 @@
           <button v-else-if="review.status === 'Approved'" @click="setStatus(false, 'suspended', 'Suspended')" :disabled="saving" class="px-4 py-2 rounded-lg bg-red-50 text-red-700 text-sm font-semibold disabled:opacity-50">Suspend</button>
           <button v-else-if="review.status === 'Suspended'" @click="setStatus(true, 'offline', 'Approved')" :disabled="saving" class="px-4 py-2 rounded-lg bg-green-50 text-[var(--color-brand)] text-sm font-semibold disabled:opacity-50">Reinstate</button>
         </div>
+        </template>
       </div>
     </div>
   </div>
@@ -184,6 +189,10 @@ import { formatFare } from '../../lib/pricing'
 import { DEMO_MODE } from '../../lib/demoMode'
 import { listDriverDocs } from '../../lib/driverDocs'
 import { toE164, formatPhone } from '../../lib/phone'
+import { useStaffRole } from '../../lib/staff'
+import AdminNotes from '../../components/AdminNotes.vue'
+
+const { isAdmin } = useStaffRole()
 
 // Like Uber, a sustained low average (recent trips) flags a driver for a quality review.
 const LOW_RATING = 4.6
@@ -255,9 +264,9 @@ async function load() {
   loadError.value = ''
   const [{ data, error }, { data: bal }] = await Promise.all([
     supabase.from('drivers').select('*').order('created_at', { ascending: false }),
-    supabase.rpc('admin_driver_balances'),
+    isAdmin.value ? supabase.rpc('admin_driver_balances') : { data: [] }, // money: admins only
   ])
-  if (error) loadError.value = 'Could not load drivers. Check that your account has the admin role.'
+  if (error) loadError.value = 'Could not load drivers. If you were just added to the team, sign out and back in.'
   const balances = Object.fromEntries((bal || []).map((b) => [b.driver_id, Number(b.balance_cents) || 0]))
   drivers.value = (data || []).map((d) => toRow(d, balances))
   loading.value = false
@@ -297,7 +306,7 @@ async function openReview(d) {
     license_plate: d.raw.license_plate || d.plate || '',
   })
   for (const k of Object.keys(docs)) delete docs[k]
-  if (DEMO_MODE || !d.raw.auth_user_id) return
+  if (DEMO_MODE || !d.raw.auth_user_id || !isAdmin.value) return
   docsLoading.value = true
   try {
     const files = await listDriverDocs(d.raw.auth_user_id)

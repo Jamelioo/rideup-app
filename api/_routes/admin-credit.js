@@ -1,6 +1,7 @@
 import { admin, requireUser, isAdmin, fail } from '../_auth.js'
 import { rateLimit } from '../_rateLimit.js'
 import { pushToUser } from '../_push.js'
+import { logAdminAction } from '../_audit.js'
 
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
 const MAX_CENTS = 10_000 // $100 per grant
@@ -38,7 +39,7 @@ export default async function handler(req, res) {
       .select('credit_cents')
     if (error) throw error
     if (!updated?.length) return res.status(409).json({ error: 'The rider’s balance just changed. Try again.' })
-    console.log('Admin credit', { riderId, amount, reason: note, by: user.id })
+    await logAdminAction(user, { action: 'rider.credit', targetType: 'rider', targetId: riderId, summary: `$${(amount / 100).toFixed(2)} credit: ${note}`, details: { amount_cents: amount } })
     await pushToUser(rider.auth_user_id, {
       title: 'You got RideUp credit',
       body: `$${(amount / 100).toFixed(2)} was added to your account. It’s used automatically on your next ride.`,

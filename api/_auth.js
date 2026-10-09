@@ -15,6 +15,12 @@ export function isAdmin(user) {
   return user?.app_metadata?.role === 'admin'
 }
 
+// Admins and support staff (Admin › Team). Support staff run day-to-day operations (live trips, cancel,
+// assign, notes) but not money, settings or approvals, which stay isAdmin().
+export function isStaff(user) {
+  return ['admin', 'support'].includes(user?.app_metadata?.role)
+}
+
 // Verifies the caller's Supabase JWT. Returns the user, or sends 401/500 and returns null.
 export async function requireUser(req, res) {
   if (!admin) {
@@ -68,13 +74,14 @@ export async function getRiderForUser(userId) {
   return data
 }
 
-// Returns { rider: bool, driver: bool, admin: bool } for the given ride + user.
+// Returns { rider, driver, admin, staff } (booleans) for the given ride + user.
 export async function rideRoles(ride, user) {
   const [rider, driver] = await Promise.all([getRiderForUser(user.id), getDriverForUser(user.id)])
   return {
     rider: !!rider && rider.id === ride.rider_id,
     driver: !!driver && driver.approved === true && driver.id === ride.driver_id,
     admin: isAdmin(user),
+    staff: isStaff(user),
   }
 }
 

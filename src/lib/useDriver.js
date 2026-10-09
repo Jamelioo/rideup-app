@@ -174,8 +174,15 @@ function currentPosition() {
   })
 }
 
+let pollCount = 0
 async function pollRequests() {
   if (!driver.value || !isOnline.value || currentRide.value) return
+  // RideUp's team can assign a trip to this driver (Admin › Live): pick it up within about 12 seconds.
+  if (++pollCount % 3 === 0 && (await restoreActiveRide())) {
+    stopPolling()
+    incomingRequest.value = null
+    return
+  }
   const pos = await currentPosition()
   const { data, error } = await supabase.rpc('open_ride_requests', {
     p_lat: pos?.lat ?? null,

@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { staffRole, canOpenAdminPage } from '../lib/staffRules'
 import { watch } from 'vue'
 import { useAuth } from '../lib/useAuth'
 import { useDriver } from '../lib/useDriver'
@@ -58,6 +59,10 @@ const AdminPayouts = () => import('../pages/admin/AdminPayouts.vue')
 const AdminPromos = () => import('../pages/admin/AdminPromos.vue')
 const AdminIncentives = () => import('../pages/admin/AdminIncentives.vue')
 const AdminSettings = () => import('../pages/admin/AdminSettings.vue')
+const AdminLive = () => import('../pages/admin/AdminLive.vue')
+const AdminMessages = () => import('../pages/admin/AdminMessages.vue')
+const AdminTeam = () => import('../pages/admin/AdminTeam.vue')
+const AdminActivity = () => import('../pages/admin/AdminActivity.vue')
 
 const routes = [
   { path: '/', name: 'home', component: RiderLanding, meta: { title: 'RideUp Nassau — Book a ride with upfront prices' } },
@@ -114,6 +119,7 @@ const routes = [
     meta: { requiresAuth: true, requiresAdmin: true },
     children: [
       { path: '', name: 'admin-dashboard', component: AdminDashboard, meta: { title: 'Admin Dashboard — RideUp' } },
+      { path: 'live', name: 'admin-live', component: AdminLive, meta: { title: 'Live — RideUp Admin' } },
       { path: 'rides', name: 'admin-rides', component: AdminRides, meta: { title: 'Manage Rides — RideUp' } },
       { path: 'users', name: 'admin-users', component: AdminUsers, meta: { title: 'Manage Users — RideUp' } },
       { path: 'drivers', name: 'admin-drivers', component: AdminDrivers, meta: { title: 'Manage Drivers — RideUp' } },
@@ -124,6 +130,9 @@ const routes = [
       { path: 'promos', name: 'admin-promos', component: AdminPromos, meta: { title: 'Promo Codes — RideUp' } },
       { path: 'incentives', name: 'admin-incentives', component: AdminIncentives, meta: { title: 'Driver Incentives — RideUp' } },
       { path: 'settings', name: 'admin-settings', component: AdminSettings, meta: { title: 'Settings — RideUp' } },
+      { path: 'messages', name: 'admin-messages', component: AdminMessages, meta: { title: 'Messages — RideUp Admin' } },
+      { path: 'team', name: 'admin-team', component: AdminTeam, meta: { title: 'Team — RideUp Admin' } },
+      { path: 'activity', name: 'admin-activity', component: AdminActivity, meta: { title: 'Activity — RideUp Admin' } },
     ],
   },
   { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFound, meta: { title: 'Page Not Found — RideUp' } },
@@ -161,8 +170,11 @@ router.beforeEach(async (to) => {
     return { path: '/book' }
   }
 
-  if (to.meta.requiresAdmin && !DEMO_MODE && user.value?.app_metadata?.role !== 'admin') {
-    return { path: '/book' }
+  // Admins see everything; support staff only the operations pages (see src/lib/staffRules.js).
+  if (to.meta.requiresAdmin && !DEMO_MODE) {
+    const role = staffRole(user.value)
+    if (!role) return { path: '/book' }
+    if (!canOpenAdminPage(role, to.path)) return { path: '/admin/live' }
   }
 
   // Driver-specific route guards

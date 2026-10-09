@@ -4,6 +4,7 @@ import { rateLimit } from '../_rateLimit.js'
 import { chargeOf } from '../../src/lib/discounts.js'
 import { pushToUser } from '../_push.js'
 import { sendEmail, refundEmail } from '../_email.js'
+import { logAdminAction } from '../_audit.js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
@@ -83,6 +84,12 @@ export default async function handler(req, res) {
     const what = method === 'card' ? 'refunded to your card' : 'added to your RideUp credit'
     await pushToUser(rider?.auth_user_id, { title: 'Refund issued', body: `$${(amount / 100).toFixed(2)} was ${what}.`, url: `/receipt/${ride.id}`, tag: `refund-${saved.id}` })
     if (rider?.email) await sendEmail({ to: rider.email, ...refundEmail({ ride, amountCents: amount, method, target }) })
+    await logAdminAction(user, {
+      action: method === 'card' ? 'ride.refund' : 'ride.credit',
+      targetType: 'ride', targetId: ride.id,
+      summary: `$${(amount / 100).toFixed(2)} ${target === 'tip' ? 'tip ' : ''}${method === 'card' ? 'refunded to card' : 'given as credit'}: ${note}`,
+      details: { amount_cents: amount, target, method, driver_deduction_cents: driverDeduction },
+    })
 
     return res.status(200).json({ ok: true, refund: saved, ...(await refundable(ride)) })
   } catch (err) {

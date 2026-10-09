@@ -4,6 +4,7 @@ import { calculateFare, BOOKING_FEE_CENTS, isAirportPickup, AIRPORT_FEE_CENTS } 
 import { pushToUser, rideParticipants, usersWithPush } from './_push.js'
 import { captureRide } from './_capture.js'
 import { notifyNearbyDrivers, DRIVER_IDLE_MIN, DRIVER_BACKGROUND_MIN } from './_notifyDrivers.js'
+import { alertRideRequest } from './_staffAlerts.js'
 import { captureServerError } from './_monitor.js'
 import { sendEmail, docExpiryEmail } from './_email.js'
 
@@ -240,7 +241,8 @@ export default async function handler(req, res) {
       if (error || !ride) { console.error('Dispatch insert error:', error?.message); await fail('failed'); continue }
 
       await admin.from('scheduled_rides').update({ status: 'dispatched', dispatched_ride_id: ride.id }).eq('id', sr.id)
-      await notifyNearbyDrivers(ride.id)
+      const notified = await notifyNearbyDrivers(ride.id)
+      await alertRideRequest(ride.id, { notified, scheduled: true })
       await pushToUser(rider.auth_user_id, {
         title: 'Finding your scheduled ride',
         body: `We're matching you with a driver for ${sr.pickup_address}.`,

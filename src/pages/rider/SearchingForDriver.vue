@@ -211,10 +211,13 @@ async function expireRequest() {
   if (elapsedTimer) clearInterval(elapsedTimer)
   if (pollTimer) clearInterval(pollTimer)
   if (!DEMO_MODE) {
-    await supabase.from('rides')
+    const { data } = await supabase.from('rides')
       .update({ status: 'cancelled', cancel_reason: 'no_drivers', cancelled_at: new Date().toISOString() })
       .eq('id', props.rideId)
       .eq('status', 'requested')
+      .select('id')
+    // Tell RideUp's team about the missed ride, so someone can call the rider back.
+    if (data?.length) apiPost('/api/trip-event', { rideId: props.rideId, event: 'expired' }).catch(() => {})
   }
 }
 

@@ -14,8 +14,10 @@ export const DRIVER_BACKGROUND_MIN = 30
 export const TRIP_TYPES = ['standard', 'xl', 'premium']
 // Which driver vehicle classes can take each trip type (same rule as open_ride_requests).
 const CLASSES_FOR = { standard: ['standard', 'xl', 'premium'], xl: ['xl'], premium: ['premium'] }
+export const driverCanTake = (driverVehicleType, tripType) =>
+  (CLASSES_FOR[tripType] || CLASSES_FOR.standard).includes(driverVehicleType || 'standard')
 // A driver with a ride in one of these states is busy (offered and confirming, or on the way, or driving).
-const BUSY_STATUSES = ['pending_driver_response', 'accepted', 'driver_arrived', 'in_progress']
+export const BUSY_STATUSES = ['pending_driver_response', 'accepted', 'driver_arrived', 'in_progress']
 // Pickup estimates: roads are ~1.35× the straight line at ~18 mph in Nassau (as in src/lib/eta.js), plus a
 // minute to set off, and two more when the driver first has to open RideUp from a notification.
 const ROAD_FACTOR = 1.35

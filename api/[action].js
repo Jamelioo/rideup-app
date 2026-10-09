@@ -5,8 +5,12 @@
 // their own files because outside services call them (and the webhook needs the raw request body).
 const routes = {
   'add-tip': () => import('./_routes/add-tip.js'),
+  'admin-assign': () => import('./_routes/admin-assign.js'),
+  'admin-broadcast': () => import('./_routes/admin-broadcast.js'),
+  'admin-complete': () => import('./_routes/admin-complete.js'),
   'admin-credit': () => import('./_routes/admin-credit.js'),
   'admin-refund': () => import('./_routes/admin-refund.js'),
+  'admin-team': () => import('./_routes/admin-team.js'),
   'authorize-ride': () => import('./_routes/authorize-ride.js'),
   'availability': () => import('./_routes/availability.js'),
   'cancel-ride': () => import('./_routes/cancel-ride.js'),

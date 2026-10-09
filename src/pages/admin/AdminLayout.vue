@@ -23,7 +23,7 @@
       <!-- Nav -->
       <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         <router-link
-          v-for="item in navItems"
+          v-for="item in visibleNav"
           :key="item.to"
           :to="item.to"
           @click="sidebarOpen = false"
@@ -38,6 +38,7 @@
             <path v-for="(path, i) in item.paths" :key="i" :d="path.d" :fill-rule="path.fillRule" :clip-rule="path.clipRule" />
           </svg>
           {{ item.label }}
+          <span v-if="item.to === '/admin/live'" class="ml-auto w-2 h-2 rounded-full bg-[#34d399] animate-pulse" aria-hidden="true"></span>
         </router-link>
       </nav>
 
@@ -68,8 +69,9 @@
           </svg>
         </button>
         <div class="text-sm text-[var(--color-text-muted)]">Nassau, Bahamas</div>
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-[#2b8659] flex items-center justify-center text-white text-xs font-semibold">A</div>
+        <div class="flex items-center gap-2">
+          <span v-if="role === 'support'" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)]">Support</span>
+          <div class="w-8 h-8 rounded-full bg-[#2b8659] flex items-center justify-center text-white text-xs font-semibold" :title="user?.email || ''" aria-hidden="true">{{ initial }}</div>
         </div>
       </header>
 
@@ -91,14 +93,19 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
 import { DEMO_MODE } from '../../lib/demoMode'
+import { useAuth } from '../../lib/useAuth'
+import { useStaffRole, canOpenAdminPage } from '../../lib/staff'
 
 const route = useRoute()
 const sidebarOpen = ref(false)
+const { user } = useAuth()
+const { role } = useStaffRole()
+const initial = computed(() => (user.value?.email || 'A').charAt(0).toUpperCase())
 
 // Warn the admin when the every-minute job has stopped (Uber-style ops: problems should be visible, not silent).
 const jobWarning = ref('')
 onMounted(async () => {
-  if (DEMO_MODE || !supabaseConfigured) return
+  if (DEMO_MODE || !supabaseConfigured || role.value !== 'admin') return
   const { data, error } = await supabase.from('system_heartbeats').select('last_run_at, last_ok').eq('name', 'dispatch').maybeSingle()
   if (error) return // migration 011 not run yet
   if (!data) { jobWarning.value = 'has never run'; return }
@@ -108,6 +115,13 @@ onMounted(async () => {
 })
 
 const navItems = [
+  {
+    label: 'Live',
+    to: '/admin/live',
+    paths: [
+      { fillRule: 'evenodd', d: 'M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z', clipRule: 'evenodd' },
+    ]
+  },
   {
     label: 'Dashboard',
     to: '/admin',
@@ -174,6 +188,28 @@ const navItems = [
     ]
   },
   {
+    label: 'Messages',
+    to: '/admin/messages',
+    paths: [
+      { fillRule: 'evenodd', d: 'M18 3a1 1 0 00-1.447-.894L8.763 6H5a3 3 0 000 6h.28l1.771 5.316A1 1 0 008 18h1a1 1 0 001-1v-4.382l6.553 3.276A1 1 0 0018 15V3z', clipRule: 'evenodd' },
+    ]
+  },
+  {
+    label: 'Team',
+    to: '/admin/team',
+    paths: [
+      { d: 'M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z' },
+    ]
+  },
+  {
+    label: 'Activity',
+    to: '/admin/activity',
+    paths: [
+      { d: 'M9 2a1 1 0 000 2h2a1 1 0 100-2H9z' },
+      { fillRule: 'evenodd', d: 'M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z', clipRule: 'evenodd' },
+    ]
+  },
+  {
     label: 'Settings',
     to: '/admin/settings',
     paths: [
@@ -188,6 +224,9 @@ const navItems = [
     ]
   },
 ]
+
+// Support staff only see the pages they can open.
+const visibleNav = computed(() => navItems.filter((item) => canOpenAdminPage(role.value, item.to)))
 
 function isActive(path) {
   if (path === '/admin') return route.path === '/admin'
