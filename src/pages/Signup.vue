@@ -6,6 +6,7 @@ import { safeRedirect } from '../lib/safeRedirect'
 import AccountConversionCard from '../components/AccountConversionCard.vue'
 import { getPendingReferral, setPendingReferral } from '../lib/rewards'
 import { trackSignUp } from '../lib/adTracking'
+import { toE164, tidyPhone, PHONE_HINT } from '../lib/phone'
 
 const router = useRouter()
 const route = useRoute()
@@ -13,6 +14,8 @@ const { signUp, resendConfirmation, isGuest } = useAuth()
 
 const name = ref('')
 const email = ref('')
+// Asked up front, like Uber: the driver calls or texts it at pickup, and the team can reach new riders.
+const phone = ref('')
 const password = ref('')
 const showPassword = ref(false)
 const error = ref('')
@@ -38,6 +41,11 @@ async function handleSignup() {
     error.value = 'Please enter a valid email address.'
     return
   }
+  const mobile = toE164(phone.value)
+  if (!mobile) {
+    error.value = PHONE_HINT
+    return
+  }
   if (password.value.length < MIN_PASSWORD) {
     error.value = `Password must be at least ${MIN_PASSWORD} characters.`
     return
@@ -45,7 +53,8 @@ async function handleSignup() {
 
   setPendingReferral(referral.value.trim() || null)
   submitting.value = true
-  const result = await signUp(email.value.trim(), password.value, name.value.trim(), { redirectPath: redirect() })
+  // The database copies the number onto the rider profile as the account is created (migration 017).
+  const result = await signUp(email.value.trim(), password.value, name.value.trim(), { redirectPath: redirect(), data: { phone: mobile } })
   submitting.value = false
 
   if (result.error) {
@@ -128,6 +137,12 @@ const inputClass = 'w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] round
           <div>
             <label for="su-email" class="block text-[14px] font-medium text-[var(--color-text-secondary)] mb-1.5">Email address</label>
             <input id="su-email" v-model="email" type="email" autocomplete="email" inputmode="email" :class="inputClass" />
+          </div>
+          <div>
+            <label for="su-phone" class="block text-[14px] font-medium text-[var(--color-text-secondary)] mb-1.5">Mobile number</label>
+            <input id="su-phone" v-model="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(242) 555-0100" aria-describedby="su-phone-hint"
+                   :class="inputClass" @blur="phone = tidyPhone(phone)" />
+            <p id="su-phone-hint" class="text-[12px] text-[var(--color-text-muted)] mt-1.5 px-1">Your driver calls or texts this number at pickup</p>
           </div>
           <div>
             <label for="su-password" class="block text-[14px] font-medium text-[var(--color-text-secondary)] mb-1.5">Password</label>

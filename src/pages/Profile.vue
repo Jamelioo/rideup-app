@@ -6,7 +6,7 @@ import ThemeToggle from '../components/ThemeToggle.vue'
 import AccountConversionCard from '../components/AccountConversionCard.vue'
 import DeleteAccountSheet from '../components/DeleteAccountSheet.vue'
 import { supabase } from '../lib/supabase'
-import { formatPhone } from '../lib/phone'
+import { formatPhone, phoneIsVerified } from '../lib/phone'
 import { useSettings } from '../lib/settings'
 import { pushStatus, enablePushNotifications } from '../lib/push'
 
@@ -22,10 +22,12 @@ function showToast(msg) {
 
 const riderName = ref('')
 const riderPhone = ref('')
+const riderLoaded = ref(false)
 const displayName = computed(() => user.value?.user_metadata?.name || riderName.value || (isGuest.value ? 'Guest' : 'Rider'))
 const displayEmail = computed(() => user.value?.email || (needsLogin.value ? 'Guest account: add your email to keep it' : ''))
-const phoneVerified = computed(() => !!user.value?.phone_confirmed_at)
-const displayPhone = computed(() => formatPhone(user.value?.phone ? `+${user.value.phone.replace(/^\+/, '')}` : riderPhone.value))
+// The number on the rider profile is the one drivers call.
+const phoneVerified = computed(() => phoneIsVerified(user.value, riderPhone.value))
+const displayPhone = computed(() => formatPhone(riderPhone.value || (user.value?.phone ? `+${user.value.phone.replace(/^\+/, '')}` : '')))
 
 // Trip alerts on this device (only offered once web push keys are configured).
 const push = ref('unavailable')
@@ -66,8 +68,8 @@ const riderTotalRides = ref(0)
 
 onMounted(async () => {
   pushStatus().then((status) => { push.value = status })
-  if (!user.value) return
   try {
+    if (!user.value) return
     const { data } = await supabase
       .from('riders')
       .select('rating, total_rides, name, phone')
@@ -79,7 +81,9 @@ onMounted(async () => {
       riderName.value = data.name || ''
       riderPhone.value = data.phone || ''
     }
-  } catch (e) { /* keep defaults */ }
+  } catch (e) { /* keep defaults */ } finally {
+    riderLoaded.value = true
+  }
 })
 
 const showDeleteConfirm = ref(false)
@@ -143,10 +147,11 @@ async function handleLogout() {
       <h2 class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-1">Account</h2>
       <div class="flex items-center justify-between py-4 border-b border-[var(--color-border)]">
         <div class="min-w-0">
-          <div class="text-base">Phone number</div>
-          <div class="text-[13px] text-[var(--color-text-muted)] truncate">{{ displayPhone || 'Not added' }}</div>
+          <div class="text-base">Mobile number</div>
+          <div class="text-[13px] text-[var(--color-text-muted)] truncate">{{ displayPhone || (riderLoaded ? 'Not added' : '…') }}</div>
         </div>
         <span v-if="phoneVerified" class="text-[13px] font-semibold text-[var(--color-brand)]">✓ Verified</span>
+        <button v-else-if="riderLoaded && !displayPhone" @click="router.push('/edit-profile')" class="text-[var(--color-brand)] text-sm font-bold uppercase tracking-wide flex-shrink-0 pl-3 min-h-[44px] min-w-[44px]">Add</button>
         <button v-else-if="settings.require_verified_phone" @click="router.push({ path: '/verify-phone', query: { redirect: '/profile' } })" class="text-[var(--color-brand)] text-sm font-bold uppercase tracking-wide">Verify</button>
       </div>
       <div v-if="push !== 'unavailable'" class="flex items-center justify-between py-4 border-b border-[var(--color-border)]">

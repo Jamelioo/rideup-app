@@ -257,4 +257,25 @@ update drivers set status = 'offline' where auth_user_id = '00000000-0000-0000-0
 reset role; select pg_temp.as_server();
 select pg_temp.check((select count(*) from admin_actions) = :log1, 'an admin who also drives: going online/offline isn''t logged as admin work');
 
+\echo '== Mobile number at sign-up'
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-0000000000b1', 'p1@test', '{"name":"Pat P","phone":"+12425550111"}'),
+  ('00000000-0000-0000-0000-0000000000b2', 'p2@test', '{"name":"Dee Applicant","driver_application":{"phone":"242 555 0122"}}'),
+  ('00000000-0000-0000-0000-0000000000b3', 'p3@test', '{"name":"Junk Number","phone":"12"}');
+select pg_temp.check(phone = '+12425550111' and name = 'Pat P', 'the number given at sign-up is on the rider profile straight away')
+  from riders where auth_user_id = '00000000-0000-0000-0000-0000000000b1';
+select pg_temp.check(phone = '+12425550122', 'a driver applicant''s number is saved the same way')
+  from riders where auth_user_id = '00000000-0000-0000-0000-0000000000b2';
+select pg_temp.check(phone is null, 'something that isn''t a phone number isn''t saved')
+  from riders where auth_user_id = '00000000-0000-0000-0000-0000000000b3';
+select pg_temp.check(public.phone_e164('555-0100') = '+12425550100' and public.phone_e164('1 (242) 555-0100') = '+12425550100'
+  and public.phone_e164('+44 20 7946 0958') = '+442079460958' and public.phone_e164('2-242-555-0100') is null
+  and public.phone_e164('12345678') is null and public.phone_e164(null) is null, 'numbers are stored the way the app writes them (toE164)');
+update auth.users set raw_user_meta_data = '{"name":"Junk Number","phone":"(242) 555-0133"}' where id = '00000000-0000-0000-0000-0000000000b3';
+update auth.users set raw_user_meta_data = '{"phone":"+12425559999"}' where id = '00000000-0000-0000-0000-0000000000a1';
+\ir ../migrations/017_rider_phone.sql
+select pg_temp.check(phone = '+12425550133', 'a number saved only on the login is copied onto the rider profile')
+  from riders where auth_user_id = '00000000-0000-0000-0000-0000000000b3';
+select pg_temp.check(phone = '+12425550101', 'a number already on the rider profile is left alone') from riders where id = :'ra';
+
 \echo 'All money and safety rules passed.'

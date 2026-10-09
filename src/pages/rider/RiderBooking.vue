@@ -20,7 +20,10 @@ import SideMenu from '../../components/SideMenu.vue'
 import ScheduleRidePicker from '../../components/ScheduleRidePicker.vue'
 import GuestInfoSheet from '../../components/GuestInfoSheet.vue'
 import CardCollectionSheet from '../../components/CardCollectionSheet.vue'
+import PhoneNumberSheet from '../../components/PhoneNumberSheet.vue'
 import WhoIsRiding from '../../components/WhoIsRiding.vue'
+import { toE164, phoneIsVerified } from '../../lib/phone'
+import { riderHasPhone, saveRiderPhone, phoneReminderShown, rememberPhoneReminder } from '../../lib/riderPhone'
 import { trackRideBooked } from '../../lib/adTracking'
 import { SCHEDULING_ENABLED } from '../../lib/features'
 import { useAvailability } from '../../lib/useAvailability'
@@ -71,6 +74,9 @@ const showGuestSheet = ref(false)
 const guestSheetRef = ref(null)
 const showCardSheet = ref(false)
 const cardSheetRef = ref(null)
+const showPhoneSheet = ref(false)
+const phoneSheetRef = ref(null)
+const phoneSheetMode = ref('book') // 'book': asked while requesting a ride; 'remind': the one-off reminder
 
 // Bottom sheet drag state
 const sheetRef = ref(null)
@@ -487,18 +493,24 @@ async function requestRide() {
     return
   }
 
-  const settings = await loadSettings()
-  if (settings.require_verified_phone && !user.phone_confirmed_at) {
+  const [{ data: rider, error: riderErr }, settings] = await Promise.all([
+    supabase.from('riders').select('id, phone, payment_method_id').eq('auth_user_id', user.id).maybeSingle(),
+    loadSettings(),
+  ])
+
+  if (settings.require_verified_phone && !phoneIsVerified(user, rider?.phone)) {
     isSubmitting.value = false
     router.push({ path: '/verify-phone', query: { redirect: '/book' } })
     return
   }
 
-  const { data: rider } = await supabase
-    .from('riders')
-    .select('payment_method_id')
-    .eq('auth_user_id', user.id)
-    .maybeSingle()
+  // A number for the driver to call or text at pickup. Accounts made before sign-up asked for one add it here.
+  if (!riderErr && !(await riderHasPhone(user, rider))) {
+    isSubmitting.value = false
+    phoneSheetMode.value = 'book'
+    showPhoneSheet.value = true
+    return
+  }
 
   if (!rider?.payment_method_id) {
     isSubmitting.value = false
@@ -534,7 +546,7 @@ async function ensureRider(user, guestInfo = null) {
       auth_user_id: user.id,
       name: guestInfo?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Rider',
       email: user.email || '',
-      phone: guestInfo?.phone || user.phone || '',
+      phone: guestInfo?.phone || toE164(user.user_metadata?.phone || '') || user.phone || '',
       is_guest: !!guestInfo,
     })
     .select('id, name, phone, payment_method_id')
@@ -702,6 +714,37 @@ async function handleCardSubmit({ cardElement, stripe }) {
     error.value = message
   }
 }
+
+// The number from "Add your mobile number". While booking, carry on with the request (the card comes next if needed).
+async function handlePhoneSubmit(phone) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) { phoneSheetRef.value?.setError('Session expired. Please log in again.'); return }
+  try {
+    await saveRiderPhone(user, phone)
+  } catch {
+    phoneSheetRef.value?.setError('Couldn’t save your number. Check your connection and try again.')
+    return
+  }
+  showPhoneSheet.value = false
+  if (phoneSheetMode.value === 'book') requestRide()
+  else showToast('Mobile number saved')
+}
+
+// Accounts made before sign-up asked for a number get asked once here; booking a ride asks anyway. Never over
+// another sheet, while they're typing an address, or once they have a price to look at.
+async function remindAboutPhone() {
+  if (DEMO_MODE) return
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user
+  if (!user || user.is_anonymous || phoneReminderShown(user.id)) return
+  const { data: rider, error: riderErr } = await supabase.from('riders').select('id, phone').eq('auth_user_id', user.id).maybeSingle()
+  if (riderErr || !rider || await riderHasPhone(user, rider)) return
+  if (showGuestSheet.value || showCardSheet.value || showPhoneSheet.value || hasRoute.value || document.activeElement?.tagName === 'INPUT') return
+  rememberPhoneReminder(user.id)
+  phoneSheetMode.value = 'remind'
+  showPhoneSheet.value = true
+}
+onMounted(remindAboutPhone)
 
 async function scheduleRide({ date, time, summary }) {
   if (!SCHEDULING_ENABLED || !routeReady.value) return
@@ -1130,6 +1173,7 @@ async function scheduleRide({ date, time, summary }) {
     <GuestInfoSheet ref="guestSheetRef" :show="showGuestSheet" @submit="handleGuestSubmit" @close="showGuestSheet = false" />
     <ScheduleRidePicker v-if="SCHEDULING_ENABLED" :show="showSchedulePicker" @close="showSchedulePicker = false" @confirm="scheduleRide" />
     <CardCollectionSheet ref="cardSheetRef" :show="showCardSheet" @submit="handleCardSubmit" @close="showCardSheet = false" />
+    <PhoneNumberSheet ref="phoneSheetRef" :show="showPhoneSheet" :mode="phoneSheetMode" @submit="handlePhoneSubmit" @close="showPhoneSheet = false" />
 
     <!-- Toast -->
     <Transition name="fade">

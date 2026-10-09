@@ -83,8 +83,22 @@ test('signup page renders with all form fields', async ({ page }) => {
   await page.goto('/signup')
   await expect(page.getByLabel('Full name')).toBeVisible()
   await expect(page.getByLabel('Email address')).toBeVisible()
+  await expect(page.getByLabel('Mobile number')).toBeVisible()
   await expect(page.getByLabel('Password', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sign up' })).toBeVisible()
+})
+
+test('signup asks for a mobile number', async ({ page }) => {
+  await page.goto('/signup')
+  await page.getByLabel('Full name').fill('Test User')
+  await page.getByLabel('Email address').fill('test@test.com')
+  await page.getByLabel('Password', { exact: true }).fill('long-enough-password')
+  await page.getByRole('button', { name: 'Sign up' }).click()
+  await expect(page.getByText('Please enter a valid mobile number')).toBeVisible()
+  const phone = page.getByLabel('Mobile number')
+  await phone.fill('555 0100')
+  await phone.blur()
+  await expect(phone).toHaveValue('(242) 555-0100')
 })
 
 test('signup validates empty name', async ({ page }) => {
@@ -105,6 +119,7 @@ test('signup validates short password', async ({ page }) => {
   await page.goto('/signup')
   await page.getByLabel('Full name').fill('Test User')
   await page.getByLabel('Email address').fill('test@test.com')
+  await page.getByLabel('Mobile number').fill('242 555 0100')
   await page.getByLabel('Password', { exact: true }).fill('1234567')
   await page.getByRole('button', { name: 'Sign up' }).click()
   await expect(page.getByText('at least 8 characters.')).toBeVisible()
