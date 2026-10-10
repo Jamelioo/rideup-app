@@ -74,6 +74,20 @@ test('the summary never says who or where a driver is, and logged-out visitors g
   assert.deepEqual(availabilitySummary(pool([]), { ...CABLE_BEACH, now: NOW }).premium, { state: 'none' })
 })
 
+test('cash trips: only drivers who take cash count, and a rider paying cash is told when only card would work', () => {
+  const noCash = driver({ accept_cash: false })
+  assert.equal(eligible(pool([noCash]), CABLE_BEACH).length, 1)
+  assert.deepEqual(eligible(pool([noCash]), CABLE_BEACH, 'standard', { cash: true }), [])
+  assert.equal(eligible(pool([driver()]), CABLE_BEACH, 'standard', { cash: true }).length, 1, 'drivers take cash unless they turn it off')
+  assert.deepEqual(availabilitySummary(pool([noCash]), { ...CABLE_BEACH, cash: true, now: NOW }).standard, { state: 'no_cash' })
+  assert.equal(availabilitySummary(pool([noCash]), { ...CABLE_BEACH, now: NOW }).standard.state, 'available')
+  assert.deepEqual(availabilitySummary(pool([]), { ...CABLE_BEACH, cash: true, now: NOW }).standard, { state: 'none' })
+  assert.equal(canBook({ state: 'no_cash' }), true)
+  assert.equal(unavailableNotice({ state: 'no_cash' }).title, 'No drivers taking cash nearby')
+  assert.match(unavailableNotice({ state: 'no_cash' }).body, /^Pay by card to get a driver now\. Or request with cash/)
+  assert.equal(optionStatus({ state: 'no_cash' }), 'Card only right now')
+})
+
 test('booking screen wording: nobody online can still request, every driver busy waits, unknown never blocks', () => {
   assert.deepEqual([5, 10, 15, 20, 30, 45, null].map(etaLabel), ['5 min', '5–10 min', '10–15 min', '15–20 min', '20–30 min', '30+ min', ''])
   assert.equal(canBook(null), true)

@@ -15,6 +15,7 @@ const routes = {
   'availability': () => import('./_routes/availability.js'),
   'cancel-ride': () => import('./_routes/cancel-ride.js'),
   'capture-payment': () => import('./_routes/capture-payment.js'),
+  'cash-unpaid': () => import('./_routes/cash-unpaid.js'),
   'create-setup-intent': () => import('./_routes/create-setup-intent.js'),
   'create-setup-session': () => import('./_routes/create-setup-session.js'),
   'delete-account': () => import('./_routes/delete-account.js'),

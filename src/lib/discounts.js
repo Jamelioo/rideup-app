@@ -14,7 +14,7 @@ export function previewDiscounts(fareCents, { promo = null, referralPending = fa
   return { discount, credit, charge: fareCents - discount - credit, label }
 }
 
-// What the rider's card is charged for a ride row (tips are charged separately).
+// What the rider pays for a ride row: charged to their card, or paid to the driver in cash (tips are separate).
 export function chargeOf(ride) {
   return Math.max(0, (ride?.fare_cents || 0) - (ride?.promo_discount_cents || 0) - (ride?.credit_applied_cents || 0))
 }

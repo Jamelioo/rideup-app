@@ -35,7 +35,8 @@ const row = (label, value, bold = false) =>
 export function tripReceiptEmail({ ride, driverName, splitPaidCents = 0, splitFriends = 0 }) {
   const charged = chargeOf(ride) - splitPaidCents
   const date = new Date(ride.completed_at || ride.created_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Nassau' })
-  const card = ride.payment_last4 ? `${escapeHtml(ride.payment_brand || 'Card')} •••• ${escapeHtml(ride.payment_last4)}` : 'Card on file'
+  const cash = ride.payment_method === 'cash'
+  const paidWith = cash ? 'Cash' : ride.payment_last4 ? `${escapeHtml(ride.payment_brand || 'Card')} •••• ${escapeHtml(ride.payment_last4)}` : 'Card on file'
   return {
     subject: `Your RideUp receipt — ${money(charged)}`,
     html: layout('Thanks for riding with RideUp', `
@@ -48,9 +49,21 @@ export function tripReceiptEmail({ ride, driverName, splitPaidCents = 0, splitFr
         ${ride.promo_discount_cents ? row(ride.promo_code === 'REFERRAL' ? 'Friend referral' : `Promo ${escapeHtml(ride.promo_code || '')}`, '−' + money(ride.promo_discount_cents)) : ''}
         ${ride.credit_applied_cents ? row('RideUp credit', '−' + money(ride.credit_applied_cents)) : ''}
         ${splitPaidCents ? row(`Split with ${splitFriends} friend${splitFriends === 1 ? '' : 's'}`, '−' + money(splitPaidCents)) : ''}
-        ${row(splitPaidCents ? 'Your share' : 'Total charged', money(charged), true)}
-        ${row('Paid with', card)}
+        ${row(splitPaidCents ? 'Your share' : cash ? 'Total paid' : 'Total charged', money(charged), true)}
+        ${row('Paid with', paidWith)}
       </table>`),
+  }
+}
+
+// The driver of a cash trip reported that the rider didn't pay (api/_routes/cash-unpaid.js).
+export function cashUnpaidEmail({ ride, amountCents }) {
+  const date = new Date(ride.completed_at || ride.created_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Nassau' })
+  return {
+    subject: `Payment needed for your RideUp trip — ${money(amountCents)}`,
+    html: layout('Your cash fare wasn’t paid', `
+      <p style="font-size:14px;color:#555">Your driver told us the ${money(amountCents)} cash fare for your trip on ${escapeHtml(date)} wasn’t paid.</p>
+      <p style="font-size:14px"><strong>From:</strong> ${escapeHtml(ride.pickup_address)}<br><strong>To:</strong> ${escapeHtml(ride.dropoff_address)}</p>
+      <p style="font-size:14px;color:#555">Until it’s sorted out, cash is turned off on your account. You can still ride and pay by card. If you did pay, or think this is a mistake, reply to this email and we’ll look into it.</p>`),
   }
 }
 

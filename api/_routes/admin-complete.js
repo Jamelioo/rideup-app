@@ -7,7 +7,8 @@ import { logAdminAction } from '../_audit.js'
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
 
 // Admin › Live: end a trip that's under way but stuck (the driver's phone died at the drop-off). Completes it,
-// charges the fare like the driver's "Complete trip" button, sends the receipt and frees the driver.
+// charges the fare like the driver's "Complete trip" button (a cash trip counts as collected), sends the receipt
+// and frees the driver.
 // If the charge fails here, the every-minute job retries it.   body: { rideId }   (admins and support staff)
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -29,7 +30,7 @@ export default async function handler(req, res) {
       .update({ status: 'completed' })
       .eq('id', rideId)
       .eq('status', 'in_progress')
-      .select('id, driver_id')
+      .select('*')
     if (error) throw error
     if (!done?.length) return res.status(409).json({ error: 'Only a trip that has started can be completed. Cancel it instead.' })
 
@@ -46,7 +47,9 @@ export default async function handler(req, res) {
 
     const people = await rideParticipants(rideId)
     await pushToUser(people.driverUserId, { title: 'Trip completed', body: 'RideUp support ended this trip for you. Thanks for driving!', url: '/driver/dashboard', tag: `ride-${rideId}` })
-    await logAdminAction(user, { action: 'ride.complete', targetType: 'ride', targetId: rideId, summary: charged ? 'Ended the trip; fare charged' : 'Ended the trip; charge will retry' })
+    const summary = done[0].payment_method === 'cash' ? 'Ended the trip; cash counted as collected'
+      : charged ? 'Ended the trip; fare charged' : 'Ended the trip; charge will retry'
+    await logAdminAction(user, { action: 'ride.complete', targetType: 'ride', targetId: rideId, summary })
     return res.status(200).json({ success: true, charged })
   } catch (err) {
     return fail(res, 'Admin complete error', err)

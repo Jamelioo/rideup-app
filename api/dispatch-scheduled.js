@@ -19,6 +19,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const DISPATCH_WINDOW_MIN = 3     // create the request this many minutes before pickup time
 const STALE_REQUEST_MIN = REQUEST_SEARCH_MINUTES // requests nobody answered within this long are cancelled
 const CAPTURE_GRACE_MIN = 2       // the driver's app captures at drop-off; after this the sweeper does it
+const CASH_CONFIRM_MIN = 30       // a cash trip the driver didn't confirm in the app counts as collected after this
 const PAYMENT_CONFIRM_SEC = 90     // a ride stuck in "confirming payment" this long is cancelled
 const CHECKIN_STOPPED_MIN = 8     // trip check-in: the car hasn't moved for this long (while the driver's app is reporting)
 const CHECKIN_ESCALATE_MIN = 5    // no "I'm OK" within this long → safety report for the admin
@@ -275,16 +276,19 @@ export default async function handler(req, res) {
     await offlineIdleDrivers(result)
 
     // Safety net: charge completed trips whose capture call never arrived (e.g. the driver lost signal at drop-off).
+    // Cash trips the driver didn't confirm (they closed the app at drop-off) count as collected after a while, like
+    // Uber, so the rider gets their receipt; the driver can still report an unpaid fare for 24 hours.
     const captureBefore = new Date(Date.now() - CAPTURE_GRACE_MIN * 60_000).toISOString()
-    const { data: uncaptured } = await admin
-      .from('rides')
-      .select('id')
-      .eq('status', 'completed')
-      .eq('payment_status', 'authorized')
-      .lt('completed_at', captureBefore)
-      .order('completed_at', { ascending: true })
-      .limit(20)
-    for (const r of uncaptured || []) {
+    const cashBefore = new Date(Date.now() - CASH_CONFIRM_MIN * 60_000).toISOString()
+    const [{ data: uncaptured }, { data: unconfirmedCash }] = await Promise.all([
+      admin.from('rides').select('id')
+        .eq('status', 'completed').eq('payment_status', 'authorized').lt('completed_at', captureBefore)
+        .order('completed_at', { ascending: true }).limit(20),
+      admin.from('rides').select('id')
+        .eq('status', 'completed').eq('payment_status', 'cash_due').lt('completed_at', cashBefore)
+        .order('completed_at', { ascending: true }).limit(20),
+    ])
+    for (const r of [...(uncaptured || []), ...(unconfirmedCash || [])]) {
       try {
         const out = await captureRide(r.id)
         if (out.ok) result.captured++

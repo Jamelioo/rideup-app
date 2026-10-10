@@ -5,6 +5,8 @@ import { driverCanTake, BUSY_STATUSES } from '../_notifyDrivers.js'
 import { pushToUser } from '../_push.js'
 import { logAdminAction } from '../_audit.js'
 import { REQUEST_SEARCH_MINUTES } from '../../src/lib/dispatch.js'
+import { chargeOf } from '../../src/lib/discounts.js'
+import { formatFare } from '../../src/lib/pricing.js'
 
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
 const short = (address) => String(address || '').split(',')[0].trim() || '—'
@@ -17,7 +19,8 @@ const PAYMENT_ERRORS = {
 }
 
 // Admin › Live: give a waiting request to a chosen driver, like a dispatcher. Same steps as a driver accepting
-// (claim, hold the card, confirm), then the driver gets a notification and their app opens the trip.
+// (claim, hold the card unless it's a cash trip, confirm), then the driver gets a notification and their app opens
+// the trip.
 //   body: { rideId, driverId }   (admins and support staff)
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -59,7 +62,7 @@ export default async function handler(req, res) {
       .eq('id', rideId)
       .eq('status', 'requested')
       .is('driver_id', null)
-      .select('id, fare_cents, promo_discount_cents, credit_applied_cents, rider_id, driver_id, status, payment_status, payment_intent_id')
+      .select('*')
     if (claimErr) throw claimErr
     if (!claimed?.length) return res.status(409).json({ error: 'This ride was taken or cancelled just now.' })
 
@@ -69,9 +72,10 @@ export default async function handler(req, res) {
 
     // 3. The driver is now on this trip; their app picks it up and opens it.
     await admin.from('drivers').update({ status: 'on_trip' }).eq('id', driver.id)
+    const cash = claimed[0].payment_method === 'cash' ? ` Cash trip: collect ${formatFare(chargeOf(claimed[0]))}.` : ''
     await pushToUser(driver.auth_user_id, {
       title: 'New trip assigned to you',
-      body: `${short(ride.pickup_address)} → ${short(ride.dropoff_address)}. Open RideUp to head to the pickup.`,
+      body: `${short(ride.pickup_address)} → ${short(ride.dropoff_address)}. Open RideUp to head to the pickup.${cash}`,
       url: '/driver/active-ride',
       tag: `ride-${rideId}`,
     })

@@ -4,8 +4,9 @@ import { captureRide } from '../_capture.js'
 
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
 
-// Captures the held payment once the ride is completed. Only the ride's driver (or an admin) may call it.
-// The every-minute sweeper in dispatch-scheduled retries any capture this call missed.
+// Captures the held payment once the ride is completed; on a cash trip, the driver's "Cash collected" tap.
+// Only the ride's driver (or an admin) may call it. The every-minute sweeper in dispatch-scheduled retries any
+// capture this call missed.
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 

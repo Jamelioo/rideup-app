@@ -13,14 +13,16 @@ const firstName = (name) => String(name || '').trim().split(/\s+/)[0] || 'your f
 // that flips the row to 'captured' sends the receipt.
 // Split fare: friends who accepted are charged their share first; the rider's hold is then captured for
 // the rest (a friend whose card fails is covered by the rider, like Uber).
+// Cash trips: see settleCash.
 export async function captureRide(rideId) {
   const { data: ride } = await admin
     .from('rides')
-    .select('id, status, payment_intent_id, payment_status, rider_name, fare_cents, promo_discount_cents, credit_applied_cents, pickup_address, dropoff_address')
+    .select('*')
     .eq('id', rideId)
     .maybeSingle()
   if (!ride) return { ok: false, status: 404, error: 'Ride not found' }
   if (ride.status !== 'completed') return { ok: false, status: 409, error: 'Ride is not completed' }
+  if (ride.payment_method === 'cash') return settleCash(ride)
   if (ride.payment_status === 'captured') return { ok: true, already: true }
   if (!ride.payment_intent_id || ride.payment_status !== 'authorized') {
     return { ok: false, status: 400, error: 'No authorized payment for this ride' }
@@ -55,15 +57,31 @@ export async function captureRide(rideId) {
     .eq('id', rideId)
     .eq('payment_status', 'authorized')
     .select('*')
-  const full = flipped?.[0]
-  if (full) {
-    const people = await rideParticipants(rideId)
-    if (people.riderEmail) {
-      await sendEmail({ to: people.riderEmail, ...tripReceiptEmail({ ride: full, driverName: people.driverName, splitPaidCents: split.paid, splitFriends: split.friends }) })
-    }
-    await pushToUser(people.riderUserId, { title: 'You’ve arrived', body: 'Rate your trip and view your receipt.', url: `/rate/${rideId}`, tag: `ride-${rideId}` })
-  }
+  if (flipped?.[0]) await sendReceipt(flipped[0], split)
   return { ok: true }
+}
+
+// A cash trip is paid to the driver at drop-off: they tap "Cash collected", or the sweeper counts it as collected
+// a while later (the driver can still report an unpaid fare). Marks it paid and sends the receipt, once.
+// A fare the driver reported unpaid stays unpaid.
+async function settleCash(ride) {
+  if (ride.payment_status !== 'cash_due') return { ok: true, already: true }
+  const { data: flipped } = await admin
+    .from('rides')
+    .update({ payment_status: 'cash_collected', paid_at: new Date().toISOString() })
+    .eq('id', ride.id)
+    .eq('payment_status', 'cash_due')
+    .select('*')
+  if (flipped?.[0]) await sendReceipt(flipped[0])
+  return { ok: true }
+}
+
+async function sendReceipt(ride, split = { paid: 0, friends: 0 }) {
+  const people = await rideParticipants(ride.id)
+  if (people.riderEmail) {
+    await sendEmail({ to: people.riderEmail, ...tripReceiptEmail({ ride, driverName: people.driverName, splitPaidCents: split.paid, splitFriends: split.friends }) })
+  }
+  await pushToUser(people.riderUserId, { title: 'You’ve arrived', body: 'Rate your trip and view your receipt.', url: `/rate/${ride.id}`, tag: `ride-${ride.id}` })
 }
 
 // Returns { paid, friends }: the total friends paid and how many of them.
