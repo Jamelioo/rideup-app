@@ -388,7 +388,7 @@ const selectedAvailability = computed(() => availabilityFor(availability.value, 
 const carsUnavailable = computed(() => !canBook(selectedAvailability.value))
 const noCarsNotice = computed(() => unavailableNotice(selectedAvailability.value))
 // Another ride option that can come now, offered when the chosen one can't (e.g. no XL driver online).
-const availableAlternative = computed(() => (carsUnavailable.value
+const availableAlternative = computed(() => (selectedAvailability.value && selectedAvailability.value.state !== 'available'
   ? availableVehicles.value.find((v) => v.id !== selectedVehicle.value && availabilityFor(availability.value, v.id)?.state === 'available') || null
   : null))
 const optionLine = (type) => {
@@ -481,6 +481,7 @@ async function requestRide() {
       fare_cents: fare,
       status: 'requested',
       demo: true,
+      drivers_alerted: selectedAvailability.value ? selectedAvailability.value.state === 'available' : null,
     })
     isSubmitting.value = false
     return
@@ -557,9 +558,10 @@ async function ensureRider(user, guestInfo = null) {
 async function createRideForUser(user, guestInfo = null) {
   isSubmitting.value = true
   error.value = null
-  // One last check just before booking: if the nearby driver went offline a moment ago, the note above the
-  // button says so now instead of after a search. An unknown answer (the check failed) never blocks booking.
-  if (!canBook(availabilityFor(await refreshAvailability({ timeoutMs: 4000 }), selectedVehicle.value))) {
+  // One last check just before booking: if every driver just started a trip, the note above the button says so
+  // now instead of after a search. An unknown answer (the check failed) never blocks booking.
+  const latest = availabilityFor(await refreshAvailability({ timeoutMs: 4000 }), selectedVehicle.value)
+  if (!canBook(latest)) {
     showGuestSheet.value = false // after signing up or adding a card, show the note rather than leave a sheet open
     showCardSheet.value = false
     isSubmitting.value = false
@@ -629,7 +631,8 @@ async function createRideForUser(user, guestInfo = null) {
     showGuestSheet.value = false
     passenger.value = null // the next booking is for the rider again unless they choose otherwise
     trackRideBooked(ride)
-    emit('requested', ride)
+    // Whether a driver could be alerted decides how long the search runs (unknown: the full length).
+    emit('requested', { ...ride, drivers_alerted: latest ? latest.state === 'available' : null })
     isSubmitting.value = false
     // Wake up nearby drivers, and offer trip alerts to the rider ("driver arrived" while the app is closed).
     apiPost('/api/trip-event', { rideId: ride.id, event: 'requested' }).catch(() => {})

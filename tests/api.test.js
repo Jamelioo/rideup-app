@@ -2,6 +2,28 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { isAdmin } from '../api/_auth.js'
 import { rateLimit } from '../api/_rateLimit.js'
+import { rideAlertText } from '../api/_staffAlerts.js'
+
+test('ride alerts: a request nobody online can take asks the team to act while the rider waits', () => {
+  const ride = { pickup_address: 'Cable Beach, Nassau', dropoff_address: 'Downtown, Nassau', fare_cents: 1868, riders: { name: 'Ann Rolle', phone: '+12425550101' } }
+  const fresh = rideAlertText(ride, { notified: 2 })
+  assert.equal(fresh.title, 'New ride request')
+  assert.equal(fresh.body, 'Cable Beach → Downtown · $18.68 · 2 drivers alerted')
+  const waiting = rideAlertText(ride, { notified: 0 })
+  assert.equal(waiting.title, 'Rider waiting: no driver online')
+  assert.match(waiting.body, /Go online in the driver app, or assign a driver in Live\. It stays open for 5 minutes\./)
+  assert.match(waiting.emailHtml, /the rider is waiting/)
+  assert.doesNotMatch(waiting.emailHtml, /told no cars/)
+  const missed = rideAlertText(ride, { expired: true })
+  assert.equal(missed.title, 'Missed ride request')
+  assert.match(missed.body, /No driver accepted in time\. Call Ann back from Live\./)
+  assert.match(missed.emailHtml, /tel:\+12425550101/)
+})
+
+test('ride alerts escape what riders typed', () => {
+  const { emailHtml } = rideAlertText({ pickup_address: '<img src=x onerror=alert(1)>', dropoff_address: 'B', fare_cents: 1000, rider_name: '<b>Eve</b>' }, { notified: 1 })
+  assert.doesNotMatch(emailHtml, /<img|<b>Eve/)
+})
 
 test('admin comes from app_metadata only — user_metadata is user-editable', () => {
   assert.equal(isAdmin({ app_metadata: { role: 'admin' } }), true)

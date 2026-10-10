@@ -1,6 +1,7 @@
-// How the booking screen describes /api/availability answers. Kept free of app imports so it is unit-tested.
+// How the booking screen describes /api/availability answers. Kept free of Vue and Vite imports so it is unit-tested.
 // An entry is { state: 'available' | 'busy' | 'none', eta_max? } for one trip type; null means unknown
 // (still checking, or the check failed), and an unknown answer never blocks booking.
+import { REQUEST_SEARCH_MINUTES } from './dispatch.js'
 
 const STEP_BEFORE = { 10: 5, 15: 10, 20: 15, 30: 20 }
 
@@ -16,13 +17,15 @@ export function availabilityFor(result, type) {
   return result?.types?.[type] || null
 }
 
+// Whether the rider can send a request now. With no driver online ('none') they still can: RideUp's team is
+// alerted and the search runs longer. Only "every driver who could take it is on a trip" ('busy') waits.
 export function canBook(entry) {
-  return !entry || entry.state === 'available'
+  return !entry || entry.state !== 'busy'
 }
 
-// The note shown above the booking button when a car can't come right now.
+// The note shown above the booking button when no car can come straight away.
 export function unavailableNotice(entry) {
-  if (canBook(entry)) return null
+  if (!entry || entry.state === 'available') return null
   if (entry.state === 'busy') {
     return {
       title: 'All drivers are on trips right now',
@@ -30,14 +33,15 @@ export function unavailableNotice(entry) {
     }
   }
   return {
-    title: 'No cars available right now',
-    body: 'We’re checking again every 30 seconds, and you can book as soon as a driver is nearby.',
+    title: 'No drivers online right now',
+    body: `You can still request. We’ll alert our team and keep looking for up to ${REQUEST_SEARCH_MINUTES} minutes. You won’t be charged if nobody accepts.`,
   }
 }
 
-// What each ride option shows on its right: the pickup estimate, "Unavailable", or nothing when unknown.
+// What each ride option shows on its right: the pickup estimate, why it can't come now, or nothing when unknown.
 export function optionStatus(entry) {
   if (!entry) return ''
+  if (entry.state === 'none') return 'No drivers online'
   if (entry.state !== 'available') return 'Unavailable'
   return entry.eta_max ? `${etaLabel(entry.eta_max)} away` : ''
 }

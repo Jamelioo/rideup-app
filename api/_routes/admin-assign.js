@@ -4,6 +4,7 @@ import { holdCardAndConfirm } from '../_hold.js'
 import { driverCanTake, BUSY_STATUSES } from '../_notifyDrivers.js'
 import { pushToUser } from '../_push.js'
 import { logAdminAction } from '../_audit.js'
+import { REQUEST_SEARCH_MINUTES } from '../../src/lib/dispatch.js'
 
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
 const short = (address) => String(address || '').split(',')[0].trim() || '—'
@@ -34,12 +35,17 @@ export default async function handler(req, res) {
 
   try {
     const [{ data: ride }, { data: driver }, { data: busy }] = await Promise.all([
-      admin.from('rides').select('id, status, driver_id, vehicle_type, pickup_address, dropoff_address').eq('id', rideId).maybeSingle(),
+      admin.from('rides').select('id, status, driver_id, vehicle_type, pickup_address, dropoff_address, created_at').eq('id', rideId).maybeSingle(),
       admin.from('drivers').select('id, auth_user_id, name, approved, deleted_at, vehicle_type, status').eq('id', driverId).maybeSingle(),
       admin.from('rides').select('id').eq('driver_id', driverId).in('status', BUSY_STATUSES).limit(1),
     ])
     if (!ride) return res.status(404).json({ error: 'Ride not found' })
     if (ride.status !== 'requested' || ride.driver_id) return res.status(409).json({ error: 'This ride already has a driver or has ended.' })
+    // Past the search time the rider has been told no cars were found and may have left (the background job
+    // normally cancels it by now). Holding their card then would charge someone who isn't waiting.
+    if (Date.now() - new Date(ride.created_at).getTime() > (REQUEST_SEARCH_MINUTES + 1) * 60_000) {
+      return res.status(409).json({ error: 'This request is too old to assign: the rider may have left. Call them, and ask them to book again if they still need a ride.' })
+    }
     if (!driver || !driver.approved || driver.deleted_at) return res.status(400).json({ error: 'That driver isn’t approved to drive.' })
     if (busy?.length) return res.status(409).json({ error: `${driver.name || 'That driver'} is on another trip.` })
     if (!driverCanTake(driver.vehicle_type, ride.vehicle_type)) {

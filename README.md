@@ -52,7 +52,7 @@ npm install
 
 1. Create a project at [supabase.com/dashboard](https://supabase.com/dashboard).
 2. In **SQL Editor**, run these files **in order**: `supabase-schema.sql`, then everything in
-   `supabase/migrations/` (`001` … `017`). Each migration can be re-run safely.
+   `supabase/migrations/` (`001` … `018`). Each migration can be re-run safely.
 3. Make yourself an admin (SQL Editor, use your account's email):
    ```sql
    update auth.users set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb
@@ -110,7 +110,8 @@ Optional features stay switched off until their keys are set; nothing breaks wit
 Pro plan sends it automatically; Supabase `pg_cron` + `pg_net` or any external pinger also works). Each run:
 
 - turns due scheduled rides into live requests and alerts nearby drivers,
-- cancels requests nobody accepted within 5 minutes,
+- cancels requests nobody accepted within 5 minutes and tells the team about them (riders can request when no
+  driver is online: the team gets a "Rider waiting" alert and the request stays open for those 5 minutes),
 - sets drivers offline whose app hasn't checked in for 3 minutes,
 - charges completed trips whose payment capture didn't arrive from the driver's phone,
 - cancels trips stuck on "confirming payment",

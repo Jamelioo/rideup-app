@@ -278,4 +278,19 @@ select pg_temp.check(phone = '+12425550133', 'a number saved only on the login i
   from riders where auth_user_id = '00000000-0000-0000-0000-0000000000b3';
 select pg_temp.check(phone = '+12425550101', 'a number already on the rider profile is left alone') from riders where id = :'ra';
 
+\echo '== A request nobody online could take stays open for 5 minutes'
+update drivers set status = 'online' where id = '20000000-0000-0000-0000-0000000000d1';
+insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, fare_cents, status, created_at)
+select '70000000-0000-0000-0000-0000000000f1', id, 25.05, -77.34, 25.08, -77.33, 1500, 'requested', now() - interval '4 minutes'
+  from riders where auth_user_id = '00000000-0000-0000-0000-0000000000b1';
+insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, fare_cents, status, created_at)
+select '70000000-0000-0000-0000-0000000000f2', id, 25.05, -77.34, 25.08, -77.33, 1500, 'requested', now() - interval '6 minutes'
+  from riders where auth_user_id = '00000000-0000-0000-0000-0000000000b2';
+set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000d1');
+select pg_temp.check(exists (select 1 from public.open_ride_requests(25.05, -77.34, 25) where id = '70000000-0000-0000-0000-0000000000f1'),
+  'a driver who goes online sees a request made 4 minutes ago, when nobody was online');
+select pg_temp.check(not exists (select 1 from public.open_ride_requests(25.05, -77.34, 25) where id = '70000000-0000-0000-0000-0000000000f2'),
+  'a request older than 5 minutes is gone (the sweeper ends it)');
+reset role; select pg_temp.as_server();
+
 \echo 'All money and safety rules passed.'
