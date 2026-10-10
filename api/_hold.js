@@ -1,6 +1,7 @@
 import Stripe from 'stripe'
 import { admin } from './_auth.js'
 import { chargeOf } from '../src/lib/discounts.js'
+import { formatFare } from '../src/lib/pricing.js'
 import { pushToUser, rideParticipants } from './_push.js'
 import { notifyPassenger } from './_passenger.js'
 
@@ -23,11 +24,14 @@ async function cancelForPayment(rideId) {
 // Holds the rider's card for a ride a driver has just claimed ('pending_driver_response'), then confirms the
 // ride ('accepted') and tells the rider their driver is on the way. Used when a driver accepts
 // (authorize-ride) and when an admin assigns a driver (admin-assign). If the hold fails the ride is cancelled.
-//   ride: id, fare_cents, promo_discount_cents, credit_applied_cents, rider_id, status, payment_status, payment_intent_id
+// A cash trip has nothing to hold: it's confirmed straight away, to be paid to the driver at drop-off.
+//   ride: id, fare_cents, promo_discount_cents, credit_applied_cents, rider_id, status, payment_status, payment_intent_id,
+//         payment_method
 // Returns { ok: true, paymentIntentId } or { ok: false, status, error } with error one of
 // 'ride_unavailable', 'no_payment_method', 'card_declined', 'payment_failed'.
 export async function holdCardAndConfirm(ride) {
   const rideId = ride.id
+  if (ride.payment_method === 'cash') return confirmCash(ride)
   // Idempotent retry
   if (ride.payment_status === 'authorized' && ride.payment_intent_id) {
     return { ok: true, paymentIntentId: ride.payment_intent_id }
@@ -92,15 +96,35 @@ export async function holdCardAndConfirm(ride) {
     return { ok: false, status: 409, error: 'ride_unavailable' }
   }
 
-  const people = await rideParticipants(rideId)
+  await tellRider(ride)
+  return { ok: true, paymentIntentId: paymentIntent.id }
+}
+
+async function confirmCash(ride) {
+  if (ride.payment_status === 'cash_due') return { ok: true, paymentIntentId: null } // idempotent retry
+  if (ride.status !== 'pending_driver_response') return { ok: false, status: 409, error: 'ride_unavailable' }
+  const { data: promoted, error } = await admin
+    .from('rides')
+    .update({ status: 'accepted', payment_status: 'cash_due' })
+    .eq('id', ride.id)
+    .eq('status', 'pending_driver_response')
+    .select('id')
+  if (error) throw error
+  if (!promoted?.length) return { ok: false, status: 409, error: 'ride_unavailable' }
+  await tellRider(ride)
+  return { ok: true, paymentIntentId: null }
+}
+
+async function tellRider(ride) {
+  const people = await rideParticipants(ride.id)
+  const driver = (people.driverName || 'Your driver').split(' ')[0]
   await pushToUser(people.riderUserId, {
     title: 'Driver on the way',
-    body: `${(people.driverName || 'Your driver').split(' ')[0]} accepted your ride.`,
-    url: `/ride/${rideId}`,
-    tag: `ride-${rideId}`,
+    body: ride.payment_method === 'cash'
+      ? `${driver} accepted your ride. Pay ${formatFare(chargeOf(ride))} in cash at drop-off.`
+      : `${driver} accepted your ride.`,
+    url: `/ride/${ride.id}`,
+    tag: `ride-${ride.id}`,
   })
-
-  await notifyPassenger(rideId, 'accepted') // booked for someone else: text them the driver and a trip link
-
-  return { ok: true, paymentIntentId: paymentIntent.id }
+  await notifyPassenger(ride.id, 'accepted') // booked for someone else: text them the driver and a trip link
 }

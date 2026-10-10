@@ -151,19 +151,22 @@ export default async function handler(req, res) {
   }
 }
 
+// What a re-match copies from the cancelled trip: same route, same upfront price, paid the same way.
+const REBOOK_FIELDS = ['rider_id', 'rider_name', 'pickup_address', 'pickup_lat', 'pickup_lng', 'dropoff_address', 'dropoff_lat', 'dropoff_lng',
+  'vehicle_type', 'distance_miles', 'duration_minutes', 'fare_cents', 'booking_fee_cents', 'airport_fee_cents', 'promo_code',
+  'promo_discount_cents', 'credit_applied_cents', 'surge_multiplier', 'stop_address', 'stop_lat', 'stop_lng', 'passenger_name',
+  'passenger_phone', 'payment_method']
+
 // Creates a fresh request for the rider after their driver cancelled. Best effort: if it fails the rider
 // simply sees "ride cancelled" and can request again.
 async function rebook(rideId, cancellingDriverId) {
   try {
-    const { data: old } = await admin
-      .from('rides')
-      .select('rider_id, rider_name, pickup_address, pickup_lat, pickup_lng, dropoff_address, dropoff_lat, dropoff_lng, vehicle_type, distance_miles, duration_minutes, fare_cents, booking_fee_cents, airport_fee_cents, promo_code, promo_discount_cents, credit_applied_cents, surge_multiplier, stop_address, stop_lat, stop_lng, passenger_name, passenger_phone')
-      .eq('id', rideId)
-      .maybeSingle()
+    const { data: old } = await admin.from('rides').select('*').eq('id', rideId).maybeSingle()
     if (!old) return null
+    const copy = Object.fromEntries(REBOOK_FIELDS.filter((k) => k in old).map((k) => [k, old[k]]))
     const { data: fresh, error } = await admin
       .from('rides')
-      .insert({ ...old, status: 'requested', declined_by: cancellingDriverId ? [cancellingDriverId] : [] })
+      .insert({ ...copy, status: 'requested', declined_by: cancellingDriverId ? [cancellingDriverId] : [] })
       .select('id')
       .single()
     if (error || !fresh) {

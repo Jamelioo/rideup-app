@@ -10,6 +10,8 @@ const BLOCKERS = {
   active_ride: 'Finish or cancel your current trip first.',
   unpaid_balance: 'You have an unpaid trip. Update your card in Payments, then try again.',
   payout_owed: 'You have earnings waiting to be paid out. Contact support so we can pay you before your account is deleted.',
+  cash_unpaid: 'A driver reported an unpaid cash fare on your account. Contact support to sort it out, then try again.',
+  cash_owed: 'You’re holding cash from trips that belongs to RideUp. Contact support to settle up before your account is deleted.',
 }
 
 // In-app account deletion (required by the App Store and Google Play). Erases personal data and the login;

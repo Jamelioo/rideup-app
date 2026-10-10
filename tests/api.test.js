@@ -4,6 +4,8 @@ import { isAdmin } from '../api/_auth.js'
 import { rateLimit } from '../api/_rateLimit.js'
 import { rideAlertText } from '../api/_staffAlerts.js'
 import promoPreview, { promoProblem } from '../api/_routes/promo-preview.js'
+import { unpaidReportProblem } from '../api/_routes/cash-unpaid.js'
+import { tripReceiptEmail, cashUnpaidEmail } from '../api/_email.js'
 
 test('promo check before an account: the code’s own rules, in the database’s words', () => {
   const now = Date.parse('2026-10-10T12:00:00Z')
@@ -47,6 +49,41 @@ test('ride alerts: a request nobody online can take asks the team to act while t
   assert.equal(missed.title, 'Missed ride request')
   assert.match(missed.body, /No driver accepted in time\. Call Ann back from Live\./)
   assert.match(missed.emailHtml, /tel:\+12425550101/)
+})
+
+test('ride alerts say when the rider pays cash', () => {
+  const ride = { pickup_address: 'Cable Beach', dropoff_address: 'Downtown', fare_cents: 1868, payment_method: 'cash', riders: { name: 'Ann Rolle' } }
+  assert.equal(rideAlertText(ride, { notified: 1 }).body, 'Cable Beach → Downtown · $18.68 cash · 1 driver alerted')
+  const waiting = rideAlertText(ride, { notified: 0 })
+  assert.equal(waiting.title, 'Cash rider waiting: no driver taking cash')
+  assert.match(waiting.emailHtml, /No driver who takes cash is online/)
+})
+
+test('cash receipts say "Paid with Cash"; card receipts keep the card', () => {
+  const ride = { pickup_address: 'A', dropoff_address: 'B', fare_cents: 2000, booking_fee_cents: 250, promo_discount_cents: 500, promo_code: 'WELCOME5', completed_at: '2026-10-10T15:00:00Z' }
+  const cash = tripReceiptEmail({ ride: { ...ride, payment_method: 'cash' }, driverName: 'Dee' })
+  assert.match(cash.subject, /\$15\.00/)
+  assert.match(cash.html, /Total paid.*\$15\.00/s)
+  assert.match(cash.html, /Paid with<\/td><td[^>]*>Cash</)
+  const card = tripReceiptEmail({ ride: { ...ride, payment_brand: 'Visa', payment_last4: '4242' }, driverName: 'Dee' })
+  assert.match(card.html, /Total charged/)
+  assert.match(card.html, /Visa •••• 4242/)
+  const unpaid = cashUnpaidEmail({ ride: { ...ride, pickup_address: '<b>x</b>' }, amountCents: 1500 })
+  assert.match(unpaid.subject, /Payment needed.*\$15\.00/)
+  assert.doesNotMatch(unpaid.html, /<b>x/)
+})
+
+test('"Rider didn’t pay": a finished cash trip, by its driver within 24 hours (staff any time), once', () => {
+  const now = Date.parse('2026-10-10T20:00:00Z')
+  const trip = { payment_method: 'cash', status: 'completed', payment_status: 'cash_collected', completed_at: '2026-10-10T19:30:00Z' }
+  assert.equal(unpaidReportProblem(trip, { now }), null)
+  assert.equal(unpaidReportProblem({ ...trip, payment_status: 'cash_due' }, { now }), null)
+  assert.match(unpaidReportProblem({ ...trip, payment_status: 'cash_unpaid' }, { now }), /already reported/)
+  assert.match(unpaidReportProblem({ ...trip, payment_method: 'card', payment_status: 'captured' }, { now }), /Only a finished cash trip/)
+  assert.match(unpaidReportProblem({ ...trip, status: 'in_progress' }, { now }), /Only a finished cash trip/)
+  const old = { ...trip, completed_at: '2026-10-09T19:00:00Z' }
+  assert.match(unpaidReportProblem(old, { now }), /up to 24 hours/)
+  assert.equal(unpaidReportProblem(old, { now, staff: true }), null)
 })
 
 test('ride alerts escape what riders typed', () => {

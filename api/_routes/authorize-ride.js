@@ -5,8 +5,8 @@ import { holdCardAndConfirm } from '../_hold.js'
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
 
 // Called by the driver right after claiming a ride (accept_ride RPC leaves it in
-// 'pending_driver_response'). Holds the rider's card, then promotes the ride to 'accepted'.
-// If the hold fails the ride is cancelled and the driver is told so.
+// 'pending_driver_response'). Holds the rider's card (nothing to hold on a cash trip), then promotes the ride
+// to 'accepted'. If the hold fails the ride is cancelled and the driver is told so.
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
 
     const { data: ride } = await admin
       .from('rides')
-      .select('id, fare_cents, promo_discount_cents, credit_applied_cents, rider_id, driver_id, status, payment_status, payment_intent_id')
+      .select('*')
       .eq('id', rideId)
       .maybeSingle()
 

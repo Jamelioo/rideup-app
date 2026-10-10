@@ -6,7 +6,8 @@ const checkRate = rateLimit({ maxRequests: 30, windowMs: 60_000 })
 
 // Before booking, like Uber: can a car come to this pickup, and roughly how soon? For each trip type the answer
 // is 'available' (with a pickup estimate in 5-minute steps for signed-in riders), 'busy' (every driver who could
-// take it is on a trip) or 'none'. The booking screen asks every 30 seconds. Never reveals where a driver is.
+// take it is on a trip), 'no_cash' (the rider pays cash and the free drivers don't take cash) or 'none'.
+// The booking screen asks every 30 seconds.   body: { lat, lng, cash? }   Never reveals where a driver is.
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
   if (checkRate(req)) return res.status(429).json({ error: 'Too many requests.' })
@@ -21,7 +22,7 @@ export default async function handler(req, res) {
   try {
     const [user, pool] = await Promise.all([optionalUser(req), loadDriverPool()])
     res.setHeader('Cache-Control', 'no-store')
-    return res.status(200).json({ types: availabilitySummary(pool, { lat, lng, withEta: Boolean(user) }) })
+    return res.status(200).json({ types: availabilitySummary(pool, { lat, lng, withEta: Boolean(user), cash: req.body?.cash === true }) })
   } catch (err) {
     return fail(res, 'Availability error', err)
   }

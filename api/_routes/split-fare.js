@@ -40,7 +40,7 @@ export default async function handler(req, res) {
 async function loadRide(rideId) {
   const { data } = await admin
     .from('rides')
-    .select('id, rider_id, rider_name, status, payment_status, pickup_address, dropoff_address, fare_cents, promo_discount_cents, credit_applied_cents')
+    .select('*')
     .eq('id', rideId)
     .maybeSingle()
   return data
@@ -68,6 +68,7 @@ async function ownerAction(req, res, me, action) {
     return res.status(200).json({ splits, total_cents: chargeOf(ride), ...splitShares(chargeOf(ride), joined) })
   }
 
+  if (ride.payment_method === 'cash') return res.status(409).json({ error: 'Split fare works with card payments. This trip is paid in cash.' })
   if (!SPLITTABLE.includes(ride.status) || ride.payment_status !== 'authorized') {
     return res.status(409).json({ error: 'You can split the fare once a driver has accepted, until the trip ends.' })
   }
