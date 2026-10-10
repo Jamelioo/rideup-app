@@ -1,17 +1,24 @@
 <script setup>
 import DotMascot from '../../components/DotMascot.vue'
 import BrandLogo from '../../components/BrandLogo.vue'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { DEMO_MODE } from '../../lib/demoMode'
 import { apiPost } from '../../lib/api'
+import { REQUEST_SEARCH_MINUTES } from '../../lib/dispatch'
 import HarborBackdrop from '../../components/HarborBackdrop.vue'
 
 const props = defineProps({
   rideId: { type: String, required: true },
   notice: { type: String, default: '' }, // e.g. "Your driver had to cancel…" after an automatic re-match
+  // Whether drivers were alerted when it was booked: false when nobody was online (RideUp's team was alerted
+  // instead), null when unknown (e.g. after reopening the app).
+  driversAlerted: { type: Boolean, default: null },
 })
+// Alerted drivers answer within seconds or not at all, so 90 seconds is enough. Otherwise give the team time to
+// see the alert and go online or assign a driver; the server ends the request at the same point.
+const SEARCH_MS = props.driversAlerted ? 90_000 : REQUEST_SEARCH_MINUTES * 60_000
 const emit = defineEmits(['matched', 'cancelled', 'replaced'])
 const router = useRouter()
 const ride = ref(null)
@@ -31,6 +38,10 @@ let demoTimer = null
 let timeoutTimer = null
 let elapsedTimer = null
 let pollTimer = null
+const elapsedLabel = computed(() => {
+  const s = elapsedSeconds.value
+  return s < 60 ? `${s}s` : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+})
 
 // Everything the "matched" screen and the live ride screen need about the driver.
 // Drivers' rows are private, so riders read them through the get_ride_driver RPC (own rides only).
@@ -110,8 +121,7 @@ onMounted(async () => {
     elapsedSeconds.value++
   }, 1000)
 
-  // 90-second timeout
-  timeoutTimer = setTimeout(expireRequest, 90000)
+  timeoutTimer = setTimeout(expireRequest, SEARCH_MS)
 
   const { data } = await supabase.from('rides').select('*').eq('id', props.rideId).single()
   ride.value = data
@@ -267,9 +277,12 @@ async function cancelRequest() {
         <div v-if="notice" class="w-full max-w-sm rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-4 py-3 text-[13px] text-[var(--color-text-primary)] text-center" role="status">{{ notice }}</div>
         <div class="text-center">
           <div class="text-xl font-medium mb-1.5">{{ driverFound || confirming ? 'Driver found' : 'Looking for a driver' }}</div>
-          <div class="text-[var(--color-text-secondary)] text-[13px]">{{ driverFound ? 'Connecting you now…' : confirming ? 'Confirming your payment method…' : 'Connecting you with a nearby driver' }}</div>
+          <div class="text-[var(--color-text-secondary)] text-[13px] max-w-xs mx-auto">{{ driverFound ? 'Connecting you now…' : confirming ? 'Confirming your payment method…' : driversAlerted === false ? 'No drivers are online right now, so we’ve alerted our team.' : 'Connecting you with a nearby driver' }}</div>
+          <p v-if="driversAlerted === false && !driverFound && !confirming" class="text-[var(--color-text-muted)] text-xs mt-2 max-w-xs mx-auto">
+            This can take a few minutes. You’re only charged if a driver accepts.
+          </p>
           <p v-if="!timedOut && elapsedSeconds > 10" class="text-[var(--color-text-muted)] text-xs mt-2">
-            Searching... {{ elapsedSeconds }}s
+            Searching… {{ elapsedLabel }}
           </p>
         </div>
         <button @click="cancelRequest" :disabled="cancelling" class="text-[var(--color-text-secondary)] text-[13px] underline underline-offset-2 mt-2 py-2 px-4 min-h-[44px] disabled:opacity-50">{{ cancelling ? 'Cancelling…' : 'Cancel request' }}</button>

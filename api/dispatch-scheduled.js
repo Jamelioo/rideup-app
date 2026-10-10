@@ -5,6 +5,7 @@ import { pushToUser, rideParticipants, usersWithPush } from './_push.js'
 import { captureRide } from './_capture.js'
 import { notifyNearbyDrivers, DRIVER_IDLE_MIN, DRIVER_BACKGROUND_MIN } from './_notifyDrivers.js'
 import { alertRideRequest } from './_staffAlerts.js'
+import { REQUEST_SEARCH_MINUTES } from '../src/lib/dispatch.js'
 import { captureServerError } from './_monitor.js'
 import { sendEmail, docExpiryEmail } from './_email.js'
 
@@ -16,7 +17,7 @@ import { sendEmail, docExpiryEmail } from './_email.js'
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 const DISPATCH_WINDOW_MIN = 3     // create the request this many minutes before pickup time
-const STALE_REQUEST_MIN = 5       // requests nobody answered within this long are cancelled
+const STALE_REQUEST_MIN = REQUEST_SEARCH_MINUTES // requests nobody answered within this long are cancelled
 const CAPTURE_GRACE_MIN = 2       // the driver's app captures at drop-off; after this the sweeper does it
 const PAYMENT_CONFIRM_SEC = 90     // a ride stuck in "confirming payment" this long is cancelled
 const CHECKIN_STOPPED_MIN = 8     // trip check-in: the car hasn't moved for this long (while the driver's app is reporting)
@@ -182,6 +183,9 @@ export default async function handler(req, res) {
       .lt('created_at', staleBefore)
       .select('id')
     result.expired = stale?.length || 0
+    // Missed rides for the team to call back. The rider's app usually ends its own search first and reports it;
+    // these are the ones it didn't (closed, or out of signal).
+    for (const r of stale || []) await alertRideRequest(r.id, { expired: true })
 
     const dueBy = new Date(Date.now() + DISPATCH_WINDOW_MIN * 60_000).toISOString()
     const { data: due } = await admin

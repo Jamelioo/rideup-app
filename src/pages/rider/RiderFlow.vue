@@ -87,5 +87,6 @@ function handleReplaced(newRideId) {
     </div>
   </div>
   <RiderBooking v-else-if="step === 'booking'" @requested="handleRequested" @existing-ride="restoreTrip" />
-  <SearchingForDriver v-else-if="step === 'searching' && activeRide" :key="activeRide.id" :ride-id="activeRide.id" :notice="notice" @cancelled="handleCancelled" @replaced="handleReplaced" />
+  <SearchingForDriver v-else-if="step === 'searching' && activeRide" :key="activeRide.id" :ride-id="activeRide.id" :notice="notice"
+                      :drivers-alerted="activeRide.drivers_alerted ?? null" @cancelled="handleCancelled" @replaced="handleReplaced" />
 </template>
