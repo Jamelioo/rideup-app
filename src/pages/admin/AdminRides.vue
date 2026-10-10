@@ -128,6 +128,14 @@ const CANCEL_REASON = {
   no_drivers: 'no driver', rider_cancelled: 'by rider', driver_cancelled: 'by driver', rider_no_show: 'rider no-show',
   admin_cancelled: 'by RideUp', payment_failed: 'card failed',
 }
+// Status column, with cash trips marked (and an unpaid cash fare called out).
+function statusLabel(r) {
+  if (r.status === 'cancelled') return CANCEL_REASON[r.cancel_reason] ? `Cancelled · ${CANCEL_REASON[r.cancel_reason]}` : LABEL.cancelled
+  const cash = r.payment_method === 'cash'
+  const label = cash && r.status === 'pending_driver_response' ? 'Confirming' : LABEL[r.status] || r.status
+  if (!cash) return label
+  return r.payment_status === 'cash_unpaid' ? `${label} · cash not paid` : `${label} · cash`
+}
 
 const activeTab = ref('All')
 const search = ref('')
@@ -207,7 +215,7 @@ async function load() {
     dropoff: r.dropoff_address || 'N/A',
     fare: r.fare_cents || 0,
     group: GROUP[r.status] || 'Other',
-    statusLabel: r.status === 'cancelled' && CANCEL_REASON[r.cancel_reason] ? `Cancelled · ${CANCEL_REASON[r.cancel_reason]}` : LABEL[r.status] || r.status,
+    statusLabel: statusLabel(r),
     date: r.created_at || '',
     when: r.created_at ? new Date(r.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '-',
     raw: r,
@@ -245,6 +253,7 @@ function exportCsv() {
     { label: 'Tip', value: (r) => dollars(r.tip_payment_intent_id ? r.tip_cents : 0) },
     { label: 'Driver earns', value: (r) => dollars(r.driver_payout_cents) },
     { label: 'RideUp keeps', value: (r) => dollars(r.platform_fee_cents) },
+    { label: 'Paid with', value: (r) => r.payment_method || 'card' },
     { label: 'Payment', value: (r) => r.payment_status || '' },
   ])
   downloadCsv(`rideup-rides-${fromDate.value}-to-${toDate.value}.csv`, csv)

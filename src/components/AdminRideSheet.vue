@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
 import { apiPost } from '../lib/api'
+import { supabase } from '../lib/supabase'
 import { formatFare } from '../lib/pricing'
 import { chargeOf } from '../lib/discounts'
 import { DEMO_MODE } from '../lib/demoMode'
@@ -19,6 +20,9 @@ const STATUS = {
   driver_arrived: 'Driver at pickup', in_progress: 'On trip', completed: 'Completed', cancelled: 'Cancelled', scheduled: 'Scheduled',
 }
 const tel = (p) => `tel:${String(p).replace(/[^\d+]/g, '')}`
+const CASH_STATUS = { cash_due: 'cash, due at drop-off', cash_collected: 'cash collected', cash_unpaid: 'cash not paid (driver reported it)' }
+const isCash = computed(() => props.ride?.payment_method === 'cash')
+const paymentText = computed(() => (isCash.value ? CASH_STATUS[props.ride.payment_status] || 'cash' : props.ride?.payment_status || 'no payment'))
 
 const limits = ref(null)
 const loading = ref(false)
@@ -44,6 +48,30 @@ async function load() {
   else error.value = body.error || 'Could not load payment details.'
 }
 watch(() => props.ride?.id, load, { immediate: true })
+
+// Cash trips: report a fare the rider didn't pay (for a driver who called in), or mark one paid after all.
+const cashBusy = ref(false)
+const cashError = ref('')
+async function reportCashUnpaid() {
+  if (!window.confirm('Report this cash fare as not paid? Cash is turned off for the rider, they’re emailed, and the driver won’t owe RideUp anything for this trip.')) return
+  cashBusy.value = true
+  cashError.value = ''
+  const res = await apiPost('/api/cash-unpaid', { rideId: props.ride.id })
+  const body = await res.json().catch(() => ({}))
+  cashBusy.value = false
+  if (!res.ok) { cashError.value = body.error || 'Couldn’t report it.'; return }
+  emit('changed')
+}
+async function markCashPaid() {
+  if (!window.confirm('Mark this cash fare as paid? Use this when the rider paid the driver after all. The driver then owes RideUp its share, as on any cash trip. Cash stays off for the rider until you turn it back on in Users.')) return
+  cashBusy.value = true
+  cashError.value = ''
+  const { error: err } = await supabase.from('rides').update({ payment_status: 'cash_collected', paid_at: new Date().toISOString() })
+    .eq('id', props.ride.id).eq('payment_status', 'cash_unpaid')
+  cashBusy.value = false
+  if (err) { cashError.value = `Couldn’t save: ${err.message}`; return }
+  emit('changed')
+}
 
 async function submit() {
   error.value = ''
@@ -94,19 +122,27 @@ async function submit() {
             <dd class="text-right">{{ ride.passenger_name }}<a v-if="ride.passenger_phone" :href="tel(ride.passenger_phone)" class="block text-[var(--color-brand)] font-medium">📞 {{ ride.passenger_phone }}</a></dd></div>
           <div v-if="ride.drivers" class="flex justify-between gap-4"><dt class="text-[var(--color-text-muted)]">Driver</dt>
             <dd class="text-right">{{ ride.drivers.name }}<a v-if="ride.drivers.phone" :href="tel(ride.drivers.phone)" class="block text-[var(--color-brand)] font-medium">📞 {{ formatPhone(ride.drivers.phone) || ride.drivers.phone }}</a></dd></div>
-          <div class="flex justify-between gap-4"><dt class="text-[var(--color-text-muted)]">Status</dt><dd>{{ STATUS[ride.status] || ride.status }} · {{ ride.payment_status || 'no payment' }}</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-[var(--color-text-muted)]">Status</dt><dd class="text-right">{{ isCash && ride.status === 'pending_driver_response' ? 'Confirming' : STATUS[ride.status] || ride.status }} · {{ paymentText }}</dd></div>
           <div><dt class="text-[var(--color-text-muted)]">From</dt><dd>{{ ride.pickup_address }}</dd></div>
           <div v-if="ride.stop_address"><dt class="text-[var(--color-text-muted)]">Stop</dt><dd>{{ ride.stop_address }}</dd></div>
           <div><dt class="text-[var(--color-text-muted)]">To</dt><dd>{{ ride.dropoff_address }}</dd></div>
           <div class="flex justify-between gap-4"><dt class="text-[var(--color-text-muted)]">Fare</dt><dd>{{ formatFare(ride.fare_cents) }}<span v-if="Number(ride.surge_multiplier) > 1"> (busy {{ ride.surge_multiplier }}×)</span></dd></div>
           <div v-if="ride.promo_discount_cents || ride.credit_applied_cents" class="flex justify-between gap-4"><dt class="text-[var(--color-text-muted)]">Discounts</dt><dd>−{{ formatFare((ride.promo_discount_cents || 0) + (ride.credit_applied_cents || 0)) }}</dd></div>
-          <div class="flex justify-between gap-4"><dt class="text-[var(--color-text-muted)]">Rider charged</dt><dd class="font-semibold">{{ formatFare(ride.status === 'cancelled' ? ride.cancel_fee_cents : chargeOf(ride)) }}</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-[var(--color-text-muted)]">{{ isCash ? 'Rider pays in cash' : 'Rider charged' }}</dt><dd class="font-semibold">{{ formatFare(ride.status === 'cancelled' ? ride.cancel_fee_cents : chargeOf(ride)) }}</dd></div>
           <div v-if="ride.tip_payment_intent_id" class="flex justify-between gap-4"><dt class="text-[var(--color-text-muted)]">Tip</dt><dd>{{ formatFare(ride.tip_cents) }}</dd></div>
           <div class="flex justify-between gap-4"><dt class="text-[var(--color-text-muted)]">Driver earns</dt><dd>{{ formatFare(ride.driver_payout_cents) }}</dd></div>
           <div v-if="ride.safety_checkin_at" class="flex justify-between gap-4"><dt class="text-[var(--color-text-muted)]">Trip check-in</dt><dd>{{ ride.safety_checkin_reason }} · {{ ride.safety_checkin_ok_at ? 'answered OK' : 'no answer' }}</dd></div>
         </dl>
 
         <AdminRideActions :ride="ride" @done="emit('changed')" class="mb-5" />
+
+        <div v-if="isCash && ride.status === 'completed'" class="mb-5 text-sm">
+          <button v-if="['cash_due', 'cash_collected'].includes(ride.payment_status)" @click="reportCashUnpaid" :disabled="cashBusy"
+                  class="h-9 px-3 rounded-lg border border-[var(--color-border)] font-semibold disabled:opacity-50">Rider didn’t pay</button>
+          <button v-else-if="ride.payment_status === 'cash_unpaid' && isAdmin" @click="markCashPaid" :disabled="cashBusy"
+                  class="h-9 px-3 rounded-lg border border-[var(--color-border)] font-semibold disabled:opacity-50">Mark cash as paid</button>
+          <p v-if="cashError" class="mt-2 text-[var(--color-danger)]" role="alert">{{ cashError }}</p>
+        </div>
         <AdminNotes subject-type="ride" :subject-id="ride.id" />
 
         <p v-if="loading" class="text-sm text-[var(--color-text-muted)]" aria-live="polite">Loading payment…</p>
@@ -151,7 +187,7 @@ async function submit() {
             <p v-if="notice" class="text-[var(--color-brand)]" aria-live="polite">{{ notice }}</p>
             <button type="submit" :disabled="busy" class="w-full py-2.5 rounded-lg bg-[#2b8659] text-white font-semibold disabled:opacity-50">{{ busy ? 'Working…' : 'Issue refund' }}</button>
           </form>
-          <p v-else class="text-sm text-[var(--color-text-muted)]">Nothing left to refund on this ride.<span v-if="notice" class="block text-[var(--color-brand)] mt-1">{{ notice }}</span></p>
+          <p v-else class="text-sm text-[var(--color-text-muted)]">{{ isCash ? 'Paid in cash, so the fare can’t be refunded here. For goodwill, give the rider credit in Users.' : 'Nothing left to refund on this ride.' }}<span v-if="notice" class="block text-[var(--color-brand)] mt-1">{{ notice }}</span></p>
         </template>
         <p v-else-if="error" class="text-sm text-[var(--color-danger)]" role="alert">{{ error }}</p>
       </div>

@@ -18,6 +18,10 @@ Without Supabase keys the app runs in **demo mode** (sample data, no backend) so
 - Cancel with a clear fee preview (free for 2 minutes after a driver accepts, then $5). If the driver cancels, the
   app finds another driver automatically at the same price.
 - After the trip: rate the driver, add a tip (100% to the driver), receipt page and receipt email.
+- Pay by card or, while an admin has **Accept cash** on, in cash to the driver. Cash needs an account (not a guest)
+  with a mobile number and isn't offered for rides booked for someone else. It's turned off for a rider whose driver
+  reports an unpaid fare, or after two missed or late-cancelled cash trips in 30 days (and for their other accounts
+  on the same phone or card). For every rider, three cancellations in an hour pause booking for a while.
 - Password reset, email confirmation, saving a guest account, optional SMS phone verification.
 
 **Drivers**
@@ -26,13 +30,18 @@ Without Supabase keys the app runs in **demo mode** (sample data, no backend) so
 - Go online, see nearby requests with distance and earnings but only an approximate pickup until accepting, accept
   or decline, navigate, arrive, start (with PIN if required), complete, rate the rider.
 - No-show: after 5 minutes waiting at pickup the driver can cancel and the rider pays the no-show fee.
-- Earnings: today and this week, balance, tips and payouts received.
+- Cash trips (drivers can turn them off in Profile): the request shows the cash to collect; at drop-off the driver
+  taps "Cash collected" (the rider's receipt goes out) or reports "Rider didn't pay" (up to 24 hours later, from
+  Earnings). RideUp's share comes off the driver's balance; a driver holding more than they've earned owes RideUp.
+- Earnings: today and this week, balance (or what's owed to RideUp), tips and payouts.
 - Drivers whose app has been closed for 30 minutes are set offline automatically.
 
 **Admins** (`/admin`, needs the admin role)
 - Live: requests waiting for a driver, trips under way, requests nobody took today (call them back) and who's
   online, updating instantly. Assign a request to a driver, cancel a trip, or complete a stuck one and charge it.
 - Ride alerts: a push notification and an email to the team for every request, and when one goes unanswered.
+- Cash: turn it on or off (Settings), see cash trips and unpaid fares (Rides, Live, Money), turn cash off or back on
+  for a rider (Riders), and record cash a driver hands over (Payouts).
 - Dashboard, rides (CSV download), riders (contact, credit, suspend), drivers (document review with checklist,
   expiry dates, background check, vehicle class, approve / reject with a note, low-rating flags), money and payouts
   (CSV downloads), support, safety reports (with reporter, trip and phone numbers), and trip settings.
@@ -52,7 +61,7 @@ npm install
 
 1. Create a project at [supabase.com/dashboard](https://supabase.com/dashboard).
 2. In **SQL Editor**, run these files **in order**: `supabase-schema.sql`, then everything in
-   `supabase/migrations/` (`001` … `018`). Each migration can be re-run safely.
+   `supabase/migrations/` (`001` … `019`). Each migration can be re-run safely.
 3. Make yourself an admin (SQL Editor, use your account's email):
    ```sql
    update auth.users set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb
@@ -145,7 +154,8 @@ Add `https://YOUR_DOMAIN/api/webhook` in Stripe → Developers → Webhooks. Eve
 Every pull request runs **CI** (`.github/workflows/ci.yml`): unit tests and the build, the browser tests in demo
 mode, and a Postgres job that applies the schema and every migration to a fresh database, re-runs the newest
 migration, and checks the money and safety rules in `supabase/tests/money_rules.sql` (fares, busy pricing, stops,
-promos and abuse checks, referrals, incentives, refunds, check-ins, who can see what, account deletion).
+promos and abuse checks, referrals, incentives, refunds, check-ins, who can see what, account deletion, cash
+payments and the cancellation pause).
 
 
 ```bash
@@ -164,7 +174,7 @@ Fares are computed in two places that must agree: `src/lib/pricing.js` (shown to
 - `src/lib`: auth (`useAuth`), driver session (`useDriver`), pricing, policy, push, settings, helpers.
 - `api/`: serverless functions. To stay within Vercel's 12-function Hobby limit, every endpoint the app calls runs
   in one function, `api/[action].js`, which hands `/api/<action>` to `api/_routes/<action>.js` (payments:
-  `authorize-ride`, `capture-payment`, `cancel-ride`, `add-tip`, card setup; notifications: `trip-event`,
+  `authorize-ride`, `capture-payment`, `cancel-ride`, `cash-unpaid`, `add-tip`, card setup; notifications: `trip-event`,
   `notify-driver`). Stripe's `webhook`, the cron (`dispatch-scheduled`) and `csp-report` are separate functions.
   Files and folders starting with `_` are shared code, not functions. Add new endpoints to `api/_routes/` and
   register them in `api/[action].js`; `tests/router.test.js` fails if the app calls an unregistered route or the

@@ -81,8 +81,11 @@ function cancel() {
   call('/api/cancel-ride', { rideId: props.ride.id }, 'Cancelled. Nobody was charged.')
 }
 function complete() {
-  if (!window.confirm('End this trip now and charge the fare? Use this when the trip is over but the driver couldn’t complete it (phone died, no signal). The rider gets their receipt.')) return
-  call('/api/admin-complete', { rideId: props.ride.id }, 'Trip completed and the fare charged.')
+  const cash = props.ride.payment_method === 'cash'
+  if (!window.confirm(cash
+    ? 'End this cash trip now? Use this when the trip is over but the driver couldn’t complete it (phone died, no signal). The cash counts as collected and the rider gets their receipt.'
+    : 'End this trip now and charge the fare? Use this when the trip is over but the driver couldn’t complete it (phone died, no signal). The rider gets their receipt.')) return
+  call('/api/admin-complete', { rideId: props.ride.id }, cash ? 'Trip completed; cash counted as collected.' : 'Trip completed and the fare charged.')
 }
 </script>
 
@@ -90,7 +93,7 @@ function complete() {
   <div v-if="canAssign || canCancel || canComplete || notice" class="space-y-2">
     <div class="flex flex-wrap gap-2">
       <button v-if="canAssign && !picking" @click="openPicker" :disabled="busy" class="h-9 px-3 rounded-lg bg-[#2b8659] text-white text-sm font-semibold disabled:opacity-50">Assign driver</button>
-      <button v-if="canComplete" @click="complete" :disabled="busy" class="h-9 px-3 rounded-lg bg-[var(--color-text-primary)] text-[var(--color-surface)] text-sm font-semibold disabled:opacity-50">Complete &amp; charge</button>
+      <button v-if="canComplete" @click="complete" :disabled="busy" class="h-9 px-3 rounded-lg bg-[var(--color-text-primary)] text-[var(--color-surface)] text-sm font-semibold disabled:opacity-50">{{ ride.payment_method === 'cash' ? 'Complete' : 'Complete &amp; charge' }}</button>
       <button v-if="canCancel" @click="cancel" :disabled="busy" class="h-9 px-3 rounded-lg text-sm font-semibold text-red-700 bg-red-50 hover:bg-red-100 disabled:opacity-50">
         {{ ride.status === 'requested' ? 'Cancel request' : 'Cancel trip' }}
       </button>

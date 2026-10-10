@@ -121,6 +121,10 @@
             <dt class="text-[var(--color-text-muted)]">Came from</dt><dd>{{ open.source }}</dd>
             <dt class="text-[var(--color-text-muted)]">Card</dt><dd>{{ open.card || 'No card saved' }}</dd>
             <dt class="text-[var(--color-text-muted)]">Credit</dt><dd class="font-semibold">{{ formatFare(open.creditCents) }}</dd>
+            <template v-if="open.cashKnown">
+              <dt class="text-[var(--color-text-muted)]">Cash</dt>
+              <dd :class="open.cashBlocked && 'text-[var(--color-danger)] font-semibold'">{{ open.cashBlocked ? `Off: ${CASH_REASONS[open.cashReason] || 'turned off'}${open.cashSince ? ` (${when(open.cashSince)})` : ''}` : 'Can pay cash' }}</dd>
+            </template>
             <dt class="text-[var(--color-text-muted)]">Referral code</dt><dd>{{ open.referralCode || '—' }}</dd>
             <dt class="text-[var(--color-text-muted)]">Referred by</dt><dd>{{ open.referredBy || '—' }}</dd>
             <dt class="text-[var(--color-text-muted)]">Rating</dt><dd>{{ open.rating.toFixed(1) }} ★</dd>
@@ -163,6 +167,15 @@
           </ul>
           <router-link v-if="rides.length" to="/admin/rides" class="mt-2 inline-block text-sm font-semibold text-[var(--color-brand)]">Open Rides to refund or see details →</router-link>
         </section>
+
+        <!-- Cash -->
+        <template v-if="isAdmin && open.cashKnown">
+        <button @click="toggleCash(open)" :disabled="busy"
+                class="w-full h-11 mb-2 rounded-xl text-sm font-semibold border border-[var(--color-border)] disabled:opacity-50">
+          {{ open.cashBlocked ? 'Turn cash back on' : 'Turn cash off' }}
+        </button>
+        <p class="mb-4 text-[12px] text-[var(--color-text-muted)]">{{ open.cashBlocked ? 'They can pay by card meanwhile. Turn cash back on once an unpaid fare is sorted out.' : 'They can still pay by card. Cash is turned off automatically for riders who don’t pay, or who miss or cancel late on two cash trips in 30 days.' }}</p>
+        </template>
 
         <!-- Suspend -->
         <template v-if="isAdmin">
@@ -306,6 +319,24 @@ async function addCredit() {
   }
 }
 
+// Paying cash: off for riders who didn't pay or kept missing pickups (set by the database), and switchable here.
+const CASH_REASONS = { unpaid: 'didn’t pay for a cash trip', no_shows: 'missed or cancelled late on 2 cash trips', admin: 'turned off by RideUp' }
+async function toggleCash(user) {
+  const off = !user.cashBlocked
+  if (off && !window.confirm(`Turn cash off for ${user.name}? They'll need to pay by card.`)) return
+  actionError.value = ''
+  notice.value = ''
+  busy.value = true
+  const change = off
+    ? { cash_blocked: true, cash_blocked_reason: 'admin', cash_blocked_at: new Date().toISOString() }
+    : { cash_blocked: false, cash_blocked_reason: null, cash_blocked_at: null }
+  const { error } = supabaseConfigured ? await supabase.from('riders').update(change).eq('id', user.id) : { error: null }
+  busy.value = false
+  if (error) { actionError.value = `Couldn't update ${user.name}: ${error.message}`; return }
+  Object.assign(user, { cashBlocked: off, cashReason: off ? 'admin' : '', cashSince: change.cash_blocked_at })
+  notice.value = off ? `Cash is off for ${firstName(user.name)}.` : `${firstName(user.name)} can pay cash again.`
+}
+
 // Suspension is enforced by the database: suspended riders can't request rides.
 async function toggleUserStatus(user) {
   const suspend = user.status === 'Active'
@@ -346,6 +377,10 @@ onMounted(async () => {
       referralCode: r.referral_code || '',
       referredBy: r.referred_by ? names.get(r.referred_by) || 'Another rider' : '',
       source: sourceOf(r.acquisition),
+      cashKnown: typeof r.cash_blocked === 'boolean', // false until migration 019 has run
+      cashBlocked: r.cash_blocked === true,
+      cashReason: r.cash_blocked_reason || '',
+      cashSince: r.cash_blocked_at || null,
     }))
   } catch { /* keep empty */ }
 })

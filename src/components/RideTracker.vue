@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import DriverInfoCard from './DriverInfoCard.vue'
 import { FREE_WAIT_SECONDS } from '../lib/policy'
 import { formatClock } from '../lib/eta'
+import { formatFare } from '../lib/pricing'
 
 // Rider's trip card (Uber-style): live ETA, who's coming, plate, contact, wait timer, PIN, cancel.
 const props = defineProps({
@@ -20,6 +21,7 @@ const props = defineProps({
   stopAddress: { type: String, default: '' },
   stopReached: { type: Boolean, default: false },
   canSplit: { type: Boolean, default: false },
+  cashCents: { type: Number, default: null }, // a cash trip: what to pay the driver at drop-off
 })
 
 const emit = defineEmits(['cancel', 'message', 'split'])
@@ -87,6 +89,9 @@ const showPin = computed(() => props.pin && ['driver_enroute', 'driver_arrived']
         <template v-if="waitLeft > 0">
           Free waiting time: <strong>{{ formatClock(waitLeft) }}</strong> left
         </template>
+        <template v-else-if="cashCents != null">
+          Free waiting time is over. Please head to your driver now. They may cancel, and missed cash pickups can turn cash off on your account.
+        </template>
         <template v-else>
           Free waiting time is over. Please head to your driver now. They may cancel and a no-show fee may apply.
         </template>
@@ -96,6 +101,12 @@ const showPin = computed(() => props.pin && ['driver_enroute', 'driver_arrived']
       <div v-if="showPin" class="mb-4 flex items-center justify-between rounded-xl border border-[var(--color-border)] px-4 py-3">
         <div class="text-[13px] text-[var(--color-text-secondary)]">Tell your driver this PIN to start the trip</div>
         <div class="text-[22px] font-extrabold tracking-[0.3em] text-[var(--color-text-primary)]" aria-label="Pickup PIN">{{ pin }}</div>
+      </div>
+
+      <!-- Cash trip -->
+      <div v-if="cashCents != null && rideStatus !== 'completed'" class="mb-4 flex items-center gap-3 rounded-xl bg-[#2b8659]/10 px-4 py-3">
+        <svg class="w-5 h-5 shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>
+        <div class="text-[13px] text-[var(--color-text-primary)]"><strong>Paying cash.</strong> Have {{ formatFare(cashCents) }} ready for your driver at drop-off.</div>
       </div>
 
       <DriverInfoCard :name="driverName" :rating="driverRating" :vehicle="vehicle" :plate="plate" :photo="driverPhoto" />

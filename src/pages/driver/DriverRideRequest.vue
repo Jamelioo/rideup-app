@@ -26,6 +26,8 @@ const tripMiles = computed(() => props.request.distance_miles != null ? Number(p
 const tripMinutes = computed(() => props.request.duration_minutes != null ? Math.round(Number(props.request.duration_minutes)) : '?')
 const riderName = computed(() => props.request.rider_first_name || props.request.rider_name?.split(' ')[0] || 'Rider')
 const riderRating = computed(() => props.request.rider_rating != null ? Number(props.request.rider_rating).toFixed(1) : 'New')
+// Cash trip: the rider pays the driver at drop-off (the fare less any promo or credit, which RideUp covers).
+const cashCents = computed(() => (props.request.payment_method === 'cash' ? Number(props.request.cash_due_cents ?? props.request.fare_cents) : null))
 
 onMounted(() => {
   if (navigator.vibrate) navigator.vibrate([200, 100, 200])
@@ -93,6 +95,11 @@ function handleDecline() {
           </div>
         </div>
 
+        <div v-if="cashCents != null" class="mb-4 flex items-center gap-3 rounded-2xl bg-amber-500/15 px-4 py-3">
+          <svg class="w-6 h-6 shrink-0 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>
+          <div class="text-[14px]"><strong>Cash trip.</strong> Collect {{ formatFare(cashCents) }} from {{ riderName }} at drop-off.</div>
+        </div>
+
         <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-5 mb-4">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
@@ -141,7 +148,7 @@ function handleDecline() {
         <div class="mt-auto max-w-md mx-auto w-full" style="padding-bottom: max(1.5rem, env(safe-area-inset-bottom));">
           <button @click="handleAccept" :disabled="accepting"
                   class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[16px] active:scale-[0.98] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:opacity-70">
-            {{ accepting ? 'Confirming the rider’s payment…' : 'Accept' }}
+            {{ accepting ? (cashCents != null ? 'Confirming…' : 'Confirming the rider’s payment…') : 'Accept' }}
           </button>
           <button @click="handleDecline" :disabled="accepting"
                   class="w-full py-3 mt-2 text-[var(--color-text-secondary)] font-semibold text-[14px] rounded-2xl disabled:opacity-50">

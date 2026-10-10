@@ -13,6 +13,8 @@ import { supabase } from '../../lib/supabase'
 import { DEMO_MODE } from '../../lib/demoMode'
 import { apiPost } from '../../lib/api'
 import { formatFare } from '../../lib/pricing'
+import { chargeOf } from '../../lib/discounts'
+import { isCashRide } from '../../lib/cash'
 import { etaMinutes as estimateEta } from '../../lib/eta'
 import { loadSettings } from '../../lib/settings'
 import { enablePushNotifications } from '../../lib/push'
@@ -62,6 +64,11 @@ async function sendToPassenger() {
   window.open(`https://wa.me/${intl}?text=${encodeURIComponent(text)}`, '_blank', 'noopener')
 }
 const stopPoint = computed(() => (ride.value?.stop_lat != null ? { lat: ride.value.stop_lat, lng: ride.value.stop_lng } : null))
+// Cash trips: what to hand the driver at drop-off.
+const cashCents = computed(() => (isCashRide(ride.value) ? chargeOf(ride.value) : null))
+// Cancelling a cash trip after the free 2 minutes counts like a missed pickup (no fee, but cash can be turned off).
+const lateCashCancel = computed(() => isCashRide(ride.value) && !!ride.value?.accepted_at &&
+  Date.now() - Date.parse(ride.value.accepted_at) > CANCEL_GRACE_SECONDS * 1000)
 // Split fare is offered once the card is held (driver accepted) until drop-off.
 const canSplit = computed(() => !DEMO_MODE && ride.value?.payment_status === 'authorized' &&
   ['accepted', 'driver_arrived', 'in_progress'].includes(ride.value?.status))
@@ -214,7 +221,8 @@ function startDemoSimulation() {
 
 onMounted(async () => {
   if (DEMO_MODE) {
-    ride.value = { id: rideId, pickup_address: 'Your pickup', dropoff_address: 'Your destination' }
+    ride.value = { id: rideId, pickup_address: 'Your pickup', dropoff_address: 'Your destination',
+      ...(route.query.cash ? { payment_method: 'cash', fare_cents: Number(route.query.cash) } : {}) }
     startDemoSimulation()
     return
   }
@@ -270,10 +278,12 @@ const endedMessage = computed(() => {
   if (endedBy.value.reason === 'rider_no_show') {
     return endedBy.value.fee > 0
       ? `Your driver waited at the pickup and marked the ride as a no-show. A ${formatFare(endedBy.value.fee)} no-show fee was charged.`
-      : 'Your driver waited at the pickup and marked the ride as a no-show.'
+      : isCashRide(ride.value)
+        ? 'Your driver waited at the pickup and marked the ride as a no-show. Missed cash pickups can turn cash off on your account.'
+        : 'Your driver waited at the pickup and marked the ride as a no-show.'
   }
   if (endedBy.value.reason === 'driver_cancelled') return 'Your driver had to cancel. You weren’t charged. Request again and we’ll find you another driver.'
-  return 'This ride was cancelled. Any hold on your card has been released.'
+  return isCashRide(ride.value) ? 'This ride was cancelled. You don’t owe anything.' : 'This ride was cancelled. Any hold on your card has been released.'
 })
 </script>
 
@@ -315,6 +325,7 @@ const endedMessage = computed(() => {
       :stop-address="ride?.stop_address || ''"
       :stop-reached="!!ride?.stop_reached_at"
       :can-split="canSplit"
+      :cash-cents="cashCents"
       @cancel="askCancel"
       @message="chatOpen = true"
       @split="splitOpen = true"
@@ -349,6 +360,7 @@ const endedMessage = computed(() => {
         <h2 id="cancel-title" class="text-xl font-bold mb-2">Cancel this ride?</h2>
         <p class="text-[var(--color-text-secondary)] text-sm mb-6">
           <template v-if="cancelFeeCents > 0">Your driver accepted more than {{ Math.round(CANCEL_GRACE_SECONDS / 60) }} minutes ago{{ rideStatus === 'driver_arrived' ? ' and is waiting for you' : ' and is on the way' }}, so a {{ formatFare(cancelFeeCents) }} cancellation fee applies. Most of it goes to your driver.</template>
+          <template v-else-if="lateCashCancel">Your driver accepted more than {{ Math.round(CANCEL_GRACE_SECONDS / 60) }} minutes ago{{ rideStatus === 'driver_arrived' ? ' and is waiting for you' : ' and is on the way' }}. Cancelling now counts as a late cancellation: two missed or late-cancelled cash trips in 30 days turn cash off on your account.</template>
           <template v-else>You won’t be charged.</template>
         </p>
         <p v-if="cancelError" class="text-[13px] text-[var(--color-danger)] mb-3" role="alert">{{ cancelError }}</p>

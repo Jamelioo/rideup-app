@@ -7,6 +7,7 @@ import { useAuth, friendlyAuthError } from '../../lib/useAuth'
 import { DEMO_MODE } from '../../lib/demoMode'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
 import { DRIVER_DOCS, listDriverDocs, expiryState } from '../../lib/driverDocs'
+import { useSettings } from '../../lib/settings'
 
 const router = useRouter()
 const { driver, currentRide, applyDriverRow } = useDriver()
@@ -60,6 +61,25 @@ onMounted(async () => {
   const rows = data || []
   stats.value = { accepted: rows.length, driverCancelled: rows.filter((r) => r.status === 'cancelled' && r.cancelled_by === 'driver').length }
 })
+
+// ── Cash trips (Uber: drivers choose whether to take them). Shown while RideUp accepts cash. ──
+const appSettings = useSettings()
+const showCashSetting = computed(() => typeof driver.value?.accept_cash === 'boolean' && (DEMO_MODE || appSettings.value.accept_cash))
+const savingCash = ref(false)
+async function toggleCash() {
+  if (savingCash.value || !driver.value) return
+  const next = !driver.value.accept_cash
+  if (DEMO_MODE || !supabaseConfigured) {
+    applyDriverRow({ ...driver.value, accept_cash: next })
+  } else {
+    savingCash.value = true
+    const { data: row, error } = await supabase.from('drivers').update({ accept_cash: next }).eq('id', driver.value.id).select().single()
+    savingCash.value = false
+    if (error) { showToast('Couldn’t save that. Check your connection and try again.'); return }
+    applyDriverRow(row)
+  }
+  showToast(next ? 'You’ll get cash trips' : 'You won’t get cash trips')
+}
 
 // ── Photo ──
 const photoInput = ref(null)
@@ -236,6 +256,22 @@ async function changePassword() {
             <span class="text-[13px] text-[var(--color-text-muted)]">Member since</span>
             <span class="text-[14px] font-semibold">{{ memberSince }}</span>
           </div>
+        </div>
+      </div>
+
+      <!-- Trip preferences -->
+      <div v-if="showCashSetting" class="mb-6">
+        <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Trip preferences</p>
+        <div class="bg-[var(--color-surface-secondary)] rounded-2xl p-4 flex items-center justify-between gap-4">
+          <div>
+            <div class="text-[14px] font-semibold">Cash trips</div>
+            <p class="text-[12px] text-[var(--color-text-muted)] mt-0.5">The rider pays you the fare in cash at drop-off. RideUp’s share comes off your balance.</p>
+          </div>
+          <button @click="toggleCash" :disabled="savingCash" role="switch" :aria-checked="String(!!driver.accept_cash)" aria-label="Cash trips"
+                  class="relative w-12 h-7 rounded-full flex-shrink-0 transition-colors disabled:opacity-50"
+                  :class="driver.accept_cash ? 'bg-[#2b8659]' : 'bg-[var(--color-text-muted)]'">
+            <span class="absolute top-1 left-1 w-5 h-5 rounded-full bg-white transition-transform" :class="driver.accept_cash && 'translate-x-5'"></span>
+          </button>
         </div>
       </div>
 
