@@ -85,7 +85,8 @@ onMounted(async () => {
       total,
       paymentLast4: data.payment_last4 || '',
       paymentBrand: data.payment_brand || '',
-      paid: ['captured', 'paid'].includes(data.payment_status),
+      cash: data.payment_method === 'cash',
+      paid: ['captured', 'paid', 'cash_collected'].includes(data.payment_status),
       hasDriver: !!driver,
       driverName: driver?.name || 'Your driver',
       driverRating: driver?.rating != null ? Number(driver.rating) : null,
@@ -190,7 +191,7 @@ async function shareReceipt() {
             <span class="text-sm text-[var(--color-text-secondary)]">{{ receipt.cancelFee ? (receipt.noShow ? 'No-show fee' : 'Cancellation fee') : 'Trip cancelled' }}</span>
             <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.cancelFee) }}</span>
           </div>
-          <p v-if="!receipt.cancelFee" class="text-xs text-[var(--color-text-muted)]">No charge. Any hold on your card has been released.</p>
+          <p v-if="!receipt.cancelFee" class="text-xs text-[var(--color-text-muted)]">{{ receipt.cash ? 'No charge.' : 'No charge. Any hold on your card has been released.' }}</p>
           <p v-else class="text-xs text-[var(--color-text-muted)]">{{ receipt.noShow ? 'Charged because the driver waited at pickup and you didn’t arrive.' : 'Charged because the trip was cancelled after the free cancellation window.' }} Think this is wrong? Report an issue below.</p>
           <div class="border-b border-[var(--color-border)]"></div>
           <div class="flex items-center justify-between">
@@ -274,11 +275,14 @@ async function shareReceipt() {
         <div class="mb-5 flex items-center justify-between">
           <span class="text-sm text-[var(--color-text-muted)]">Payment method</span>
           <div class="flex items-center gap-2">
+            <svg v-if="receipt.cash" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <rect x="2" y="6" width="20" height="12" rx="2" /><circle cx="12" cy="12" r="2.5" /><path d="M6 12h.01M18 12h.01" />
+            </svg>
             <!-- Card icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
             </svg>
-            <span class="text-sm font-medium text-[var(--color-text-primary)]">{{ receipt.paymentLast4 ? `${receipt.paymentBrand ? receipt.paymentBrand.charAt(0).toUpperCase() + receipt.paymentBrand.slice(1) : 'Card'} •••• ${receipt.paymentLast4}` : 'Card' }}</span>
+            <span class="text-sm font-medium text-[var(--color-text-primary)]">{{ receipt.cash ? 'Cash' : receipt.paymentLast4 ? `${receipt.paymentBrand ? receipt.paymentBrand.charAt(0).toUpperCase() + receipt.paymentBrand.slice(1) : 'Card'} •••• ${receipt.paymentLast4}` : 'Card' }}</span>
           </div>
         </div>
 

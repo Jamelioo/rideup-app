@@ -16,6 +16,9 @@ import RideChat from '../../components/RideChat.vue'
 import SafetyToolkit from '../../components/SafetyToolkit.vue'
 import TripCheckin from '../../components/TripCheckin.vue'
 import { useWakeLock } from '../../lib/useWakeLock'
+import { chargeOf } from '../../lib/discounts'
+import { isCashRide } from '../../lib/cash'
+import ReportUnpaidCash from '../../components/ReportUnpaidCash.vue'
 
 const router = useRouter()
 const { user } = useAuth()
@@ -25,6 +28,15 @@ const phase = computed(() => currentRide.value?.status || 'none')
 // Screen stays on during the trip so the rider keeps seeing the car move.
 useWakeLock(computed(() => !DEMO_MODE && ['accepted', 'driver_arrived', 'in_progress'].includes(phase.value)))
 const earnings = computed(() => driverPayout(currentRide.value))
+// Cash trip: the rider pays the driver at drop-off (the fare less any promo or credit, which RideUp covers).
+const isCash = computed(() => isCashRide(currentRide.value))
+const cashCents = computed(() => (isCash.value ? chargeOf(currentRide.value) : 0))
+const cashSplitNote = computed(() => (cashCents.value >= earnings.value
+  ? `You keep ${formatFare(earnings.value)}. RideUp’s ${formatFare(cashCents.value - earnings.value)} share comes off your balance.`
+  : `You keep it all, and RideUp adds ${formatFare(earnings.value - cashCents.value)} to your balance for the rider’s discount.`))
+// A cash trip ends by collecting the fare: 'collect' → 'collected' (the rider's receipt goes out) or 'unpaid'.
+const cashStep = ref('collect')
+watch(() => currentRide.value?.id, () => { cashStep.value = 'collect' })
 const busy = ref(false)
 const actionError = ref('')
 const mapFailed = ref(DEMO_MODE)
@@ -161,6 +173,12 @@ async function completeTrip() {
     return
   }
   // Charge the held fare (receipt goes to the rider). Retried a few times; the server sweeps up any miss.
+  // A cash trip is settled when the driver confirms the cash below.
+  if (!DEMO_MODE && currentRide.value?.id && !isCash.value) captureWithRetry(currentRide.value.id)
+}
+
+function cashCollected() {
+  cashStep.value = 'collected'
   if (!DEMO_MODE && currentRide.value?.id) captureWithRetry(currentRide.value.id)
 }
 
@@ -333,14 +351,34 @@ onUnmounted(() => {
       <div class="px-5 pb-6 md:pt-8">
         <div class="hidden md:block text-[22px] font-bold mb-6"><BrandLogo /> <span class="text-[13px] font-medium text-[var(--color-text-muted)]">Driver</span></div>
 
+        <!-- Completed, cash trip: collect the fare first -->
+        <div v-if="phase === 'completed' && isCash && cashStep === 'collect'" class="text-center py-4">
+          <div class="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-3" aria-hidden="true">
+            <svg class="w-8 h-8 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>
+          </div>
+          <h2 class="text-2xl font-bold mb-1">Collect cash</h2>
+          <div class="text-[40px] leading-tight font-extrabold mt-2">{{ formatFare(cashCents) }}</div>
+          <div class="text-[13px] text-[var(--color-text-secondary)] mt-1">from {{ riderName }}</div>
+          <p class="text-[12px] text-[var(--color-text-muted)] mt-3 leading-relaxed">{{ cashSplitNote }}</p>
+          <button @click="cashCollected" class="w-full py-4 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mt-6 active:scale-[0.98]">Cash collected</button>
+          <ReportUnpaidCash v-if="currentRide?.id" :ride-id="currentRide.id" :rider-name="riderName" :amount-cents="cashCents"
+                            button-class="w-full py-3 mt-1 text-[14px] text-[var(--color-text-secondary)] font-semibold" @reported="cashStep = 'unpaid'" />
+        </div>
+
         <!-- Completed -->
-        <div v-if="phase === 'completed'" class="text-center py-4">
+        <div v-else-if="phase === 'completed'" class="text-center py-4">
           <div class="w-16 h-16 rounded-full bg-[#2b8659] flex items-center justify-center mx-auto mb-3" aria-hidden="true">
             <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
           </div>
-          <h2 class="text-2xl font-bold mb-1">Trip complete</h2>
-          <div class="text-[34px] font-extrabold text-[var(--color-brand)] mt-3">+{{ formatFare(earnings) }}</div>
-          <div class="text-[13px] text-[var(--color-text-secondary)] mt-1">Your 70% of the {{ formatFare(currentRide?.fare_cents) }} fare</div>
+          <template v-if="isCash && cashStep === 'unpaid'">
+            <h2 class="text-2xl font-bold mb-1">Thanks for telling us</h2>
+            <p class="text-[13px] text-[var(--color-text-secondary)] mt-2">RideUp will follow up with {{ riderName }}, and cash is off on their account. You don’t owe RideUp anything for this trip.</p>
+          </template>
+          <template v-else>
+            <h2 class="text-2xl font-bold mb-1">Trip complete</h2>
+            <div class="text-[34px] font-extrabold text-[var(--color-brand)] mt-3">+{{ formatFare(earnings) }}</div>
+            <div class="text-[13px] text-[var(--color-text-secondary)] mt-1">Your 70% of the {{ formatFare(currentRide?.fare_cents) }} fare<template v-if="isCash"> · {{ formatFare(cashCents) }} collected in cash</template></div>
+          </template>
           <div class="text-[13px] text-[var(--color-text-muted)] mt-2">
             {{ currentRide?.distance_miles != null ? Number(currentRide.distance_miles).toFixed(1) : '0.0' }} mi · {{ Math.round(currentRide?.duration_minutes || 0) }} min
           </div>
@@ -405,6 +443,11 @@ onUnmounted(() => {
                 </div>
               </div>
             </div>
+          </div>
+
+          <div v-if="isCash" class="mb-4 flex items-center gap-3 rounded-xl bg-amber-500/15 px-4 py-3 text-[14px]">
+            <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>
+            <span><strong>Cash trip.</strong> Collect {{ formatFare(cashCents) }} at drop-off.</span>
           </div>
 
           <!-- Wait timer -->
@@ -487,7 +530,8 @@ onUnmounted(() => {
       <div class="bg-[var(--color-surface)] rounded-3xl p-6 max-w-sm w-full text-center">
         <h2 id="confirm-title" class="text-xl font-bold mb-2">{{ confirm === 'noshow' ? 'Mark as no-show?' : 'Cancel this trip?' }}</h2>
         <p class="text-[13px] text-[var(--color-text-secondary)] mb-5">
-          <template v-if="confirm === 'noshow'">You waited {{ formatClock(waitedSeconds) }}. The rider is charged a no-show fee and you receive your share of it.</template>
+          <template v-if="confirm === 'noshow' && isCash">You waited {{ formatClock(waitedSeconds) }}. This is a cash trip, so there’s no fee, but missed cash pickups turn cash off for the rider.</template>
+          <template v-else-if="confirm === 'noshow'">You waited {{ formatClock(waitedSeconds) }}. The rider is charged a no-show fee and you receive your share of it.</template>
           <template v-else>The rider won’t be charged and will be matched with another driver. Frequent cancellations can affect your account.</template>
         </p>
         <p v-if="actionError" class="text-[13px] text-[var(--color-danger)] mb-3" role="alert">{{ actionError }}</p>

@@ -62,6 +62,7 @@
           <div class="flex justify-between pl-3 text-xs"><dt class="text-[var(--color-text-muted)]">incl. booking fees</dt><dd class="text-[var(--color-text-muted)]">{{ money(sum.booking_fee_cents) }}</dd></div>
           <div class="flex justify-between pl-3 text-xs"><dt class="text-[var(--color-text-muted)]">incl. airport fees</dt><dd class="text-[var(--color-text-muted)]">{{ money(sum.airport_fee_cents) }}</dd></div>
           <div class="flex justify-between pl-3 text-xs"><dt class="text-[var(--color-text-muted)]">incl. busy-time pricing</dt><dd class="text-[var(--color-text-muted)]">{{ money(sum.busy_extra_cents) }}</dd></div>
+          <div v-if="sum.cash_trips" class="flex justify-between pl-3 text-xs"><dt class="text-[var(--color-text-muted)]">paid in cash to drivers ({{ sum.cash_trips }} trip{{ sum.cash_trips === 1 ? '' : 's' }})</dt><dd class="text-[var(--color-text-muted)]">{{ money(sum.cash_cents) }}</dd></div>
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">Drivers’ share of fares</dt><dd>−{{ money(sum.driver_fare_cents) }}</dd></div>
           <div class="flex justify-between font-semibold border-t border-[var(--color-border)] pt-2"><dt>RideUp fees</dt><dd>{{ money(sum.platform_fee_cents) }}</dd></div>
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">+ Cancellation &amp; no-show fees (RideUp part)</dt><dd>{{ money(sum.cancel_platform_cents) }}</dd></div>
@@ -72,7 +73,7 @@
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">− Card refunds (RideUp part)</dt><dd>−{{ money(sum.refund_cents - sum.refund_driver_cents) }}</dd></div>
           <div class="flex justify-between font-bold text-base border-t border-[var(--color-border)] pt-2"><dt>RideUp net</dt><dd :class="totalNet < 0 && 'text-[var(--color-danger)]'">{{ money(totalNet) }}</dd></div>
         </dl>
-        <p class="text-xs text-[var(--color-text-muted)] mt-3">Card fees are estimated at 2.9% + 30¢ per charge; check Stripe for exact amounts. Tips go 100% to drivers.</p>
+        <p class="text-xs text-[var(--color-text-muted)] mt-3">Card fees are estimated at 2.9% + 30¢ per charge; check Stripe for exact amounts. Tips go 100% to drivers. RideUp’s share of cash trips is collected from drivers’ balances (Payouts).</p>
       </div>
 
       <!-- What RideUp owes -->
@@ -167,7 +168,7 @@ const RANGES = [{ days: 7, label: '7 days' }, { days: 30, label: '30 days' }, { 
 const FIELDS = ['trips', 'gross_fare_cents', 'platform_fee_cents', 'driver_fare_cents', 'booking_fee_cents', 'airport_fee_cents',
   'busy_extra_cents', 'promo_cents', 'credit_cents', 'tips_cents', 'cancel_fee_cents', 'cancel_platform_cents',
   'quest_reward_cents', 'rider_paid_cents', 'est_card_fee_cents', 'cancelled_trips',
-  'refund_cents', 'refund_driver_cents', 'credit_issued_cents']
+  'refund_cents', 'refund_driver_cents', 'credit_issued_cents', 'cash_trips', 'cash_cents'] // cash_*: migration 019
 
 const days = ref(30)
 const rows = ref([])
@@ -189,7 +190,7 @@ const driverTotal = computed(() => sum.value.driver_fare_cents + sum.value.tips_
 const maxPaid = computed(() => Math.max(1, ...rows.value.map((d) => d.rider_paid_cents)))
 const tableRows = computed(() => rows.value.filter((d) => d.trips || d.rider_paid_cents || d.quest_reward_cents).slice().reverse())
 const tiles = computed(() => [
-  { label: 'Rider payments', value: money(sum.value.rider_paid_cents - sum.value.refund_cents), note: `${sum.value.trips} trips${sum.value.refund_cents ? ` · after ${money(sum.value.refund_cents)} refunds` : ''}` },
+  { label: 'Rider payments', value: money(sum.value.rider_paid_cents - sum.value.refund_cents), note: `${sum.value.trips} trips${sum.value.cash_trips ? ` (${sum.value.cash_trips} in cash)` : ''}${sum.value.refund_cents ? ` · after ${money(sum.value.refund_cents)} refunds` : ''}` },
   { label: 'RideUp net', value: money(totalNet.value), note: 'after discounts, incentives and card fees' },
   { label: 'Drivers earned', value: money(driverTotal.value) },
   { label: 'Average trip fare', value: money(sum.value.trips ? Math.round(sum.value.gross_fare_cents / sum.value.trips) : 0), note: `${sum.value.cancelled_trips} cancellation fees` },
@@ -230,6 +231,7 @@ function exportCsv() {
     ['Cancellation fees', 'cancel_fee_cents'], ['RideUp share of cancellation fees', 'cancel_platform_cents'], ['Incentive rewards', 'quest_reward_cents'],
     ['Riders paid', 'rider_paid_cents'], ['Estimated card fees', 'est_card_fee_cents'], ['Cancelled trips', 'cancelled_trips'],
     ['Refunds', 'refund_cents'], ['Refunds taken from drivers', 'refund_driver_cents'], ['Credit given', 'credit_issued_cents'],
+    ['Cash trips', 'cash_trips'], ['Paid in cash to drivers', 'cash_cents'],
   ]
   const csv = toCsv(rows.value, [
     { label: 'Date', value: (d) => d.day },

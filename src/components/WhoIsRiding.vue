@@ -48,10 +48,10 @@ function done() {
           <h3 id="who-title" class="text-lg font-bold mb-4">Who’s riding?</h3>
           <div class="space-y-2 mb-4" role="radiogroup" aria-labelledby="who-title">
             <label class="flex items-center gap-3 rounded-xl border-2 px-4 py-3 cursor-pointer" :class="mode === 'me' ? 'border-[#2b8659]' : 'border-[var(--color-border)]'">
-              <input type="radio" v-model="mode" value="me" class="w-4 h-4" /> <span class="font-semibold text-[15px]">Me</span>
+              <input type="radio" v-model="mode" value="me" class="w-4 h-4 accent-[#2b8659]" /> <span class="font-semibold text-[15px]">Me</span>
             </label>
             <label class="flex items-center gap-3 rounded-xl border-2 px-4 py-3 cursor-pointer" :class="mode === 'other' ? 'border-[#2b8659]' : 'border-[var(--color-border)]'">
-              <input type="radio" v-model="mode" value="other" class="w-4 h-4" /> <span class="font-semibold text-[15px]">Someone else</span>
+              <input type="radio" v-model="mode" value="other" class="w-4 h-4 accent-[#2b8659]" /> <span class="font-semibold text-[15px]">Someone else</span>
             </label>
           </div>
           <div v-if="mode === 'other'" class="space-y-3 mb-4">

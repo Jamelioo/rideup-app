@@ -226,6 +226,43 @@ test('with no driver online, riders can still request and are told how it works'
   await expect(page.getByText('You’re only charged if a driver accepts.', { exact: false })).toBeVisible()
 })
 
+test('riders can pay their driver in cash, and are told what to have ready', async ({ page }) => {
+  await page.goto('/book')
+  await enterDemoTrip(page)
+  await page.getByRole('button', { name: /^Paying with .*Change$/ }).filter({ visible: true }).click()
+  const sheet = page.getByRole('dialog', { name: 'How will you pay?' })
+  await sheet.getByRole('radio', { name: /^Cash/ }).check()
+  await expect(sheet.getByText(/Have \$\d+\.\d\d ready for your driver/)).toBeVisible()
+  await sheet.getByRole('button', { name: 'Done' }).click()
+  await expect(page.getByRole('button', { name: 'Paying with Cash. Change' }).filter({ visible: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Choose RideUp Go' }).filter({ visible: true }).click()
+  await expect(page.getByText(/Paying cash: have \$\d+\.\d\d ready for your driver\./)).toBeVisible()
+})
+
+test('cash is for the rider’s own rides: booking for someone else pays by card', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('rideup_payment_method', 'cash'))
+  await page.goto('/book')
+  await enterDemoTrip(page)
+  await expect(page.getByRole('button', { name: 'Paying with Cash. Change' }).filter({ visible: true })).toBeVisible()
+  await page.getByRole('button', { name: /Book for someone else/ }).filter({ visible: true }).click()
+  await page.getByRole('radio', { name: 'Someone else' }).check()
+  await page.getByLabel('Passenger’s name').fill('Mary Smith')
+  await page.getByLabel('Passenger’s phone').fill('242 555 1234')
+  await page.getByRole('button', { name: 'Done' }).click()
+  await page.getByRole('button', { name: /^Paying with Visa/ }).filter({ visible: true }).click()
+  await expect(page.getByRole('radio', { name: /^Cash/ })).toBeDisabled()
+  await expect(page.getByText('Cash is for your own rides. When you book for someone else, pay by card.')).toBeVisible()
+})
+
+test('a rider paying cash is told when the drivers nearby only take card', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('rideup_payment_method', 'cash'))
+  await page.goto('/book?cars=no_cash')
+  await enterDemoTrip(page)
+  await expect(page.getByText('No drivers taking cash nearby').filter({ visible: true }).first()).toBeVisible()
+  await expect(page.getByText('Card only right now').filter({ visible: true }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Choose RideUp Go' })).toBeEnabled()
+})
+
 test('booking explains when every driver is on a trip', async ({ page }) => {
   await page.goto('/book?cars=busy')
   await enterDemoTrip(page)

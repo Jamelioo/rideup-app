@@ -7,6 +7,9 @@ import { supabase } from '../../lib/supabase'
 import { DEMO_MODE } from '../../lib/demoMode'
 import { apiPost } from '../../lib/api'
 import { REQUEST_SEARCH_MINUTES } from '../../lib/dispatch'
+import { chargeOf } from '../../lib/discounts'
+import { formatFare } from '../../lib/pricing'
+import { isCashRide } from '../../lib/cash'
 import HarborBackdrop from '../../components/HarborBackdrop.vue'
 
 const props = defineProps({
@@ -15,6 +18,7 @@ const props = defineProps({
   // Whether drivers were alerted when it was booked: false when nobody was online (RideUp's team was alerted
   // instead), null when unknown (e.g. after reopening the app).
   driversAlerted: { type: Boolean, default: null },
+  cashCents: { type: Number, default: null }, // a cash trip, as booked (the loaded ride has the final say)
 })
 // Alerted drivers answer within seconds or not at all, so 90 seconds is enough. Otherwise give the team time to
 // see the alert and go online or assign a driver; the server ends the request at the same point.
@@ -29,6 +33,8 @@ const paymentFailed = ref(false)
 const cancelling = ref(false)
 const cancelError = ref('')
 const confirming = ref(false) // a driver accepted; the card hold is being placed
+// A cash trip: nothing to hold, the rider pays the driver at drop-off.
+const cashCents = computed(() => (ride.value ? (isCashRide(ride.value) ? chargeOf(ride.value) : null) : props.cashCents))
 let replacementDeadline = null
 let confirmDeadline = null
 let handleLatest = () => {} // set in onMounted to the status handler
@@ -94,6 +100,7 @@ function navigateToActiveRide(rideRow, match) {
         pickupLng: rideRow.pickup_lng || ride.value?.pickup_lng || '',
         dropoffLat: rideRow.dropoff_lat || ride.value?.dropoff_lat || '',
         dropoffLng: rideRow.dropoff_lng || ride.value?.dropoff_lng || '',
+        ...(DEMO_MODE && cashCents.value != null ? { cash: cashCents.value } : {}),
       },
     })
   }, 900)
@@ -277,9 +284,12 @@ async function cancelRequest() {
         <div v-if="notice" class="w-full max-w-sm rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-4 py-3 text-[13px] text-[var(--color-text-primary)] text-center" role="status">{{ notice }}</div>
         <div class="text-center">
           <div class="text-xl font-medium mb-1.5">{{ driverFound || confirming ? 'Driver found' : 'Looking for a driver' }}</div>
-          <div class="text-[var(--color-text-secondary)] text-[13px] max-w-xs mx-auto">{{ driverFound ? 'Connecting you now…' : confirming ? 'Confirming your payment method…' : driversAlerted === false ? 'No drivers are online right now, so we’ve alerted our team.' : 'Connecting you with a nearby driver' }}</div>
+          <div class="text-[var(--color-text-secondary)] text-[13px] max-w-xs mx-auto">{{ driverFound ? 'Connecting you now…' : confirming ? (cashCents != null ? 'Confirming your ride…' : 'Confirming your payment method…') : driversAlerted === false ? 'No drivers are online right now, so we’ve alerted our team.' : 'Connecting you with a nearby driver' }}</div>
           <p v-if="driversAlerted === false && !driverFound && !confirming" class="text-[var(--color-text-muted)] text-xs mt-2 max-w-xs mx-auto">
-            This can take a few minutes. You’re only charged if a driver accepts.
+            This can take a few minutes. {{ cashCents != null ? 'You pay your driver in cash at drop-off.' : 'You’re only charged if a driver accepts.' }}
+          </p>
+          <p v-else-if="cashCents != null && !driverFound" class="text-[var(--color-text-muted)] text-xs mt-2 max-w-xs mx-auto">
+            Paying cash: have {{ formatFare(cashCents) }} ready for your driver.
           </p>
           <p v-if="!timedOut && elapsedSeconds > 10" class="text-[var(--color-text-muted)] text-xs mt-2">
             Searching… {{ elapsedLabel }}
@@ -305,14 +315,23 @@ async function cancelRequest() {
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
           </svg>
         </div>
-        <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-2">Payment issue</h2>
-        <p class="text-[var(--color-text-muted)] text-sm mb-6">Your card couldn’t be charged (for example, it was declined or has insufficient funds), so the ride was cancelled. You weren’t charged.</p>
-        <button @click="router.push('/payments')" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mb-2">
-          Use a different card
-        </button>
-        <button @click="emit('cancelled')" class="w-full py-3 text-[var(--color-text-secondary)] font-semibold text-[14px]">
-          Try again with the same card
-        </button>
+        <template v-if="cashCents != null">
+          <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-2">Your driver couldn’t confirm</h2>
+          <p class="text-[var(--color-text-muted)] text-sm mb-6">The driver’s app didn’t confirm the trip in time, so it was cancelled. You don’t owe anything. Request again and we’ll find you a driver.</p>
+          <button @click="emit('cancelled')" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mb-2">
+            Try again
+          </button>
+        </template>
+        <template v-else>
+          <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-2">Payment issue</h2>
+          <p class="text-[var(--color-text-muted)] text-sm mb-6">Your card couldn’t be charged (for example, it was declined or has insufficient funds), so the ride was cancelled. You weren’t charged.</p>
+          <button @click="router.push('/payments')" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mb-2">
+            Use a different card
+          </button>
+          <button @click="emit('cancelled')" class="w-full py-3 text-[var(--color-text-secondary)] font-semibold text-[14px]">
+            Try again with the same card
+          </button>
+        </template>
       </div>
     </div>
   </div>

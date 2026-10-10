@@ -50,6 +50,9 @@ const riderName = (r) => r.riders?.name || r.rider_name || 'Rider'
 const riderPhone = (r) => r.riders?.phone || ''
 const short = (a) => String(a || '—').split(',')[0]
 const since = (r) => elapsed(r[STAGE[r.status]?.since] || r.created_at, now.value)
+const isCash = (r) => r.payment_method === 'cash'
+// A cash trip has no card to hold: it's only being confirmed.
+const stageLabel = (r) => (isCash(r) && r.status === 'pending_driver_response' ? 'Confirming' : STAGE[r.status].label)
 const ageSec = (r) => (now.value - new Date(r.created_at).getTime()) / 1000
 const waitTone = (r) => (ageSec(r) > 90 ? 'text-[var(--color-danger)]' : ageSec(r) > 45 ? 'text-amber-700' : 'text-[var(--color-text-secondary)]')
 const timeOf = (iso) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
@@ -116,7 +119,7 @@ function demo() {
   const ago = (s) => new Date(Date.now() - s * 1000).toISOString()
   rides.value = [
     { id: 'd1', status: 'requested', created_at: ago(38), pickup_address: 'Lynden Pindling International Airport, Nassau', dropoff_address: 'Baha Mar, Cable Beach', fare_cents: 1955, vehicle_type: 'standard', riders: { name: 'Ienka Johnson', phone: '+12425550141' } },
-    { id: 'd2', status: 'accepted', created_at: ago(400), accepted_at: ago(300), pickup_address: 'Downtown Nassau, Bay St', dropoff_address: 'Paradise Island', fare_cents: 1308, vehicle_type: 'standard', driver_id: 'dd1', riders: { name: 'Oneal Humes', phone: '+12425550133' }, drivers: { name: 'Deon Rolle', phone: '+12425550100' } },
+    { id: 'd2', status: 'accepted', created_at: ago(400), accepted_at: ago(300), pickup_address: 'Downtown Nassau, Bay St', dropoff_address: 'Paradise Island', fare_cents: 1308, vehicle_type: 'standard', payment_method: 'cash', payment_status: 'cash_due', driver_id: 'dd1', riders: { name: 'Oneal Humes', phone: '+12425550133' }, drivers: { name: 'Deon Rolle', phone: '+12425550100' } },
     { id: 'd3', status: 'cancelled', cancel_reason: 'no_drivers', created_at: ago(5400), pickup_address: 'Cable Beach', dropoff_address: 'Downtown Nassau', fare_cents: 1868, vehicle_type: 'standard', riders: { name: 'Chyna Williams', phone: '+12425550122' } },
     { id: 'd4', status: 'completed', created_at: ago(9000), pickup_address: 'Fox Hill', dropoff_address: 'Airport', fare_cents: 2400 },
   ]
@@ -199,7 +202,7 @@ onUnmounted(() => {
                   <a v-if="riderPhone(r)" :href="tel(riderPhone(r))" class="text-sm text-[var(--color-brand)] font-medium">📞 {{ formatPhone(riderPhone(r)) || riderPhone(r) }}</a>
                 </div>
                 <div class="text-right">
-                  <div class="font-bold">{{ formatFare(r.fare_cents) }}</div>
+                  <div class="font-bold"><span v-if="isCash(r)" class="mr-1 align-middle text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900">Cash</span>{{ formatFare(r.fare_cents) }}</div>
                   <div :class="['text-xs font-semibold', waitTone(r)]">Waiting {{ elapsed(r.created_at, now) }}</div>
                 </div>
               </div>
@@ -219,8 +222,8 @@ onUnmounted(() => {
           <ul class="space-y-3">
             <li v-for="r in underway" :key="r.id" class="rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-4">
               <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                <span :class="['text-xs font-semibold px-2 py-0.5 rounded-full', STAGE[r.status].tone]">{{ STAGE[r.status].label }} · {{ since(r) }}</span>
-                <span class="font-bold">{{ formatFare(r.fare_cents) }}</span>
+                <span :class="['text-xs font-semibold px-2 py-0.5 rounded-full', STAGE[r.status].tone]">{{ stageLabel(r) }} · {{ since(r) }}</span>
+                <span class="font-bold"><span v-if="isCash(r)" class="mr-1 align-middle text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900">Cash</span>{{ formatFare(r.fare_cents) }}</span>
               </div>
               <p class="text-sm mb-2">{{ short(r.pickup_address) }} → {{ short(r.dropoff_address) }}</p>
               <div class="grid sm:grid-cols-2 gap-2 text-sm mb-3">

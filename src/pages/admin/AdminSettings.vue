@@ -11,8 +11,9 @@
           <p class="font-semibold text-[var(--color-text-primary)]">{{ item.title }}</p>
           <p class="text-sm text-[var(--color-text-secondary)] mt-1">{{ item.description }}</p>
           <p v-if="item.note" class="text-xs text-[var(--color-text-muted)] mt-1">{{ item.note }}</p>
+          <p v-if="notReady.includes(item.key)" class="text-xs font-semibold text-[var(--color-warning)] mt-1">{{ item.needs }}</p>
         </div>
-        <button @click="toggle(item.key)" :disabled="saving === item.key" role="switch" :aria-checked="String(values[item.key])" :aria-label="item.title"
+        <button @click="toggle(item.key)" :disabled="saving === item.key || notReady.includes(item.key)" role="switch" :aria-checked="String(values[item.key])" :aria-label="item.title"
                 class="relative w-12 h-7 rounded-full flex-shrink-0 transition-colors disabled:opacity-50"
                 :class="values[item.key] ? 'bg-[#2b8659]' : 'bg-[var(--color-text-muted)]'">
           <span class="absolute top-1 left-1 w-5 h-5 rounded-full bg-white transition-transform" :class="values[item.key] && 'translate-x-5'"></span>
@@ -61,21 +62,32 @@ const toggles = [
     note: 'Turn on once you have enough Premium drivers, or riders will wait and get “no drivers available”.',
   },
   {
+    key: 'accept_cash',
+    title: 'Accept cash',
+    description: 'Riders with an account and a mobile number can pay their driver in cash at drop-off. RideUp’s share comes off the driver’s balance (see Payouts). Riders who don’t pay, or who miss or cancel late on two cash trips in 30 days, can only pay by card after that.',
+    note: 'Turning it off stops new cash bookings straight away; cash trips already booked carry on. Drivers can also turn cash trips off for themselves.',
+    needs: 'Run the cash payments SQL (migration 019) in Supabase first.',
+    requiresRow: true,
+  },
+  {
     key: 'require_verified_phone',
     title: 'Require verified phone numbers',
     description: 'Riders must confirm their phone number with an SMS code before requesting a ride.',
     note: 'Needs an SMS provider (e.g. Twilio) set up in Supabase → Authentication → Phone. Turn this on only after testing a code arrives.',
   },
 ]
-const values = reactive({ surge_pricing: true, require_pickup_pin: false, offer_xl: false, offer_premium: false, require_verified_phone: false })
+const values = reactive({ surge_pricing: true, require_pickup_pin: false, offer_xl: false, offer_premium: false, accept_cash: false, require_verified_phone: false })
 const saving = ref('')
 const error = ref('')
+// Settings whose migration hasn't run yet (their row is missing): they can't be switched on until it has.
+const notReady = ref([])
 
 onMounted(async () => {
   if (!supabaseConfigured || DEMO_MODE) return
   const { data, error: err } = await supabase.from('app_settings').select('key, value')
   if (err) { error.value = 'Could not load settings. Run migration 006 first.'; return }
   for (const row of data || []) if (row.key in values) values[row.key] = row.value === true
+  notReady.value = toggles.filter((t) => t.requiresRow && !(data || []).some((row) => row.key === t.key)).map((t) => t.key)
 })
 
 async function toggle(key) {

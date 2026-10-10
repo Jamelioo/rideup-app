@@ -5,6 +5,8 @@ import RiderBooking from './RiderBooking.vue'
 import SearchingForDriver from './SearchingForDriver.vue'
 import { DEMO_MODE } from '../../lib/demoMode'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
+import { chargeOf } from '../../lib/discounts'
+import { isCashRide } from '../../lib/cash'
 
 const router = useRouter()
 const step = ref(DEMO_MODE || !supabaseConfigured ? 'booking' : 'checking') // checking | booking | searching
@@ -88,5 +90,6 @@ function handleReplaced(newRideId) {
   </div>
   <RiderBooking v-else-if="step === 'booking'" @requested="handleRequested" @existing-ride="restoreTrip" />
   <SearchingForDriver v-else-if="step === 'searching' && activeRide" :key="activeRide.id" :ride-id="activeRide.id" :notice="notice"
-                      :drivers-alerted="activeRide.drivers_alerted ?? null" @cancelled="handleCancelled" @replaced="handleReplaced" />
+                      :drivers-alerted="activeRide.drivers_alerted ?? null" :cash-cents="isCashRide(activeRide) ? chargeOf(activeRide) : null"
+                      @cancelled="handleCancelled" @replaced="handleReplaced" />
 </template>

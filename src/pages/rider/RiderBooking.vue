@@ -22,6 +22,9 @@ import GuestInfoSheet from '../../components/GuestInfoSheet.vue'
 import CardCollectionSheet from '../../components/CardCollectionSheet.vue'
 import PhoneNumberSheet from '../../components/PhoneNumberSheet.vue'
 import WhoIsRiding from '../../components/WhoIsRiding.vue'
+import PaymentPicker from '../../components/PaymentPicker.vue'
+import { cashOption, savedPaymentChoice, savePaymentChoice } from '../../lib/cash'
+import { useAuth } from '../../lib/useAuth'
 import { toE164, phoneIsVerified } from '../../lib/phone'
 import { riderHasPhone, saveRiderPhone, phoneReminderShown, rememberPhoneReminder } from '../../lib/riderPhone'
 import { trackRideBooked } from '../../lib/adTracking'
@@ -382,8 +385,21 @@ function showToast(msg) {
 // Route and price ready. Scheduling for later only needs this; booking now also needs a car that can come.
 const routeReady = computed(() => pickup.value && dropoff.value && fareEstimates.value[selectedVehicle.value] && !isSubmitting.value)
 
+// ── How the rider pays: their card, or cash to the driver while RideUp accepts cash (Admin › Settings) ──
+const { user: authUser } = useAuth()
+const paymentChoice = ref(savedPaymentChoice()) // remembered on this device
+watch(paymentChoice, savePaymentChoice)
+const cashBlocked = ref(false)
+const cashChoice = computed(() => ((DEMO_MODE || appSettings.value.accept_cash) ? cashOption({
+  signedIn: DEMO_MODE || !!authUser.value,
+  guest: !DEMO_MODE && !!authUser.value?.is_anonymous,
+  blocked: cashBlocked.value,
+  forSomeoneElse: !!passenger.value,
+}) : null))
+const payingCash = computed(() => paymentChoice.value === 'cash' && !!cashChoice.value?.ok)
+
 // ── Can a car come now? Checked when the pickup changes and every 30 seconds (Uber: "No cars available") ──
-const { availability, refresh: refreshAvailability } = useAvailability(pickup)
+const { availability, refresh: refreshAvailability } = useAvailability(pickup, { cash: payingCash })
 const selectedAvailability = computed(() => availabilityFor(availability.value, selectedVehicle.value))
 const carsUnavailable = computed(() => !canBook(selectedAvailability.value))
 const noCarsNotice = computed(() => unavailableNotice(selectedAvailability.value))
@@ -408,8 +424,11 @@ async function loadPaymentMethod() {
   if (DEMO_MODE) { paymentLabel.value = 'Visa •••• 4242'; hasCardOnFile.value = true; return }
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) { paymentLabel.value = 'Pay by card · added at the next step'; return }
-  const { data } = await supabase.from('riders').select('payment_method_id, card_brand, card_last4').eq('auth_user_id', session.user.id).maybeSingle()
+  const riderRow = (columns) => supabase.from('riders').select(columns).eq('auth_user_id', session.user.id).maybeSingle()
+  // cash_blocked is asked for on its own: it only exists once migration 019 has run.
+  const [{ data }, { data: cash }] = await Promise.all([riderRow('payment_method_id, card_brand, card_last4'), riderRow('cash_blocked')])
   hasCardOnFile.value = !!data?.payment_method_id
+  cashBlocked.value = cash?.cash_blocked === true
   paymentLabel.value = hasCardOnFile.value
     ? `${capitalize(data.card_brand)}${data.card_last4 ? ' •••• ' + data.card_last4 : ''}`
     : 'Add a card at the next step'
@@ -477,6 +496,7 @@ async function requestRide() {
       vehicle_type: selectedVehicle.value,
       fare_cents: fare,
       status: 'requested',
+      payment_method: payingCash.value ? 'cash' : 'card',
       demo: true,
       drivers_alerted: selectedAvailability.value ? selectedAvailability.value.state === 'available' : null,
     })
@@ -510,7 +530,7 @@ async function requestRide() {
     return
   }
 
-  if (!rider?.payment_method_id) {
+  if (!payingCash.value && !rider?.payment_method_id) {
     isSubmitting.value = false
     showCardSheet.value = true
     return
@@ -570,8 +590,8 @@ async function createRideForUser(user, guestInfo = null) {
     const rider = await ensureRider(user, guestInfo)
     if (!rider) { error.value = 'Could not create your rider profile. Please try again.'; isSubmitting.value = false; return }
 
-    // Enforce: no ride without a payment method on file
-    if (!rider.payment_method_id) {
+    // Enforce: no card ride without a card on file (cash is paid to the driver)
+    if (!payingCash.value && !rider.payment_method_id) {
       isSubmitting.value = false
       showCardSheet.value = true
       return
@@ -590,6 +610,8 @@ async function createRideForUser(user, guestInfo = null) {
       surge_multiplier: surge.value,
       stop_address: stop.value?.address || null, stop_lat: stop.value?.lat ?? null, stop_lng: stop.value?.lng ?? null,
       passenger_name: passenger.value?.name || null, passenger_phone: passenger.value?.phone || null,
+      // Only sent for cash, so card bookings keep working before migration 019 adds the column.
+      ...(payingCash.value ? { payment_method: 'cash' } : {}),
     }).select().single()
     if (rideErr) {
       isSubmitting.value = false
@@ -599,8 +621,15 @@ async function createRideForUser(user, guestInfo = null) {
         emit('existing-ride')
         return
       }
-      if (rideErr.hint === 'passenger') {
+      if (rideErr.hint === 'passenger' || rideErr.hint === 'cooldown') {
         error.value = rideErr.message
+        return
+      }
+      if (rideErr.hint === 'cash') {
+        // Cash isn't possible for this booking after all (turned off, or on this account): switch to card.
+        if (/your account/i.test(rideErr.message)) cashBlocked.value = true
+        paymentChoice.value = 'card'
+        error.value = `${rideErr.message} We switched you to card. Tap the button again to book.`
         return
       }
       if (rideErr.hint === 'surge') {
@@ -973,12 +1002,8 @@ async function scheduleRide({ date, time, summary }) {
               <p v-if="promoError" class="text-[var(--color-danger)]" role="alert">{{ promoError }}</p>
             </div>
             <WhoIsRiding v-model="passenger" />
-            <component :is="hasCardOnFile && !DEMO_MODE ? 'router-link' : 'div'" :to="hasCardOnFile && !DEMO_MODE ? '/payments' : undefined"
-                       class="flex items-center gap-2 text-[13px] text-[var(--color-text-secondary)] mb-2.5 px-1">
-              <svg class="w-4 h-4 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
-              <span class="flex-1 truncate">{{ paymentLabel || 'Card' }}</span>
-              <span v-if="hasCardOnFile && !DEMO_MODE" class="text-[var(--color-brand)] font-semibold">Change</span>
-            </component>
+            <PaymentPicker v-model="paymentChoice" :card-label="paymentLabel" :manage-cards="hasCardOnFile && !DEMO_MODE"
+                           :cash="cashChoice" :charge-cents="discounts.charge" />
           <div class="flex gap-2.5">
             <button @click="requestRide" :disabled="!canRequest"
                     class="flex-1 py-4 bg-[#2b8659] disabled:bg-[var(--color-surface-secondary)] disabled:text-[var(--color-text-muted)] text-white font-bold rounded-2xl text-[15px] transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:shadow-none">
@@ -1148,12 +1173,8 @@ async function scheduleRide({ date, time, summary }) {
               <p v-if="promoError" class="text-[var(--color-danger)]" role="alert">{{ promoError }}</p>
             </div>
             <WhoIsRiding v-model="passenger" />
-            <component :is="hasCardOnFile && !DEMO_MODE ? 'router-link' : 'div'" :to="hasCardOnFile && !DEMO_MODE ? '/payments' : undefined"
-                       class="flex items-center gap-2 text-[13px] text-[var(--color-text-secondary)] mb-2.5 px-1">
-              <svg class="w-4 h-4 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
-              <span class="flex-1 truncate">{{ paymentLabel || 'Card' }}</span>
-              <span v-if="hasCardOnFile && !DEMO_MODE" class="text-[var(--color-brand)] font-semibold">Change</span>
-            </component>
+            <PaymentPicker v-model="paymentChoice" :card-label="paymentLabel" :manage-cards="hasCardOnFile && !DEMO_MODE"
+                           :cash="cashChoice" :charge-cents="discounts.charge" />
           <div class="flex gap-2.5">
             <button @click="requestRide" :disabled="!canRequest"
                     class="flex-1 py-4 bg-[#2b8659] disabled:bg-[var(--color-surface-secondary)] disabled:text-[var(--color-text-muted)] text-white font-bold rounded-2xl text-[15px] transition-all hover:bg-[#236e49] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:shadow-none">

@@ -7,6 +7,8 @@ import { generateFakeEarnings } from '../../lib/demoDriverMode'
 import { DEMO_MODE } from '../../lib/demoMode'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
 import { useDriver } from '../../lib/useDriver'
+import { chargeOf } from '../../lib/discounts'
+import ReportUnpaidCash from '../../components/ReportUnpaidCash.vue'
 
 const router = useRouter()
 const { driver } = useDriver()
@@ -14,9 +16,12 @@ const activeTab = ref('today')
 const loading = ref(!DEMO_MODE)
 const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const METHODS = { bank_transfer: 'Bank transfer', cash: 'Cash', mobile_money: 'Mobile money', other: 'Payout' }
-const PAID = ['captured', 'paid', 'partially_refunded']
+const PAID = ['captured', 'paid', 'partially_refunded', 'cash_collected']
+const RIDE_COLUMNS = 'id, status, fare_cents, driver_payout_cents, tip_cents, tip_payment_intent_id, payment_status, completed_at, cancelled_at, created_at, dropoff_address, distance_miles, cancel_reason, promo_discount_cents, credit_applied_cents'
+const UNPAID_REPORT_MS = 24 * 3_600_000 // drivers can report an unpaid cash fare this long after drop-off
 
 // Every earning line: completed trips (your 70% + 100% of tips) and your share of cancellation/no-show fees.
+// Cash trips show the cash collected; one the rider didn't pay earns nothing (and costs the driver nothing).
 const items = ref([])
 const summary = ref(null) // driver_earnings_summary: balance, paid out, tips
 const payouts = ref([])
@@ -34,6 +39,7 @@ const weekStart = new Date(todayStart)
 weekStart.setDate(todayStart.getDate() - ((todayStart.getDay() + 6) % 7)) // Monday, also on Sundays
 
 const total = (list) => list.reduce((s, i) => s + i.amount + i.tip, 0)
+const owesRideUp = computed(() => (summary.value?.balance_cents || 0) < 0)
 const todayItems = computed(() => items.value.filter((i) => new Date(i.at) >= todayStart))
 const weekItems = computed(() => items.value.filter((i) => new Date(i.at) >= weekStart))
 const todayTotal = computed(() => total(todayItems.value))
@@ -57,26 +63,33 @@ onMounted(async () => {
     return
   }
   const since = new Date(weekStart.getTime() - 7 * 86_400_000).toISOString()
+  const myRides = (columns) => supabase
+    .from('rides')
+    .select(columns)
+    .eq('driver_id', driver.value.id)
+    .in('status', ['completed', 'cancelled'])
+    .gte('created_at', since)
+    .order('created_at', { ascending: false })
+    .limit(500)
   const [{ data: rides }, { data: sum }, { data: paid }] = await Promise.all([
-    supabase
-      .from('rides')
-      .select('id, status, fare_cents, driver_payout_cents, tip_cents, tip_payment_intent_id, payment_status, completed_at, cancelled_at, created_at, dropoff_address, distance_miles, cancel_reason')
-      .eq('driver_id', driver.value.id)
-      .in('status', ['completed', 'cancelled'])
-      .gte('created_at', since)
-      .order('created_at', { ascending: false })
-      .limit(500),
+    // payment_method comes with migration 019; before it has run, the list loads without it.
+    myRides(`${RIDE_COLUMNS}, payment_method`).then((r) => (r.error ? myRides(RIDE_COLUMNS) : r)),
     supabase.rpc('driver_earnings_summary'),
     supabase.from('driver_payouts').select('id, amount_cents, method, reference, created_at, status').eq('status', 'paid').order('created_at', { ascending: false }).limit(20),
   ])
 
   items.value = (rides || []).flatMap((r) => {
     if (r.status === 'completed' && !['failed', 'refunded'].includes(r.payment_status)) {
+      const cash = r.payment_method === 'cash'
+      const unpaid = r.payment_status === 'cash_unpaid'
+      const at = r.completed_at || r.created_at
       return [{
-        id: r.id, kind: 'trip', at: r.completed_at || r.created_at, label: r.dropoff_address,
-        miles: Number(r.distance_miles) || null, amount: driverPayout(r),
-        tip: r.tip_payment_intent_id ? (r.tip_cents || 0) : 0,
-        processing: !PAID.includes(r.payment_status),
+        id: r.id, kind: 'trip', at, label: r.dropoff_address,
+        miles: Number(r.distance_miles) || null, amount: unpaid ? 0 : driverPayout(r),
+        tip: !unpaid && r.tip_payment_intent_id ? (r.tip_cents || 0) : 0,
+        processing: !cash && !PAID.includes(r.payment_status),
+        cash, unpaid, cashCents: cash ? chargeOf(r) : 0,
+        canReport: cash && ['cash_due', 'cash_collected'].includes(r.payment_status) && Date.now() - new Date(at).getTime() < UNPAID_REPORT_MS,
       }]
     }
     if (r.status === 'cancelled' && (r.driver_payout_cents || 0) > 0 && PAID.includes(r.payment_status)) {
@@ -88,6 +101,14 @@ onMounted(async () => {
   payouts.value = paid || []
   loading.value = false
 })
+
+function markUnpaid(item) {
+  item.unpaid = true
+  item.canReport = false
+  item.amount = 0
+  item.tip = 0
+  supabase.rpc('driver_earnings_summary').then(({ data }) => { if (data) summary.value = Array.isArray(data) ? data[0] : data })
+}
 
 function timeLabel(isoString) {
   const diff = Date.now() - new Date(isoString).getTime()
@@ -118,10 +139,11 @@ function goBack() {
     <div class="max-w-lg mx-auto px-5 pb-8">
       <!-- Balance -->
       <div class="rounded-2xl bg-[#191f1c] text-white p-5 mb-6">
-        <p class="text-[12px] font-semibold uppercase tracking-wide text-white/70">Balance</p>
-        <p class="text-[34px] font-bold leading-tight">{{ summary ? formatFare(Math.max(0, summary.balance_cents || 0)) : (loading ? '…' : '$0.00') }}</p>
+        <p class="text-[12px] font-semibold uppercase tracking-wide text-white/70">{{ owesRideUp ? 'You owe RideUp' : 'Balance' }}</p>
+        <p class="text-[34px] font-bold leading-tight">{{ summary ? formatFare(Math.abs(summary.balance_cents || 0)) : (loading ? '…' : '$0.00') }}</p>
         <p class="text-[12px] text-white/70 mt-1" v-if="summary">Paid out so far {{ formatFare(summary.paid_out_cents || 0) }} · Tips {{ formatFare(summary.tips_cents || 0) }}</p>
-        <p class="text-[12px] text-white/80 mt-3 leading-relaxed">Your balance includes incentive rewards. RideUp pays it by bank transfer, cash or mobile money. Each payout you receive is listed below.</p>
+        <p v-if="owesRideUp" class="text-[12px] text-white/80 mt-3 leading-relaxed">This is RideUp’s share of the cash fares you collected. It comes off your next earnings, or you can hand it to RideUp; either way it shows below.</p>
+        <p v-else class="text-[12px] text-white/80 mt-3 leading-relaxed">Your balance includes incentive rewards. RideUp pays it by bank transfer, cash or mobile money. Each payout you receive is listed below.</p>
       </div>
       <DriverQuests />
 
@@ -153,8 +175,10 @@ function goBack() {
             <div class="min-w-0">
               <div class="text-[14px] font-semibold truncate">{{ item.kind === 'trip' ? `Trip to ${item.label || 'drop-off'}` : item.label }}</div>
               <div class="text-[11px] text-[var(--color-text-muted)] mt-0.5">
-                {{ timeLabel(item.at) }}<span v-if="item.miles"> · {{ item.miles.toFixed(1) }} mi</span><span v-if="item.tip"> · includes {{ formatFare(item.tip) }} tip</span><span v-if="item.processing"> · processing</span>
+                {{ timeLabel(item.at) }}<span v-if="item.miles"> · {{ item.miles.toFixed(1) }} mi</span><span v-if="item.tip"> · includes {{ formatFare(item.tip) }} tip</span><span v-if="item.processing"> · processing</span><span v-if="item.cash && !item.unpaid"> · {{ formatFare(item.cashCents) }} cash collected</span><span v-if="item.unpaid"> · cash not paid, reported</span>
               </div>
+              <ReportUnpaidCash v-if="item.canReport" :ride-id="item.id" :amount-cents="item.cashCents"
+                                button-class="mt-1 text-[12px] font-semibold text-[var(--color-brand)]" @reported="markUnpaid(item)" />
             </div>
             <div class="text-[15px] font-bold text-[var(--color-brand)] flex-shrink-0">+{{ formatFare(item.amount + item.tip) }}</div>
           </div>
@@ -206,14 +230,14 @@ function goBack() {
 
       <!-- Payout history -->
       <div class="mt-8">
-        <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3 px-1">Payouts received</p>
+        <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3 px-1">Payouts</p>
         <div v-if="payouts.length" class="space-y-2">
           <div v-for="p in payouts" :key="p.id" class="flex items-center justify-between bg-[var(--color-surface-secondary)] rounded-2xl px-4 py-3.5">
             <div>
-              <div class="text-[14px] font-semibold">{{ METHODS[p.method] || 'Payout' }}</div>
+              <div class="text-[14px] font-semibold">{{ p.amount_cents < 0 ? 'Cash you handed to RideUp' : METHODS[p.method] || 'Payout' }}</div>
               <div class="text-[11px] text-[var(--color-text-muted)] mt-0.5">{{ new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}<span v-if="p.reference"> · Ref {{ p.reference }}</span></div>
             </div>
-            <div class="text-[15px] font-bold">{{ formatFare(p.amount_cents) }}</div>
+            <div class="text-[15px] font-bold">{{ p.amount_cents < 0 ? `−${formatFare(-p.amount_cents)}` : formatFare(p.amount_cents) }}</div>
           </div>
         </div>
         <p v-else-if="!loading" class="text-[13px] text-[var(--color-text-muted)] px-1">No payouts yet. Questions about a payout? <router-link to="/support" class="text-[var(--color-brand)] font-semibold">Contact support</router-link>.</p>
