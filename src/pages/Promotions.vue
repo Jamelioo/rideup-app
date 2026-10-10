@@ -3,13 +3,13 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import PromoInput from '../components/PromoInput.vue'
 import { formatFare } from '../lib/pricing'
-import { getSavedPromo, savePromo, clearSavedPromo, checkPromo, loadRewards } from '../lib/rewards'
+import { useSavedPromo, savePromo, clearSavedPromo, checkPromo, loadRewards } from '../lib/rewards'
 import { DEMO_MODE } from '../lib/demoMode'
 
 const router = useRouter()
 
 const loading = ref(true)
-const promo = ref(getSavedPromo())
+const promo = useSavedPromo() // the same code the booking screen uses
 const rewards = ref(null)
 
 onMounted(async () => {
@@ -17,7 +17,7 @@ onMounted(async () => {
     rewards.value = await loadRewards()
     if (promo.value) {
       const res = await checkPromo(promo.value.code)
-      if (!res.ok) { clearSavedPromo(); promo.value = null }
+      if (!res.ok && !res.retry) clearSavedPromo()
     }
   }
   loading.value = false
@@ -28,13 +28,11 @@ async function handleApplyCode(code) {
   if (DEMO_MODE) return { success: false, message: 'Promo codes work once the app is connected.' }
   const res = await checkPromo(code)
   if (!res.ok) return { success: false, message: res.message }
-  promo.value = res.promo
   savePromo(res.promo)
   return { success: true, message: `${formatFare(res.promo.amount_cents)} off your next ride` }
 }
 
 function removePromo() {
-  promo.value = null
   clearSavedPromo()
 }
 </script>

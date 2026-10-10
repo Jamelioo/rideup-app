@@ -20,6 +20,7 @@ const routes = {
   'delete-account': () => import('./_routes/delete-account.js'),
   'health': () => import('./_routes/health.js'),
   'notify-driver': () => import('./_routes/notify-driver.js'),
+  'promo-preview': () => import('./_routes/promo-preview.js'),
   'save-payment-method': () => import('./_routes/save-payment-method.js'),
   'split-fare': () => import('./_routes/split-fare.js'),
   'trip-event': () => import('./_routes/trip-event.js'),

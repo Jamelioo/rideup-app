@@ -3,14 +3,17 @@ import BrandLogo from '../components/BrandLogo.vue'
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
-import { getPendingPromoCode } from '../lib/rewards'
+import { usePendingPromoCode, useSavedPromo } from '../lib/rewards'
 import { calculateFare, formatFare, AIRPORT, AIRPORT_FEE_CENTS, BOOKING_FEE_CENTS } from '../lib/pricing'
 
 const router = useRouter()
 const route = useRoute()
 const accountDeleted = computed(() => route.query.deleted === '1')
-// From an ad link like rideupnassau.com/?promo=WELCOME5 (applied automatically after sign-up).
-const adPromo = getPendingPromoCode()
+// From an ad link like rideupnassau.com/?promo=WELCOME5: waiting to be checked, or already saved for the next
+// ride. It comes off when they book, with or without an account.
+const pendingPromo = usePendingPromoCode()
+const savedPromo = useSavedPromo()
+const adPromo = computed(() => pendingPromo.value || savedPromo.value?.code || '')
 const { user } = useAuth()
 
 const isLoggedIn = computed(() => !!user.value)
@@ -38,7 +41,7 @@ const popularTrips = POPULAR_TRIPS.map((t) => ({
 <template>
   <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)] font-sans">
 
-    <p v-if="adPromo" role="status" class="bg-[#2b8659] text-white text-center text-[14px] font-semibold px-4 py-2.5">Code {{ adPromo }} will come off your first ride. Sign up or book to use it.</p>
+    <p v-if="adPromo" role="status" class="bg-[#2b8659] text-white text-center text-[14px] font-semibold px-4 py-2.5">Code {{ adPromo }} comes off when you book. No account needed.</p>
     <p v-if="accountDeleted" role="status" class="bg-[var(--color-surface-secondary)] text-center text-[14px] px-4 py-3">Your RideUp account has been deleted.</p>
 
     <!-- NAV -->

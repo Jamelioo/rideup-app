@@ -3,6 +3,35 @@ import assert from 'node:assert/strict'
 import { isAdmin } from '../api/_auth.js'
 import { rateLimit } from '../api/_rateLimit.js'
 import { rideAlertText } from '../api/_staffAlerts.js'
+import promoPreview, { promoProblem } from '../api/_routes/promo-preview.js'
+
+test('promo check before an account: the code’s own rules, in the database’s words', () => {
+  const now = Date.parse('2026-10-10T12:00:00Z')
+  const code = { active: true, expires_at: null, max_uses: null, uses: 0 }
+  assert.equal(promoProblem(code, now), null)
+  assert.equal(promoProblem({ ...code, max_uses: 100, uses: 99 }, now), null)
+  assert.equal(promoProblem(null, now), 'That promo code isn’t valid.')
+  assert.equal(promoProblem({ ...code, active: false }, now), 'That promo code isn’t valid.')
+  assert.equal(promoProblem({ ...code, expires_at: '2026-10-09T00:00:00Z' }, now), 'That promo code has expired.')
+  assert.equal(promoProblem({ ...code, expires_at: '2026-10-11T00:00:00Z' }, now), null)
+  assert.equal(promoProblem({ ...code, max_uses: 50, uses: 50 }, now), 'That promo code has been fully used.')
+})
+
+test('promo check before an account: junk is refused before the database, and it is rate limited', async () => {
+  const call = async (body, ip) => {
+    const res = { statusCode: 0, body: null, headers: {}, status(c) { this.statusCode = c; return this }, json(b) { this.body = b; return this }, setHeader(k, v) { this.headers[k] = v } }
+    await promoPreview({ method: 'POST', body, headers: { 'x-vercel-forwarded-for': ip }, socket: {} }, res)
+    return res
+  }
+  const junk = await call({ code: "x'; drop table promo_codes;--" }, '203.0.113.50')
+  assert.equal(junk.statusCode, 200)
+  assert.deepEqual(junk.body, { ok: false, error: 'That promo code isn’t valid.' })
+  assert.equal((await call({}, '203.0.113.50')).body.ok, false)
+  let last
+  for (let i = 0; i < 31; i++) last = await call({ code: 'WELCOME5' }, '203.0.113.51')
+  assert.equal(last.statusCode, 429)
+  assert.ok(Number(last.headers['Retry-After']) > 0)
+})
 
 test('ride alerts: a request nobody online can take asks the team to act while the rider waits', () => {
   const ride = { pickup_address: 'Cable Beach, Nassau', dropoff_address: 'Downtown, Nassau', fare_cents: 1868, riders: { name: 'Ann Rolle', phone: '+12425550101' } }

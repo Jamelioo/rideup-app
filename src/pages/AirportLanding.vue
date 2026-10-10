@@ -3,13 +3,16 @@ import BrandLogo from '../components/BrandLogo.vue'
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { calculateFare, formatFare, AIRPORT, AIRPORT_FEE_CENTS, BOOKING_FEE_CENTS } from '../lib/pricing'
-import { getPendingPromoCode } from '../lib/rewards'
+import { usePendingPromoCode, useSavedPromo } from '../lib/rewards'
 import { SCHEDULING_ENABLED } from '../lib/features'
 
 // Landing page for "Nassau airport taxi / ride" searches and airport ads. Example fares use the real pricing
 // (normal traffic, RideUp Go, airport fee and booking fee included); the app shows the exact price first.
 const router = useRouter()
-const promo = getPendingPromoCode()
+// An ad link's code: waiting to be checked, or already saved for the next ride (it comes off at booking).
+const pendingPromo = usePendingPromoCode()
+const savedPromo = useSavedPromo()
+const promo = computed(() => pendingPromo.value || savedPromo.value?.code || '')
 const pickup = { lat: AIRPORT.lat, lng: AIRPORT.lng }
 const DESTINATIONS = [
   { name: 'Cable Beach & Baha Mar', miles: 6, minutes: 13 },
@@ -36,7 +39,7 @@ onUnmounted(() => document.querySelector('meta[name="description"]')?.setAttribu
     </nav>
 
     <header class="max-w-5xl mx-auto px-5 pt-6 pb-10">
-      <p v-if="promo" class="inline-block mb-4 rounded-full bg-[#2b8659]/12 px-3 py-1 text-[13px] font-semibold text-[var(--color-brand)]">Code {{ promo }} comes off your first ride</p>
+      <p v-if="promo" class="inline-block mb-4 rounded-full bg-[#2b8659]/12 px-3 py-1 text-[13px] font-semibold text-[var(--color-brand)]">Code {{ promo }} comes off when you book</p>
       <h1 class="text-[34px] md:text-[48px] leading-[1.05] font-bold tracking-tight max-w-2xl">Nassau airport rides with the price up front</h1>
       <p class="mt-4 text-[17px] text-[var(--color-text-secondary)] max-w-xl">Landed at Lynden Pindling (NAS)? Book a RideUp from the arrivals area, see your fare before you ride, pay by card and follow your driver on the map.</p>
       <div class="mt-6 flex flex-wrap gap-3">

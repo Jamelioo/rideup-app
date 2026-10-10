@@ -12,7 +12,7 @@ import { loadSettings, useSettings } from '../../lib/settings'
 import { enablePushNotifications } from '../../lib/push'
 import { loadGoogleMaps, reverseGeocode } from '../../lib/useGoogleMaps'
 import { calculateFare, formatFare, VEHICLE_TYPES, isAirportPickup, AIRPORT_FEE_CENTS, STOP_MINUTES, normalizeSurge } from '../../lib/pricing'
-import { getSavedPromo, savePromo, clearSavedPromo, checkPromo, loadRewards, previewDiscounts } from '../../lib/rewards'
+import { useSavedPromo, savePromo, clearSavedPromo, checkPromo, checkPendingPromo, loadRewards, previewDiscounts, redeemPendingReferral } from '../../lib/rewards'
 import { DEMO_MODE, DEMO_LOCATIONS, fakeRoute } from '../../lib/demoMode'
 import GoogleMap from '../../components/GoogleMap.vue'
 import HarborBackdrop from '../../components/HarborBackdrop.vue'
@@ -418,7 +418,7 @@ onMounted(loadPaymentMethod)
 
 // ── Promo codes, referral discount and ride credit (the database applies them; this previews them) ──
 const rewards = ref({ credit_cents: 0, referral_discount_pending: false })
-const promo = ref(getSavedPromo())
+const promo = useSavedPromo() // shared: an ad link's code checked as the app opens shows up here straight away
 const promoOpen = ref(false)
 const promoInput = ref('')
 const promoError = ref('')
@@ -433,34 +433,31 @@ const discounts = computed(() => previewDiscounts(fareEstimates.value[selectedVe
 async function loadRiderRewards() {
   if (DEMO_MODE) return
   const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return
-  rewards.value = (await loadRewards()) || rewards.value
-  // A saved code may have been used or expired since it was entered.
+  if (session) rewards.value = (await loadRewards()) || rewards.value
+  await checkPendingPromo() // an ad link's code that couldn't be checked when the app opened
+  // A saved code may have been used or expired since it was entered. Guests' codes are checked too.
   if (promo.value) {
     const res = await checkPromo(promo.value.code)
-    if (!res.ok) { clearSavedPromo(); promo.value = null }
+    if (!res.ok && !res.retry) clearSavedPromo()
   }
 }
 onMounted(loadRiderRewards)
 
+// No account needed: guests' codes are checked on their own now, and against their account when they book.
 async function applyPromo() {
   const code = promoInput.value.trim().toUpperCase()
   if (!code) return
   promoError.value = ''
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) { promoError.value = 'Book once (or log in) to use promo codes.'; return }
   promoBusy.value = true
   const res = await checkPromo(code)
   promoBusy.value = false
   if (!res.ok) { promoError.value = res.message; return }
-  promo.value = res.promo
   savePromo(res.promo)
   promoOpen.value = false
   promoInput.value = ''
 }
 
 function removePromo() {
-  promo.value = null
   clearSavedPromo()
 }
 
@@ -687,6 +684,9 @@ async function handleGuestSubmit({ name, phone, cardElement, stripe }) {
     }
 
     await saveCardForUser(data.user, cardElement, stripe)
+    // A friend's referral link needs a rider profile, which a guest only has now: use it before the first ride is
+    // booked so its $5 comes off. After saving the card, so referring yourself with the same card is caught.
+    await redeemPendingReferral().catch(() => {})
 
     await createRideForUser(data.user, { name, phone })
     if (error.value && guestSheetRef.value) guestSheetRef.value.reset()

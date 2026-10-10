@@ -5,7 +5,7 @@ import { DEMO_MODE } from './lib/demoMode'
 import { useAuth } from './lib/useAuth'
 import BottomNav from './components/BottomNav.vue'
 import InstallPrompt from './components/InstallPrompt.vue'
-import { getPendingReferral, setPendingReferral, redeemReferral, getPendingPromoCode, setPendingPromoCode, checkPromo, savePromo } from './lib/rewards'
+import { getPendingReferral, redeemPendingReferral, setPendingPromoCode, checkPendingPromo } from './lib/rewards'
 import { initAdTracking, saveAttribution } from './lib/adTracking'
 import { isNativeApp, initNativePush, refreshNativePush } from './lib/nativePush'
 import { setMonitoringUser } from './lib/monitoring'
@@ -13,7 +13,7 @@ import { setMonitoringUser } from './lib/monitoring'
 const router = useRouter()
 const route = useRoute()
 const { init, pendingRoute, clearPendingRoute, user } = useAuth()
-// Ad links: remember a promo code from ?promo=CODE (or ?code=) until the visitor signs up.
+// Ad links: remember a promo code from ?promo=CODE (or ?code=) until it has been checked (below).
 try {
   const q = new URLSearchParams(location.search)
   const code = q.get('promo') || q.get('code')
@@ -40,26 +40,17 @@ watch(() => user.value?.id, (id) => setMonitoringUser(id), { immediate: true })
 // Store app: trip alerts follow whoever is signed in on this phone.
 watch(() => user.value?.id, (id) => { if (id && isNativeApp()) refreshNativePush().catch(() => {}) })
 
-// Once signed in: credit the ad that brought them, and apply a promo code from an ad link.
-watch(() => user.value?.id, async (id) => {
-  if (!id || DEMO_MODE) return
-  saveAttribution().catch(() => {})
-  const code = getPendingPromoCode()
-  if (!code) return
-  const res = await checkPromo(code)
-  if (res.ok) savePromo(res.promo)
-  // Keep it only while there's no rider profile yet (a brand-new sign-up); otherwise it's used or invalid.
-  if (res.ok || !/sign in/i.test(res.message || '')) setPendingPromoCode(null)
-}, { immediate: true })
+// Once signed in: credit the ad that brought them.
+watch(() => user.value?.id, (id) => { if (id && !DEMO_MODE) saveAttribution().catch(() => {}) }, { immediate: true })
 
-// A friend's referral code from a /r/CODE link is applied as soon as this person has a rider profile.
-watch(user, async (u) => {
-  const code = getPendingReferral()
-  if (!u || !code || DEMO_MODE) return
-  const res = await redeemReferral(code)
-  // Keep it for later only if there's no rider profile yet (e.g. a guest who hasn't booked).
-  if (res.ok || !/sign in first/i.test(res.message || '')) setPendingReferral(null)
-}, { immediate: true })
+// A promo code from an ad link is checked as soon as the app opens, signed in or not, so the booking screen
+// shows the discount before anyone has an account (guests' own rules are checked when they book). A check that
+// got no answer is tried again on sign-in and when the booking screen opens.
+watch(() => user.value?.id, () => { if (!DEMO_MODE) checkPendingPromo() }, { immediate: true })
+
+// A friend's referral code from a /r/CODE link is applied as soon as this person has a rider profile (guests:
+// just before their first booking, see RiderBooking).
+watch(user, (u) => { if (u && !DEMO_MODE && getPendingReferral()) redeemPendingReferral() }, { immediate: true })
 </script>
 
 <template>
