@@ -7,7 +7,7 @@ test('landing page loads with headline and booking widget', async ({ page }) => 
   await expect(page.locator('h1')).toContainText('Get anywhere in Nassau')
   await expect(page.getByText('Pickup location')).toBeVisible()
   await expect(page.getByText('Where to?')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'See prices' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'See my price' }).first()).toBeVisible()
 })
 
 test('landing page nav leads with booking, then Log in and Sign up, on phones too', async ({ page }) => {
@@ -17,8 +17,8 @@ test('landing page nav leads with booking, then Log in and Sign up, on phones to
     const nav = page.getByRole('navigation', { name: 'Main' })
     await expect(nav.getByRole('link', { name: 'Book a ride', exact: true })).toBeVisible()
     await expect(nav.getByRole('link', { name: 'Log in', exact: true })).toBeVisible()
-    // Sign up is in the header on wider screens, and under the booking box on phones (no room for three).
-    const signUp = width >= 640 ? nav.getByRole('link', { name: 'Sign up', exact: true }) : page.getByRole('link', { name: 'Sign up', exact: true })
+    // Sign up is in the header on wider screens, and in the free-account section on phones (no room for three).
+    const signUp = width >= 640 ? nav.getByRole('link', { name: 'Sign up', exact: true }) : page.getByRole('link', { name: 'Create free account' })
     await expect(signUp).toBeVisible()
   }
 })
@@ -42,16 +42,80 @@ test('landing shows popular trip prices', async ({ page }) => {
   await expect(page.getByText(/^about \$\d+\.\d{2}$/).first()).toBeVisible()
 })
 
-test('"See prices" button navigates to /book', async ({ page }) => {
+test('"See my price" button navigates to /book', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'See prices' }).click()
+  await page.getByRole('button', { name: 'See my price' }).first().click()
   await expect(page).toHaveURL('/book')
 })
 
-test('"Book a ride" CTA navigates to /book', async ({ page }) => {
+test('the final "See my price" call to action navigates to /book', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Book a ride', exact: true }).click()
+  await page.locator('section[aria-labelledby="cta-title"]').getByRole('button', { name: 'See my price' }).click()
   await expect(page).toHaveURL('/book')
+})
+
+test('every new visitor gets the first-ride offer, and it comes off on the booking screen', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.getByText('First ride $5 off').first()).toBeVisible()
+  await page.getByRole('button', { name: 'See my price' }).first().click()
+  await page.locator('input[data-field="pickup"]:visible').fill('Cable Beach, Nassau')
+  await page.locator('input[data-field="dropoff"]:visible').fill('Downtown Nassau, Bay St')
+  await expect(page.getByText('Promo WELCOME5 −$5.00').filter({ visible: true }).first()).toBeVisible()
+})
+
+test('a popular trip opens booking with the trip filled in and priced', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('link', { name: /^Airport to Cable Beach about \$\d+\.\d{2} .*See exact price/ }).click()
+  await expect(page).toHaveURL('/book')
+  await expect(page.locator('input[data-field="pickup"]:visible')).toHaveValue(/Lynden Pindling/)
+  await expect(page.locator('input[data-field="dropoff"]:visible')).toHaveValue('Cable Beach, Nassau')
+  await expect(page.getByText(/You pay \$\d+\.\d{2}/).filter({ visible: true }).first()).toBeVisible()
+  // A neighbourhood pickup asks for the exact spot; the airport doesn't.
+  await expect(page.getByText('Change this to your exact pickup spot').filter({ visible: true })).toHaveCount(0)
+  await page.goto('/book?from=cable-beach&to=downtown')
+  await expect(page.getByText('Change this to your exact pickup spot').filter({ visible: true }).first()).toBeVisible()
+  // Only known places: anything else in a link is ignored.
+  await page.goto('/book?from=nowhere&to=downtown')
+  await expect(page).toHaveURL('/book')
+  await expect(page.locator('input[data-field="pickup"]:visible')).toHaveValue('')
+  await expect(page.locator('input[data-field="dropoff"]:visible')).toHaveValue('Downtown Nassau, Bay Street')
+})
+
+test('phones: a "See my price" bar follows the reader until the final call to action', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  const bar = page.locator('.fixed.bottom-0').filter({ has: page.getByRole('button', { name: 'See my price' }) })
+  await expect(bar).toBeHidden()
+  await page.getByRole('heading', { name: 'How it works' }).scrollIntoViewIfNeeded()
+  await expect(bar).toBeVisible()
+  await expect(bar).toContainText('First ride $5 off')
+  await page.getByRole('heading', { name: 'Ready to ride?' }).scrollIntoViewIfNeeded()
+  await expect(bar).toBeHidden()
+  await page.getByRole('heading', { name: 'Popular trips' }).scrollIntoViewIfNeeded()
+  await bar.getByRole('button', { name: 'See my price' }).click()
+  await expect(page).toHaveURL('/book')
+})
+
+test('landing answers questions without leaving the page, and offers a free account', async ({ page }) => {
+  await page.goto('/')
+  const cost = page.locator('details').filter({ hasText: 'How much does a ride cost?' })
+  await expect(cost.getByText(/RideUp Go is \$2 plus \$1\.25 a mile/)).toBeHidden()
+  await cost.locator('summary').click()
+  await expect(cost.getByText(/RideUp Go is \$2 plus \$1\.25 a mile/)).toBeVisible()
+  await cost.locator('summary').click()
+  await expect(cost.getByText(/RideUp Go is \$2 plus \$1\.25 a mile/)).toBeHidden()
+  await expect(page.getByText('Pay by card, no cash')).toHaveCount(0)
+  await page.getByRole('link', { name: 'Create free account' }).click()
+  await expect(page).toHaveURL('/signup')
+})
+
+test('airport page: each fare opens booking from the airport, priced', async ({ page }) => {
+  await page.goto('/airport')
+  await expect(page.getByText('First ride $5 off').first()).toBeVisible()
+  await page.getByRole('link', { name: /^Paradise Island & Atlantis about 30 min about \$/ }).click()
+  await expect(page).toHaveURL('/book')
+  await expect(page.locator('input[data-field="dropoff"]:visible')).toHaveValue('Paradise Island, Nassau')
+  await expect(page.getByText(/You pay \$\d+\.\d{2}/).filter({ visible: true }).first()).toBeVisible()
 })
 
 test('footer has Instagram and WhatsApp links', async ({ page }) => {

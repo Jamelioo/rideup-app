@@ -2,19 +2,10 @@
 // Best-effort only: counters live in one warm instance, so this slows abuse and accidents but is not a
 // hard guarantee. Auth, ownership checks and Stripe idempotency keys are the real protections.
 // For hard limits put Vercel's WAF / rate-limit rules or an external store in front of /api.
-const store = new Map()
+// Each limiter keeps its own counters: every route runs in one function (api/[action].js), so a shared store
+// would let calls to one route (say the booking screen's availability checks) use up another route's limit.
 
 const CLEANUP_INTERVAL = 60_000
-let lastCleanup = Date.now()
-
-function cleanup(windowMs) {
-  const now = Date.now()
-  if (now - lastCleanup < CLEANUP_INTERVAL) return
-  lastCleanup = now
-  for (const [key, entry] of store) {
-    if (now - entry.start > windowMs) store.delete(key)
-  }
-}
 
 // On Vercel the edge sets x-vercel-forwarded-for / x-real-ip itself. The left-most x-forwarded-for
 // entry is whatever the client sent, so it must not be trusted as the rate-limit key.
@@ -28,10 +19,21 @@ function clientIp(req) {
 }
 
 export function rateLimit({ maxRequests = 10, windowMs = 60_000 } = {}) {
+  const store = new Map()
+  let lastCleanup = Date.now()
+
+  function cleanup(now) {
+    if (now - lastCleanup < CLEANUP_INTERVAL) return
+    lastCleanup = now
+    for (const [key, entry] of store) {
+      if (now - entry.start > windowMs) store.delete(key)
+    }
+  }
+
   return function check(req) {
-    cleanup(windowMs)
-    const ip = clientIp(req)
     const now = Date.now()
+    cleanup(now)
+    const ip = clientIp(req)
     const entry = store.get(ip)
 
     if (!entry || now - entry.start > windowMs) {

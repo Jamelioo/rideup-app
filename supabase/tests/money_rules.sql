@@ -36,7 +36,11 @@ select id as rn from riders where auth_user_id = '00000000-0000-0000-0000-000000
 select id as rt from riders where auth_user_id = '00000000-0000-0000-0000-0000000000a3' \gset
 select id as rf from riders where auth_user_id = '00000000-0000-0000-0000-0000000000a4' \gset
 select referral_code as acode from riders where id = :'ra' \gset
-insert into promo_codes (code, amount_cents, first_ride_only) values ('WELCOME5', 500, true), ('BIG', 5000, false);
+select pg_temp.check(exists (select 1 from promo_codes where code = 'WELCOME5' and active and first_ride_only and amount_cents = 500)
+  and (select value from app_settings where key = 'landing_promo') = '"WELCOME5"'::jsonb,
+  'out of the box, the landing page offers WELCOME5: $5 off a first ride');
+insert into promo_codes (code, amount_cents, first_ride_only) values ('WELCOME5', 500, true), ('BIG', 5000, false)
+on conflict (code) do update set amount_cents = excluded.amount_cents, first_ride_only = excluded.first_ride_only;
 
 -- A has one past trip, so A is not a first-time rider.
 insert into rides (rider_id, driver_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, fare_cents, status, payment_status, completed_at)
@@ -494,5 +498,40 @@ insert into rides (rider_id, driver_id, pickup_lat, pickup_lng, dropoff_lat, dro
 values (:'rc5', '20000000-0000-0000-0000-0000000000d3', 25.04, -77.35, 25.08, -77.33, 1800, 250, 'completed', 'cash', 'cash_unpaid', now());
 select pg_temp.check(balance_cents = 917, 'an unpaid cash trip doesn''t add to what the driver owes RideUp') from public.driver_earnings_summary('20000000-0000-0000-0000-0000000000d3');
 select pg_temp.check(public.account_deletion_blocker('00000000-0000-0000-0000-0000000000c5') = 'cash_unpaid', 'a rider with an unpaid cash trip can''t delete their account to avoid it');
+
+\echo '== Booking funnel'
+do $$ begin perform public.funnel_bump('landing'); perform public.funnel_bump('landing'); perform public.funnel_bump('price'); end $$;
+select pg_temp.check(count(*) = 2 and bool_and(day = (now() at time zone 'America/Nassau')::date)
+  and sum(visitors) filter (where step = 'landing') = 2 and sum(visitors) filter (where step = 'price') = 1,
+  'the server adds up each booking step per day, by Nassau date') from funnel_daily;
+do $$ begin
+  perform public.funnel_bump('checkout');
+  raise exception 'FAIL: an unknown funnel step was counted';
+exception when check_violation then raise notice 'ok  only the four known steps can be counted';
+end $$;
+set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+do $$ begin
+  perform public.funnel_bump('request');
+  raise exception 'FAIL: a rider could count funnel steps';
+exception when insufficient_privilege then raise notice 'ok  riders can''t count funnel steps themselves';
+end $$;
+do $$ begin
+  insert into funnel_daily (day, step, visitors) values (current_date, 'request', 999);
+  raise exception 'FAIL: a rider could write funnel numbers';
+exception when insufficient_privilege then raise notice 'ok  or write funnel numbers';
+end $$;
+select pg_temp.check(count(*) = 0, 'or read them') from funnel_daily;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000d1');
+select pg_temp.check(count(*) = 0, 'drivers can''t read them either') from funnel_daily;
+reset role; set role anon; select pg_temp.as_server();
+do $$ begin
+  perform public.funnel_bump('request');
+  raise exception 'FAIL: a visitor could count funnel steps without going through the server';
+exception when insufficient_privilege then raise notice 'ok  visitors can''t skip the server to count steps';
+end $$;
+reset role;
+set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000ad', '{"role":"admin"}');
+select pg_temp.check(count(*) = 2 and sum(visitors) = 3, 'admins can read the funnel') from funnel_daily;
+reset role; select pg_temp.as_server();
 
 \echo 'All money and safety rules passed.'

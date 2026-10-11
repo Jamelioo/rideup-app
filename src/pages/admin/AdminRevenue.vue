@@ -24,6 +24,25 @@
       </div>
     </div>
 
+    <!-- Booking funnel (migration 020) -->
+    <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5 mb-6">
+      <h2 class="text-sm font-semibold text-[var(--color-text-primary)]">Booking funnel, last {{ days }} days</h2>
+      <p class="text-xs text-[var(--color-text-muted)] mb-4">Where riders stop between visiting and riding. People are counted once a day per browser, anonymously; the % is of the step before.</p>
+      <p v-if="funnelMissing" class="text-sm text-[var(--color-text-muted)]">Run migration 020 in Supabase to start counting.</p>
+      <p v-else-if="!funnelRows[0].count" class="text-sm text-[var(--color-text-muted)]">No visits counted yet in this period.</p>
+      <ol v-else class="space-y-3">
+        <li v-for="s in funnelRows" :key="s.key">
+          <div class="flex items-baseline justify-between gap-3 text-sm mb-1">
+            <span class="text-[var(--color-text-secondary)]">{{ s.label }}</span>
+            <span class="font-semibold tabular-nums">{{ s.count }}<span v-if="s.rate != null" class="font-normal text-[var(--color-text-muted)]"> · {{ s.rate }}%</span></span>
+          </div>
+          <div class="h-2 rounded-full bg-[var(--color-surface-secondary)]" aria-hidden="true">
+            <div class="h-2 rounded-full bg-[#2b8659]" :style="{ width: `${s.width}%` }"></div>
+          </div>
+        </li>
+      </ol>
+    </div>
+
     <!-- Daily rider payments -->
     <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5 mb-6">
       <h2 class="text-sm font-semibold text-[var(--color-text-primary)]">Rider payments per day</h2>
@@ -162,6 +181,7 @@ import { ref, computed, onMounted } from 'vue'
 import { toCsv, downloadCsv, dollars } from '../../lib/csv'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
 import { DEMO_MODE } from '../../lib/demoMode'
+import { FUNNEL_STEPS, FUNNEL_LABELS } from '../../lib/funnelSteps'
 
 // Real numbers from admin_money_summary / admin_money_owed (migration 010).
 const RANGES = [{ days: 7, label: '7 days' }, { days: 30, label: '30 days' }, { days: 90, label: '90 days' }]
@@ -174,6 +194,8 @@ const days = ref(30)
 const rows = ref([])
 const owed = ref({ credit_outstanding_cents: 0, driver_balances_cents: 0, drivers_owed: 0 })
 const acquisition = ref([]) // admin_acquisition_report (migration 013)
+const funnel = ref(Object.fromEntries(FUNNEL_STEPS.map((s) => [s, 0]))) // funnel_daily (migration 020), summed
+const funnelMissing = ref(false)
 const loading = ref(false)
 const error = ref('')
 const hover = ref(null)
@@ -189,6 +211,17 @@ const totalNet = computed(() => net(sum.value))
 const driverTotal = computed(() => sum.value.driver_fare_cents + sum.value.tips_cents + sum.value.cancel_fee_cents - sum.value.cancel_platform_cents + sum.value.quest_reward_cents - sum.value.refund_driver_cents)
 const maxPaid = computed(() => Math.max(1, ...rows.value.map((d) => d.rider_paid_cents)))
 const tableRows = computed(() => rows.value.filter((d) => d.trips || d.rider_paid_cents || d.quest_reward_cents).slice().reverse())
+// Visited › opened booking › saw a price › requested › completed trips, each with its share of the step before.
+const funnelRows = computed(() => {
+  const steps = [...FUNNEL_STEPS.map((s) => ({ key: s, label: FUNNEL_LABELS[s], count: funnel.value[s] || 0 })),
+    { key: 'completed', label: 'Trips completed', count: sum.value.trips }]
+  const top = Math.max(1, steps[0].count)
+  return steps.map((s, i) => ({
+    ...s,
+    rate: i > 0 && steps[i - 1].count ? Math.round((s.count / steps[i - 1].count) * 100) : null,
+    width: Math.min(100, Math.round((s.count / top) * 100)),
+  }))
+})
 const tiles = computed(() => [
   { label: 'Rider payments', value: money(sum.value.rider_paid_cents - sum.value.refund_cents), note: `${sum.value.trips} trips${sum.value.cash_trips ? ` (${sum.value.cash_trips} in cash)` : ''}${sum.value.refund_cents ? ` · after ${money(sum.value.refund_cents)} refunds` : ''}` },
   { label: 'RideUp net', value: money(totalNet.value), note: 'after discounts, incentives and card fees' },
@@ -205,18 +238,22 @@ async function load() {
   error.value = ''
   if (!supabaseConfigured || DEMO_MODE) {
     rows.value = Array.from({ length: days.value }, (_, i) => ({ day: nassauDate(i - days.value + 1), ...Object.fromEntries(FIELDS.map((f) => [f, 0])) }))
+    if (DEMO_MODE) funnel.value = { landing: 120, booking: 41, price: 26, request: 7 }
     return
   }
   loading.value = true
   const acq = supabase.rpc('admin_acquisition_report', { p_from: nassauDate(1 - days.value), p_to: nassauDate(0) })
-  const [summary, owedRes] = await Promise.all([
+  const [summary, owedRes, funnelRes] = await Promise.all([
     supabase.rpc('admin_money_summary', { p_from: nassauDate(1 - days.value), p_to: nassauDate(0) }),
     supabase.rpc('admin_money_owed'),
+    supabase.from('funnel_daily').select('step, visitors').gte('day', nassauDate(1 - days.value)).lte('day', nassauDate(0)),
   ])
   loading.value = false
   if (summary.error) { error.value = 'Could not load money data. Run migration 010 and check your account has the admin role.'; return }
   rows.value = (summary.data || []).map((d) => ({ ...d, ...Object.fromEntries(FIELDS.map((f) => [f, Number(d[f]) || 0])) }))
   const { data: acqRows } = await acq
+  funnelMissing.value = !!funnelRes.error
+  funnel.value = Object.fromEntries(FUNNEL_STEPS.map((s) => [s, (funnelRes.data || []).filter((r) => r.step === s).reduce((n, r) => n + (r.visitors || 0), 0)]))
   acquisition.value = (acqRows || []).map((a) => ({ ...a, signups: Number(a.signups), riders_with_trip: Number(a.riders_with_trip), trips: Number(a.trips), rider_paid_cents: Number(a.rider_paid_cents) }))
   const o = Array.isArray(owedRes.data) ? owedRes.data[0] : owedRes.data
   if (o) owed.value = { credit_outstanding_cents: Number(o.credit_outstanding_cents) || 0, driver_balances_cents: Number(o.driver_balances_cents) || 0, drivers_owed: Number(o.drivers_owed) || 0 }

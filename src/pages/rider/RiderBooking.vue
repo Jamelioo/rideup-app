@@ -27,7 +27,10 @@ import { cashOption, savedPaymentChoice, savePaymentChoice } from '../../lib/cas
 import { useAuth } from '../../lib/useAuth'
 import { toE164, phoneIsVerified } from '../../lib/phone'
 import { riderHasPhone, saveRiderPhone, phoneReminderShown, rememberPhoneReminder } from '../../lib/riderPhone'
-import { trackRideBooked } from '../../lib/adTracking'
+import { trackRideBooked, trackPriceSeen } from '../../lib/adTracking'
+import { trackStep } from '../../lib/funnel'
+import { applyLandingOffer } from '../../lib/landingOffer'
+import { placeById } from '../../lib/places'
 import { SCHEDULING_ENABLED } from '../../lib/features'
 import { useAvailability } from '../../lib/useAvailability'
 import { availabilityFor, canBook, unavailableNotice, optionStatus } from '../../lib/availability'
@@ -172,6 +175,7 @@ onMounted(async () => {
     directionsService = new maps.DirectionsService()
     await nextTick()
     setupAutocomplete(maps)
+    maybeCalculateRoute() // a trip a link filled in (prefillTrip) is priced as soon as Maps is ready
   } catch (err) {
     error.value = 'Could not load maps. Check your connection and try again.'
   }
@@ -243,21 +247,39 @@ function removeStop() {
   maybeCalculateRoute()
 }
 onActivated(() => nextTick(syncAddressFields))
-// Opened from the landing page's "Pickup location" / "Where to?" (/book?focus=pickup|dropoff): put the cursor
-// in that field, like Uber. Only the visible copy (phone or desktop layout) is focused; the hint is then removed
-// from the address so going back doesn't refocus.
-function focusRequestedField() {
-  const field = route.query.focus
-  if (field !== 'pickup' && field !== 'dropoff') return
+// Opened from a link on the landing pages: put the cursor in a field, like Uber (/book?focus=pickup|dropoff),
+// and/or fill in a popular trip and price it straight away (/book?from=airport&to=cable-beach; only known places,
+// src/lib/places.js). The hints are then removed from the address, so going back doesn't apply them again.
+// Only the visible copy of a field (phone or desktop layout) is focused.
+const pickupArea = ref('') // a neighbourhood pickup from a link: the rider is asked for the exact spot until they change it
+watch(pickup, (p) => { if (pickupArea.value && p?.address !== pickupArea.value) pickupArea.value = '' })
+let applyingLink = false
+function applyLinkHints() {
+  const { focus, from, to, ...rest } = route.query
+  if (applyingLink || (focus === undefined && from === undefined && to === undefined)) return
+  applyingLink = true // onMounted and onActivated both run on the first visit
+  router.replace({ query: rest }).finally(() => { applyingLink = false })
+  prefillTrip(placeById(from), placeById(to))
+  if (focus !== 'pickup' && focus !== 'dropoff') return
   nextTick(() => {
-    const input = [...document.querySelectorAll(`input[data-field="${field}"]`)].find((el) => el.offsetParent !== null)
+    const input = [...document.querySelectorAll(`input[data-field="${focus}"]`)].find((el) => el.offsetParent !== null)
     if (input && !input.value) input.focus()
-    const { focus, ...rest } = route.query
-    router.replace({ query: rest })
   })
 }
-onMounted(focusRequestedField)
-onActivated(focusRequestedField)
+function prefillTrip(from, to) {
+  if (!from && !to) return
+  if (DEMO_MODE) {
+    if (from) pickupText.value = from.address
+    if (to) dropoffText.value = to.address
+  } else {
+    if (from) pickup.value = { address: from.address, lat: from.lat, lng: from.lng }
+    if (to) dropoff.value = { address: to.address, lat: to.lat, lng: to.lng }
+    if (directionsService) maybeCalculateRoute()
+  }
+  pickupArea.value = from?.area ? from.address : ''
+}
+onMounted(applyLinkHints)
+onActivated(applyLinkHints)
 
 async function handleMapTap(latlng) {
   const address = await reverseGeocode(latlng.lat, latlng.lng)
@@ -383,6 +405,18 @@ function showToast(msg) {
 }
 
 // Route and price ready. Scheduling for later only needs this; booking now also needs a car that can come.
+// Funnel and ads: the first price shown for each route ("saw a price").
+let pricedRoute = ''
+watch(() => fareEstimates.value[selectedVehicle.value], (fare) => {
+  if (!fare || !pickup.value || !dropoff.value) return
+  const key = [pickup.value.lat, pickup.value.lng, dropoff.value.lat, dropoff.value.lng, stop.value?.lat ?? ''].join(',')
+  if (key === pricedRoute) return
+  pricedRoute = key
+  trackStep('price')
+  trackPriceSeen(fare)
+})
+onMounted(() => trackStep('booking'))
+
 const routeReady = computed(() => pickup.value && dropoff.value && fareEstimates.value[selectedVehicle.value] && !isSubmitting.value)
 
 // ── How the rider pays: their card, or cash to the driver while RideUp accepts cash (Admin › Settings) ──
@@ -450,10 +484,11 @@ const discounts = computed(() => previewDiscounts(fareEstimates.value[selectedVe
 }))
 
 async function loadRiderRewards() {
-  if (DEMO_MODE) return
+  if (DEMO_MODE) { await applyLandingOffer(); return }
   const { data: { session } } = await supabase.auth.getSession()
   if (session) rewards.value = (await loadRewards()) || rewards.value
   await checkPendingPromo() // an ad link's code that couldn't be checked when the app opened
+  await applyLandingOffer() // a new visitor's first-ride offer, unless they already have a code (src/lib/landingOffer.js)
   // A saved code may have been used or expired since it was entered. Guests' codes are checked too.
   if (promo.value) {
     const res = await checkPromo(promo.value.code)
@@ -657,6 +692,7 @@ async function createRideForUser(user, guestInfo = null) {
     showGuestSheet.value = false
     passenger.value = null // the next booking is for the rider again unless they choose otherwise
     trackRideBooked(ride)
+    trackStep('request')
     // Whether a driver could be alerted decides how long the search runs (unknown: the full length).
     emit('requested', { ...ride, drivers_alerted: latest ? latest.state === 'available' : null })
     isSubmitting.value = false
@@ -885,6 +921,7 @@ async function scheduleRide({ date, time, summary }) {
                      @focus="activeInput = 'pickup'"
                      class="bg-transparent outline-none w-full py-3 -my-3 text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
+            <p v-if="pickupArea" class="px-1 text-[12px] leading-snug text-[var(--color-text-secondary)]">Change this to your exact pickup spot so your driver can find you.</p>
             <button
               @click="useCurrentLocation"
               :disabled="isLocating"
@@ -1056,6 +1093,7 @@ async function scheduleRide({ date, time, summary }) {
                      @focus="activeInput = 'pickup'"
                      class="bg-transparent outline-none w-full py-3 -my-3 text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
+            <p v-if="pickupArea" class="px-1 text-[12px] leading-snug text-[var(--color-text-secondary)]">Change this to your exact pickup spot so your driver can find you.</p>
             <button
               @click="useCurrentLocation"
               :disabled="isLocating"

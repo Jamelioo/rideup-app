@@ -1,47 +1,114 @@
 <script setup>
 import BrandLogo from '../components/BrandLogo.vue'
-import { computed } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
-import { usePendingPromoCode, useSavedPromo } from '../lib/rewards'
-import { calculateFare, formatFare, AIRPORT, AIRPORT_FEE_CENTS, BOOKING_FEE_CENTS } from '../lib/pricing'
+import { useSettings, loadSettings } from '../lib/settings'
+import { applyLandingOffer, landingPill as pill, landingPillReady as pillReady } from '../lib/landingOffer'
+import { trackStep } from '../lib/funnel'
+import { placeById, tripLink } from '../lib/places'
+import { CANCEL_GRACE_SECONDS } from '../lib/policy'
+import { calculateFare, formatFare, formatAmount, RATES, AIRPORT_FEE_CENTS, BOOKING_FEE_CENTS } from '../lib/pricing'
 
+// Booking first, sign-up second. The offer, the promise and the answers only say what the app really does.
 const router = useRouter()
 const route = useRoute()
 const accountDeleted = computed(() => route.query.deleted === '1')
-// From an ad link like rideupnassau.com/?promo=WELCOME5: waiting to be checked, or already saved for the next
-// ride. It comes off when they book, with or without an account.
-const pendingPromo = usePendingPromoCode()
-const savedPromo = useSavedPromo()
-const adPromo = computed(() => pendingPromo.value || savedPromo.value?.code || '')
 const { user } = useAuth()
-
 const isLoggedIn = computed(() => !!user.value)
 const firstName = computed(() => (user.value?.user_metadata?.name || '').trim().split(/\s+/)[0] || 'Account')
+// Guests book with a temporary account, so they still see the free-account section.
+const showAccountPitch = computed(() => !user.value || user.value.is_anonymous)
 const year = new Date().getFullYear()
+
+// The first-ride offer (Admin › Promos), applied for them. The pill keeps its space while it loads.
+applyLandingOffer()
+// Cash follows Admin › Settings. The hero line that depends on it waits for the setting, so it doesn't change on screen.
+const settings = useSettings()
+const settingsReady = ref(false)
+loadSettings().then(() => { settingsReady.value = true })
+const cash = computed(() => !!settings.value.accept_cash)
+
+onMounted(() => trackStep('landing'))
 
 // Like Uber: tapping a field opens booking with that field ready to type in.
 function goToBooking(field) {
   router.push(field ? { path: '/book', query: { focus: field } } : '/book')
 }
 
-// Typical RideUp Go prices with the real rates (src/lib/pricing.js), normal traffic. Same airport trips as /airport.
-const POPULAR_TRIPS = [
-  { from: 'Airport', to: 'Cable Beach', miles: 6, minutes: 13, airport: true },
-  { from: 'Airport', to: 'Downtown', miles: 10.5, minutes: 24, airport: true },
-  { from: 'Cable Beach', to: 'Downtown', miles: 6.3, minutes: 18 },
-  { from: 'Downtown', to: 'Paradise Island', miles: 3.5, minutes: 12 },
+const graceLabel = CANCEL_GRACE_SECONDS % 60 === 0 ? `${CANCEL_GRACE_SECONDS / 60} minutes` : `${CANCEL_GRACE_SECONDS} seconds`
+
+const PROMISE = [
+  { icon: 'lock', title: 'Price lock', text: 'Your price is set when you book. Traffic or a longer route won’t change it.' },
+  { icon: 'card', title: 'No driver, no charge', text: 'If nobody accepts your request, you pay nothing.' },
+  { icon: 'clock', title: 'Free cancellation', text: `Cancel free until a driver accepts, and for ${graceLabel} after.` },
+  { icon: 'repeat', title: 'We re-match you', text: 'If your driver cancels, we find you another at the same price, automatically.' },
 ]
-const popularTrips = POPULAR_TRIPS.map((t) => ({
-  ...t,
-  fare: formatFare(calculateFare(t.miles, t.minutes, 'standard', t.airport ? { pickup: AIRPORT } : {})),
-}))
+
+// Typical RideUp Go prices with the real rates (src/lib/pricing.js), normal traffic. Each opens booking with the
+// trip filled in and priced for right now (src/lib/places.js).
+const POPULAR_TRIPS = [
+  { from: 'airport', to: 'cable-beach', miles: 6, minutes: 13 },
+  { from: 'airport', to: 'downtown', miles: 10.5, minutes: 24 },
+  { from: 'cable-beach', to: 'downtown', miles: 6.3, minutes: 18 },
+  { from: 'cruise-port', to: 'paradise-island', miles: 3.5, minutes: 12 },
+]
+const popularTrips = POPULAR_TRIPS.map((t) => {
+  const from = placeById(t.from)
+  const to = placeById(t.to)
+  const fare = formatFare(calculateFare(t.miles, t.minutes, 'standard', { pickup: from }))
+  return { ...t, key: `${t.from}-${t.to}`, fromLabel: from.label, toLabel: to.label, fare, link: tripLink(t.from, t.to) }
+})
+
+const steps = computed(() => [
+  { title: 'Enter where you’re going', text: 'Your exact price shows straight away, before you commit to anything.' },
+  { title: 'Request your ride', text: 'No account needed. A nearby approved driver accepts, and you see their name, car and plate.' },
+  { title: 'Ride and pay', text: cash.value ? 'Follow your car on the map. Pay by card automatically, or in cash at drop-off.' : 'Follow your car on the map. Your card is charged when you arrive, and your receipt is emailed.' },
+])
+
+const go = RATES.standard
+const faqs = computed(() => [
+  { q: 'How much does a ride cost?', a: `You see the exact price before you book. RideUp Go is ${formatAmount(go.base)} plus ${formatAmount(go.perMile)} a mile and ${formatAmount(go.perMinute)} a minute (${formatAmount(go.minimum)} minimum), plus a ${formatAmount(BOOKING_FEE_CENTS)} booking fee. Airport pickups add ${formatAmount(AIRPORT_FEE_CENTS)}. At busy times it can cost more, and you see that before you book too.` },
+  { q: 'Do I need an account or the app?', a: 'No. Book right here in your browser as a guest with your name, phone and card. A free account saves your details and trips for next time.' },
+  { q: 'Can I pay with cash?', a: cash.value ? 'Yes, with a free account and a mobile number. Choose Cash before you request, then pay your driver at drop-off. Exact change helps.' : 'Rides are paid by card for now. Your card is charged when you arrive, and your receipt is emailed to you.' },
+  { q: 'What if no driver accepts?', a: 'You pay nothing. Your request simply ends, and you can try again whenever you like.' },
+  { q: 'Is RideUp safe?', a: 'Every driver is approved by RideUp before their first trip. You see their name, photo, car and plate before pickup, you can share your trip live with family, and you can call for help from the trip screen.' },
+  { q: 'Can I cancel?', a: `Yes. It’s free until a driver accepts and for ${graceLabel} after. Later than that there’s a $5 fee, because your driver is on the way, and you see it before you confirm. If your driver cancels, you’re never charged.` },
+  { q: 'Can I book for someone else, or from the airport?', a: `Yes. Tap “Someone else?” when you book and we’ll text them the driver’s details. At the airport, book from arrivals; airport pickups add ${formatAmount(AIRPORT_FEE_CENTS)}.` },
+])
+
+const accountPerks = computed(() => [
+  { title: 'Book faster', text: 'Your details and card are saved for next time.' },
+  ...(cash.value ? [{ title: 'Pay with cash', text: 'Pay your driver at drop-off. Cash needs an account with a mobile number.' }] : []),
+  { title: '$5 for every friend', text: 'Friends get $5 off their first ride with your code, and you get $5 credit when they ride.' },
+  { title: 'Trips and receipts', text: 'Every trip and receipt in one place.' },
+])
+
+// Phones: a "See my price" bar once the booking box has scrolled away, until the final call to action.
+const heroCard = ref(null)
+const finalCta = ref(null)
+const heroInView = ref(true)
+const finalReached = ref(false)
+let observer = null
+onMounted(() => {
+  if (!('IntersectionObserver' in window) || !heroCard.value || !finalCta.value) return
+  observer = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.target === heroCard.value) heroInView.value = e.isIntersecting
+      // On screen, or already scrolled past (above the screen): the bar isn't needed either way.
+      else finalReached.value = e.isIntersecting || e.boundingClientRect.top < 0
+    }
+  })
+  observer.observe(heroCard.value)
+  observer.observe(finalCta.value)
+})
+onBeforeUnmount(() => observer?.disconnect())
+const showStickyCta = computed(() => !heroInView.value && !finalReached.value)
 </script>
 
 <template>
   <div class="min-h-dvh bg-[var(--color-surface)] text-[var(--color-text-primary)] font-sans">
 
-    <p v-if="adPromo" role="status" class="bg-[#2b8659] text-white text-center text-[14px] font-semibold px-4 py-2.5">Code {{ adPromo }} comes off when you book. No account needed.</p>
     <p v-if="accountDeleted" role="status" class="bg-[var(--color-surface-secondary)] text-center text-[14px] px-4 py-3">Your RideUp account has been deleted.</p>
 
     <!-- NAV -->
@@ -59,7 +126,7 @@ const popularTrips = POPULAR_TRIPS.map((t) => ({
             <router-link to="/profile" class="hidden sm:flex items-center px-3 py-2 min-h-[44px] text-[16px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors">{{ firstName }}</router-link>
             <router-link to="/book" class="text-[16px] font-bold bg-[var(--color-text-primary)] text-[var(--color-surface)] px-5 py-2.5 rounded-full hover:opacity-90 transition-opacity">Book a ride</router-link>
           </template>
-          <!-- Booking first: no account is needed to ride. On phones, Sign up is under the booking box instead. -->
+          <!-- Booking first: no account is needed to ride. On phones, sign-up is in the free-account section below. -->
           <template v-else>
             <router-link to="/login" class="flex items-center px-3 py-2 min-h-[44px] text-[16px] font-medium text-[var(--color-text-primary)] hover:opacity-70 transition-opacity">Log in</router-link>
             <router-link to="/signup" class="hidden sm:flex items-center px-3 py-2 min-h-[44px] text-[16px] font-medium text-[var(--color-text-primary)] hover:opacity-70 transition-opacity">Sign up</router-link>
@@ -69,19 +136,29 @@ const popularTrips = POPULAR_TRIPS.map((t) => ({
       </nav>
     </header>
 
-    <!-- HERO -->
+    <!-- HERO: the offer, the promise in brief, and booking -->
     <section class="bg-[var(--color-surface-secondary)]" aria-labelledby="hero-title">
-      <div class="max-w-6xl mx-auto px-5 pt-10 pb-0 md:pt-14 md:pb-14 md:grid md:grid-cols-2 md:gap-8 md:items-center">
+      <div class="max-w-6xl mx-auto px-5 pt-6 md:pt-14 md:pb-14 md:grid md:grid-cols-2 md:gap-8 md:items-center">
         <div class="pb-10 md:pb-16">
-          <h1 id="hero-title" class="text-[38px] sm:text-[48px] lg:text-[60px] leading-[1.02] font-bold tracking-tight mb-4">
+          <!-- One line tall whatever it says, so nothing moves when the offer arrives -->
+          <div class="min-h-[30px] mb-4">
+            <p v-if="pillReady && pill" class="inline-flex flex-wrap items-center gap-x-1.5 rounded-full bg-[#2b8659]/8 px-3 py-1.5 text-[13px] leading-[18px] text-[var(--color-brand)]">
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M3 11.6V4a1 1 0 011-1h7.6a1 1 0 01.7.3l8.4 8.4a1 1 0 010 1.4l-7.6 7.6a1 1 0 01-1.4 0L3.3 12.3a1 1 0 01-.3-.7z"/></svg>
+              <strong class="font-bold">{{ pill.title }}</strong>
+              <span class="text-[var(--color-text-secondary)]">· {{ pill.note }}</span>
+              <span v-if="pill.ends" class="text-[var(--color-text-secondary)]">· ends {{ pill.ends }}</span>
+            </p>
+            <p v-else-if="pillReady" class="inline-flex items-center rounded-full bg-[var(--color-surface)] px-3 py-1.5 text-[13px] leading-[18px] font-semibold text-[var(--color-text-secondary)]">Rides across New Providence</p>
+          </div>
+          <h1 id="hero-title" class="text-[36px] sm:text-[48px] lg:text-[60px] leading-[1.04] font-bold tracking-tight mb-3">
             Get anywhere in Nassau.
           </h1>
-          <p class="text-[var(--color-text-secondary)] text-[17px] leading-[1.5] max-w-md mb-7">
-            See your exact fare before you book. That’s the price you pay, with a driver approved by RideUp.
+          <p class="text-[var(--color-text-secondary)] text-[16px] sm:text-[17px] leading-[1.5] max-w-md mb-6">
+            See your exact price before you book. No haggling, no surprises. Every driver is approved by RideUp.
           </p>
 
           <!-- Booking widget: each field opens booking ready to type, like Uber -->
-          <div class="bg-[var(--color-surface)] rounded-2xl p-4 shadow-lg shadow-black/5 max-w-sm">
+          <div ref="heroCard" class="bg-[var(--color-surface)] rounded-2xl p-4 shadow-lg shadow-black/5 max-w-sm">
             <div class="relative space-y-2 mb-3">
               <span class="absolute left-[21px] top-[22px] bottom-[22px] w-px bg-[var(--color-border)]" aria-hidden="true"></span>
               <button type="button" @click="goToBooking('pickup')" class="relative w-full flex items-center gap-3 bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3.5 text-left hover:bg-[var(--color-border)] transition-colors">
@@ -94,17 +171,15 @@ const popularTrips = POPULAR_TRIPS.map((t) => ({
               </button>
             </div>
             <button type="button" @click="goToBooking()" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-xl text-[16px] hover:bg-[#236e49] transition-colors active:scale-[0.99]">
-              See prices
+              See my price
             </button>
           </div>
-          <p v-if="!isLoggedIn" class="mt-4 text-[14px] text-[var(--color-text-secondary)]">
-            No account needed to book.
-            <!-- py-3 -my-3: a 44px tap target that doesn't push the lines apart when the sentence wraps -->
-            <router-link to="/signup" class="inline-block py-3 -my-3 font-semibold underline underline-offset-2 hover:text-[var(--color-text-primary)]">Sign up</router-link>
-            or
-            <router-link to="/login" class="inline-block py-3 -my-3 font-semibold underline underline-offset-2 hover:text-[var(--color-text-primary)]">log in</router-link>
-            to see your trips.
-          </p>
+          <ul class="mt-4 grid gap-y-1.5 sm:grid-cols-2 sm:gap-x-5 max-w-lg text-[14px] text-[var(--color-text-secondary)]">
+            <li class="flex gap-2"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Price locked when you book</li>
+            <li class="flex gap-2"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>No account or app needed</li>
+            <li class="flex gap-2" :class="!settingsReady && 'invisible'"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>{{ cash ? 'Pay by card or cash' : 'Card charged when you arrive' }}</li>
+            <li class="flex gap-2"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>No charge if nobody accepts</li>
+          </ul>
         </div>
 
         <!-- Phone mockup — desktop only -->
@@ -167,56 +242,111 @@ const popularTrips = POPULAR_TRIPS.map((t) => ({
       </div>
     </section>
 
-    <!-- WHY RIDEUP -->
-    <section class="bg-[var(--color-surface)]" aria-labelledby="why-title">
+    <!-- THE RIDEUP PROMISE: what every rider can count on, all of it true in the app today -->
+    <section class="below-fold bg-[var(--color-surface)]" aria-labelledby="promise-title">
       <div class="max-w-6xl mx-auto px-5 py-12 md:py-16">
-        <h2 id="why-title" class="text-[28px] sm:text-[35px] font-bold leading-[1.14] tracking-tight mb-8">Why ride with RideUp</h2>
-        <div class="grid gap-8 md:grid-cols-3 md:gap-10">
-          <div>
-            <div class="w-12 h-12 rounded-xl bg-[#2b8659]/10 flex items-center justify-center mb-4" aria-hidden="true">
-              <svg class="w-6 h-6 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <h2 id="promise-title" class="text-[28px] sm:text-[35px] font-bold leading-[1.14] tracking-tight mb-2">The RideUp Promise</h2>
+        <p class="text-[var(--color-text-secondary)] text-[16px] leading-[1.5] mb-7 max-w-xl">On every ride, for every rider.</p>
+        <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <li v-for="item in PROMISE" :key="item.title" class="rounded-2xl bg-[var(--color-surface-secondary)] p-5">
+            <div class="w-10 h-10 rounded-xl bg-[#2b8659]/12 text-[var(--color-brand)] flex items-center justify-center mb-3">
+              <svg v-if="item.icon === 'lock'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path stroke-linecap="round" d="M8 11V7a4 4 0 118 0v4"/></svg>
+              <svg v-else-if="item.icon === 'card'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path stroke-linecap="round" d="M2 10h20M7 15h3"/></svg>
+              <svg v-else-if="item.icon === 'clock'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>
+              <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 9a8 8 0 0114-3l2 2M20 15a8 8 0 01-14 3l-2-2M20 4v4h-4M4 20v-4h4"/></svg>
             </div>
-            <h3 class="text-[19px] font-bold mb-1.5">Know your fare first</h3>
-            <p class="text-[var(--color-text-secondary)] text-[16px] leading-[1.5]">Your price is shown before you book and doesn’t change during the trip. No haggling, no hidden fees.</p>
-          </div>
-          <div>
-            <div class="w-12 h-12 rounded-xl bg-[#2b8659]/10 flex items-center justify-center mb-4" aria-hidden="true">
-              <svg class="w-6 h-6 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-            </div>
-            <h3 class="text-[19px] font-bold mb-1.5">Ride with peace of mind</h3>
-            <p class="text-[var(--color-text-secondary)] text-[16px] leading-[1.5]">Every driver is approved by RideUp. See their name, car and plate, follow the trip live and share it with family.</p>
-          </div>
-          <div>
-            <div class="w-12 h-12 rounded-xl bg-[#2b8659]/10 flex items-center justify-center mb-4" aria-hidden="true">
-              <svg class="w-6 h-6 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path stroke-linecap="round" d="M2 10h20"/></svg>
-            </div>
-            <h3 class="text-[19px] font-bold mb-1.5">Pay by card, no cash</h3>
-            <p class="text-[var(--color-text-secondary)] text-[16px] leading-[1.5]">Your card is charged when the trip ends and your receipt is emailed to you. Book as a guest, no account needed.</p>
-          </div>
-        </div>
+            <h3 class="text-[17px] font-bold mb-1">{{ item.title }}</h3>
+            <p class="text-[15px] leading-[1.5] text-[var(--color-text-secondary)]">{{ item.text }}</p>
+          </li>
+        </ul>
+        <p class="mt-6 flex gap-3 items-start text-[15px] leading-[1.5] text-[var(--color-text-secondary)] max-w-3xl">
+          <svg class="w-5 h-5 mt-0.5 shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          <span>Every driver is approved by RideUp. You see their name, photo, car and plate before pickup, and you can share your trip live with family.</span>
+        </p>
       </div>
     </section>
 
-    <!-- POPULAR TRIPS: real prices, like Uber's price estimates -->
-    <section class="bg-[var(--color-surface-secondary)]" aria-labelledby="trips-title">
+    <!-- POPULAR TRIPS: real prices; each opens booking with the trip filled in and priced -->
+    <section class="below-fold bg-[var(--color-surface-secondary)]" aria-labelledby="trips-title">
       <div class="max-w-6xl mx-auto px-5 py-12 md:py-16">
         <h2 id="trips-title" class="text-[28px] sm:text-[35px] font-bold leading-[1.14] tracking-tight mb-2">Popular trips</h2>
-        <p class="text-[var(--color-text-secondary)] text-[16px] leading-[1.5] mb-7 max-w-xl">Typical RideUp Go prices in normal traffic, including the {{ formatFare(BOOKING_FEE_CENTS) }} booking fee (and the {{ formatFare(AIRPORT_FEE_CENTS) }} airport pickup fee from the airport). Your exact price is shown before you book.</p>
+        <p class="text-[var(--color-text-secondary)] text-[16px] leading-[1.5] mb-7 max-w-xl">Typical RideUp Go prices in normal traffic, including the {{ formatFare(BOOKING_FEE_CENTS) }} booking fee (and the {{ formatFare(AIRPORT_FEE_CENTS) }} airport pickup fee from the airport). Tap a trip to see its exact price now.</p>
         <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-          <li v-for="trip in popularTrips" :key="trip.from + trip.to">
-            <button type="button" @click="goToBooking('pickup')" class="w-full h-full text-left bg-[var(--color-surface)] rounded-2xl p-5 hover:shadow-md transition-shadow">
-              <span class="block text-[14px] text-[var(--color-text-secondary)]">{{ trip.from }} <span aria-hidden="true">→</span><span class="sr-only">to</span> {{ trip.to }}</span>
+          <li v-for="trip in popularTrips" :key="trip.key">
+            <router-link :to="trip.link" class="flex flex-col h-full bg-[var(--color-surface)] rounded-2xl p-5 hover:shadow-md transition-shadow">
+              <span class="block text-[14px] text-[var(--color-text-secondary)]">{{ trip.fromLabel }} <span aria-hidden="true">→</span><span class="sr-only">to</span> {{ trip.toLabel }}</span>
               <span class="block text-[26px] font-bold mt-1">about {{ trip.fare }}</span>
               <span class="block text-[14px] text-[var(--color-text-secondary)] mt-1">about {{ trip.minutes }} min · {{ trip.miles }} mi</span>
-            </button>
+              <span class="mt-auto pt-3 inline-flex items-center gap-1 text-[15px] font-semibold text-[var(--color-brand)]">See exact price <span aria-hidden="true">→</span></span>
+            </router-link>
           </li>
         </ul>
         <router-link to="/airport" class="inline-flex items-center gap-1 text-[16px] font-semibold text-[var(--color-brand)] py-2">More airport prices <span aria-hidden="true">→</span></router-link>
       </div>
     </section>
 
+    <!-- HOW IT WORKS -->
+    <section class="below-fold bg-[var(--color-surface)]" aria-labelledby="how-title">
+      <div class="max-w-6xl mx-auto px-5 py-12 md:py-16">
+        <h2 id="how-title" class="text-[28px] sm:text-[35px] font-bold leading-[1.14] tracking-tight mb-7">How it works</h2>
+        <ol class="grid gap-6 md:grid-cols-3 md:gap-10">
+          <li v-for="(step, i) in steps" :key="step.title" class="flex gap-4 md:block">
+            <span class="w-9 h-9 shrink-0 rounded-full bg-[#2b8659] text-white font-bold flex items-center justify-center md:mb-3" aria-hidden="true">{{ i + 1 }}</span>
+            <div>
+              <h3 class="text-[18px] font-bold mb-1">{{ step.title }}</h3>
+              <p class="text-[15px] leading-[1.5] text-[var(--color-text-secondary)]">{{ step.text }}</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- FREE ACCOUNT: sign-up second, with real reasons -->
+    <section v-if="showAccountPitch" class="below-fold bg-[var(--color-surface-secondary)]" aria-labelledby="account-title">
+      <div class="max-w-6xl mx-auto px-5 py-12 md:py-16 md:grid md:grid-cols-[1fr_1.4fr] md:gap-12 md:items-start">
+        <div class="mb-6 md:mb-0">
+          <h2 id="account-title" class="text-[28px] sm:text-[35px] font-bold leading-[1.14] tracking-tight mb-3">Get more with a free account</h2>
+          <p class="text-[var(--color-text-secondary)] text-[16px] leading-[1.5] mb-5">You can always book as a guest. An account takes a minute and makes every ride after the first easier.</p>
+          <router-link to="/signup" class="inline-flex items-center justify-center min-h-[48px] px-6 rounded-xl border-2 border-[var(--color-text-primary)] font-bold text-[16px] hover:bg-[var(--color-surface)] transition-colors">Create free account</router-link>
+        </div>
+        <ul class="grid gap-3 sm:grid-cols-2">
+          <li v-for="perk in accountPerks" :key="perk.title" class="rounded-2xl bg-[var(--color-surface)] p-5">
+            <h3 class="text-[17px] font-bold mb-1 flex gap-2"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>{{ perk.title }}</h3>
+            <p class="text-[15px] leading-[1.5] text-[var(--color-text-secondary)]">{{ perk.text }}</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- FAQ: what people ask before their first ride -->
+    <section class="below-fold bg-[var(--color-surface)] border-t border-[var(--color-border)]" aria-labelledby="faq-title">
+      <div class="max-w-3xl mx-auto px-5 py-12 md:py-16">
+        <h2 id="faq-title" class="text-[28px] sm:text-[35px] font-bold leading-[1.14] tracking-tight mb-6">Questions</h2>
+        <div class="divide-y divide-[var(--color-border)] border-y border-[var(--color-border)]">
+          <details v-for="f in faqs" :key="f.q" class="group">
+            <summary class="flex items-center justify-between gap-4 py-4 min-h-[56px] cursor-pointer list-none text-[17px] font-semibold [&::-webkit-details-marker]:hidden">
+              {{ f.q }}
+              <svg class="w-5 h-5 shrink-0 text-[var(--color-text-muted)] transition-transform group-open:rotate-180 motion-reduce:transition-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </summary>
+            <p class="pb-5 -mt-1 text-[16px] leading-[1.6] text-[var(--color-text-secondary)]">{{ f.a }}</p>
+          </details>
+        </div>
+        <p class="mt-5 text-[15px] text-[var(--color-text-secondary)]">Something else? <router-link to="/support" class="inline-block py-3 -my-3 font-semibold text-[var(--color-brand)]">Visit Help</router-link> or call <a href="tel:+12424529911" class="inline-block py-3 -my-3 font-semibold text-[var(--color-brand)] whitespace-nowrap">(242) 452-9911</a>.</p>
+      </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section ref="finalCta" class="below-fold bg-[var(--color-surface-secondary)] py-12 md:py-16 text-center px-5" aria-labelledby="cta-title">
+      <h2 id="cta-title" class="text-[28px] sm:text-[35px] font-bold leading-[1.14] tracking-tight mb-3">Ready to ride?</h2>
+      <p class="text-[var(--color-text-secondary)] text-[16px] leading-[1.5] mb-6">See your exact price in seconds. No account or app needed.</p>
+      <button type="button" @click="goToBooking()" class="px-10 py-3.5 bg-[#2b8659] text-white font-bold rounded-xl text-[16px] hover:bg-[#236e49] transition-colors active:scale-[0.98]">
+        See my price
+      </button>
+      <p v-if="pill" class="mt-4 text-[14px] text-[var(--color-text-secondary)]"><strong class="text-[var(--color-brand)]">{{ pill.title }}</strong> · {{ pill.note }}</p>
+    </section>
+
     <!-- DRIVER RECRUITMENT -->
-    <section class="bg-[#191f1c]" aria-labelledby="drive-title">
+    <section class="below-fold bg-[#191f1c]" aria-labelledby="drive-title">
       <div class="max-w-6xl mx-auto px-5 py-12 md:py-16 md:grid md:grid-cols-2 md:gap-10 md:items-center">
         <div class="mb-6 md:mb-0">
           <picture>
@@ -241,17 +371,8 @@ const popularTrips = POPULAR_TRIPS.map((t) => ({
       </div>
     </section>
 
-    <!-- FINAL CTA -->
-    <section class="bg-[var(--color-surface)] py-12 md:py-16 text-center px-5" aria-labelledby="cta-title">
-      <h2 id="cta-title" class="text-[28px] sm:text-[35px] font-bold leading-[1.14] tracking-tight mb-3">Ready to ride?</h2>
-      <p class="text-[var(--color-text-secondary)] text-[16px] leading-[1.5] mb-6">Book in a few taps, right here in your browser. No app download needed.</p>
-      <button type="button" @click="goToBooking()" class="px-10 py-3.5 bg-[#2b8659] text-white font-bold rounded-xl text-[16px] hover:bg-[#236e49] transition-colors active:scale-[0.98]">
-        Book a ride
-      </button>
-    </section>
-
     <!-- FOOTER -->
-    <footer class="bg-[#191f1c] text-white">
+    <footer class="below-fold bg-[#191f1c] text-white border-t border-white/10">
       <div class="max-w-6xl mx-auto px-5 py-10">
         <div class="md:flex md:justify-between md:gap-10">
           <div class="mb-6 md:mb-0">
@@ -292,5 +413,33 @@ const popularTrips = POPULAR_TRIPS.map((t) => ({
       </div>
     </footer>
 
+    <!-- Phones: booking stays one tap away while reading -->
+    <Transition name="sticky-cta">
+      <div v-show="showStickyCta" class="md:hidden fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur-md px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div class="flex items-center gap-3 max-w-md mx-auto">
+          <p v-if="pill" class="flex-1 min-w-0 text-[13px] leading-tight">
+            <span class="block font-bold truncate">{{ pill.title }}</span>
+            <span class="block text-[var(--color-text-secondary)] truncate">{{ pill.note }}</span>
+          </p>
+          <button type="button" @click="goToBooking()" class="py-3.5 bg-[#2b8659] text-white font-bold rounded-xl text-[16px] hover:bg-[#236e49] transition-colors" :class="pill ? 'shrink-0 px-6' : 'w-full'">
+            See my price
+          </button>
+        </div>
+      </div>
+    </Transition>
+
   </div>
 </template>
+
+<style scoped>
+/* Sections below the first screen are laid out only as they come near, so the first screen shows sooner. */
+.below-fold { content-visibility: auto; contain-intrinsic-size: auto 600px; }
+.sticky-cta-enter-active,
+.sticky-cta-leave-active { transition: transform 0.2s ease, opacity 0.2s ease; }
+.sticky-cta-enter-from,
+.sticky-cta-leave-to { transform: translateY(100%); opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .sticky-cta-enter-active,
+  .sticky-cta-leave-active { transition: none; }
+}
+</style>
