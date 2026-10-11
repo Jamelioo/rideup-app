@@ -20,6 +20,7 @@ const routes = {
   'create-setup-session': () => import('./_routes/create-setup-session.js'),
   'delete-account': () => import('./_routes/delete-account.js'),
   'health': () => import('./_routes/health.js'),
+  'landing-offer': () => import('./_routes/landing-offer.js'),
   'notify-driver': () => import('./_routes/notify-driver.js'),
   'promo-preview': () => import('./_routes/promo-preview.js'),
   'save-payment-method': () => import('./_routes/save-payment-method.js'),

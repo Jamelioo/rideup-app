@@ -36,7 +36,11 @@ select id as rn from riders where auth_user_id = '00000000-0000-0000-0000-000000
 select id as rt from riders where auth_user_id = '00000000-0000-0000-0000-0000000000a3' \gset
 select id as rf from riders where auth_user_id = '00000000-0000-0000-0000-0000000000a4' \gset
 select referral_code as acode from riders where id = :'ra' \gset
-insert into promo_codes (code, amount_cents, first_ride_only) values ('WELCOME5', 500, true), ('BIG', 5000, false);
+select pg_temp.check(exists (select 1 from promo_codes where code = 'WELCOME5' and active and first_ride_only and amount_cents = 500)
+  and (select value from app_settings where key = 'landing_promo') = '"WELCOME5"'::jsonb,
+  'out of the box, the landing page offers WELCOME5: $5 off a first ride');
+insert into promo_codes (code, amount_cents, first_ride_only) values ('WELCOME5', 500, true), ('BIG', 5000, false)
+on conflict (code) do update set amount_cents = excluded.amount_cents, first_ride_only = excluded.first_ride_only;
 
 -- A has one past trip, so A is not a first-time rider.
 insert into rides (rider_id, driver_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, fare_cents, status, payment_status, completed_at)

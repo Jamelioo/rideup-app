@@ -6,6 +6,22 @@
       Discounts come out of RideUp’s share: drivers are always paid on the full fare, and riders always pay at least $1.
     </p>
 
+    <!-- The code every new visitor gets automatically (app_settings.landing_promo, src/lib/landingOffer.js) -->
+    <section class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 mb-8 text-sm" aria-labelledby="landing-offer-title">
+      <h2 id="landing-offer-title" class="text-base font-bold mb-1">Landing page offer</h2>
+      <p class="text-[var(--color-text-secondary)] mb-3">
+        New visitors get this code automatically on the home, airport and booking pages, without typing it. Riders who’ve taken a trip don’t see a first-ride offer.
+        Changes show on the site within 5 minutes.
+      </p>
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <span class="font-bold tracking-wide">{{ featured || 'No landing offer' }}</span>
+        <span :class="featuredStatus.ok ? 'text-[var(--color-text-secondary)]' : 'text-[var(--color-danger)]'">{{ featuredStatus.text }}</span>
+        <button v-if="featured" type="button" @click="setFeatured('')" :disabled="featureSaving"
+                class="sm:ml-auto text-xs font-semibold px-3 py-2 rounded-lg border border-[var(--color-border)] disabled:opacity-50">No landing offer</button>
+      </div>
+      <p v-if="featureError" class="mt-2 text-[var(--color-danger)]" role="alert">{{ featureError }}</p>
+    </section>
+
     <form @submit.prevent="createCode" class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 mb-8 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
       <h2 class="sm:col-span-2 text-base font-bold">New code</h2>
       <label class="flex flex-col gap-1">Code
@@ -49,12 +65,17 @@
             <td data-label="Code" class="px-4 py-3 font-bold tracking-wide">{{ c.code }}<div class="text-xs font-normal text-[var(--color-text-muted)]">{{ c.first_ride_only ? 'First ride only' : 'Any ride' }}<span v-if="c.description"> · {{ c.description }}</span></div></td>
             <td data-label="Off" class="px-4 py-3">{{ formatFare(c.amount_cents) }}</td>
             <td data-label="Used" class="px-4 py-3">{{ c.uses }}{{ c.max_uses ? ` / ${c.max_uses}` : '' }}</td>
-            <td data-label="Expires" class="px-4 py-3">{{ c.expires_at ? new Date(c.expires_at).toLocaleDateString() : '—' }}</td>
+            <td data-label="Expires" class="px-4 py-3">{{ c.expires_at ? new Date(c.expires_at).toLocaleDateString('en-US', { timeZone: 'America/Nassau' }) : '—' }}</td>
             <td data-label="Status" class="px-4 py-3">
-              <button @click="toggle(c)" class="text-xs font-semibold px-3 py-1.5 rounded-lg border"
-                      :class="c.active ? 'border-[#2b8659] text-[var(--color-brand)]' : 'border-[var(--color-border)] text-[var(--color-text-muted)]'">
-                {{ c.active ? 'Active · turn off' : 'Off · turn on' }}
-              </button>
+              <div class="flex flex-wrap items-center gap-2">
+                <button @click="toggle(c)" class="text-xs font-semibold px-3 py-1.5 rounded-lg border"
+                        :class="c.active ? 'border-[#2b8659] text-[var(--color-brand)]' : 'border-[var(--color-border)] text-[var(--color-text-muted)]'">
+                  {{ c.active ? 'Active · turn off' : 'Off · turn on' }}
+                </button>
+                <span v-if="c.code === featured" class="text-xs font-semibold text-[var(--color-brand)]">On landing page</span>
+                <button v-else-if="c.active" type="button" @click="setFeatured(c.code)" :disabled="featureSaving"
+                        class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] disabled:opacity-50">Show on landing page</button>
+              </div>
             </td>
           </tr>
           <tr v-if="!loading && codes.length === 0"><td colspan="5" class="px-4 py-8 text-center text-[var(--color-text-muted)]">No promo codes yet.</td></tr>
@@ -67,10 +88,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
 import { formatFare } from '../../lib/pricing'
 import { DEMO_MODE } from '../../lib/demoMode'
+import { featuredCode, offerAmount } from '../../lib/landingOfferRules'
+import { nassauMidnight } from '../../lib/nassauTime'
 
 const codes = ref(DEMO_MODE ? [{ code: 'WELCOME5', amount_cents: 500, uses: 12, max_uses: 100, first_ride_only: true, active: true, description: '$5 off your first ride' }] : [])
 const loading = ref(!DEMO_MODE)
@@ -79,12 +102,42 @@ const saving = ref(false)
 const formError = ref('')
 const form = reactive({ code: '', amount: '', maxUses: '', expires: '', description: '', firstRideOnly: true })
 
+// The landing page offer: WELCOME5 until an admin picks another code, '' for none.
+const featured = ref(featuredCode(null))
+const featureSaving = ref(false)
+const featureError = ref('')
+const featuredStatus = computed(() => {
+  if (!featured.value) return { ok: true, text: 'Visitors see no offer.' }
+  if (loading.value) return { ok: true, text: '' }
+  const c = codes.value.find((x) => x.code === featured.value)
+  if (!c) return { ok: false, text: 'This code doesn’t exist yet. Create it below, or show another code.' }
+  if (!c.active) return { ok: false, text: 'This code is turned off, so visitors see no offer.' }
+  if (c.expires_at && new Date(c.expires_at).getTime() < Date.now()) return { ok: false, text: 'This code has expired, so visitors see no offer.' }
+  if (c.max_uses != null && c.uses >= c.max_uses) return { ok: false, text: 'This code is fully used, so visitors see no offer.' }
+  return { ok: true, text: `Shown as “${c.first_ride_only ? `First ride ${offerAmount(c.amount_cents)} off` : `${offerAmount(c.amount_cents)} off your next ride`}” and applied for them.` }
+})
+
+async function setFeatured(code) {
+  featureError.value = ''
+  featureSaving.value = true
+  if (!DEMO_MODE) {
+    const { error: err } = await supabase.from('app_settings').upsert({ key: 'landing_promo', value: code, updated_at: new Date().toISOString() })
+    if (err) { featureSaving.value = false; featureError.value = `Couldn’t save: ${err.message}`; return }
+  }
+  featured.value = code
+  featureSaving.value = false
+}
+
 async function load() {
   if (!supabaseConfigured || DEMO_MODE) return
   loading.value = true
-  const { data, error: err } = await supabase.from('promo_codes').select('*').order('created_at', { ascending: false })
+  const [{ data, error: err }, setting] = await Promise.all([
+    supabase.from('promo_codes').select('*').order('created_at', { ascending: false }),
+    supabase.from('app_settings').select('value').eq('key', 'landing_promo').maybeSingle(),
+  ])
   if (err) error.value = 'Could not load promo codes. Run migration 009 and check your account has the admin role.'
   codes.value = data || []
+  if (!setting.error) featured.value = featuredCode(setting.data)
   loading.value = false
 }
 
@@ -99,7 +152,8 @@ async function createCode() {
     const { error: err } = await supabase.from('promo_codes').insert({
       code, amount_cents: cents,
       max_uses: form.maxUses ? Number(form.maxUses) : null,
-      expires_at: form.expires ? new Date(`${form.expires}T23:59:59-05:00`).toISOString() : null,
+      // The end of that day in Nassau, summer time included (a fixed −05:00 ran an hour into the next day).
+      expires_at: form.expires ? new Date(Date.parse(nassauMidnight(form.expires, 1)) - 1000).toISOString() : null,
       description: form.description.trim() || null,
       first_ride_only: form.firstRideOnly,
     })

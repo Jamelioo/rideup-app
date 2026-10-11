@@ -57,6 +57,12 @@ export function trackSignUp() {
   window.fbq?.('track', 'CompleteRegistration')
   window.gtag?.('event', 'sign_up')
 }
+// A price shown for a trip: the step before booking, which ads can optimise for while bookings are still few.
+export function trackPriceSeen(fareCents) {
+  const params = { value: Math.round(fareCents || 0) / 100, currency: 'USD' }
+  window.fbq?.('track', 'InitiateCheckout', params)
+  window.gtag?.('event', 'begin_checkout', params)
+}
 export function trackRideBooked(ride) {
   const value = Math.round(ride?.fare_cents || 0) / 100
   const params = { value, currency: 'USD' }
