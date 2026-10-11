@@ -11,6 +11,9 @@ Without Supabase keys the app runs in **demo mode** (sample data, no backend) so
 **Riders**
 - Book with Google Places search, see upfront prices for Go ($2.00 + $1.25/mile + $0.35/min with live traffic, $10 minimum, plus a $2.50 booking fee and a $3 LPIA pickup fee; XL and Premium appear once an admin turns them on), promo codes and referrals ($5 off a friend's first ride, $5 credit to the referrer), book as a
   guest or with an account, schedule rides.
+- First-ride offer: every new visitor gets a code automatically (WELCOME5, $5 off; Admin › Promos picks the code
+  or turns it off), shown on the home and airport pages. Popular trips open booking with the route filled in and
+  priced (`/book?from=airport&to=cable-beach`, places in `src/lib/places.js`).
 - Live trip screen: driver photo, car and big plate, live ETA, wait timer at pickup, call and in-app chat (phone and
   chat only while the trip is active; chat stays open 30 minutes after drop-off for lost items).
 - Safety: share a live trip link (`/track/<token>`, no login needed), optional pickup PIN, report a problem,
@@ -109,7 +112,7 @@ cp .env.example .env
 | `FCM_SERVICE_ACCOUNT` | optional: push in the Google Play app (Firebase service-account JSON; see MOBILE_APP.md) |
 | `APP_URL` | optional: link base for emails (default `https://rideupnassau.com`) |
 | `VITE_SENTRY_DSN`, `SENTRY_DSN` | optional: error reports to Sentry (see Monitoring) |
-| `VITE_META_PIXEL_ID` | optional: Meta Pixel for Instagram / Facebook ads (page views, sign-ups, booked rides) |
+| `VITE_META_PIXEL_ID` | optional: Meta Pixel for Instagram / Facebook ads (page views, prices seen, sign-ups, booked rides) |
 | `VITE_GOOGLE_TAG_ID`, `VITE_GOOGLE_ADS_BOOKING_SEND_TO` | optional: Google tag (Ads `AW-…`, GA4 `G-…`, comma-separated) and the Ads conversion for a booked ride (`AW-…/label`) |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` | optional: texts to passengers when a rider books for someone else |
 
