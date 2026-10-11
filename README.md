@@ -45,6 +45,8 @@ Without Supabase keys the app runs in **demo mode** (sample data, no backend) so
 - Dashboard, rides (CSV download), riders (contact, credit, suspend), drivers (document review with checklist,
   expiry dates, background check, vehicle class, approve / reject with a note, low-rating flags), money and payouts
   (CSV downloads), support, safety reports (with reporter, trip and phone numbers), and trip settings.
+- Booking funnel (Money): how many people visited, opened booking, saw a price, requested and rode, so you can see
+  where riders stop. Anonymous daily counts, each person once a day; nothing personal is stored.
 - Private team notes on riders, drivers and rides; Messages (a push to all riders or drivers); Activity (who did
   what); Team (give someone Admin or Support access; Support runs day-to-day operations without money, settings,
   approvals or refunds).
@@ -61,7 +63,7 @@ npm install
 
 1. Create a project at [supabase.com/dashboard](https://supabase.com/dashboard).
 2. In **SQL Editor**, run these files **in order**: `supabase-schema.sql`, then everything in
-   `supabase/migrations/` (`001` … `019`). Each migration can be re-run safely.
+   `supabase/migrations/` (`001` … `020`). Each migration can be re-run safely.
 3. Make yourself an admin (SQL Editor, use your account's email):
    ```sql
    update auth.users set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb

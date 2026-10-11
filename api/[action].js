@@ -24,6 +24,7 @@ const routes = {
   'promo-preview': () => import('./_routes/promo-preview.js'),
   'save-payment-method': () => import('./_routes/save-payment-method.js'),
   'split-fare': () => import('./_routes/split-fare.js'),
+  'track': () => import('./_routes/track.js'),
   'trip-event': () => import('./_routes/trip-event.js'),
   'verify-session': () => import('./_routes/verify-session.js'),
 }
