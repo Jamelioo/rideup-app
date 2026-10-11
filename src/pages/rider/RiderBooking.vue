@@ -247,33 +247,27 @@ function removeStop() {
   maybeCalculateRoute()
 }
 onActivated(() => nextTick(syncAddressFields))
-// Opened from the landing page's "Pickup location" / "Where to?" (/book?focus=pickup|dropoff): put the cursor
-// in that field, like Uber. Only the visible copy (phone or desktop layout) is focused; the hint is then removed
-// from the address so going back doesn't refocus.
-function focusRequestedField() {
-  const field = route.query.focus
-  if (field !== 'pickup' && field !== 'dropoff') return
+// Opened from a link on the landing pages: put the cursor in a field, like Uber (/book?focus=pickup|dropoff),
+// and/or fill in a popular trip and price it straight away (/book?from=airport&to=cable-beach; only known places,
+// src/lib/places.js). The hints are then removed from the address, so going back doesn't apply them again.
+// Only the visible copy of a field (phone or desktop layout) is focused.
+const pickupArea = ref('') // a neighbourhood pickup from a link: the rider is asked for the exact spot until they change it
+watch(pickup, (p) => { if (pickupArea.value && p?.address !== pickupArea.value) pickupArea.value = '' })
+let applyingLink = false
+function applyLinkHints() {
+  const { focus, from, to, ...rest } = route.query
+  if (applyingLink || (focus === undefined && from === undefined && to === undefined)) return
+  applyingLink = true // onMounted and onActivated both run on the first visit
+  router.replace({ query: rest }).finally(() => { applyingLink = false })
+  prefillTrip(placeById(from), placeById(to))
+  if (focus !== 'pickup' && focus !== 'dropoff') return
   nextTick(() => {
-    const input = [...document.querySelectorAll(`input[data-field="${field}"]`)].find((el) => el.offsetParent !== null)
+    const input = [...document.querySelectorAll(`input[data-field="${focus}"]`)].find((el) => el.offsetParent !== null)
     if (input && !input.value) input.focus()
-    const { focus, ...rest } = route.query
-    router.replace({ query: rest })
   })
 }
-onMounted(focusRequestedField)
-onActivated(focusRequestedField)
-
-// Opened from a popular trip (/book?from=airport&to=cable-beach): both places are filled in and the trip is
-// priced straight away. Only known places are accepted (src/lib/places.js). When the pickup is a neighbourhood
-// rather than a spot, the rider is asked for the exact pickup until they change it.
-const pickupArea = ref('')
-watch(pickup, (p) => { if (pickupArea.value && p?.address !== pickupArea.value) pickupArea.value = '' })
-function prefillTrip() {
-  const from = placeById(route.query.from)
-  const to = placeById(route.query.to)
+function prefillTrip(from, to) {
   if (!from && !to) return
-  const { from: _from, to: _to, ...rest } = route.query
-  router.replace({ query: rest })
   if (DEMO_MODE) {
     if (from) pickupText.value = from.address
     if (to) dropoffText.value = to.address
@@ -284,8 +278,8 @@ function prefillTrip() {
   }
   pickupArea.value = from?.area ? from.address : ''
 }
-onMounted(prefillTrip)
-onActivated(prefillTrip)
+onMounted(applyLinkHints)
+onActivated(applyLinkHints)
 
 async function handleMapTap(latlng) {
   const address = await reverseGeocode(latlng.lat, latlng.lng)

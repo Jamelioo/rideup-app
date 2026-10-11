@@ -59,6 +59,11 @@ export function formatFare(cents) {
   return '$' + ((cents || 0) / 100).toFixed(2)
 }
 
+// Prices in marketing copy: "$5" for whole dollars, "$1.25" otherwise.
+export function formatAmount(cents) {
+  return (cents || 0) % 100 === 0 ? `$${(cents || 0) / 100}` : formatFare(cents)
+}
+
 export const VEHICLE_TYPES = [
   { id: 'standard', name: 'RideUp Go', capacity: 4, icon: '🚗', desc: 'Everyday rides, nearby drivers' },
   { id: 'xl', name: 'RideUp XL', capacity: 6, icon: '🚙', desc: 'More room for groups' },

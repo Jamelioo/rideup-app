@@ -90,9 +90,9 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
-import { formatFare } from '../../lib/pricing'
+import { formatFare, formatAmount } from '../../lib/pricing'
 import { DEMO_MODE } from '../../lib/demoMode'
-import { featuredCode, offerAmount } from '../../lib/landingOfferRules'
+import { featuredCode } from '../../lib/landingOfferRules'
 import { nassauMidnight } from '../../lib/nassauTime'
 
 const codes = ref(DEMO_MODE ? [{ code: 'WELCOME5', amount_cents: 500, uses: 12, max_uses: 100, first_ride_only: true, active: true, description: '$5 off your first ride' }] : [])
@@ -114,7 +114,7 @@ const featuredStatus = computed(() => {
   if (!c.active) return { ok: false, text: 'This code is turned off, so visitors see no offer.' }
   if (c.expires_at && new Date(c.expires_at).getTime() < Date.now()) return { ok: false, text: 'This code has expired, so visitors see no offer.' }
   if (c.max_uses != null && c.uses >= c.max_uses) return { ok: false, text: 'This code is fully used, so visitors see no offer.' }
-  return { ok: true, text: `Shown as “${c.first_ride_only ? `First ride ${offerAmount(c.amount_cents)} off` : `${offerAmount(c.amount_cents)} off your next ride`}” and applied for them.` }
+  return { ok: true, text: `Shown as “${c.first_ride_only ? `First ride ${formatAmount(c.amount_cents)} off` : `${formatAmount(c.amount_cents)} off your next ride`}” and applied for them.` }
 })
 
 async function setFeatured(code) {

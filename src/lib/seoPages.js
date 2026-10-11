@@ -8,9 +8,9 @@ export const SEO_PAGES = [
   {
     path: '/',
     title: 'RideUp Nassau — Book a ride with upfront prices',
-    description: 'Book a ride across New Providence. See your exact fare before you book, pay by card, and ride with approved local drivers. LPIA airport rides too.',
+    description: 'Book a ride across New Providence. See your exact price before you book, no haggling, with drivers approved by RideUp. LPIA airport rides too.',
     h1: 'Get anywhere in Nassau.',
-    intro: 'See your exact fare before you book. That’s the price you pay, with a driver approved by RideUp.',
+    intro: 'See your exact price before you book. No haggling, no surprises. Every driver is approved by RideUp.',
   },
   {
     path: '/airport',
@@ -36,7 +36,7 @@ export const SEO_PAGES = [
   {
     path: '/about',
     title: 'About — RideUp',
-    description: 'RideUp is a Nassau ride service with upfront prices, card payments and approved local drivers across New Providence.',
+    description: 'RideUp is a Nassau ride service with upfront prices and approved local drivers across New Providence.',
     h1: 'About RideUp',
     intro: 'Rides across New Providence with the price shown before you book.',
   },
