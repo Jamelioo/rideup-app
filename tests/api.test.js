@@ -122,6 +122,15 @@ test('different real clients get separate counters', () => {
   assert.equal(check({ headers: { 'x-vercel-forwarded-for': '192.0.2.2' }, socket: {} }), null)
 })
 
+test('each route’s limit is its own: using one up doesn’t block another', () => {
+  const availability = rateLimit({ maxRequests: 2, windowMs: 60_000 })
+  const booking = rateLimit({ maxRequests: 2, windowMs: 60_000 })
+  const req = { headers: { 'x-vercel-forwarded-for': '192.0.2.9' }, socket: {} }
+  availability(req); availability(req)
+  assert.ok(availability(req), 'the busy route is limited')
+  assert.equal(booking(req), null, 'the same person can still book')
+})
+
 test('distance helper used for nearby-driver alerts', async () => {
   const { milesBetween } = await import('../api/_notifyDrivers.js')
   assert.equal(Math.round(milesBetween(25.04, -77.35, 25.04, -77.35) * 100), 0)
