@@ -1,8 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { DEFAULT_LANDING_PROMO, featuredCode, offerStep, offerPill, offerAmount, endsLabel } from '../src/lib/landingOfferRules.js'
+import { DEFAULT_LANDING_PROMO, featuredCode, offerStep, offerPill, endsLabel } from '../src/lib/landingOfferRules.js'
 import { PLACES, placeById, tripLink } from '../src/lib/places.js'
-import { AIRPORT, isAirportPickup } from '../src/lib/pricing.js'
+import { AIRPORT, isAirportPickup, formatAmount } from '../src/lib/pricing.js'
 import { landingOfferHandler } from '../api/_routes/landing-offer.js'
 
 const WELCOME5 = { code: 'WELCOME5', amount_cents: 500, description: '$5 off your first ride', first_ride_only: true, expires_at: null }
@@ -37,7 +37,7 @@ test('landing offer: riders who have taken a trip don’t get a first-ride offer
 
 test('landing offer pill: says what the offer is, and the end date only when it is close', () => {
   const now = Date.parse('2026-10-11T12:00:00-04:00')
-  assert.deepEqual(offerPill({ offer: WELCOME5, saved: saved(WELCOME5) }, now), { title: 'First ride $5 off', note: 'applied automatically', ends: null })
+  assert.deepEqual(offerPill({ offer: WELCOME5, saved: saved(WELCOME5) }, now), { title: 'First ride $5 off', note: 'no code needed', ends: null })
   assert.equal(offerPill({ offer: { ...WELCOME5, first_ride_only: false }, saved: saved(WELCOME5) }, now).title, '$5 off your next ride')
   assert.equal(offerPill({ offer: { ...WELCOME5, expires_at: '2026-10-31T23:59:59-04:00' }, saved: saved(WELCOME5) }, now).ends, 'Oct 31')
   assert.equal(offerPill({ offer: { ...WELCOME5, expires_at: '2026-12-31T23:59:59-05:00' }, saved: saved(WELCOME5) }, now).ends, null, 'over 30 days away')
@@ -45,7 +45,8 @@ test('landing offer pill: says what the offer is, and the end date only when it 
   assert.deepEqual(offerPill({ offer: WELCOME5, saved: null, pending: 'FB10' }, now), { title: 'Code FB10', note: 'comes off when you book' })
   assert.equal(offerPill({ offer: WELCOME5, saved: null }, now), null, 'nothing saved: nothing promised')
   assert.equal(offerPill({ offer: WELCOME5, saved: saved(WELCOME5), hasRides: true }, now), null)
-  assert.equal(offerAmount(750), '$7.50')
+  assert.equal(formatAmount(750), '$7.50')
+  assert.equal(formatAmount(1000), '$10')
   assert.equal(endsLabel('2026-10-10T00:00:00Z', now), null, 'already ended')
   assert.equal(endsLabel(null, now), null)
 })

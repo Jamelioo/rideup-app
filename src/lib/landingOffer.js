@@ -59,24 +59,30 @@ function act(rides) {
   }
 }
 
-// Booking screen: give a new visitor the offer before the saved code is checked and shown.
+// Whether this visitor has ridden, and whether the offer has loaded: one copy for every page that shows the offer.
+const rides = ref(false)
+const ready = ref(false)
+const saved = useSavedPromo()
+const pending = usePendingPromoCode()
+let watching = false
+
+// Gives a new visitor the offer (booking screen: before the saved code is checked and shown). Checks again each
+// time whether they've ridden, since they may have signed in since.
 export async function applyLandingOffer() {
-  const [, rides] = await Promise.all([loadOffer(), hasRides()])
-  act(rides)
+  if (!watching) {
+    watching = true
+    // When an ad link's code has been checked: if it wasn't valid, the featured offer takes its place.
+    watch(pending, () => { if (ready.value) act(rides.value) })
+  }
+  const [, r] = await Promise.all([loadOffer(), hasRides()])
+  rides.value = r
+  ready.value = true
+  act(r)
 }
 
-// Landing pages: gives the offer, and returns the hero pill ({ title, note, ends? } or null) and whether it's
-// known yet, so the page can keep the pill's space while it loads instead of shifting when it arrives.
-export function useLandingOffer() {
-  const saved = useSavedPromo()
-  const pending = usePendingPromoCode()
-  const rides = ref(false)
-  const ready = ref(false)
-  Promise.all([loadOffer(), hasRides()]).then(([, r]) => { rides.value = r; ready.value = true })
-  // Again when an ad link's code has been checked: if it wasn't valid, the featured offer takes its place.
-  watch([ready, pending], () => { if (ready.value) act(rides.value) })
-  const pill = computed(() => (ready.value || pending.value
-    ? offerPill({ offer: offer.value, saved: saved.value, pending: pending.value, hasRides: rides.value })
-    : null))
-  return { pill, ready: computed(() => ready.value || !!pending.value) }
-}
+// The landing pages' offer pill ({ title, note, ends? } or null), and whether it's known yet, so a page can keep
+// the pill's space while it loads instead of shifting when it arrives.
+export const landingPill = computed(() => (ready.value || pending.value
+  ? offerPill({ offer: offer.value, saved: saved.value, pending: pending.value, hasRides: rides.value })
+  : null))
+export const landingPillReady = computed(() => ready.value || !!pending.value)

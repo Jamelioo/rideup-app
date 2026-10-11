@@ -1,4 +1,4 @@
-import { formatFare } from './pricing.js'
+import { formatAmount } from './pricing.js'
 
 // The first-ride offer every new visitor gets, applied automatically. Admin › Promos picks the code ("Show on
 // landing page"), stored as app_settings.landing_promo. Shared by the server (api/_routes/landing-offer.js) and
@@ -29,11 +29,6 @@ export function offerStep({ offer, saved, pending, applied, hasRides }) {
   return 'apply'
 }
 
-// "$5" for whole dollars, "$7.50" otherwise: offers read like a price tag.
-export function offerAmount(cents) {
-  return cents % 100 === 0 ? `$${cents / 100}` : formatFare(cents)
-}
-
 // "Oct 31" when an offer ends within 30 days, so the date is real urgency; otherwise null.
 export function endsLabel(expiresAt, now = Date.now()) {
   const t = expiresAt ? new Date(expiresAt).getTime() : NaN
@@ -46,12 +41,12 @@ export function endsLabel(expiresAt, now = Date.now()) {
 export function offerPill({ offer, saved, pending, hasRides }, now = Date.now()) {
   if (pending) return { title: `Code ${pending}`, note: 'comes off when you book' }
   if (!saved?.code) return null
-  const off = `${offerAmount(saved.amount_cents)} off`
+  const off = `${formatAmount(saved.amount_cents)} off`
   if (saved.code !== offer?.code) return { title: `${off} with ${saved.code}`, note: 'applied automatically' }
   if (hasRides && offer.first_ride_only) return null
   return {
     title: offer.first_ride_only ? `First ride ${off}` : `${off} your next ride`,
-    note: 'applied automatically',
+    note: 'no code needed',
     ends: endsLabel(offer.expires_at, now),
   }
 }
