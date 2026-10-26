@@ -4,6 +4,7 @@ import { chargeOf } from '../../src/lib/discounts.js'
 import { pushToUser } from '../_push.js'
 import { sendEmail, refundEmail } from '../_email.js'
 import { logAdminAction } from '../_audit.js'
+import { addCredit } from '../_credit.js'
 
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
 // Fares that were paid: cash collected, or charged to a card before RideUp went cash-only.
@@ -81,24 +82,6 @@ export default async function handler(req, res) {
   } catch (err) {
     return fail(res, 'Admin refund error', err)
   }
-}
-
-// Adds to the rider's credit without losing a change made at the same moment (the rider booking a trip, another
-// admin): the update only applies if the balance is still the one read, else it reads again.
-async function addCredit(riderId, amount) {
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const { data: r, error } = await admin.from('riders').select('credit_cents').eq('id', riderId).maybeSingle()
-    if (error) throw error
-    if (!r) throw new Error('Rider not found')
-    const { data: done, error: updErr } = await admin.from('riders')
-      .update({ credit_cents: (r.credit_cents || 0) + amount })
-      .eq('id', riderId)
-      .eq('credit_cents', r.credit_cents || 0)
-      .select('id')
-    if (updErr) throw updErr
-    if (done?.length) return
-  }
-  throw new Error('The rider’s credit changed while saving. Try again.')
 }
 
 // What was paid for the fare (or an old card cancellation fee) and the tip, minus earlier refunds.

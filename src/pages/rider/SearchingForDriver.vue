@@ -145,7 +145,7 @@ onMounted(async () => {
     }
     if (updatedRide.status === 'cancelled' && updatedRide.replaced_by_ride_id) {
       // The driver cancelled and the server already booked a fresh request: follow it.
-      emit('replaced', updatedRide.replaced_by_ride_id)
+      emit('replaced', updatedRide.replaced_by_ride_id, updatedRide.id)
       return
     }
     if (updatedRide.status === 'cancelled' && updatedRide.cancel_reason === 'driver_cancelled') {

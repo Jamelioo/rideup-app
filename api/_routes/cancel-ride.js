@@ -5,6 +5,8 @@ import { pushToUser, rideParticipants } from '../_push.js'
 import { notifyNearbyDrivers } from '../_notifyDrivers.js'
 import { alertRideRequest } from '../_staffAlerts.js'
 import { logAdminAction } from '../_audit.js'
+import { grantDriverCancelCredit } from '../_credit.js'
+import { guaranteeApplies } from '../../src/lib/guarantee.js'
 
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
 
@@ -89,6 +91,10 @@ export default async function handler(req, res) {
     if (ride.driver_id) {
       await admin.from('drivers').update({ status: 'online' }).eq('id', ride.driver_id).eq('status', 'on_trip')
     }
+    // The RideUp guarantee: a driver cancelling after accepting also adds credit to the rider's next ride. Given
+    // before the re-match is written, so the rider's screen finds it as soon as it follows the new request.
+    const creditCents = guaranteeApplies({ actor, noShow, status: ride.status }) ? await grantDriverCancelCredit(ride) : 0
+    const creditText = creditCents ? ` We also added $${(creditCents / 100).toFixed(2)} RideUp credit for your next booking.` : ''
     const rebookedRideId = actor === 'driver' && !noShow ? await rebook(rideId, ride.driver_id) : null
 
     // 3. Tell the other side.
@@ -100,8 +106,8 @@ export default async function handler(req, res) {
       const body = noShow
         ? `Your driver waited ${minutes} minutes and marked the ride as a no-show. Missed pickups can pause booking on your account.`
         : rebookedRideId
-          ? 'Your driver had to cancel. We’re finding you another driver now, at the same price.'
-          : 'Your ride was cancelled. Request again and we’ll find you a driver.'
+          ? `Your driver had to cancel. We’re finding you another driver now, at the same price.${creditText}`
+          : `Your ride was cancelled. Request again and we’ll find you a driver.${creditText}`
       await pushToUser(people.riderUserId, { title: rebookedRideId ? 'Finding you a new driver' : 'Ride cancelled', body, url: '/book', tag: `ride-${rideId}` })
     }
     if (actor === 'admin' && people.driverUserId) {
@@ -111,7 +117,7 @@ export default async function handler(req, res) {
       await logAdminAction(user, { action: 'ride.cancel', targetType: 'ride', targetId: rideId, summary: `Cancelled a ${ride.status.replace(/_/g, ' ')} trip` })
     }
 
-    return res.status(200).json({ success: true, fee_cents: 0, rebooked_ride_id: rebookedRideId })
+    return res.status(200).json({ success: true, fee_cents: 0, rebooked_ride_id: rebookedRideId, credit_cents: creditCents })
   } catch (err) {
     return fail(res, 'Cancel ride error', err)
   }

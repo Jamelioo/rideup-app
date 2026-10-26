@@ -1,4 +1,5 @@
 <script setup>
+import { isGuaranteeCredit } from '../../lib/guarantee'
 import BrandLogo from '../../components/BrandLogo.vue'
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
@@ -30,7 +31,7 @@ onMounted(async () => {
     // Drivers' rows are private; the RPC returns them for this ride's participants only.
     const { data: rpc } = await supabase.rpc('get_ride_driver', { p_ride_id: rideId })
     const driver = Array.isArray(rpc) ? rpc[0] : rpc
-    const { data: refunds } = await supabase.from('ride_refunds').select('amount_cents, method, target, created_at').eq('ride_id', rideId).order('created_at')
+    const { data: refunds } = await supabase.from('ride_refunds').select('amount_cents, method, target, reason, created_at').eq('ride_id', rideId).order('created_at')
 
     // Rebuild the line items from the same rates the fare was computed with.
     const rate = RATES[data.vehicle_type] || RATES.standard
@@ -189,7 +190,7 @@ async function shareReceipt() {
             <span class="text-base font-bold text-[var(--color-text-primary)]">{{ formatCents(receipt.grandTotal) }}</span>
           </div>
           <div v-for="(r, i) in receipt.refunds" :key="i" class="flex items-center justify-between">
-            <span class="text-sm text-[var(--color-text-secondary)]">{{ r.method === 'credit' ? 'Refunded as RideUp credit' : 'Refunded' }}{{ r.target === 'tip' ? ' (tip)' : '' }}</span>
+            <span class="text-sm text-[var(--color-text-secondary)]">{{ isGuaranteeCredit(r) ? 'RideUp guarantee: credit for your next ride' : r.method === 'credit' ? 'Refunded as RideUp credit' : 'Refunded' }}{{ r.target === 'tip' ? ' (tip)' : '' }}</span>
             <span class="text-sm text-[var(--color-brand)]">−{{ formatCents(r.amount_cents) }}</span>
           </div>
         </div>
@@ -245,7 +246,7 @@ async function shareReceipt() {
             <span class="text-base font-bold text-[var(--color-text-primary)]">{{ formatCents(receipt.grandTotal) }}</span>
           </div>
           <div v-for="(r, i) in receipt.refunds" :key="i" class="flex items-center justify-between">
-            <span class="text-sm text-[var(--color-text-secondary)]">{{ r.method === 'credit' ? 'Refunded as RideUp credit' : 'Refunded' }}{{ r.target === 'tip' ? ' (tip)' : '' }}</span>
+            <span class="text-sm text-[var(--color-text-secondary)]">{{ isGuaranteeCredit(r) ? 'RideUp guarantee: credit for your next ride' : r.method === 'credit' ? 'Refunded as RideUp credit' : 'Refunded' }}{{ r.target === 'tip' ? ' (tip)' : '' }}</span>
             <span class="text-sm text-[var(--color-brand)]">−{{ formatCents(r.amount_cents) }}</span>
           </div>
         </div>
