@@ -106,7 +106,7 @@ cp .env.example .env
 | `SUPABASE_SERVICE_ROLE_KEY` | every protected `/api/*` route (they refuse to run without it) |
 | `CRON_SECRET` | the every-minute job below |
 | `CANCEL_GRACE_SECONDS`, `FREE_WAIT_SECONDS` | when a cancellation counts as late, and free waiting at pickup before a no-show (defaults 2 min, 5 min); set `VITE_CANCEL_GRACE_SECONDS` / `VITE_FREE_WAIT_SECONDS` to match |
-| `DRIVER_CANCEL_CREDIT_CENTS` | the RideUp guarantee: RideUp credit added when a driver cancels after accepting (default 500 = $5; 0 turns it off; at most once per rider per 24 hours). Shown on receipts as "RideUp guarantee" |
+| `DRIVER_CANCEL_CREDIT_CENTS` | the RideUp guarantee: RideUp credit added when a driver cancels after accepting (default 500 = $5; 0 turns it off; at most once per rider per 24 hours). Shown on receipts as "RideUp guarantee". Set `VITE_DRIVER_CANCEL_CREDIT_CENTS` to match: the landing pages and ads promise this amount |
 | `RESEND_API_KEY`, `EMAIL_FROM` | optional: receipts, refund and unpaid-fare emails, driver approval emails |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `VITE_VAPID_PUBLIC_KEY` | optional: push notifications (`npx web-push generate-vapid-keys`) |
 | `APNS_KEY`, `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_BUNDLE_ID`, `APNS_PRODUCTION` | optional: push in the App Store app (see MOBILE_APP.md) |

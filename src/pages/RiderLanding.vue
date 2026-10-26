@@ -3,10 +3,10 @@ import BrandLogo from '../components/BrandLogo.vue'
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
-import { applyLandingOffer, landingPill as pill, landingPillReady as pillReady } from '../lib/landingOffer'
+import { applyLandingOffer, landingPill as pill, landingPillReady as pillReady, landingOfferCents as offerCents } from '../lib/landingOffer'
 import { trackStep } from '../lib/funnel'
 import { placeById, tripLink } from '../lib/places'
-import { CANCEL_GRACE_SECONDS } from '../lib/policy'
+import { CANCEL_GRACE_SECONDS, DRIVER_CANCEL_CREDIT_CENTS } from '../lib/policy'
 import { calculateFare, formatFare, formatAmount, RATES, AIRPORT_FEE_CENTS, BOOKING_FEE_CENTS } from '../lib/pricing'
 
 // Booking first, sign-up second. The offer, the promise and the answers only say what the app really does.
@@ -32,11 +32,18 @@ function goToBooking(field) {
 
 const graceLabel = CANCEL_GRACE_SECONDS % 60 === 0 ? `${CANCEL_GRACE_SECONDS / 60} minutes` : `${CANCEL_GRACE_SECONDS} seconds`
 
+// The RideUp guarantee (api/_credit.js): a re-match at the same price, plus credit when the credit is switched on.
+const credit = DRIVER_CANCEL_CREDIT_CENTS > 0 ? formatAmount(DRIVER_CANCEL_CREDIT_CENTS) : ''
+const guaranteeLine = credit
+  ? `If your driver cancels, we find you another driver at the same price and add ${credit} credit to your account.`
+  : 'If your driver cancels, we find you another driver at the same price, automatically.'
+
+// What every ride comes with, all of it true in the app today.
 const PROMISE = [
   { icon: 'lock', title: 'Price lock', text: 'Your price is set when you book. Traffic or a longer route won’t change it.' },
-  { icon: 'cash', title: 'Pay when you arrive', text: 'No card needed. Pay your driver the price you saw, in cash, at drop-off.' },
+  { icon: 'cash', title: 'Pay when you arrive', text: 'No card and no app. Pay your driver the price you saw, in cash, at drop-off.' },
   { icon: 'clock', title: 'Free cancellation', text: 'Cancelling never costs a cent. Cancel early if your plans change, so your driver isn’t left waiting.' },
-  { icon: 'repeat', title: 'We re-match you', text: 'If your driver cancels, we find you another at the same price, automatically.' },
+  { icon: 'shield', title: 'Approved drivers', text: 'See your driver’s name, photo, car and plate before pickup, and share your trip live with family.' },
 ]
 
 // Typical RideUp Go prices with the real rates (src/lib/pricing.js), normal traffic. Each opens booking with the
@@ -50,8 +57,8 @@ const POPULAR_TRIPS = [
 const popularTrips = POPULAR_TRIPS.map((t) => {
   const from = placeById(t.from)
   const to = placeById(t.to)
-  const fare = formatFare(calculateFare(t.miles, t.minutes, 'standard', { pickup: from }))
-  return { ...t, key: `${t.from}-${t.to}`, fromLabel: from.label, toLabel: to.label, fare, link: tripLink(t.from, t.to) }
+  const cents = calculateFare(t.miles, t.minutes, 'standard', { pickup: from })
+  return { ...t, key: `${t.from}-${t.to}`, fromLabel: from.label, toLabel: to.label, cents, fare: formatFare(cents), link: tripLink(t.from, t.to) }
 })
 
 const steps = computed(() => [
@@ -67,8 +74,18 @@ const faqs = computed(() => [
   { q: 'How do I pay?', a: 'In cash, to your driver at drop-off: the price you saw when you booked, less any promo or credit. No card needed. Exact change helps, and you get a receipt once your driver confirms it.' },
   { q: 'What if no driver accepts?', a: 'Nothing happens and you owe nothing. Your request simply ends, and you can try again whenever you like.' },
   { q: 'Is RideUp safe?', a: 'Every driver is approved by RideUp before their first trip. You see their name, photo, car and plate before pickup, you can share your trip live with family, and you can call for help from the trip screen.' },
-  { q: 'Can I cancel?', a: `Yes, and it’s always free. Please cancel early: after a driver has been on the way for ${graceLabel}, it counts as a late cancellation, and two late cancellations or missed pickups in 30 days pause booking on your account. If your driver cancels, we find you another one.` },
+  { q: 'Can I cancel?', a: `Yes, and it’s always free. Please cancel early: after a driver has been on the way for ${graceLabel}, it counts as a late cancellation, and two late cancellations or missed pickups in 30 days pause booking on your account. ` },
+  { q: 'What if my driver cancels?', a: `${guaranteeLine} You don’t need to do anything: you’ll see the new driver on your screen.${credit ? ' The credit is given once every 24 hours and comes off your next booking automatically.' : ''}` },
   { q: 'Can I book for someone else, or from the airport?', a: `Yes. Tap “Someone else?” when you book and we’ll text them the driver’s details. At the airport, book from arrivals; airport pickups add ${formatAmount(AIRPORT_FEE_CENTS)}.` },
+])
+
+// The offer stack at the end of the page: everything the first ride includes, the discount first when there is one.
+const firstRideStack = computed(() => [
+  ...(pill.value ? [`${pill.value.title}, ${pill.value.note.toLowerCase()}`] : []),
+  'Your price locked when you book',
+  'Pay cash at drop-off: no card, no app',
+  credit ? `The RideUp Guarantee: same price and ${credit} credit if your driver cancels` : 'The RideUp Guarantee: a new driver at the same price if yours cancels',
+  'Free cancellation',
 ])
 
 const accountPerks = computed(() => [
@@ -144,10 +161,10 @@ const showStickyCta = computed(() => !heroInView.value && !finalReached.value)
             <p v-else-if="pillReady" class="inline-flex items-center rounded-full bg-[var(--color-surface)] px-3 py-1.5 text-[13px] leading-[18px] font-semibold text-[var(--color-text-secondary)]">Rides across New Providence</p>
           </div>
           <h1 id="hero-title" class="text-[36px] sm:text-[48px] lg:text-[60px] leading-[1.04] font-bold tracking-tight mb-3">
-            Get anywhere in Nassau.
+            Nassau rides. Price locked. Pay cash on arrival.
           </h1>
           <p class="text-[var(--color-text-secondary)] text-[16px] sm:text-[17px] leading-[1.5] max-w-md mb-6">
-            See your exact price before you book. No haggling, no surprises. Every driver is approved by RideUp.
+            See your exact price before you book. No haggling, no card, no app. Every driver is approved by RideUp.
           </p>
 
           <!-- Booking widget: each field opens booking ready to type, like Uber -->
@@ -169,9 +186,9 @@ const showStickyCta = computed(() => !heroInView.value && !finalReached.value)
           </div>
           <ul class="mt-4 grid gap-y-1.5 sm:grid-cols-2 sm:gap-x-5 max-w-lg text-[14px] text-[var(--color-text-secondary)]">
             <li class="flex gap-2"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Price locked when you book</li>
-            <li class="flex gap-2"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>No account or app needed</li>
+            <li class="flex gap-2"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>No account, app or card</li>
             <li class="flex gap-2"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Pay cash at drop-off</li>
-            <li class="flex gap-2"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>No card needed</li>
+            <li v-if="credit" class="flex gap-2"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>{{ credit }} credit if your driver cancels</li>
           </ul>
         </div>
 
@@ -238,23 +255,35 @@ const showStickyCta = computed(() => !heroInView.value && !finalReached.value)
     <!-- THE RIDEUP PROMISE: what every rider can count on, all of it true in the app today -->
     <section class="below-fold bg-[var(--color-surface)]" aria-labelledby="promise-title">
       <div class="max-w-6xl mx-auto px-5 py-12 md:py-16">
-        <h2 id="promise-title" class="text-[28px] sm:text-[35px] font-bold leading-[1.14] tracking-tight mb-2">The RideUp Promise</h2>
-        <p class="text-[var(--color-text-secondary)] text-[16px] leading-[1.5] mb-7 max-w-xl">On every ride, for every rider.</p>
+        <!-- The guarantee first: it takes away the biggest worry about a new ride app (being left waiting) -->
+        <div class="rounded-3xl bg-[#0F3D2A] text-white p-6 sm:p-8 mb-10 md:flex md:items-center md:gap-8">
+          <div class="w-14 h-14 rounded-2xl bg-white/10 text-[#FFC83D] flex items-center justify-center shrink-0 mb-4 md:mb-0" aria-hidden="true">
+            <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <div class="flex-1">
+            <h2 id="promise-title" class="text-[26px] sm:text-[32px] font-bold leading-[1.14] tracking-tight mb-2">The RideUp Guarantee</h2>
+            <p class="text-[17px] leading-[1.5] text-white/90 max-w-2xl">{{ guaranteeLine }} If no driver accepts, you pay nothing.</p>
+            <p class="mt-2 text-[13px] text-white/75"><template v-if="credit">Credit once every 24 hours, used automatically on your next booking. </template><router-link to="/terms" class="underline underline-offset-2 inline-block py-2 -my-2">Terms</router-link></p>
+          </div>
+        </div>
+        <h3 class="text-[24px] sm:text-[28px] font-bold leading-[1.14] tracking-tight mb-2">On every ride</h3>
+        <p class="text-[var(--color-text-secondary)] text-[16px] leading-[1.5] mb-7 max-w-xl">For every rider, first trip or fiftieth.</p>
         <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <li v-for="item in PROMISE" :key="item.title" class="rounded-2xl bg-[var(--color-surface-secondary)] p-5">
             <div class="w-10 h-10 rounded-xl bg-[#2b8659]/12 text-[var(--color-brand)] flex items-center justify-center mb-3">
               <svg v-if="item.icon === 'lock'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path stroke-linecap="round" d="M8 11V7a4 4 0 118 0v4"/></svg>
               <svg v-else-if="item.icon === 'cash'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path stroke-linecap="round" d="M6 12h.01M18 12h.01"/></svg>
               <svg v-else-if="item.icon === 'clock'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>
-              <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 9a8 8 0 0114-3l2 2M20 15a8 8 0 01-14 3l-2-2M20 4v4h-4M4 20v-4h4"/></svg>
+              <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z"/></svg>
             </div>
-            <h3 class="text-[17px] font-bold mb-1">{{ item.title }}</h3>
+            <h4 class="text-[17px] font-bold mb-1">{{ item.title }}</h4>
             <p class="text-[15px] leading-[1.5] text-[var(--color-text-secondary)]">{{ item.text }}</p>
           </li>
         </ul>
+        <!-- Proof we can stand behind today: a local team you can reach, not reviews we don't have yet -->
         <p class="mt-6 flex gap-3 items-start text-[15px] leading-[1.5] text-[var(--color-text-secondary)] max-w-3xl">
-          <svg class="w-5 h-5 mt-0.5 shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-          <span>Every driver is approved by RideUp. You see their name, photo, car and plate before pickup, and you can share your trip live with family.</span>
+          <svg class="w-5 h-5 mt-0.5 shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.95.68l1.5 4.49a1 1 0 01-.5 1.21l-2.26 1.13a11 11 0 005.52 5.52l1.13-2.26a1 1 0 011.21-.5l4.49 1.5a1 1 0 01.68.95V19a2 2 0 01-2 2h-1C9.72 21 3 14.28 3 6V5z"/></svg>
+          <span>A Nassau company with real people on the line. Questions before you ride? Call or WhatsApp <a href="tel:+12424529911" class="font-semibold text-[var(--color-brand)] whitespace-nowrap">(242) 452-9911</a>.</span>
         </p>
       </div>
     </section>
@@ -270,6 +299,7 @@ const showStickyCta = computed(() => !heroInView.value && !finalReached.value)
               <span class="block text-[14px] text-[var(--color-text-secondary)]">{{ trip.fromLabel }} <span aria-hidden="true">→</span><span class="sr-only">to</span> {{ trip.toLabel }}</span>
               <span class="block text-[26px] font-bold mt-1">about {{ trip.fare }}</span>
               <span class="block text-[14px] text-[var(--color-text-secondary)] mt-1">about {{ trip.minutes }} min · {{ trip.miles }} mi</span>
+              <span v-if="offerCents" class="mt-2 inline-flex self-start rounded-full bg-[#2b8659]/10 px-2.5 py-1 text-[13px] font-semibold text-[var(--color-brand)]">{{ formatFare(Math.max(0, trip.cents - offerCents)) }} {{ pill.title.startsWith('First ride') ? 'on your first ride' : 'with your code' }}</span>
               <span class="mt-auto pt-3 inline-flex items-center gap-1 text-[15px] font-semibold text-[var(--color-brand)]">See exact price <span aria-hidden="true">→</span></span>
             </router-link>
           </li>
@@ -330,12 +360,15 @@ const showStickyCta = computed(() => !heroInView.value && !finalReached.value)
 
     <!-- FINAL CTA -->
     <section ref="finalCta" class="below-fold bg-[var(--color-surface-secondary)] py-12 md:py-16 text-center px-5" aria-labelledby="cta-title">
-      <h2 id="cta-title" class="text-[28px] sm:text-[35px] font-bold leading-[1.14] tracking-tight mb-3">Ready to ride?</h2>
-      <p class="text-[var(--color-text-secondary)] text-[16px] leading-[1.5] mb-6">See your exact price in seconds. No account or app needed.</p>
+      <h2 id="cta-title" class="text-[28px] sm:text-[35px] font-bold leading-[1.14] tracking-tight mb-3">Your first ride comes with</h2>
+      <ul class="inline-grid gap-2 text-left text-[16px] mb-7">
+        <li v-for="line in firstRideStack" :key="line" class="flex gap-2.5"><svg class="w-5 h-5 mt-[2px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span>{{ line }}</span></li>
+      </ul>
+      <div></div>
       <button type="button" @click="goToBooking()" class="px-10 py-3.5 bg-[#2b8659] text-white font-bold rounded-xl text-[16px] hover:bg-[#236e49] transition-colors active:scale-[0.98]">
         See my price
       </button>
-      <p v-if="pill" class="mt-4 text-[14px] text-[var(--color-text-secondary)]"><strong class="text-[var(--color-brand)]">{{ pill.title }}</strong> · {{ pill.note }}</p>
+      <p class="mt-4 text-[14px] text-[var(--color-text-secondary)]">See your exact price in seconds. No account or app needed.</p>
     </section>
 
     <!-- DRIVER RECRUITMENT -->
@@ -350,10 +383,10 @@ const showStickyCta = computed(() => !heroInView.value && !finalReached.value)
         <div>
           <p class="inline-block bg-[#2b8659]/20 text-[#6fdca6] text-[12px] font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wide">Drive with us</p>
           <h2 id="drive-title" class="text-[28px] sm:text-[35px] font-bold leading-[1.14] text-white mb-3">Keep 70% of every trip fare</h2>
-          <p class="text-white/75 text-[16px] leading-[1.5] mb-5">Drive with RideUp on your own schedule. No shifts, no minimums. Apply today and start earning once you’re approved.</p>
+          <p class="text-white/75 text-[16px] leading-[1.5] mb-5">Riders pay you in cash at drop-off. Drive on your own schedule: no shifts, no minimums, no lease.</p>
           <ul class="flex flex-wrap gap-x-5 gap-y-2 mb-6 text-[14px] text-white/80">
             <li class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[#4cc48a]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Flexible hours</li>
-            <li class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[#4cc48a]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Weekly payouts</li>
+            <li class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[#4cc48a]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Cash every trip</li>
             <li class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[#4cc48a]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>No minimums</li>
           </ul>
           <div class="flex flex-wrap items-center gap-3">

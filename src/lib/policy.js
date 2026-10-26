@@ -6,3 +6,6 @@ const fromEnv = (value, fallback) => (value !== undefined && value !== '' && Num
 export const CANCEL_GRACE_SECONDS = fromEnv(import.meta.env.VITE_CANCEL_GRACE_SECONDS, 120) // free cancellation window after a driver accepts
 export const FREE_WAIT_SECONDS = fromEnv(import.meta.env.VITE_FREE_WAIT_SECONDS, 300) // free waiting time once the driver arrives (then no-show is allowed)
 export const EMERGENCY_NUMBER = '919' // Royal Bahamas Police Force emergency line
+// The RideUp guarantee credit when a driver cancels after accepting (the server reads DRIVER_CANCEL_CREDIT_CENTS;
+// keep this copy equal). 0 hides the guarantee credit from the pages.
+export const DRIVER_CANCEL_CREDIT_CENTS = Math.max(0, fromEnv(import.meta.env.VITE_DRIVER_CANCEL_CREDIT_CENTS, 500))

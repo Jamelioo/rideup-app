@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test'
 
 test('landing page loads with headline and booking widget', async ({ page }) => {
   await page.goto('/')
-  await expect(page.locator('h1')).toContainText('Get anywhere in Nassau')
+  await expect(page.locator('h1')).toContainText('Price locked')
   await expect(page.getByText('Pickup location')).toBeVisible()
   await expect(page.getByText('Where to?')).toBeVisible()
   await expect(page.getByRole('button', { name: 'See my price' }).first()).toBeVisible()
@@ -89,7 +89,7 @@ test('phones: a "See my price" bar follows the reader until the final call to ac
   await page.getByRole('heading', { name: 'How it works' }).scrollIntoViewIfNeeded()
   await expect(bar).toBeVisible()
   await expect(bar).toContainText('First ride $5 off')
-  await page.getByRole('heading', { name: 'Ready to ride?' }).scrollIntoViewIfNeeded()
+  await page.getByRole('heading', { name: 'Your first ride comes with' }).scrollIntoViewIfNeeded()
   await expect(bar).toBeHidden()
   await page.getByRole('heading', { name: 'Popular trips' }).scrollIntoViewIfNeeded()
   await bar.getByRole('button', { name: 'See my price' }).click()

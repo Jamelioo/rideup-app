@@ -86,3 +86,7 @@ export const landingPill = computed(() => (ready.value || pending.value
   ? offerPill({ offer: offer.value, saved: saved.value, pending: pending.value, hasRides: rides.value })
   : null))
 export const landingPillReady = computed(() => ready.value || !!pending.value)
+
+// The amount the shown offer takes off (0 when no offer shows, or an ad code isn't checked yet), so pages can show
+// what a trip costs with it.
+export const landingOfferCents = computed(() => (landingPill.value && !pending.value ? saved.value?.amount_cents || 0 : 0))
