@@ -14,18 +14,8 @@ export function previewDiscounts(fareCents, { promo = null, referralPending = fa
   return { discount, credit, charge: fareCents - discount - credit, label }
 }
 
-// What the rider pays for a ride row: charged to their card, or paid to the driver in cash (tips are separate).
+// What the rider pays for a ride row, in cash to the driver at drop-off.
 export function chargeOf(ride) {
   return Math.max(0, (ride?.fare_cents || 0) - (ride?.promo_discount_cents || 0) - (ride?.credit_applied_cents || 0))
 }
 
-// Split fare: everyone pays an equal share; the rider who booked covers any leftover cent.
-// Stripe can't charge less than $0.50, so very cheap trips aren't split.
-export const MAX_SPLIT_FRIENDS = 3
-export const MIN_SPLIT_SHARE_CENTS = 50
-export function splitShares(totalCents, friends) {
-  const n = Math.max(0, Math.min(friends || 0, MAX_SPLIT_FRIENDS))
-  const share = n ? Math.floor((totalCents || 0) / (n + 1)) : 0
-  if (!n || share < MIN_SPLIT_SHARE_CENTS) return { friendShare: 0, ownerShare: totalCents || 0, friends: 0 }
-  return { friendShare: share, ownerShare: totalCents - share * n, friends: n }
-}

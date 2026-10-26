@@ -16,7 +16,7 @@ const activeTab = computed(() => {
   const path = route.path
   if (path === '/book' || path === '/') return '/book'
   if (path === '/my-rides' || path === '/scheduled-rides') return '/my-rides'
-  if (['/profile', '/edit-profile', '/payments', '/saved-places', '/promotions', '/referrals', '/trusted-contacts'].includes(path)) return '/profile'
+  if (['/profile', '/edit-profile', '/saved-places', '/promotions', '/referrals', '/trusted-contacts'].includes(path)) return '/profile'
   return null
 })
 
@@ -24,7 +24,7 @@ const isVisible = computed(() => {
   if (!user.value) return false
   const path = route.path
   const hiddenPrefixes = ['/driver', '/admin', '/ride/', '/rate/', '/login', '/signup', '/welcome', '/drive', '/receipt', '/track/', '/reset-password', '/set-password', '/verify-phone']
-  const hiddenExact = ['/', '/about', '/privacy', '/terms', '/payment-success']
+  const hiddenExact = ['/', '/about', '/privacy', '/terms']
   if (hiddenExact.includes(path)) return false
   if (hiddenPrefixes.some(p => path.startsWith(p))) return false
   return true

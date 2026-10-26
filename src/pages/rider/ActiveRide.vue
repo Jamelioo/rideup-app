@@ -8,7 +8,6 @@ import RideTracker from '../../components/RideTracker.vue'
 import RideChat from '../../components/RideChat.vue'
 import SafetyToolkit from '../../components/SafetyToolkit.vue'
 import TripCheckin from '../../components/TripCheckin.vue'
-import SplitFareSheet from '../../components/SplitFareSheet.vue'
 import { supabase } from '../../lib/supabase'
 import { DEMO_MODE } from '../../lib/demoMode'
 import { apiPost } from '../../lib/api'
@@ -47,7 +46,6 @@ const mapFailed = ref(DEMO_MODE)
 const chatOpen = ref(false)
 const unread = ref(0)
 const safetyOpen = ref(false)
-const splitOpen = ref(false)
 
 // Booked for someone else: send them the driver, car, PIN and a live trip link (WhatsApp, or the phone's share sheet).
 const passengerSent = ref(false)
@@ -64,16 +62,14 @@ async function sendToPassenger() {
   window.open(`https://wa.me/${intl}?text=${encodeURIComponent(text)}`, '_blank', 'noopener')
 }
 const stopPoint = computed(() => (ride.value?.stop_lat != null ? { lat: ride.value.stop_lat, lng: ride.value.stop_lng } : null))
-// Cash trips: what to hand the driver at drop-off.
-const cashCents = computed(() => (isCashRide(ride.value) ? chargeOf(ride.value) : null))
-// Cancelling a cash trip after the free 2 minutes counts like a missed pickup (no fee, but cash can be turned off).
-const lateCashCancel = computed(() => isCashRide(ride.value) && !!ride.value?.accepted_at &&
-  Date.now() - Date.parse(ride.value.accepted_at) > CANCEL_GRACE_SECONDS * 1000)
-// Split fare is offered once the card is held (driver accepted) until drop-off.
-const canSplit = computed(() => !DEMO_MODE && ride.value?.payment_status === 'authorized' &&
-  ['accepted', 'driver_arrived', 'in_progress'].includes(ride.value?.status))
+// What to hand the driver in cash at drop-off.
+const cashCents = computed(() => (isCashRide(ride.value) && chargeOf(ride.value) > 0 ? chargeOf(ride.value) : null))
+// Cancelling is free, but after the free 2 minutes it counts as a late cancellation (like a missed pickup): two in
+// 30 days pause booking. The server's answer wins; this is the fallback when it can't be asked.
+const lateCancel = ref(false)
+const lateByClock = () => ['accepted', 'driver_arrived'].includes(ride.value?.status) && !!ride.value?.accepted_at &&
+  Date.now() - Date.parse(ride.value.accepted_at) > CANCEL_GRACE_SECONDS * 1000
 const confirmingCancel = ref(false)
-const cancelFeeCents = ref(0)
 const cancelling = ref(false)
 const cancelError = ref('')
 const endedBy = ref(null) // set when the ride is cancelled by the driver/system → modal
@@ -129,7 +125,7 @@ function applyRide(row) {
     if (cancelling.value) return
     if (row.replaced_by_ride_id) {
       // The driver cancelled and the server already booked a new request: go back to searching.
-      try { sessionStorage.setItem('rideup_notice', 'Your driver had to cancel. We’re finding you another driver. You weren’t charged.') } catch { /* private mode */ }
+      try { sessionStorage.setItem('rideup_notice', 'Your driver had to cancel. We’re finding you another driver at the same price.') } catch { /* private mode */ }
       router.replace({ name: 'book' })
       return
     }
@@ -139,7 +135,7 @@ function applyRide(row) {
       setTimeout(refreshRide, 2000)
       return
     }
-    endedBy.value = { reason: row.cancel_reason, fee: row.cancel_fee_cents || 0 }
+    endedBy.value = { reason: row.cancel_reason }
     return
   }
   if (row.status === 'requested' || row.status === 'pending_driver_response') {
@@ -238,15 +234,15 @@ onUnmounted(() => {
   stopLive()
 })
 
-// ── Cancellation: always confirm; the server decides the fee and releases or charges the hold in one step ──
+// ── Cancellation: always confirm, and say whether it counts as a late cancellation (it never costs anything) ──
 async function askCancel() {
   cancelError.value = ''
-  cancelFeeCents.value = 0
+  lateCancel.value = lateByClock()
   if (!DEMO_MODE) {
     try {
       const res = await apiPost('/api/cancel-ride', { rideId, preview: true })
       const data = await res.json().catch(() => ({}))
-      if (res.ok) cancelFeeCents.value = data.fee_cents || 0
+      if (res.ok && typeof data.late === 'boolean') lateCancel.value = data.late
       else if (res.status === 409) { cancelError.value = data.error || 'This ride can no longer be cancelled.' }
     } catch { /* show the confirm anyway; the server re-checks */ }
   }
@@ -276,14 +272,10 @@ async function doCancel() {
 const endedMessage = computed(() => {
   if (!endedBy.value) return ''
   if (endedBy.value.reason === 'rider_no_show') {
-    return endedBy.value.fee > 0
-      ? `Your driver waited at the pickup and marked the ride as a no-show. A ${formatFare(endedBy.value.fee)} no-show fee was charged.`
-      : isCashRide(ride.value)
-        ? 'Your driver waited at the pickup and marked the ride as a no-show. Missed cash pickups can turn cash off on your account.'
-        : 'Your driver waited at the pickup and marked the ride as a no-show.'
+    return 'Your driver waited at the pickup and marked the ride as a no-show. Missed pickups can pause booking on your account.'
   }
-  if (endedBy.value.reason === 'driver_cancelled') return 'Your driver had to cancel. You weren’t charged. Request again and we’ll find you another driver.'
-  return isCashRide(ride.value) ? 'This ride was cancelled. You don’t owe anything.' : 'This ride was cancelled. Any hold on your card has been released.'
+  if (endedBy.value.reason === 'driver_cancelled') return 'Your driver had to cancel. Request again and we’ll find you another driver.'
+  return 'This ride was cancelled. You don’t owe anything.'
 })
 </script>
 
@@ -324,11 +316,9 @@ const endedMessage = computed(() => {
       :unread="unread"
       :stop-address="ride?.stop_address || ''"
       :stop-reached="!!ride?.stop_reached_at"
-      :can-split="canSplit"
       :cash-cents="cashCents"
       @cancel="askCancel"
       @message="chatOpen = true"
-      @split="splitOpen = true"
     />
 
     <div v-if="ride?.passenger_phone && ['driver_enroute', 'driver_arrived'].includes(rideStatus)"
@@ -336,8 +326,6 @@ const endedMessage = computed(() => {
       <p class="flex-1 text-[13px]"><strong>Riding: {{ ride.passenger_name }}</strong><br><span class="text-[var(--color-text-secondary)]">{{ passengerSent ? 'Details sent. You can send them again.' : 'We text them the driver details. Send them on WhatsApp too.' }}</span></p>
       <button @click="sendToPassenger" class="px-3 py-2 rounded-xl bg-[#2b8659] text-white text-[13px] font-bold whitespace-nowrap">Send on WhatsApp</button>
     </div>
-
-    <SplitFareSheet v-if="canSplit || splitOpen" :open="splitOpen" :ride-id="rideId" @close="splitOpen = false" />
 
     <RideChat
       v-if="!DEMO_MODE && user"
@@ -359,14 +347,13 @@ const endedMessage = computed(() => {
       <div class="bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-3xl p-6 max-w-sm w-full text-center">
         <h2 id="cancel-title" class="text-xl font-bold mb-2">Cancel this ride?</h2>
         <p class="text-[var(--color-text-secondary)] text-sm mb-6">
-          <template v-if="cancelFeeCents > 0">Your driver accepted more than {{ Math.round(CANCEL_GRACE_SECONDS / 60) }} minutes ago{{ rideStatus === 'driver_arrived' ? ' and is waiting for you' : ' and is on the way' }}, so a {{ formatFare(cancelFeeCents) }} cancellation fee applies. Most of it goes to your driver.</template>
-          <template v-else-if="lateCashCancel">Your driver accepted more than {{ Math.round(CANCEL_GRACE_SECONDS / 60) }} minutes ago{{ rideStatus === 'driver_arrived' ? ' and is waiting for you' : ' and is on the way' }}. Cancelling now counts as a late cancellation: two missed or late-cancelled cash trips in 30 days turn cash off on your account.</template>
-          <template v-else>You won’t be charged.</template>
+          <template v-if="lateCancel">Your driver accepted more than {{ Math.round(CANCEL_GRACE_SECONDS / 60) }} minutes ago{{ rideStatus === 'driver_arrived' ? ' and is waiting for you' : ' and is on the way' }}. Cancelling is free, but it counts as a late cancellation: two late cancellations or missed pickups in 30 days pause booking on your account.</template>
+          <template v-else>Cancelling is free.</template>
         </p>
         <p v-if="cancelError" class="text-[13px] text-[var(--color-danger)] mb-3" role="alert">{{ cancelError }}</p>
         <button @click="confirmingCancel = false" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mb-2">Keep my ride</button>
         <button @click="doCancel" :disabled="cancelling" class="w-full py-3 text-[var(--color-text-secondary)] font-semibold text-[14px] disabled:opacity-50">
-          {{ cancelling ? 'Cancelling…' : cancelFeeCents > 0 ? `Cancel and pay ${formatFare(cancelFeeCents)}` : 'Yes, cancel ride' }}
+          {{ cancelling ? 'Cancelling…' : 'Yes, cancel ride' }}
         </button>
       </div>
     </div>

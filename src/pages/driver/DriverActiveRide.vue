@@ -28,13 +28,13 @@ const phase = computed(() => currentRide.value?.status || 'none')
 // Screen stays on during the trip so the rider keeps seeing the car move.
 useWakeLock(computed(() => !DEMO_MODE && ['accepted', 'driver_arrived', 'in_progress'].includes(phase.value)))
 const earnings = computed(() => driverPayout(currentRide.value))
-// Cash trip: the rider pays the driver at drop-off (the fare less any promo or credit, which RideUp covers).
+// Every trip is paid in cash at drop-off: the fare less any promo or credit, which RideUp covers.
 const isCash = computed(() => isCashRide(currentRide.value))
 const cashCents = computed(() => (isCash.value ? chargeOf(currentRide.value) : 0))
 const cashSplitNote = computed(() => (cashCents.value >= earnings.value
   ? `You keep ${formatFare(earnings.value)}. RideUp’s ${formatFare(cashCents.value - earnings.value)} share comes off your balance.`
   : `You keep it all, and RideUp adds ${formatFare(earnings.value - cashCents.value)} to your balance for the rider’s discount.`))
-// A cash trip ends by collecting the fare: 'collect' → 'collected' (the rider's receipt goes out) or 'unpaid'.
+// A trip ends by collecting the cash: 'collect' → 'collected' (the rider's receipt goes out) or 'unpaid'.
 const cashStep = ref('collect')
 watch(() => currentRide.value?.id, () => { cashStep.value = 'collect' })
 const busy = ref(false)
@@ -97,7 +97,8 @@ async function markStopDone() {
   currentRide.value = { ...currentRide.value, stop_reached_at: data?.stop_reached_at || new Date().toISOString() }
 }
 
-// ── Wait timer + no-show (Uber: after 5 minutes at pickup the driver can cancel and the rider pays a fee) ──
+// ── Wait timer + no-show (Uber: after 5 minutes at pickup the driver can cancel as a no-show; it counts against
+//    the rider, and two in 30 days pause their booking) ──
 const now = ref(Date.now())
 let ticker = null
 const waitedSeconds = computed(() => {
@@ -172,22 +173,22 @@ async function completeTrip() {
     actionError.value = res.error || 'Couldn’t complete the trip. Try again.'
     return
   }
-  // Charge the held fare (receipt goes to the rider). Retried a few times; the server sweeps up any miss.
-  // A cash trip is settled when the driver confirms the cash below.
-  if (!DEMO_MODE && currentRide.value?.id && !isCash.value) captureWithRetry(currentRide.value.id)
+  // The trip is settled when the driver confirms the cash below.
 }
 
+// "Cash collected": marks the fare paid and sends the rider their receipt. Retried a few times; if it never gets
+// through, the server counts the cash as collected half an hour later.
 function cashCollected() {
   cashStep.value = 'collected'
-  if (!DEMO_MODE && currentRide.value?.id) captureWithRetry(currentRide.value.id)
+  if (!DEMO_MODE && currentRide.value?.id) settleWithRetry(currentRide.value.id)
 }
 
-async function captureWithRetry(rideId, attempt = 0) {
+async function settleWithRetry(rideId, attempt = 0) {
   try {
     const res = await apiPost('/api/capture-payment', { rideId })
     if (res.ok || res.status < 500) return
   } catch { /* offline: retry below */ }
-  if (attempt < 3) setTimeout(() => captureWithRetry(rideId, attempt + 1), 3000 * 2 ** attempt)
+  if (attempt < 3) setTimeout(() => settleWithRetry(rideId, attempt + 1), 3000 * 2 ** attempt)
 }
 
 function finish() {
@@ -272,8 +273,7 @@ function handleRemoteUpdate(row) {
   if (!row || !currentRide.value || row.id !== currentRide.value.id) return
   if (row.status === 'cancelled') {
     if (busy.value && row.cancelled_by === 'driver') return // our own cancel; doCancel navigates
-    const fee = row.cancel_fee_cents > 0 ? ` You’ll receive ${formatFare(row.driver_payout_cents || 0)} for your time.` : ''
-    endedNotice.value = row.cancelled_by === 'rider' ? `The rider cancelled this trip.${fee}`
+    endedNotice.value = row.cancelled_by === 'rider' ? 'The rider cancelled this trip.'
       : row.cancelled_by === 'admin' ? 'RideUp support cancelled this trip.'
       : 'This trip was cancelled.'
     stopLive()
@@ -372,7 +372,7 @@ onUnmounted(() => {
           </div>
           <template v-if="isCash && cashStep === 'unpaid'">
             <h2 class="text-2xl font-bold mb-1">Thanks for telling us</h2>
-            <p class="text-[13px] text-[var(--color-text-secondary)] mt-2">RideUp will follow up with {{ riderName }}, and cash is off on their account. You don’t owe RideUp anything for this trip.</p>
+            <p class="text-[13px] text-[var(--color-text-secondary)] mt-2">RideUp will follow up with {{ riderName }}, and their booking is paused until it’s sorted. You don’t owe RideUp anything for this trip.</p>
           </template>
           <template v-else>
             <h2 class="text-2xl font-bold mb-1">Trip complete</h2>
@@ -447,7 +447,7 @@ onUnmounted(() => {
 
           <div v-if="isCash" class="mb-4 flex items-center gap-3 rounded-xl bg-amber-500/15 px-4 py-3 text-[14px]">
             <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>
-            <span><strong>Cash trip.</strong> Collect {{ formatFare(cashCents) }} at drop-off.</span>
+            <span>Collect <strong>{{ formatFare(cashCents) }} in cash</strong> at drop-off.</span>
           </div>
 
           <!-- Wait timer -->
@@ -530,9 +530,8 @@ onUnmounted(() => {
       <div class="bg-[var(--color-surface)] rounded-3xl p-6 max-w-sm w-full text-center">
         <h2 id="confirm-title" class="text-xl font-bold mb-2">{{ confirm === 'noshow' ? 'Mark as no-show?' : 'Cancel this trip?' }}</h2>
         <p class="text-[13px] text-[var(--color-text-secondary)] mb-5">
-          <template v-if="confirm === 'noshow' && isCash">You waited {{ formatClock(waitedSeconds) }}. This is a cash trip, so there’s no fee, but missed cash pickups turn cash off for the rider.</template>
-          <template v-else-if="confirm === 'noshow'">You waited {{ formatClock(waitedSeconds) }}. The rider is charged a no-show fee and you receive your share of it.</template>
-          <template v-else>The rider won’t be charged and will be matched with another driver. Frequent cancellations can affect your account.</template>
+          <template v-if="confirm === 'noshow'">You waited {{ formatClock(waitedSeconds) }}. There’s no fee, but missed pickups count against the rider: two in 30 days pause their booking.</template>
+          <template v-else>The rider will be matched with another driver at the same price. Frequent cancellations can affect your account.</template>
         </p>
         <p v-if="actionError" class="text-[13px] text-[var(--color-danger)] mb-3" role="alert">{{ actionError }}</p>
         <button @click="doCancel(confirm === 'noshow')" :disabled="busy" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl disabled:opacity-50">

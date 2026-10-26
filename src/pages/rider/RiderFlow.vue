@@ -77,7 +77,7 @@ function handleCancelled() {
 
 function handleReplaced(newRideId) {
   activeRide.value = { id: newRideId }
-  notice.value = 'Your driver had to cancel. We’re finding you another driver. You weren’t charged.'
+  notice.value = 'Your driver had to cancel. We’re finding you another driver at the same price.'
 }
 </script>
 

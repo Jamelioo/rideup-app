@@ -19,12 +19,10 @@ import HarborBackdrop from '../../components/HarborBackdrop.vue'
 import SideMenu from '../../components/SideMenu.vue'
 import ScheduleRidePicker from '../../components/ScheduleRidePicker.vue'
 import GuestInfoSheet from '../../components/GuestInfoSheet.vue'
-import CardCollectionSheet from '../../components/CardCollectionSheet.vue'
 import PhoneNumberSheet from '../../components/PhoneNumberSheet.vue'
 import WhoIsRiding from '../../components/WhoIsRiding.vue'
-import PaymentPicker from '../../components/PaymentPicker.vue'
-import { cashOption, savedPaymentChoice, savePaymentChoice } from '../../lib/cash'
-import { useAuth } from '../../lib/useAuth'
+import PayCashRow from '../../components/PayCashRow.vue'
+import { BOOKING_PAUSED } from '../../lib/cash'
 import { toE164, phoneIsVerified } from '../../lib/phone'
 import { riderHasPhone, saveRiderPhone, phoneReminderShown, rememberPhoneReminder } from '../../lib/riderPhone'
 import { trackRideBooked, trackPriceSeen } from '../../lib/adTracking'
@@ -78,8 +76,6 @@ const mapRef = ref(null)
 const isLocating = ref(false)
 const showGuestSheet = ref(false)
 const guestSheetRef = ref(null)
-const showCardSheet = ref(false)
-const cardSheetRef = ref(null)
 const showPhoneSheet = ref(false)
 const phoneSheetRef = ref(null)
 const phoneSheetMode = ref('book') // 'book': asked while requesting a ride; 'remind': the one-off reminder
@@ -419,21 +415,20 @@ onMounted(() => trackStep('booking'))
 
 const routeReady = computed(() => pickup.value && dropoff.value && fareEstimates.value[selectedVehicle.value] && !isSubmitting.value)
 
-// ── How the rider pays: their card, or cash to the driver while RideUp accepts cash (Admin › Settings) ──
-const { user: authUser } = useAuth()
-const paymentChoice = ref(savedPaymentChoice()) // remembered on this device
-watch(paymentChoice, savePaymentChoice)
-const cashBlocked = ref(false)
-const cashChoice = computed(() => ((DEMO_MODE || appSettings.value.accept_cash) ? cashOption({
-  signedIn: DEMO_MODE || !!authUser.value,
-  guest: !DEMO_MODE && !!authUser.value?.is_anonymous,
-  blocked: cashBlocked.value,
-  forSomeoneElse: !!passenger.value,
-}) : null))
-const payingCash = computed(() => paymentChoice.value === 'cash' && !!cashChoice.value?.ok)
+// ── Every trip is paid in cash to the driver at drop-off. Booking pauses after missed pickups or an unpaid fare
+//    (the database decides, including for the rider's other accounts; this shows it before they try). ──
+const bookingPaused = ref(false)
+async function loadBookingPaused() {
+  if (DEMO_MODE) return
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) return
+  const { data } = await supabase.from('riders').select('cash_blocked').eq('auth_user_id', session.user.id).maybeSingle()
+  bookingPaused.value = data?.cash_blocked === true
+}
+onMounted(loadBookingPaused)
 
 // ── Can a car come now? Checked when the pickup changes and every 30 seconds (Uber: "No cars available") ──
-const { availability, refresh: refreshAvailability } = useAvailability(pickup, { cash: payingCash })
+const { availability, refresh: refreshAvailability } = useAvailability(pickup)
 const selectedAvailability = computed(() => availabilityFor(availability.value, selectedVehicle.value))
 const carsUnavailable = computed(() => !canBook(selectedAvailability.value))
 const noCarsNotice = computed(() => unavailableNotice(selectedAvailability.value))
@@ -445,29 +440,10 @@ const optionLine = (type) => {
   const entry = availabilityFor(availability.value, type)
   return { text: optionStatus(entry), unavailable: !canBook(entry) }
 }
-const canRequest = computed(() => routeReady.value && !carsUnavailable.value)
+const canRequest = computed(() => routeReady.value && !carsUnavailable.value && !bookingPaused.value)
 const hasRoute = computed(() => distanceMiles.value && !isCalculating.value)
 
 const emit = defineEmits(['requested', 'existing-ride'])
-
-// Card on file, shown above the request button (Uber: "Visa •••• 4242").
-const paymentLabel = ref('')
-const hasCardOnFile = ref(false)
-const capitalize = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Card')
-async function loadPaymentMethod() {
-  if (DEMO_MODE) { paymentLabel.value = 'Visa •••• 4242'; hasCardOnFile.value = true; return }
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) { paymentLabel.value = 'Pay by card · added at the next step'; return }
-  const riderRow = (columns) => supabase.from('riders').select(columns).eq('auth_user_id', session.user.id).maybeSingle()
-  // cash_blocked is asked for on its own: it only exists once migration 019 has run.
-  const [{ data }, { data: cash }] = await Promise.all([riderRow('payment_method_id, card_brand, card_last4'), riderRow('cash_blocked')])
-  hasCardOnFile.value = !!data?.payment_method_id
-  cashBlocked.value = cash?.cash_blocked === true
-  paymentLabel.value = hasCardOnFile.value
-    ? `${capitalize(data.card_brand)}${data.card_last4 ? ' •••• ' + data.card_last4 : ''}`
-    : 'Add a card at the next step'
-}
-onMounted(loadPaymentMethod)
 
 // ── Promo codes, referral discount and ride credit (the database applies them; this previews them) ──
 const rewards = ref({ credit_cents: 0, referral_discount_pending: false })
@@ -531,7 +507,7 @@ async function requestRide() {
       vehicle_type: selectedVehicle.value,
       fare_cents: fare,
       status: 'requested',
-      payment_method: payingCash.value ? 'cash' : 'card',
+      payment_method: 'cash',
       demo: true,
       drivers_alerted: selectedAvailability.value ? selectedAvailability.value.state === 'available' : null,
     })
@@ -547,7 +523,7 @@ async function requestRide() {
   }
 
   const [{ data: rider, error: riderErr }, settings] = await Promise.all([
-    supabase.from('riders').select('id, phone, payment_method_id').eq('auth_user_id', user.id).maybeSingle(),
+    supabase.from('riders').select('id, phone').eq('auth_user_id', user.id).maybeSingle(),
     loadSettings(),
   ])
 
@@ -565,12 +541,6 @@ async function requestRide() {
     return
   }
 
-  if (!payingCash.value && !rider?.payment_method_id) {
-    isSubmitting.value = false
-    showCardSheet.value = true
-    return
-  }
-
   await createRideForUser(user)
 }
 
@@ -579,7 +549,7 @@ async function requestRide() {
 async function ensureRider(user, guestInfo = null) {
   const { data: existing } = await supabase
     .from('riders')
-    .select('id, name, phone, payment_method_id')
+    .select('id, name, phone')
     .eq('auth_user_id', user.id)
     .maybeSingle()
 
@@ -602,7 +572,7 @@ async function ensureRider(user, guestInfo = null) {
       phone: guestInfo?.phone || toE164(user.user_metadata?.phone || '') || user.phone || '',
       is_guest: !!guestInfo,
     })
-    .select('id, name, phone, payment_method_id')
+    .select('id, name, phone')
     .single()
   return createErr ? null : created
 }
@@ -614,8 +584,7 @@ async function createRideForUser(user, guestInfo = null) {
   // now instead of after a search. An unknown answer (the check failed) never blocks booking.
   const latest = availabilityFor(await refreshAvailability({ timeoutMs: 4000 }), selectedVehicle.value)
   if (!canBook(latest)) {
-    showGuestSheet.value = false // after signing up or adding a card, show the note rather than leave a sheet open
-    showCardSheet.value = false
+    showGuestSheet.value = false // after entering their details, show the note rather than leave the sheet open
     isSubmitting.value = false
     return
   }
@@ -624,13 +593,6 @@ async function createRideForUser(user, guestInfo = null) {
   try {
     const rider = await ensureRider(user, guestInfo)
     if (!rider) { error.value = 'Could not create your rider profile. Please try again.'; isSubmitting.value = false; return }
-
-    // Enforce: no card ride without a card on file (cash is paid to the driver)
-    if (!payingCash.value && !rider.payment_method_id) {
-      isSubmitting.value = false
-      showCardSheet.value = true
-      return
-    }
 
     const riderName = guestInfo?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Rider'
     const { data: ride, error: rideErr } = await supabase.from('rides').insert({
@@ -645,8 +607,7 @@ async function createRideForUser(user, guestInfo = null) {
       surge_multiplier: surge.value,
       stop_address: stop.value?.address || null, stop_lat: stop.value?.lat ?? null, stop_lng: stop.value?.lng ?? null,
       passenger_name: passenger.value?.name || null, passenger_phone: passenger.value?.phone || null,
-      // Only sent for cash, so card bookings keep working before migration 019 adds the column.
-      ...(payingCash.value ? { payment_method: 'cash' } : {}),
+      payment_method: 'cash',
     }).select().single()
     if (rideErr) {
       isSubmitting.value = false
@@ -660,11 +621,17 @@ async function createRideForUser(user, guestInfo = null) {
         error.value = rideErr.message
         return
       }
-      if (rideErr.hint === 'cash') {
-        // Cash isn't possible for this booking after all (turned off, or on this account): switch to card.
-        if (/your account/i.test(rideErr.message)) cashBlocked.value = true
-        paymentChoice.value = 'card'
-        error.value = `${rideErr.message} We switched you to card. Tap the button again to book.`
+      if (rideErr.hint === 'blocked') {
+        // Paused on this account or another of theirs: the notice above the button explains and links to support.
+        showGuestSheet.value = false
+        bookingPaused.value = true
+        return
+      }
+      if (rideErr.hint === 'phone') {
+        // No usable mobile number on the profile: ask for one, then carry on with the request.
+        showGuestSheet.value = false
+        phoneSheetMode.value = 'book'
+        showPhoneSheet.value = true
         return
       }
       if (rideErr.hint === 'surge') {
@@ -705,85 +672,39 @@ async function createRideForUser(user, guestInfo = null) {
   }
 }
 
-async function saveCardForUser(user, cardElement, stripe) {
-  const res = await apiPost('/api/create-setup-intent', {
-    name: user.user_metadata?.name || user.email?.split('@')[0] || 'Rider',
-  })
-  const setup = await res.json().catch(() => ({}))
-  if (!res.ok || !setup.client_secret) {
-    console.error('create-setup-intent failed', res.status, setup)
-    throw new Error(setup.error || `Couldn't start card setup (error ${res.status}). Please try again.`)
-  }
-
-  const { setupIntent, error: stripeError } = await stripe.confirmCardSetup(setup.client_secret, {
-    payment_method: { card: cardElement },
-  })
-  if (stripeError) throw new Error(stripeError.message)
-
-  // The server re-verifies the SetupIntent with Stripe and stores the card (clients can't write it).
-  const saveRes = await apiPost('/api/save-payment-method', { setupIntentId: setupIntent.id })
-  const saved = await saveRes.json().catch(() => ({}))
-  if (!saveRes.ok || !saved.success) {
-    console.error('save-payment-method failed', saveRes.status, saved)
-    throw new Error(saved.error || `Your card was verified but couldn't be saved (error ${saveRes.status}). Please try again.`)
-  }
-
-  return { customer_id: setup.customer_id, payment_method_id: setupIntent.payment_method }
-}
-
-async function handleGuestSubmit({ name, phone, cardElement, stripe }) {
+async function handleGuestSubmit({ name, phone }) {
   error.value = null
   try {
-    const { data, error: authErr } = await supabase.auth.signInAnonymously()
-    if (authErr || !data.user) {
-      if (guestSheetRef.value) guestSheetRef.value.reset()
-      error.value = 'Could not start your session. Please try again.'
-      return
+    // A guest whose first try failed already has a session: keep it rather than start another.
+    const { data: { session } } = await supabase.auth.getSession()
+    let user = session?.user || null
+    if (!user) {
+      const { data, error: authErr } = await supabase.auth.signInAnonymously()
+      if (authErr || !data.user) {
+        guestSheetRef.value?.setError('Could not start your booking. Check your connection and try again.')
+        return
+      }
+      user = data.user
     }
 
-    const guestRider = await ensureRider(data.user, { name, phone })
+    const guestRider = await ensureRider(user, { name, phone })
     if (!guestRider) {
-      if (guestSheetRef.value) guestSheetRef.value.reset()
-      error.value = 'Could not create your profile. Please try again.'
+      guestSheetRef.value?.setError('Could not save your details. Please try again.')
       return
     }
 
-    await saveCardForUser(data.user, cardElement, stripe)
     // A friend's referral link needs a rider profile, which a guest only has now: use it before the first ride is
-    // booked so its $5 comes off. After saving the card, so referring yourself with the same card is caught.
+    // booked so its $5 comes off.
     await redeemPendingReferral().catch(() => {})
 
-    await createRideForUser(data.user, { name, phone })
-    if (error.value && guestSheetRef.value) guestSheetRef.value.reset()
+    await createRideForUser(user, { name, phone })
+    if (error.value && showGuestSheet.value) guestSheetRef.value?.setError(error.value)
   } catch (err) {
-    if (guestSheetRef.value) guestSheetRef.value.reset()
-    error.value = err.message || 'Connection error. Please try again.'
+    guestSheetRef.value?.setError(err.message || 'Connection error. Please try again.')
   }
 }
 
-async function handleCardSubmit({ cardElement, stripe }) {
-  error.value = null
-  try {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      if (cardSheetRef.value) cardSheetRef.value.reset()
-      error.value = 'Session expired. Please log in again.'
-      return
-    }
-
-    await saveCardForUser(user, cardElement, stripe)
-    loadPaymentMethod()
-
-    showCardSheet.value = false
-    await createRideForUser(user)
-  } catch (err) {
-    const message = err.message || 'Could not save card. Please try again.'
-    if (cardSheetRef.value) { cardSheetRef.value.reset(); cardSheetRef.value.setError(message) }
-    error.value = message
-  }
-}
-
-// The number from "Add your mobile number". While booking, carry on with the request (the card comes next if needed).
+// The number from "Add your mobile number". While booking, carry on with the request.
 async function handlePhoneSubmit(phone) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) { phoneSheetRef.value?.setError('Session expired. Please log in again.'); return }
@@ -807,7 +728,7 @@ async function remindAboutPhone() {
   if (!user || user.is_anonymous || phoneReminderShown(user.id)) return
   const { data: rider, error: riderErr } = await supabase.from('riders').select('id, phone').eq('auth_user_id', user.id).maybeSingle()
   if (riderErr || !rider || await riderHasPhone(user, rider)) return
-  if (showGuestSheet.value || showCardSheet.value || showPhoneSheet.value || hasRoute.value || document.activeElement?.tagName === 'INPUT') return
+  if (showGuestSheet.value || showPhoneSheet.value || hasRoute.value || document.activeElement?.tagName === 'INPUT') return
   rememberPhoneReminder(user.id)
   phoneSheetMode.value = 'remind'
   showPhoneSheet.value = true
@@ -815,7 +736,7 @@ async function remindAboutPhone() {
 onMounted(remindAboutPhone)
 
 async function scheduleRide({ date, time, summary }) {
-  if (!SCHEDULING_ENABLED || !routeReady.value) return
+  if (!SCHEDULING_ENABLED || !routeReady.value || bookingPaused.value) return
   isScheduling.value = true
   showSchedulePicker.value = false
   const fare = fareEstimates.value[selectedVehicle.value]
@@ -1007,7 +928,11 @@ async function scheduleRide({ date, time, summary }) {
             </button>
           </div>
           <div class="sticky bottom-0 z-10 -mx-5 px-5 pt-3 pb-1 mt-3 bg-[var(--color-surface)] border-t border-[var(--color-border)]">
-            <div v-if="hasRoute && noCarsNotice" class="mb-2 rounded-xl bg-[var(--color-surface-secondary)] px-3 py-2.5" role="status" aria-live="polite">
+            <div v-if="bookingPaused" class="mb-2 rounded-xl bg-[var(--color-surface-secondary)] px-3 py-2.5" role="status" aria-live="polite">
+              <p class="text-[14px] font-semibold text-[var(--color-text-primary)]">Booking is paused</p>
+              <p class="text-[12px] leading-snug text-[var(--color-text-muted)] mt-0.5">{{ BOOKING_PAUSED }} <router-link to="/support" class="text-[var(--color-brand)] font-semibold whitespace-nowrap">Go to Support</router-link></p>
+            </div>
+            <div v-else-if="hasRoute && noCarsNotice" class="mb-2 rounded-xl bg-[var(--color-surface-secondary)] px-3 py-2.5" role="status" aria-live="polite">
               <p class="text-[14px] font-semibold text-[var(--color-text-primary)]">{{ noCarsNotice.title }}</p>
               <p class="text-[12px] leading-snug text-[var(--color-text-muted)] mt-0.5">{{ noCarsNotice.body }}</p>
               <button v-if="availableAlternative" type="button" @click="selectedVehicle = availableAlternative.id" class="mt-1.5 text-[13px] font-semibold text-[var(--color-brand)]">Choose {{ availableAlternative.name }}, available now</button>
@@ -1039,14 +964,13 @@ async function scheduleRide({ date, time, summary }) {
               <p v-if="promoError" class="text-[var(--color-danger)]" role="alert">{{ promoError }}</p>
             </div>
             <WhoIsRiding v-model="passenger" />
-            <PaymentPicker v-model="paymentChoice" :card-label="paymentLabel" :manage-cards="hasCardOnFile && !DEMO_MODE"
-                           :cash="cashChoice" :charge-cents="discounts.charge" />
+            <PayCashRow :charge-cents="discounts.charge" />
           <div class="flex gap-2.5">
             <button @click="requestRide" :disabled="!canRequest"
                     class="flex-1 py-4 bg-[#2b8659] disabled:bg-[var(--color-surface-secondary)] disabled:text-[var(--color-text-muted)] text-white font-bold rounded-2xl text-[15px] transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:shadow-none">
-              {{ isSubmitting ? 'Requesting…' : carsUnavailable ? 'No cars available' : `Choose ${VEHICLE_TYPES.find(v => v.id === selectedVehicle)?.name || 'ride'}` }}
+              {{ isSubmitting ? 'Requesting…' : bookingPaused ? 'Booking paused' : carsUnavailable ? 'No cars available' : `Choose ${VEHICLE_TYPES.find(v => v.id === selectedVehicle)?.name || 'ride'}` }}
             </button>
-            <button v-if="SCHEDULING_ENABLED" @click="showSchedulePicker = true" :disabled="!routeReady"
+            <button v-if="SCHEDULING_ENABLED" @click="showSchedulePicker = true" :disabled="!routeReady || bookingPaused"
                     class="w-[52px] flex-shrink-0 flex items-center justify-center bg-[var(--color-surface-secondary)] disabled:bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] disabled:text-[var(--color-text-muted)] rounded-2xl transition-all active:scale-[0.97] border border-[var(--color-border)]"
                     title="Schedule for later">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -1179,7 +1103,11 @@ async function scheduleRide({ date, time, summary }) {
             </button>
           </div>
           <div class="sticky bottom-0 z-10 -mx-6 px-6 pt-3 pb-4 mt-4 bg-[var(--color-surface)] border-t border-[var(--color-border)]">
-            <div v-if="hasRoute && noCarsNotice" class="mb-2 rounded-xl bg-[var(--color-surface-secondary)] px-3 py-2.5" role="status" aria-live="polite">
+            <div v-if="bookingPaused" class="mb-2 rounded-xl bg-[var(--color-surface-secondary)] px-3 py-2.5" role="status" aria-live="polite">
+              <p class="text-[14px] font-semibold text-[var(--color-text-primary)]">Booking is paused</p>
+              <p class="text-[12px] leading-snug text-[var(--color-text-muted)] mt-0.5">{{ BOOKING_PAUSED }} <router-link to="/support" class="text-[var(--color-brand)] font-semibold whitespace-nowrap">Go to Support</router-link></p>
+            </div>
+            <div v-else-if="hasRoute && noCarsNotice" class="mb-2 rounded-xl bg-[var(--color-surface-secondary)] px-3 py-2.5" role="status" aria-live="polite">
               <p class="text-[14px] font-semibold text-[var(--color-text-primary)]">{{ noCarsNotice.title }}</p>
               <p class="text-[12px] leading-snug text-[var(--color-text-muted)] mt-0.5">{{ noCarsNotice.body }}</p>
               <button v-if="availableAlternative" type="button" @click="selectedVehicle = availableAlternative.id" class="mt-1.5 text-[13px] font-semibold text-[var(--color-brand)]">Choose {{ availableAlternative.name }}, available now</button>
@@ -1211,14 +1139,13 @@ async function scheduleRide({ date, time, summary }) {
               <p v-if="promoError" class="text-[var(--color-danger)]" role="alert">{{ promoError }}</p>
             </div>
             <WhoIsRiding v-model="passenger" />
-            <PaymentPicker v-model="paymentChoice" :card-label="paymentLabel" :manage-cards="hasCardOnFile && !DEMO_MODE"
-                           :cash="cashChoice" :charge-cents="discounts.charge" />
+            <PayCashRow :charge-cents="discounts.charge" />
           <div class="flex gap-2.5">
             <button @click="requestRide" :disabled="!canRequest"
                     class="flex-1 py-4 bg-[#2b8659] disabled:bg-[var(--color-surface-secondary)] disabled:text-[var(--color-text-muted)] text-white font-bold rounded-2xl text-[15px] transition-all hover:bg-[#236e49] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:shadow-none">
-              {{ isSubmitting ? 'Requesting…' : carsUnavailable ? 'No cars available' : `Choose ${VEHICLE_TYPES.find(v => v.id === selectedVehicle)?.name || 'ride'}` }}
+              {{ isSubmitting ? 'Requesting…' : bookingPaused ? 'Booking paused' : carsUnavailable ? 'No cars available' : `Choose ${VEHICLE_TYPES.find(v => v.id === selectedVehicle)?.name || 'ride'}` }}
             </button>
-            <button v-if="SCHEDULING_ENABLED" @click="showSchedulePicker = true" :disabled="!routeReady"
+            <button v-if="SCHEDULING_ENABLED" @click="showSchedulePicker = true" :disabled="!routeReady || bookingPaused"
                     class="w-[52px] flex-shrink-0 flex items-center justify-center bg-[var(--color-surface-secondary)] disabled:bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] disabled:text-[var(--color-text-muted)] rounded-2xl transition-all hover:opacity-90 active:scale-[0.97] border border-[var(--color-border)]"
                     title="Schedule for later">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -1232,9 +1159,8 @@ async function scheduleRide({ date, time, summary }) {
     </div>
 
     <!-- Schedule Ride Picker -->
-    <GuestInfoSheet ref="guestSheetRef" :show="showGuestSheet" @submit="handleGuestSubmit" @close="showGuestSheet = false" />
+    <GuestInfoSheet ref="guestSheetRef" :show="showGuestSheet" :charge-cents="discounts.charge" @submit="handleGuestSubmit" @close="showGuestSheet = false" />
     <ScheduleRidePicker v-if="SCHEDULING_ENABLED" :show="showSchedulePicker" @close="showSchedulePicker = false" @confirm="scheduleRide" />
-    <CardCollectionSheet ref="cardSheetRef" :show="showCardSheet" @submit="handleCardSubmit" @close="showCardSheet = false" />
     <PhoneNumberSheet ref="phoneSheetRef" :show="showPhoneSheet" :mode="phoneSheetMode" @submit="handlePhoneSubmit" @close="showPhoneSheet = false" />
 
     <!-- Toast -->

@@ -23,7 +23,6 @@ export const DEMO_DRIVER_PROFILE = {
   rating: 4.9,
   total_trips: 247,
   approved: true,
-  accept_cash: true,
   created_at: '2026-01-15T10:00:00Z',
 }
 
@@ -39,8 +38,6 @@ export function generateFakeRideRequest() {
   const riderRating = (4.2 + Math.random() * 0.8).toFixed(1)
   const { distanceMiles, durationMinutes } = fakeRoute(pickup, dropoff)
   const fare = calculateFare(distanceMiles, durationMinutes, 'standard')
-  // Demo only: /driver/dashboard?pay=cash previews cash trips.
-  const cash = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('pay') === 'cash'
 
   return {
     id: 'demo-ride-' + Date.now(),
@@ -58,8 +55,8 @@ export function generateFakeRideRequest() {
     vehicle_type: 'standard',
     status: 'requested',
     requested_at: new Date().toISOString(),
-    payment_method: cash ? 'cash' : 'card',
-    cash_due_cents: cash ? fare : null,
+    payment_method: 'cash',
+    cash_due_cents: fare,
   }
 }
 

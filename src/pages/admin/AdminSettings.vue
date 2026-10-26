@@ -21,11 +21,11 @@
       </div>
     </div>
 
-    <h2 class="text-lg font-bold mt-8 mb-2">Fees and waiting time</h2>
-    <p class="text-sm text-[var(--color-text-secondary)] mb-3">Set in Vercel environment variables (redeploy after changing). If you change the two timings, set <code>VITE_CANCEL_GRACE_SECONDS</code> and <code>VITE_FREE_WAIT_SECONDS</code> to the same values so the in-app timers match.</p>
+    <h2 class="text-lg font-bold mt-8 mb-2">Payments, cancelling and waiting time</h2>
+    <p class="text-sm text-[var(--color-text-secondary)] mb-3">Every trip is paid in cash to the driver at drop-off, and cancelling never costs anything. Instead, two late cancellations or missed pickups within 30 days pause the rider’s booking (and a driver’s unpaid-fare report pauses it at once); you can turn booking back on in Users.</p>
+    <p class="text-sm text-[var(--color-text-secondary)] mb-3">The timings are set in Vercel environment variables (redeploy after changing). Set <code>VITE_CANCEL_GRACE_SECONDS</code> and <code>VITE_FREE_WAIT_SECONDS</code> to the same values so the in-app timers match.</p>
     <ul class="text-sm space-y-1.5 text-[var(--color-text-primary)]">
-      <li><code>CANCEL_FEE_CENTS</code>: cancellation and no-show fee, default <strong>500</strong> ($5.00). 0 turns fees off.</li>
-      <li><code>CANCEL_GRACE_SECONDS</code>: free cancellation window after a driver accepts, default <strong>120</strong>.</li>
+      <li><code>CANCEL_GRACE_SECONDS</code>: after a driver accepts, how long a rider can cancel without it counting as late, default <strong>120</strong> (the database counts 2 minutes; keep them the same).</li>
       <li><code>FREE_WAIT_SECONDS</code>: free waiting time at pickup before a driver can mark a no-show, default <strong>300</strong>.</li>
     </ul>
   </div>
@@ -62,21 +62,13 @@ const toggles = [
     note: 'Turn on once you have enough Premium drivers, or riders will wait and get “no drivers available”.',
   },
   {
-    key: 'accept_cash',
-    title: 'Accept cash',
-    description: 'Riders with an account and a mobile number can pay their driver in cash at drop-off. RideUp’s share comes off the driver’s balance (see Payouts). Riders who don’t pay, or who miss or cancel late on two cash trips in 30 days, can only pay by card after that.',
-    note: 'Turning it off stops new cash bookings straight away; cash trips already booked carry on. Drivers can also turn cash trips off for themselves.',
-    needs: 'Run the cash payments SQL (migration 019) in Supabase first.',
-    requiresRow: true,
-  },
-  {
     key: 'require_verified_phone',
     title: 'Require verified phone numbers',
     description: 'Riders must confirm their phone number with an SMS code before requesting a ride.',
     note: 'Needs an SMS provider (e.g. Twilio) set up in Supabase → Authentication → Phone. Turn this on only after testing a code arrives.',
   },
 ]
-const values = reactive({ surge_pricing: true, require_pickup_pin: false, offer_xl: false, offer_premium: false, accept_cash: false, require_verified_phone: false })
+const values = reactive({ surge_pricing: true, require_pickup_pin: false, offer_xl: false, offer_premium: false, require_verified_phone: false })
 const saving = ref('')
 const error = ref('')
 // Settings whose migration hasn't run yet (their row is missing): they can't be switched on until it has.

@@ -67,7 +67,7 @@ async function confirmDelete() {
         </template>
         <template v-else>
           <ul class="text-[14px] text-[var(--color-text-secondary)] space-y-1.5 mb-4 list-disc pl-5">
-            <li>Your login, name, phone, email, photo and saved cards are deleted.</li>
+            <li>Your login, name, phone, email and photo are deleted.</li>
             <li v-if="role === 'driver'">Your documents are deleted and you won’t get trip requests.</li>
             <li v-else>Any ride credit and promo codes are lost.</li>
             <li>Past trips and payments are kept without your name, for tax and safety records.</li>

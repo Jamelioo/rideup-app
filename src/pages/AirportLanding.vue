@@ -85,9 +85,9 @@ onUnmounted(() => document.querySelector('meta[name="description"]')?.setAttribu
     </section>
 
     <section class="max-w-5xl mx-auto px-5 pb-14 grid md:grid-cols-3 gap-4" aria-label="How it works">
-      <div class="rounded-2xl bg-[var(--color-surface-secondary)] p-5"><p class="font-bold mb-1">1. Book</p><p class="text-[14px] text-[var(--color-text-secondary)]">Enter where you’re going and see the price. No account? Book as a guest with your name, phone and card.</p></div>
+      <div class="rounded-2xl bg-[var(--color-surface-secondary)] p-5"><p class="font-bold mb-1">1. Book</p><p class="text-[14px] text-[var(--color-text-secondary)]">Enter where you’re going and see the price. No account? Book as a guest with just your name and mobile number.</p></div>
       <div class="rounded-2xl bg-[var(--color-surface-secondary)] p-5"><p class="font-bold mb-1">2. Meet your driver</p><p class="text-[14px] text-[var(--color-text-secondary)]">See your driver’s name, photo, car and plate. Message or call them in the app{{ settings.require_pickup_pin ? ', and use your PIN to start the trip' : '' }}.</p></div>
-      <div class="rounded-2xl bg-[var(--color-surface-secondary)] p-5"><p class="font-bold mb-1">3. Ride and go</p><p class="text-[14px] text-[var(--color-text-secondary)]">{{ settings.accept_cash ? 'Share your trip with family. Pay by card, or in cash with a free account, and get your receipt by email.' : 'Share your trip with family, pay by card automatically, and get your receipt by email.' }}</p></div>
+      <div class="rounded-2xl bg-[var(--color-surface-secondary)] p-5"><p class="font-bold mb-1">3. Ride and pay cash</p><p class="text-[14px] text-[var(--color-text-secondary)]">Share your trip with family, then pay your driver in cash at drop-off. No card needed.</p></div>
     </section>
   </div>
 </template>

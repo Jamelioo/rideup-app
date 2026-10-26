@@ -82,9 +82,8 @@ onMounted(async () => {
       .from('rides')
       .select('*')
       .eq('rider_id', rider.id)
-      // Trip history = trips that happened, plus cancellations that actually charged a fee (like Uber).
-      // Searching, failed-payment and free cancellations aren't trips.
-      .or('status.eq.completed,and(status.eq.cancelled,cancel_fee_cents.gt.0,payment_status.eq.captured)')
+      // Trip history = trips that happened (like Uber). Searches and cancellations aren't trips.
+      .eq('status', 'completed')
       .order('created_at', { ascending: false })
 
     if (error) throw error
@@ -146,15 +145,15 @@ onMounted(async () => {
           <div class="flex items-center justify-between">
             <!-- Left: dot + info -->
             <div class="flex items-start gap-3">
-              <div class="mt-1.5 h-3 w-3 shrink-0 rounded-full" :class="ride.status === 'cancelled' ? 'bg-[var(--color-text-muted)]' : 'bg-[#2b8659]'"></div>
+              <div class="mt-1.5 h-3 w-3 shrink-0 rounded-full bg-[#2b8659]"></div>
               <div>
                 <p class="text-base font-semibold text-[var(--color-text-primary)]">{{ ride.dropoff_address || ride.pickup_address }}</p>
-                <p class="mt-0.5 text-sm text-[var(--color-text-muted)]">{{ formatDate(ride.created_at) }}<span v-if="ride.status === 'cancelled'"> · {{ ride.cancel_reason === 'rider_no_show' ? 'No-show fee' : 'Cancellation fee' }}</span></p>
+                <p class="mt-0.5 text-sm text-[var(--color-text-muted)]">{{ formatDate(ride.created_at) }}</p>
               </div>
             </div>
 
             <!-- Right: fare -->
-            <span class="text-base font-semibold text-[var(--color-text-primary)]">{{ formatFare(ride.status === 'cancelled' ? ride.cancel_fee_cents : chargeOf(ride) + (ride.tip_payment_intent_id ? ride.tip_cents || 0 : 0)) }}</span>
+            <span class="text-base font-semibold text-[var(--color-text-primary)]">{{ formatFare(chargeOf(ride)) }}</span>
           </div>
 
           <!-- View receipt button for completed rides -->

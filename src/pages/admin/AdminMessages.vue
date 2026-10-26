@@ -20,7 +20,7 @@ const AUDIENCES = [
 const IDEAS = {
   riders: [
     { title: '$5 off this weekend 🎉', body: 'Use code WELCOME5 on your next RideUp. See your price before you book.' },
-    { title: 'Flying in or out?', body: 'Book your LPIA airport ride with RideUp. Upfront price, pay by card.' },
+    { title: 'Flying in or out?', body: 'Book your LPIA airport ride with RideUp. Upfront price, pay your driver in cash.' },
   ],
   drivers: [
     { title: 'Busy tonight 🚗', body: 'Lots of riders around Cable Beach and downtown. Go online to catch trips.' },

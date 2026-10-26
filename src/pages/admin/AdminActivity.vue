@@ -62,7 +62,7 @@ async function load(append = false) {
   if (DEMO_MODE || !supabaseConfigured) {
     const t = (m) => new Date(Date.now() - m * 60_000).toISOString()
     entries.value = [
-      { id: 3, created_at: t(4), actor_email: 'owner@rideupnassau.com', action: 'ride.refund', target_type: 'ride', target_id: 'r1', summary: '$5.00 refunded to card: Driver took a longer route' },
+      { id: 3, created_at: t(4), actor_email: 'owner@rideupnassau.com', action: 'ride.credit', target_type: 'ride', target_id: 'r1', summary: '$5.00 given as credit: Driver took a longer route' },
       { id: 2, created_at: t(40), actor_email: 'owner@rideupnassau.com', action: 'riders.update', target_type: 'riders', target_id: 'u1', details: { suspended: [false, true] } },
       { id: 1, created_at: t(90), actor_email: 'owner@rideupnassau.com', action: 'broadcast', target_type: 'riders', summary: '“$5 off this weekend 🎉” to 3 of 7 riders' },
     ]

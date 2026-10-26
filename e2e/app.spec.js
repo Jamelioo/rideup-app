@@ -104,7 +104,11 @@ test('landing answers questions without leaving the page, and offers a free acco
   await expect(cost.getByText(/RideUp Go is \$2 plus \$1\.25 a mile/)).toBeVisible()
   await cost.locator('summary').click()
   await expect(cost.getByText(/RideUp Go is \$2 plus \$1\.25 a mile/)).toBeHidden()
-  await expect(page.getByText('Pay by card, no cash')).toHaveCount(0)
+  const pay = page.locator('details').filter({ hasText: 'How do I pay?' })
+  await pay.locator('summary').click()
+  await expect(pay.getByText(/^In cash, to your driver at drop-off/)).toBeVisible()
+  await expect(page.getByText('Pay cash at drop-off').first()).toBeVisible()
+  await expect(page.getByText(/pay by card|card is charged|cancellation fee/i)).toHaveCount(0)
   await page.getByRole('link', { name: 'Create free account' }).click()
   await expect(page).toHaveURL('/signup')
 })
@@ -236,13 +240,13 @@ test('login redirect ignores off-site targets', async ({ page }) => {
 
 // ─── After the trip ───
 
-test('rating screen shows the driver, trip and tip options', async ({ page }) => {
+test('rating screen shows the driver and trip, paid in cash, with tips in cash', async ({ page }) => {
   await page.goto('/rate/demo')
   await expect(page.getByRole('heading', { name: /How was your trip with Marcus/ })).toBeVisible()
   await expect(page.getByRole('link', { name: 'View receipt' })).toHaveCount(0) // demo trip has no receipt
-  await expect(page.getByRole('button', { name: '$5' })).toBeVisible()
-  await page.getByRole('button', { name: '$5' }).click()
-  await expect(page.getByRole('button', { name: 'Add $5.00 tip' })).toBeVisible()
+  await expect(page.getByText('$13.75 · paid in cash')).toBeVisible()
+  await expect(page.getByText('Tips are welcome in cash and go 100% to your driver.', { exact: false })).toBeVisible()
+  await expect(page.getByRole('button', { name: /tip/i })).toHaveCount(0)
 })
 
 test('low rating asks what went wrong and offers a safety report', async ({ page }) => {
@@ -283,48 +287,38 @@ test('with no driver online, riders can still request and are told how it works'
   await page.goto('/book?cars=none')
   await enterDemoTrip(page)
   await expect(page.getByText('No drivers online right now').filter({ visible: true }).first()).toBeVisible()
-  await expect(page.getByText('You won’t be charged if nobody accepts.', { exact: false }).filter({ visible: true }).first()).toBeVisible()
+  await expect(page.getByText('keep looking for up to 5 minutes.', { exact: false }).filter({ visible: true }).first()).toBeVisible()
   await expect(page.getByRole('button', { name: 'Choose RideUp Go' })).toBeEnabled()
   await page.getByRole('button', { name: 'Choose RideUp Go' }).filter({ visible: true }).click()
   await expect(page.getByText('No drivers are online right now, so we’ve alerted our team.')).toBeVisible()
-  await expect(page.getByText('You’re only charged if a driver accepts.', { exact: false })).toBeVisible()
+  await expect(page.getByText('You pay your driver in cash at drop-off.', { exact: false })).toBeVisible()
 })
 
-test('riders can pay their driver in cash, and are told what to have ready', async ({ page }) => {
+test('every trip is cash: booking says what to pay, and the search what to have ready', async ({ page }) => {
   await page.goto('/book')
   await enterDemoTrip(page)
-  await page.getByRole('button', { name: /^Paying with .*Change$/ }).filter({ visible: true }).click()
-  const sheet = page.getByRole('dialog', { name: 'How will you pay?' })
-  await sheet.getByRole('radio', { name: /^Cash/ }).check()
-  await expect(sheet.getByText(/Have \$\d+\.\d\d ready for your driver/)).toBeVisible()
-  await sheet.getByRole('button', { name: 'Done' }).click()
-  await expect(page.getByRole('button', { name: 'Paying with Cash. Change' }).filter({ visible: true })).toBeVisible()
+  await expect(page.getByText(/^Cash · pay \$\d+\.\d\d to your driver at drop-off$/).filter({ visible: true }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Paying with/ })).toHaveCount(0) // nothing to choose
+  await expect(page.getByText(/Visa|••••|Add a card/).filter({ visible: true })).toHaveCount(0)
   await page.getByRole('button', { name: 'Choose RideUp Go' }).filter({ visible: true }).click()
-  await expect(page.getByText(/Paying cash: have \$\d+\.\d\d ready for your driver\./)).toBeVisible()
+  await expect(page.getByText(/Pay in cash: have \$\d+\.\d\d ready for your driver\./)).toBeVisible()
 })
 
-test('cash is for the rider’s own rides: booking for someone else pays by card', async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('rideup_payment_method', 'cash'))
+test('booking for someone else is paid in cash too', async ({ page }) => {
   await page.goto('/book')
   await enterDemoTrip(page)
-  await expect(page.getByRole('button', { name: 'Paying with Cash. Change' }).filter({ visible: true })).toBeVisible()
   await page.getByRole('button', { name: /Book for someone else/ }).filter({ visible: true }).click()
   await page.getByRole('radio', { name: 'Someone else' }).check()
   await page.getByLabel('Passenger’s name').fill('Mary Smith')
   await page.getByLabel('Passenger’s phone').fill('242 555 1234')
   await page.getByRole('button', { name: 'Done' }).click()
-  await page.getByRole('button', { name: /^Paying with Visa/ }).filter({ visible: true }).click()
-  await expect(page.getByRole('radio', { name: /^Cash/ })).toBeDisabled()
-  await expect(page.getByText('Cash is for your own rides. When you book for someone else, pay by card.')).toBeVisible()
+  await expect(page.getByText(/^Cash · pay \$\d+\.\d\d to your driver at drop-off$/).filter({ visible: true }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Choose RideUp Go' })).toBeEnabled()
 })
 
-test('a rider paying cash is told when the drivers nearby only take card', async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('rideup_payment_method', 'cash'))
-  await page.goto('/book?cars=no_cash')
-  await enterDemoTrip(page)
-  await expect(page.getByText('No drivers taking cash nearby').filter({ visible: true }).first()).toBeVisible()
-  await expect(page.getByText('Card only right now').filter({ visible: true }).first()).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Choose RideUp Go' })).toBeEnabled()
+test('old card links land somewhere useful', async ({ page }) => {
+  await page.goto('/payment-success')
+  await expect(page).toHaveURL('/book')
 })
 
 test('booking explains when every driver is on a trip', async ({ page }) => {
@@ -392,7 +386,7 @@ test('profile redirects to login when not authenticated', async ({ page }) => {
   await expect(page).toHaveURL(/\/login/)
 })
 
-test('payments redirects to login when not authenticated', async ({ page }) => {
+test('the old payments page goes to the profile (login when signed out)', async ({ page }) => {
   await skipInDemoMode(page, test)
   await page.goto('/payments')
   await expect(page).toHaveURL(/\/login/)

@@ -32,7 +32,7 @@ export default {
     const entry = { el, close: binding.value, returnTo: document.activeElement }
     stack.push(entry)
     if (stack.length === 1) document.addEventListener('keydown', onKeydown, true)
-    // Wait for enter transitions and child components (e.g. Stripe's card field) before moving focus.
+    // Wait for enter transitions and child components before moving focus.
     requestAnimationFrame(() => {
       if (!el.isConnected || el.contains(document.activeElement)) return
       const target = el.querySelector('[autofocus]') || el

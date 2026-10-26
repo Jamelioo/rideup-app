@@ -65,7 +65,6 @@ const menuItems = computed(() => {
 
   if (isLoggedIn.value) {
     items.unshift(
-      { label: 'Payments', route: '/payments', icon: 'card', requiresAuth: true },
       { label: 'Promotions', route: '/promotions', icon: 'tag', requiresAuth: true },
       { label: 'My Rides', route: '/my-rides', icon: 'history', requiresAuth: true },
       ...(SCHEDULING_ENABLED ? [{ label: 'Scheduled Rides', route: '/scheduled-rides', icon: 'calendar', requiresAuth: true }] : []),

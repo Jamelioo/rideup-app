@@ -19,9 +19,7 @@ const VerifyPhone = () => import('../pages/VerifyPhone.vue')
 const Profile = () => import('../pages/Profile.vue')
 const EditProfile = () => import('../pages/EditProfile.vue')
 const MyRides = () => import('../pages/MyRides.vue')
-const SplitInvite = () => import('../pages/rider/SplitInvite.vue')
 const AirportLanding = () => import('../pages/AirportLanding.vue')
-const Payments = () => import('../pages/Payments.vue')
 const SavedPlaces = () => import('../pages/SavedPlaces.vue')
 const Support = () => import('../pages/Support.vue')
 const About = () => import('../pages/About.vue')
@@ -33,7 +31,6 @@ const Promotions = () => import('../pages/Promotions.vue')
 const Referrals = () => import('../pages/Referrals.vue')
 const Privacy = () => import('../pages/Privacy.vue')
 const Terms = () => import('../pages/Terms.vue')
-const PaymentSuccess = () => import('../pages/rider/PaymentSuccess.vue')
 const RideReceipt = () => import('../pages/rider/RideReceipt.vue')
 const DriverApply = () => import('../pages/driver/DriverApply.vue')
 const DriverPending = () => import('../pages/driver/DriverPending.vue')
@@ -74,12 +71,9 @@ const routes = [
   { path: '/verify-phone', name: 'verify-phone', component: VerifyPhone, meta: { requiresAuth: true, title: 'Verify Your Phone — RideUp' } },
   { path: '/profile', name: 'profile', component: Profile, meta: { requiresAuth: true, title: 'Profile — RideUp' } },
   { path: '/edit-profile', name: 'edit-profile', component: EditProfile, meta: { requiresAuth: true, title: 'Edit Profile — RideUp' } },
-  { path: '/split/:splitId', name: 'split-invite', component: SplitInvite, meta: { requiresAuth: true, title: 'Split Fare — RideUp' } },
   { path: '/my-rides', name: 'my-rides', component: MyRides, meta: { requiresAuth: true, title: 'My Rides — RideUp' } },
   { path: '/scheduled-rides', name: 'scheduled-rides', component: ScheduledRides, meta: { requiresAuth: true, title: 'Scheduled Rides — RideUp' } },
-  { path: '/payments', name: 'payments', component: Payments, meta: { requiresAuth: true, title: 'Payments — RideUp' } },
   { path: '/saved-places', name: 'saved-places', component: SavedPlaces, meta: { requiresAuth: true, title: 'Saved Places — RideUp' } },
-  { path: '/payment-success', name: 'payment-success', component: PaymentSuccess, meta: { title: 'Payment Successful — RideUp' } },
   { path: '/receipt/:rideId', name: 'ride-receipt', component: RideReceipt, meta: { title: 'Receipt — RideUp' } },
   { path: '/support', name: 'support', component: Support, meta: { title: 'Help — RideUp' } },
   { path: '/trusted-contacts', name: 'trusted-contacts', component: TrustedContacts, meta: { requiresAuth: true, title: 'Trusted Contacts — RideUp' } },
@@ -89,6 +83,10 @@ const routes = [
   { path: '/airport', name: 'airport', component: AirportLanding, meta: { title: 'Nassau Airport Rides — RideUp', public: true } },
   { path: '/track/:token', name: 'track-trip', component: TrackTrip, meta: { title: 'Live Trip — RideUp', public: true } },
   { path: '/welcome', redirect: '/' },
+  // Card payments are gone (every trip is paid in cash at drop-off): old links and bookmarks land somewhere useful.
+  { path: '/payments', redirect: '/profile' },
+  { path: '/payment-success', redirect: '/book' },
+  { path: '/split/:splitId', redirect: '/my-rides' },
   // Referral links (rideupnassau.com/r/RIDEXXXXX): remember the code, then sign up. It's applied once the
   // friend has an account (App.vue), giving them $5 off their first ride.
   {
