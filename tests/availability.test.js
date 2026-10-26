@@ -74,18 +74,11 @@ test('the summary never says who or where a driver is, and logged-out visitors g
   assert.deepEqual(availabilitySummary(pool([]), { ...CABLE_BEACH, now: NOW }).premium, { state: 'none' })
 })
 
-test('cash trips: only drivers who take cash count, and a rider paying cash is told when only card would work', () => {
-  const noCash = driver({ accept_cash: false })
-  assert.equal(eligible(pool([noCash]), CABLE_BEACH).length, 1)
-  assert.deepEqual(eligible(pool([noCash]), CABLE_BEACH, 'standard', { cash: true }), [])
-  assert.equal(eligible(pool([driver()]), CABLE_BEACH, 'standard', { cash: true }).length, 1, 'drivers take cash unless they turn it off')
-  assert.deepEqual(availabilitySummary(pool([noCash]), { ...CABLE_BEACH, cash: true, now: NOW }).standard, { state: 'no_cash' })
-  assert.equal(availabilitySummary(pool([noCash]), { ...CABLE_BEACH, now: NOW }).standard.state, 'available')
-  assert.deepEqual(availabilitySummary(pool([]), { ...CABLE_BEACH, cash: true, now: NOW }).standard, { state: 'none' })
-  assert.equal(canBook({ state: 'no_cash' }), true)
-  assert.equal(unavailableNotice({ state: 'no_cash' }).title, 'No drivers taking cash nearby')
-  assert.match(unavailableNotice({ state: 'no_cash' }).body, /^Pay by card to get a driver now\. Or request with cash/)
-  assert.equal(optionStatus({ state: 'no_cash' }), 'Card only right now')
+test('every trip is cash, so every free driver counts (a driver’s old "no cash" setting is ignored)', () => {
+  const oldNoCash = driver({ accept_cash: false })
+  assert.equal(eligible(pool([oldNoCash]), CABLE_BEACH).length, 1)
+  assert.equal(availabilitySummary(pool([oldNoCash]), { ...CABLE_BEACH, now: NOW }).standard.state, 'available')
+  assert.deepEqual(availabilitySummary(pool([]), { ...CABLE_BEACH, now: NOW }).standard, { state: 'none' })
 })
 
 test('booking screen wording: nobody online can still request, every driver busy waits, unknown never blocks', () => {
@@ -97,7 +90,7 @@ test('booking screen wording: nobody online can still request, every driver busy
   assert.equal(unavailableNotice(null), null)
   assert.equal(unavailableNotice({ state: 'available', eta_max: 5 }), null)
   assert.equal(unavailableNotice({ state: 'none' }).title, 'No drivers online right now')
-  assert.match(unavailableNotice({ state: 'none' }).body, /still request.*up to 5 minutes.*won’t be charged/)
+  assert.match(unavailableNotice({ state: 'none' }).body, /still request.*up to 5 minutes\.$/)
   assert.equal(unavailableNotice({ state: 'busy' }).title, 'All drivers are on trips right now')
   assert.equal(optionStatus({ state: 'available', eta_max: 10 }), '5–10 min away')
   assert.equal(optionStatus({ state: 'available' }), '')

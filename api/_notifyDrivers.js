@@ -47,8 +47,7 @@ export async function loadDriverPool(now = Date.now()) {
     .gte('last_seen_at', since)
     .limit(200)
   const [drivers, busy] = await Promise.all([
-    // accept_cash comes with migration 019; before it has run, the list loads without it.
-    onlineDrivers(`${POOL_COLUMNS}, accept_cash`).then((r) => (r.error ? onlineDrivers(POOL_COLUMNS) : r)),
+    onlineDrivers(POOL_COLUMNS),
     admin.from('rides')
       .select('driver_id, drivers:driver_id(vehicle_type)')
       .in('status', BUSY_STATUSES)
@@ -68,8 +67,7 @@ export async function loadDriverPool(now = Date.now()) {
 
 // The drivers who can take a trip of this type from this pickup, nearest first: right vehicle, not busy,
 // within MAX_PICKUP_MILES, and either using the app now or in the background with notifications we can deliver.
-// A cash trip only goes to drivers who take cash.
-export function eligibleDrivers(pool, { lat, lng, vehicleType, cash = false, skip = [], now = Date.now() }) {
+export function eligibleDrivers(pool, { lat, lng, vehicleType, skip = [], now = Date.now() }) {
   const classes = CLASSES_FOR[vehicleType] || CLASSES_FOR.standard
   const busy = new Set(pool.busy.map((r) => r.driver_id))
   const skipped = new Set(skip)
@@ -77,7 +75,6 @@ export function eligibleDrivers(pool, { lat, lng, vehicleType, cash = false, ski
   const backgroundSince = now - DRIVER_BACKGROUND_MIN * 60_000
   return pool.drivers
     .filter((d) => classes.includes(d.vehicle_type || 'standard') && !busy.has(d.id) && !skipped.has(d.id))
-    .filter((d) => !cash || d.accept_cash !== false)
     .filter((d) => Date.parse(d.last_seen_at) >= backgroundSince)
     .map((d) => ({ ...d, inBackground: Date.parse(d.last_seen_at) < activeSince }))
     .filter((d) => !d.inBackground || pool.reachable.has(d.auth_user_id))
@@ -102,16 +99,14 @@ export function etaStep(minutes) {
 }
 
 // What the booking screen shows for each trip type (like Uber's "No cars available"): 'available' with the
-// nearest driver's pickup estimate (signed-in riders only), 'busy' (everyone who could take it is on a trip),
-// 'no_cash' (paying cash, and the free drivers don't take cash) or 'none'. Never includes who or where a driver is.
-export function availabilitySummary(pool, { lat, lng, withEta = true, cash = false, now = Date.now() }) {
+// nearest driver's pickup estimate (signed-in riders only), 'busy' (everyone who could take it is on a trip) or
+// 'none'. Never includes who or where a driver is.
+export function availabilitySummary(pool, { lat, lng, withEta = true, now = Date.now() }) {
   const out = {}
   for (const type of TRIP_TYPES) {
-    const [nearest] = eligibleDrivers(pool, { lat, lng, vehicleType: type, cash, now })
+    const [nearest] = eligibleDrivers(pool, { lat, lng, vehicleType: type, now })
     if (nearest) {
       out[type] = withEta ? { state: 'available', eta_max: etaStep(pickupMinutes(nearest, { lat, lng })) } : { state: 'available' }
-    } else if (cash && eligibleDrivers(pool, { lat, lng, vehicleType: type, now }).length) {
-      out[type] = { state: 'no_cash' }
     } else {
       const classes = CLASSES_FOR[type]
       out[type] = { state: pool.busy.some((r) => classes.includes(r.vehicle_type)) ? 'busy' : 'none' }
@@ -137,15 +132,13 @@ export async function notifyNearbyDrivers(rideId, { exclude = [] } = {}) {
       lat: ride.pickup_lat,
       lng: ride.pickup_lng,
       vehicleType: ride.vehicle_type,
-      cash: ride.payment_method === 'cash',
       skip: [...(ride.declined_by || []), ...exclude],
     }).slice(0, MAX_DRIVERS)
 
     const payout = driverPayout(ride)
-    const cash = ride.payment_method === 'cash' ? ` · Cash: collect ${formatFare(chargeOf(ride))}` : ''
     await Promise.all(nearby.map((d) => pushToUser(d.auth_user_id, {
-      title: ride.payment_method === 'cash' ? 'New cash trip request' : 'New trip request',
-      body: `${d.miles != null ? `${d.miles.toFixed(1)} mi away · ` : ''}Earn about $${(payout / 100).toFixed(2)}${cash}`,
+      title: 'New trip request',
+      body: `${d.miles != null ? `${d.miles.toFixed(1)} mi away · ` : ''}Earn about $${(payout / 100).toFixed(2)} · Cash: collect ${formatFare(chargeOf(ride))}`,
       url: '/driver/dashboard',
       tag: 'ride-request',
     })))

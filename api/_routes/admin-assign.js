@@ -1,6 +1,6 @@
 import { admin, requireUser, isStaff, fail } from '../_auth.js'
 import { rateLimit } from '../_rateLimit.js'
-import { holdCardAndConfirm } from '../_hold.js'
+import { confirmRide } from '../_cash.js'
 import { driverCanTake, BUSY_STATUSES } from '../_notifyDrivers.js'
 import { pushToUser } from '../_push.js'
 import { logAdminAction } from '../_audit.js'
@@ -11,16 +11,8 @@ import { formatFare } from '../../src/lib/pricing.js'
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
 const short = (address) => String(address || '').split(',')[0].trim() || '—'
 
-const PAYMENT_ERRORS = {
-  no_payment_method: 'The rider has no card saved, so the ride was cancelled.',
-  card_declined: 'The rider’s card was declined, so the ride was cancelled.',
-  payment_failed: 'The rider’s card couldn’t be held, so the ride was cancelled.',
-  ride_unavailable: 'This ride was cancelled or taken while assigning.',
-}
-
 // Admin › Live: give a waiting request to a chosen driver, like a dispatcher. Same steps as a driver accepting
-// (claim, hold the card unless it's a cash trip, confirm), then the driver gets a notification and their app opens
-// the trip.
+// (claim, confirm), then the driver gets a notification and their app opens the trip.
 //   body: { rideId, driverId }   (admins and support staff)
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -45,7 +37,7 @@ export default async function handler(req, res) {
     if (!ride) return res.status(404).json({ error: 'Ride not found' })
     if (ride.status !== 'requested' || ride.driver_id) return res.status(409).json({ error: 'This ride already has a driver or has ended.' })
     // Past the search time the rider has been told no cars were found and may have left (the background job
-    // normally cancels it by now). Holding their card then would charge someone who isn't waiting.
+    // normally cancels it by now). Sending a driver then would mean a wasted trip to an empty pickup.
     if (Date.now() - new Date(ride.created_at).getTime() > (REQUEST_SEARCH_MINUTES + 1) * 60_000) {
       return res.status(409).json({ error: 'This request is too old to assign: the rider may have left. Call them, and ask them to book again if they still need a ride.' })
     }
@@ -66,16 +58,15 @@ export default async function handler(req, res) {
     if (claimErr) throw claimErr
     if (!claimed?.length) return res.status(409).json({ error: 'This ride was taken or cancelled just now.' })
 
-    // 2. Hold the rider's card and confirm (tells the rider their driver is on the way).
-    const result = await holdCardAndConfirm(claimed[0])
-    if (!result.ok) return res.status(result.status).json({ error: PAYMENT_ERRORS[result.error] || 'The ride couldn’t be assigned.' })
+    // 2. Confirm it (tells the rider their driver is on the way and how much cash to have ready).
+    const result = await confirmRide(claimed[0])
+    if (!result.ok) return res.status(result.status).json({ error: 'This ride was cancelled or taken while assigning.' })
 
     // 3. The driver is now on this trip; their app picks it up and opens it.
     await admin.from('drivers').update({ status: 'on_trip' }).eq('id', driver.id)
-    const cash = claimed[0].payment_method === 'cash' ? ` Cash trip: collect ${formatFare(chargeOf(claimed[0]))}.` : ''
     await pushToUser(driver.auth_user_id, {
       title: 'New trip assigned to you',
-      body: `${short(ride.pickup_address)} → ${short(ride.dropoff_address)}. Open RideUp to head to the pickup.${cash}`,
+      body: `${short(ride.pickup_address)} → ${short(ride.dropoff_address)}. Open RideUp to head to the pickup. Collect ${formatFare(chargeOf(claimed[0]))} in cash.`,
       url: '/driver/active-ride',
       tag: `ride-${rideId}`,
     })

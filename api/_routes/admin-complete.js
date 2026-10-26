@@ -1,15 +1,14 @@
 import { admin, requireUser, isStaff, fail } from '../_auth.js'
 import { rateLimit } from '../_rateLimit.js'
-import { captureRide } from '../_capture.js'
+import { settleRide } from '../_cash.js'
 import { pushToUser, rideParticipants } from '../_push.js'
 import { logAdminAction } from '../_audit.js'
 
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
 
 // Admin › Live: end a trip that's under way but stuck (the driver's phone died at the drop-off). Completes it,
-// charges the fare like the driver's "Complete trip" button (a cash trip counts as collected), sends the receipt
-// and frees the driver.
-// If the charge fails here, the every-minute job retries it.   body: { rideId }   (admins and support staff)
+// counts the cash fare as collected (the driver can still report it unpaid), sends the receipt and frees the
+// driver. If that step fails here, the every-minute job retries it.   body: { rideId }   (admins and support staff)
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
   const blocked = checkRate(req)
@@ -36,21 +35,19 @@ export default async function handler(req, res) {
 
     if (done[0].driver_id) await admin.from('drivers').update({ status: 'online' }).eq('id', done[0].driver_id).eq('status', 'on_trip')
 
-    let charged = true
+    let settled = true
     try {
-      const out = await captureRide(rideId)
-      charged = out.ok
+      settled = (await settleRide(rideId)).ok
     } catch (err) {
-      console.error('Admin complete capture failed (the job will retry):', err.message)
-      charged = false
+      console.error('Admin complete settle failed (the job will retry):', err.message)
+      settled = false
     }
 
     const people = await rideParticipants(rideId)
     await pushToUser(people.driverUserId, { title: 'Trip completed', body: 'RideUp support ended this trip for you. Thanks for driving!', url: '/driver/dashboard', tag: `ride-${rideId}` })
-    const summary = done[0].payment_method === 'cash' ? 'Ended the trip; cash counted as collected'
-      : charged ? 'Ended the trip; fare charged' : 'Ended the trip; charge will retry'
+    const summary = settled ? 'Ended the trip; cash counted as collected' : 'Ended the trip; receipt will retry'
     await logAdminAction(user, { action: 'ride.complete', targetType: 'ride', targetId: rideId, summary })
-    return res.status(200).json({ success: true, charged })
+    return res.status(200).json({ success: true, settled })
   } catch (err) {
     return fail(res, 'Admin complete error', err)
   }

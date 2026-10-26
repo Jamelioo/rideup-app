@@ -1,6 +1,6 @@
 // Simple in-memory rate limiter for Vercel serverless functions.
 // Best-effort only: counters live in one warm instance, so this slows abuse and accidents but is not a
-// hard guarantee. Auth, ownership checks and Stripe idempotency keys are the real protections.
+// hard guarantee. Auth, ownership checks and the database's own rules are the real protections.
 // For hard limits put Vercel's WAF / rate-limit rules or an external store in front of /api.
 // Each limiter keeps its own counters: every route runs in one function (api/[action].js), so a shared store
 // would let calls to one route (say the booking screen's availability checks) use up another route's limit.

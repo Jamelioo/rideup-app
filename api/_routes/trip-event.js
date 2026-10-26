@@ -33,7 +33,7 @@ export default async function handler(req, res) {
       const rider = await getRiderForUser(user.id)
       if (!rider || rider.id !== ride.rider_id || ride.status !== 'requested') return res.status(403).json({ error: 'Not allowed' })
       // When no driver can be alerted (nobody online), the request stays open for the full search and the team's
-      // alert asks them to go online or assign a driver from Live. Nothing is charged unless a driver accepts.
+      // alert asks them to go online or assign a driver from Live. The rider pays nothing unless a trip happens.
       const notified = await notifyNearbyDrivers(rideId)
       await alertRideRequest(rideId, { notified }) // the team sees every request
       return res.status(200).json({ success: true, notified: notified ?? 0 })

@@ -68,7 +68,7 @@ export async function getDriverForUser(userId) {
 export async function getRiderForUser(userId) {
   const { data } = await admin
     .from('riders')
-    .select('id, stripe_customer_id, payment_method_id')
+    .select('id')
     .eq('auth_user_id', userId)
     .maybeSingle()
   return data
@@ -85,7 +85,7 @@ export async function rideRoles(ride, user) {
   }
 }
 
-// Stripe/Supabase messages can leak internals; log them (and report to Sentry), return something generic.
+// Database and provider messages can leak internals; log them (and report to Sentry), return something generic.
 export async function fail(res, label, err, status = 500) {
   console.error(`${label}:`, err?.message || err)
   await captureServerError(label, err)

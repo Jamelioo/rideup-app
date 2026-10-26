@@ -36,12 +36,11 @@ export async function alertStaff({ title, body, url = '/admin/live', tag, emailH
 // waits. expired: nobody accepted in time (the search ran out), a missed ride the team can call back.
 export function rideAlertText(ride, { notified = null, scheduled = false, expired = false } = {}) {
   const waiting = notified === 0 && !expired
-  const cash = ride.payment_method === 'cash'
   const route = `${short(ride.pickup_address)} → ${short(ride.dropoff_address)}`
-  const fare = formatFare(ride.fare_cents) + (cash ? ' cash' : '')
+  const fare = formatFare(ride.fare_cents)
   const who = ride.riders?.name || ride.rider_name || 'A rider'
   const title = expired ? 'Missed ride request'
-    : waiting ? (cash ? 'Cash rider waiting: no driver taking cash' : 'Rider waiting: no driver online')
+    : waiting ? 'Rider waiting: no driver online'
       : scheduled ? 'Scheduled ride needs a driver' : 'New ride request'
   const body = expired
     ? `${route} · ${fare}. No driver accepted in time. Call ${who.split(' ')[0]} back from Live.`
@@ -55,7 +54,7 @@ export function rideAlertText(ride, { notified = null, scheduled = false, expire
       <p style="margin:0 0 6px">${escapeHtml(ride.pickup_address || '')} → ${escapeHtml(ride.dropoff_address || '')}</p>
       <p style="margin:0 0 16px">${fare} · ${escapeHtml(ride.vehicle_type || 'standard')}</p>
       ${expired ? '<p style="margin:0 0 16px;color:#b42318"><strong>No driver accepted in time, so the rider was told no cars.</strong> A quick call can still win this ride.</p>' : ''}
-      ${waiting ? `<p style="margin:0 0 16px;color:#b42318"><strong>${cash ? 'No driver who takes cash is online' : 'No driver is online'}, and the rider is waiting.</strong> Go online in the driver app, or assign a driver in Live. The request closes after ${REQUEST_SEARCH_MINUTES} minutes if nobody accepts.</p>` : ''}
+      ${waiting ? `<p style="margin:0 0 16px;color:#b42318"><strong>No driver is online, and the rider is waiting.</strong> Go online in the driver app, or assign a driver in Live. The request closes after ${REQUEST_SEARCH_MINUTES} minutes if nobody accepts.</p>` : ''}
       <p><a href="${APP_URL}/admin/live" style="display:inline-block;background:#2b8659;color:#fff;text-decoration:none;font-weight:700;padding:10px 18px;border-radius:10px">Open Live</a></p>
       <p style="font-size:12px;color:#888">Turn these off in Admin › Team.</p></div>`
   return { title, body, emailHtml }
