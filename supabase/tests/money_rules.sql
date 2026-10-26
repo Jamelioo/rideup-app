@@ -298,8 +298,10 @@ select pg_temp.check(not exists (select 1 from public.open_ride_requests(25.05, 
 reset role; select pg_temp.as_server();
 update rides set status = 'cancelled' where status = 'requested';
 
-\echo '== Cash: who can pay cash'
--- Riders: C1 pays cash, C2 has no mobile number, C3 is a guest, C4 is C1's second account (same number),
+\echo '== Cash only: who can book'
+-- The paid trips so far stand in for card trips from before cash only.
+update rides set payment_method = 'card' where payment_status in ('captured', 'paid', 'partially_refunded', 'refunded');
+-- Riders: C1 books normally, C2 has no mobile number, C3 is a guest, C4 is C1's second account (same number),
 -- C5 books and cancels. Driver D3 starts with nothing owed either way.
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000c1', 'c1@test'), ('00000000-0000-0000-0000-0000000000c2', 'c2@test'),
@@ -313,125 +315,119 @@ update riders set name = 'Cora Cancel', phone = '+12425550305' where auth_user_i
 insert into drivers (id, auth_user_id, name, approved, status, last_seen_at, last_lat, last_lng) values
   ('20000000-0000-0000-0000-0000000000d3', '00000000-0000-0000-0000-0000000000d3', 'Dot Three', true, 'online', now(), 25.05, -77.34);
 select id as rc1 from riders where auth_user_id = '00000000-0000-0000-0000-0000000000c1' \gset
+select id as rc3 from riders where auth_user_id = '00000000-0000-0000-0000-0000000000c3' \gset
 select id as rc5 from riders where auth_user_id = '00000000-0000-0000-0000-0000000000c5' \gset
 
 set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000c2');
-do $$ begin
-  insert into rides (rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, payment_method)
-  values ((select id from riders where name = 'Nora Nophone'), 25.04, -77.35, 25.08, -77.33, 'a', 'b', 'cash');
-  raise exception 'FAIL: cash was accepted without a mobile number';
+do $$ declare h text; begin
+  insert into rides (rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address)
+  values ((select id from riders where name = 'Nora Nophone'), 25.04, -77.35, 25.08, -77.33, 'a', 'b');
+  raise exception 'FAIL: a ride was booked without a mobile number';
 exception when sqlstate '22023' then
-  if sqlerrm not like 'Add your mobile number%' then raise exception 'FAIL: wrong reason: %', sqlerrm; end if;
-  raise notice 'ok  cash needs a mobile number on the account';
+  get stacked diagnostics h = pg_exception_hint;
+  if h is distinct from 'phone' then raise exception 'FAIL: wrong reason: % (%)', sqlerrm, h; end if;
+  raise notice 'ok  every booking needs a mobile number the driver can call';
 end $$;
 select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000c3', 'role', 'authenticated', 'is_anonymous', true)::text, false);
-do $$ begin
-  insert into rides (rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, payment_method)
-  values ((select id from riders where name = 'Gus Guest'), 25.04, -77.35, 25.08, -77.33, 'a', 'b', 'cash');
-  raise exception 'FAIL: a guest booked a cash trip';
-exception when sqlstate '22023' then
-  if sqlerrm not like 'Sign up to pay with cash%' then raise exception 'FAIL: wrong reason: %', sqlerrm; end if;
-  raise notice 'ok  guests sign up before paying cash';
-end $$;
-select pg_temp.as_user('00000000-0000-0000-0000-0000000000c1');
-do $$ begin
-  insert into rides (rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, payment_method, passenger_name, passenger_phone)
-  values ((select id from riders where name = 'Cass Cash'), 25.04, -77.35, 25.08, -77.33, 'a', 'b', 'cash', 'Mum', '242-555-7788');
-  raise exception 'FAIL: a cash ride was booked for someone else';
-exception when sqlstate '22023' then
-  if sqlerrm not like 'Cash is for your own rides%' then raise exception 'FAIL: wrong reason: %', sqlerrm; end if;
-  raise notice 'ok  cash is for the rider''s own rides, not ones booked for someone else';
-end $$;
+insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, distance_miles, duration_minutes)
+values ('7c000000-0000-0000-0000-000000000008', :'rc3', 25.04, -77.35, 25.08, -77.33, 'a', 'b', 4.4, 16);
 reset role; select pg_temp.as_server();
-update app_settings set value = 'false' where key = 'accept_cash';
+select pg_temp.check(payment_method = 'cash' and fare_cents = 1560, 'a guest with a name and mobile number books, paying cash at drop-off')
+  from rides where id = '7c000000-0000-0000-0000-000000000008';
+update rides set status = 'cancelled' where id = '7c000000-0000-0000-0000-000000000008';
 set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000c1');
-do $$ begin
-  insert into rides (rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, payment_method)
-  values ((select id from riders where name = 'Cass Cash'), 25.04, -77.35, 25.08, -77.33, 'a', 'b', 'cash');
-  raise exception 'FAIL: cash was accepted while Accept cash is off';
-exception when sqlstate '22023' then
-  if sqlerrm not like 'Cash isn''t available right now%' then raise exception 'FAIL: wrong reason: %', sqlerrm; end if;
-  raise notice 'ok  Admin › Settings › Accept cash turns cash off for new bookings';
-end $$;
+insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, distance_miles, duration_minutes, passenger_name, passenger_phone)
+values ('7c000000-0000-0000-0000-000000000009', :'rc1', 25.04, -77.35, 25.08, -77.33, 'a', 'b', 4.4, 16, 'Mum', '242-555-7788');
 reset role; select pg_temp.as_server();
-update app_settings set value = 'true' where key = 'accept_cash';
+select pg_temp.check(payment_method = 'cash', 'a ride for someone else is booked too: the passenger pays the driver in cash')
+  from rides where id = '7c000000-0000-0000-0000-000000000009';
+update rides set status = 'cancelled' where id = '7c000000-0000-0000-0000-000000000009';
 set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000c1');
 insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, distance_miles, duration_minutes, payment_method)
-values ('7c000000-0000-0000-0000-000000000001', :'rc1', 25.04, -77.35, 25.08, -77.33, 'a', 'b', 4.4, 16, 'bitcoin');
+values ('7c000000-0000-0000-0000-000000000001', :'rc1', 25.04, -77.35, 25.08, -77.33, 'a', 'b', 4.4, 16, 'card');
 reset role; select pg_temp.as_server();
-select pg_temp.check(payment_method = 'card', 'an unknown payment method is booked as card') from rides where id = '7c000000-0000-0000-0000-000000000001';
+select pg_temp.check(payment_method = 'cash', 'an old app asking to pay by card gets a cash ride (cards are off)') from rides where id = '7c000000-0000-0000-0000-000000000001';
 update rides set status = 'cancelled' where id = '7c000000-0000-0000-0000-000000000001';
+insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, fare_cents, status, payment_method)
+values ('7c000000-0000-0000-0000-00000000000a', :'rc1', 25.04, -77.35, 25.08, -77.33, 1500, 'cancelled', 'card');
+select pg_temp.check(payment_method = 'cash', 'the server can''t make card rides either') from rides where id = '7c000000-0000-0000-0000-00000000000a';
 set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000c1');
-insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, distance_miles, duration_minutes, payment_method, payment_status)
-values ('7c000000-0000-0000-0000-000000000002', :'rc1', 25.04, -77.35, 25.08, -77.33, 'a', 'b', 4.4, 16, 'cash', 'cash_collected');
+insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, distance_miles, duration_minutes, payment_status)
+values ('7c000000-0000-0000-0000-000000000002', :'rc1', 25.04, -77.35, 25.08, -77.33, 'a', 'b', 4.4, 16, 'cash_collected');
 do $$ begin
   update rides set payment_method = 'card' where id = '7c000000-0000-0000-0000-000000000002';
   raise exception 'FAIL: a rider changed how a booked ride is paid';
-exception when insufficient_privilege then raise notice 'ok  riders can''t switch a booked ride between cash and card';
+exception when insufficient_privilege then raise notice 'ok  riders can''t change how a booked ride is paid';
 end $$;
 reset role; select pg_temp.as_server();
 select pg_temp.check(payment_method = 'cash' and payment_status is null and fare_cents = 1560,
-  'a rider with an account and a mobile number books cash, at the same fare; the app can''t mark it paid')
+  'a rider books at the same fare; the app can''t mark it paid')
   from rides where id = '7c000000-0000-0000-0000-000000000002';
 set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000d3');
-select pg_temp.check(payment_method = 'cash' and cash_due_cents = 1560, 'drivers see it''s a cash trip and how much to collect')
+select pg_temp.check(payment_method = 'cash' and cash_due_cents = 1560, 'drivers see how much cash to collect')
   from public.open_ride_requests(25.05, -77.34, 25) where id = '7c000000-0000-0000-0000-000000000002';
-update drivers set accept_cash = false where auth_user_id = '00000000-0000-0000-0000-0000000000d3';
-select pg_temp.check(not exists (select 1 from public.open_ride_requests(25.05, -77.34, 25) where id = '7c000000-0000-0000-0000-000000000002'),
-  'a driver who turned off cash trips doesn''t get them');
-update drivers set accept_cash = true where auth_user_id = '00000000-0000-0000-0000-0000000000d3';
 reset role; select pg_temp.as_server();
+update drivers set accept_cash = false where id = '20000000-0000-0000-0000-0000000000d3';
+set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000d3');
+select pg_temp.check(exists (select 1 from public.open_ride_requests(25.05, -77.34, 25) where id = '7c000000-0000-0000-0000-000000000002'),
+  'every driver gets every trip (the old "take cash trips" switch no longer hides them)');
+reset role; select pg_temp.as_server();
+update drivers set accept_cash = true where id = '20000000-0000-0000-0000-0000000000d3';
 
-\echo '== Cash: no-shows and late cancellations turn cash off'
+\echo '== Missed pickups and late cancellations pause booking'
 update rides set status = 'accepted', driver_id = '20000000-0000-0000-0000-0000000000d3', accepted_at = now() - interval '5 minutes'
  where id = '7c000000-0000-0000-0000-000000000002';
 update rides set status = 'cancelled', cancel_reason = 'rider_cancelled', cancelled_by = 'rider' where id = '7c000000-0000-0000-0000-000000000002';
 set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000c1');
-insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, distance_miles, duration_minutes, payment_method)
-values ('7c000000-0000-0000-0000-000000000003', :'rc1', 25.04, -77.35, 25.08, -77.33, 'a', 'b', 4.4, 16, 'cash');
+insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, distance_miles, duration_minutes)
+values ('7c000000-0000-0000-0000-000000000003', :'rc1', 25.04, -77.35, 25.08, -77.33, 'a', 'b', 4.4, 16);
 reset role; select pg_temp.as_server();
 update rides set status = 'accepted', driver_id = '20000000-0000-0000-0000-0000000000d3', accepted_at = now() - interval '30 seconds'
  where id = '7c000000-0000-0000-0000-000000000003';
 update rides set status = 'cancelled', cancel_reason = 'rider_cancelled', cancelled_by = 'rider' where id = '7c000000-0000-0000-0000-000000000003';
-select pg_temp.check(not cash_blocked, 'one late cancellation, and a cancellation inside the 2 free minutes, leave cash on') from riders where id = :'rc1';
+select pg_temp.check(not cash_blocked, 'one late cancellation, and a cancellation inside the 2 free minutes, don''t pause booking') from riders where id = :'rc1';
 set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000c1');
-insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, distance_miles, duration_minutes, payment_method)
-values ('7c000000-0000-0000-0000-000000000004', :'rc1', 25.04, -77.35, 25.08, -77.33, 'a', 'b', 4.4, 16, 'cash');
+insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, distance_miles, duration_minutes)
+values ('7c000000-0000-0000-0000-000000000004', :'rc1', 25.04, -77.35, 25.08, -77.33, 'a', 'b', 4.4, 16);
 reset role; select pg_temp.as_server();
 update rides set status = 'driver_arrived', driver_id = '20000000-0000-0000-0000-0000000000d3', accepted_at = now() - interval '15 minutes'
  where id = '7c000000-0000-0000-0000-000000000004';
 update rides set status = 'cancelled', cancel_reason = 'rider_no_show', cancelled_by = 'driver' where id = '7c000000-0000-0000-0000-000000000004';
 select pg_temp.check(cash_blocked and cash_blocked_reason = 'no_shows' and cash_blocked_at is not null,
-  'a no-show on top of a late cancellation (2 in 30 days) turns cash off') from riders where id = :'rc1';
+  'a missed pickup on top of a late cancellation (2 in 30 days) pauses booking') from riders where id = :'rc1';
 set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000c1');
-do $$ begin
-  insert into rides (rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, payment_method)
-  values ((select id from riders where name = 'Cass Cash'), 25.04, -77.35, 25.08, -77.33, 'a', 'b', 'cash');
-  raise exception 'FAIL: a rider with cash turned off booked cash';
+do $$ declare h text; begin
+  insert into rides (rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address)
+  values ((select id from riders where name = 'Cass Cash'), 25.04, -77.35, 25.08, -77.33, 'a', 'b');
+  raise exception 'FAIL: a paused rider booked';
 exception when sqlstate '22023' then
-  if sqlerrm not like 'Cash isn''t available on your account%' then raise exception 'FAIL: wrong reason: %', sqlerrm; end if;
-  raise notice 'ok  cash stays off for that rider';
+  get stacked diagnostics h = pg_exception_hint;
+  if h is distinct from 'blocked' or sqlerrm not like 'Booking is paused on your account%' then raise exception 'FAIL: wrong reason: % (%)', sqlerrm, h; end if;
+  raise notice 'ok  that rider can''t book until support turns booking back on';
 end $$;
-insert into rides (id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, distance_miles, duration_minutes)
-values ('7c000000-0000-0000-0000-000000000005', :'rc1', 25.04, -77.35, 25.08, -77.33, 'a', 'b', 4.4, 16);
 update riders set cash_blocked = false, cash_blocked_reason = null where auth_user_id = '00000000-0000-0000-0000-0000000000c1';
 select pg_temp.as_user('00000000-0000-0000-0000-0000000000c4');
 do $$ begin
-  insert into rides (rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address, payment_method)
-  values ((select id from riders where name = 'Cass Again'), 25.04, -77.35, 25.08, -77.33, 'a', 'b', 'cash');
-  raise exception 'FAIL: a second account on the same number got around cash being off';
+  insert into rides (rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, pickup_address, dropoff_address)
+  values ((select id from riders where name = 'Cass Again'), 25.04, -77.35, 25.08, -77.33, 'a', 'b');
+  raise exception 'FAIL: a second account on the same number got around the pause';
 exception when sqlstate '22023' then
-  if sqlerrm not like 'Cash isn''t available on your account%' then raise exception 'FAIL: wrong reason: %', sqlerrm; end if;
-  raise notice 'ok  cash is off on their other accounts with the same number too';
+  if sqlerrm not like 'Booking is paused on your account%' then raise exception 'FAIL: wrong reason: %', sqlerrm; end if;
+  raise notice 'ok  their other accounts on the same number are paused too';
+end $$;
+do $$ begin
+  perform public.booking_paused((select id from riders where name = 'Cass Again'));
+  raise exception 'FAIL: a rider could look up whose booking is paused';
+exception when insufficient_privilege then raise notice 'ok  riders can''t look up whose booking is paused';
 end $$;
 reset role; select pg_temp.as_server();
-select pg_temp.check(r.cash_blocked and x.payment_method = 'card', 'they can still book by card, and can''t turn cash back on themselves')
-  from riders r, rides x where r.id = :'rc1' and x.id = '7c000000-0000-0000-0000-000000000005';
-update rides set status = 'cancelled' where id = '7c000000-0000-0000-0000-000000000005';
+select pg_temp.check(cash_blocked, 'riders can''t lift the pause themselves') from riders where id = :'rc1';
+select pg_temp.check(public.booking_paused(:'rc1') and public.booking_paused((select id from riders where name = 'Cass Again')),
+  'scheduled rides see the pause too, on both accounts');
 set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000ad', '{"role":"admin"}');
 update riders set cash_blocked = false, cash_blocked_reason = null, cash_blocked_at = null where id = :'rc1';
 reset role; select pg_temp.as_server();
-select pg_temp.check(not cash_blocked, 'an admin can turn cash back on') from riders where id = :'rc1';
+select pg_temp.check(not cash_blocked and not public.booking_paused(:'rc1'), 'an admin can turn booking back on') from riders where id = :'rc1';
 
 \echo '== A pause for riders who keep booking and cancelling'
 insert into rides (rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, fare_cents, status, cancelled_by, cancel_reason, created_at, cancelled_at) values
@@ -472,7 +468,7 @@ select pg_temp.check(earned_cents = 1225 and balance_cents = -775 and paid_out_c
   'a $20 cash trip: the driver earned $12.25 and holds $20, so they owe RideUp $7.75')
   from public.driver_earnings_summary('20000000-0000-0000-0000-0000000000d3');
 update rides set tip_cents = 300, tip_payment_intent_id = 'pi_tip_cash' where id = '7c000000-0000-0000-0000-000000000007';
-select pg_temp.check(balance_cents = -475, 'a $3 tip by card on a cash trip goes to the driver') from public.driver_earnings_summary('20000000-0000-0000-0000-0000000000d3');
+select pg_temp.check(balance_cents = -475, 'an old card tip on a cash trip goes to the driver') from public.driver_earnings_summary('20000000-0000-0000-0000-0000000000d3');
 select pg_temp.check(public.account_deletion_blocker('00000000-0000-0000-0000-0000000000d3') = 'cash_owed', 'a driver who owes RideUp cash can''t delete yet');
 set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000ad', '{"role":"admin"}');
 insert into driver_payouts (driver_id, amount_cents, method, note) values ('20000000-0000-0000-0000-0000000000d3', -475, 'cash', 'Cash handed over');
@@ -485,9 +481,10 @@ reset role; select pg_temp.as_server();
 select pg_temp.check(balance_cents = 0 and paid_out_cents = 0, 'cash handed to RideUp (a negative payout) settles it; it isn''t a payout')
   from public.driver_earnings_summary('20000000-0000-0000-0000-0000000000d3');
 select pg_temp.check(public.account_deletion_blocker('00000000-0000-0000-0000-0000000000d3') is null, 'settled up, the driver can delete');
-insert into rides (rider_id, driver_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, fare_cents, booking_fee_cents, status, payment_status, completed_at)
-values (:'rc5', '20000000-0000-0000-0000-0000000000d3', 25.04, -77.35, 25.08, -77.33, 1560, 250, 'completed', 'captured', now());
-select pg_temp.check(balance_cents = 917, 'a card trip after that is owed to the driver as usual') from public.driver_earnings_summary('20000000-0000-0000-0000-0000000000d3');
+insert into rides (id, rider_id, driver_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, fare_cents, booking_fee_cents, status, payment_status, completed_at)
+values ('7c000000-0000-0000-0000-00000000000b', :'rc5', '20000000-0000-0000-0000-0000000000d3', 25.04, -77.35, 25.08, -77.33, 1560, 250, 'completed', 'captured', now());
+update rides set payment_method = 'card' where id = '7c000000-0000-0000-0000-00000000000b'; -- a card trip from before cash only
+select pg_temp.check(balance_cents = 917, 'an old card trip is owed to the driver as before') from public.driver_earnings_summary('20000000-0000-0000-0000-0000000000d3');
 set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000ad', '{"role":"admin"}');
 select pg_temp.check(sum(cash_trips) = 1 and sum(cash_cents) = 2000, 'the money summary shows cash trips and the cash drivers collected')
   from public.admin_money_summary(current_date - 1, current_date + 1);
