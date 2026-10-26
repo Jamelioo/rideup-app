@@ -26,7 +26,7 @@ export function unpaidReportProblem(ride, { staff = false, now = Date.now() } = 
 }
 
 // "Rider didn't pay" on a cash trip (like Uber's report in the trip's help). The fare is marked unpaid, so the
-// driver doesn't owe RideUp its share of it; cash is turned off for the rider (and their other accounts on the
+// driver doesn't owe RideUp its share of it; booking is paused for the rider (and their other accounts on the
 // same phone or card) until RideUp sorts it out; the rider is told and can reply if they did pay; and the team
 // gets a support ticket and an alert. Staff can report it for a driver.   body: { rideId }
 export default async function handler(req, res) {
@@ -70,7 +70,7 @@ export default async function handler(req, res) {
       .from('riders')
       .update({ cash_blocked: true, cash_blocked_reason: 'unpaid', cash_blocked_at: new Date().toISOString() })
       .eq('id', ride.rider_id)
-    if (blockErr) console.error('Turning cash off after an unpaid fare failed:', blockErr.message)
+    if (blockErr) console.error('Pausing booking after an unpaid fare failed:', blockErr.message)
 
     // A driver who reports a lot of unpaid fares is worth a look too.
     const since = new Date(Date.now() - 30 * 86_400_000).toISOString()
@@ -88,7 +88,7 @@ export default async function handler(req, res) {
     const route = `${short(ride.pickup_address)} → ${short(ride.dropoff_address)}`
     const when = new Date(ride.completed_at || ride.created_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Nassau' })
     const description = `${driverName} reported that ${rider.name || 'the rider'} (${rider.phone || 'no phone on file'}) didn’t pay the ${amount} cash fare for ${route} on ${when}. Ride ${rideId}. `
-      + `Cash is now off for this rider; turn it back on in Admin › Users once it’s sorted. Unpaid fares this driver reported in the last 30 days: ${driverReports ?? 1}.`
+      + `Booking is now paused for this rider; turn it back on in Admin › Users once it’s sorted. Unpaid fares this driver reported in the last 30 days: ${driverReports ?? 1}.`
     const { error: ticketErr } = await admin.from('support_tickets').insert({
       user_id: ride.drivers?.auth_user_id || user.id,
       subject: 'Cash fare not paid',
@@ -98,7 +98,7 @@ export default async function handler(req, res) {
 
     await alertStaff({
       title: 'Cash fare not paid',
-      body: `${first(driverName, 'A driver')} reported ${first(rider.name, 'a rider')} didn’t pay ${amount} (${route}). Cash is off for them until it’s sorted.`,
+      body: `${first(driverName, 'A driver')} reported ${first(rider.name, 'a rider')} didn’t pay ${amount} (${route}). Their booking is paused until it’s sorted.`,
       url: '/admin/support',
       tag: `admin-unpaid-${rideId}`,
       emailHtml: `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:480px;color:#191f1c">

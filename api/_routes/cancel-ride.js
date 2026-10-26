@@ -1,29 +1,26 @@
-import Stripe from 'stripe'
 import { admin, requireUser, rideRoles, fail } from '../_auth.js'
 import { rateLimit } from '../_rateLimit.js'
-import { chargeOf } from '../../src/lib/discounts.js'
-import { cancellationFeeCents, noShowFeeCents, noShowAllowed, splitFee } from '../_fees.js'
-import { sendEmail, cancellationFeeEmail } from '../_email.js'
+import { isLateCancel, noShowAllowed } from '../_cancelRules.js'
 import { pushToUser, rideParticipants } from '../_push.js'
 import { notifyNearbyDrivers } from '../_notifyDrivers.js'
 import { alertRideRequest } from '../_staffAlerts.js'
 import { logAdminAction } from '../_audit.js'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
 
-// Policy (Uber-style). Override with env vars; set CANCEL_FEE_CENTS=0 to disable fees entirely.
-const FEE_CENTS = Math.max(0, parseInt(process.env.CANCEL_FEE_CENTS || '500', 10) || 0)
+// Policy (Uber-style), overridable with env vars. The database counts late cancellations after 2 minutes, so keep
+// CANCEL_GRACE_SECONDS at 120 unless the database rule changes too.
 const GRACE_SECONDS = Math.max(0, parseInt(process.env.CANCEL_GRACE_SECONDS || '120', 10) || 0)
 const FREE_WAIT_SECONDS = Math.max(0, parseInt(process.env.FREE_WAIT_SECONDS || '300', 10) || 0)
 
 const CANCELLABLE = ['requested', 'pending_driver_response', 'accepted', 'driver_arrived']
 
-// One endpoint for every cancellation, so the ride status and the card hold always change together.
+// One endpoint for every cancellation. Cancelling is always free (trips are paid in cash at drop-off); late
+// cancellations and no-shows count towards booking being paused (api/_cancelRules.js).
 //   body: { rideId, preview?: boolean, noShow?: boolean }
-//   rider  → free until GRACE_SECONDS after a driver accepts, then FEE_CENTS
-//   driver → free for the rider, or (noShow) FEE_CENTS once the driver has waited FREE_WAIT_SECONDS at pickup
-//   admin  → free (admins and support staff; the rider and driver are both told)
+//   rider  → free; after GRACE_SECONDS from a driver accepting it counts as a late cancellation
+//   driver → free; or (noShow) once the driver has waited FREE_WAIT_SECONDS at pickup, counted as a no-show
+//   admin  → free and never counted (admins and support staff; the rider and driver are both told)
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
@@ -42,7 +39,7 @@ export default async function handler(req, res) {
   try {
     const { data: ride } = await admin
       .from('rides')
-      .select('id, rider_id, driver_id, status, fare_cents, promo_discount_cents, credit_applied_cents, accepted_at, arrived_at, payment_intent_id, payment_status, pickup_address')
+      .select('id, rider_id, driver_id, status, accepted_at, arrived_at')
       .eq('id', rideId)
       .maybeSingle()
     if (!ride) return res.status(404).json({ error: 'Ride not found' })
@@ -55,25 +52,14 @@ export default async function handler(req, res) {
       return res.status(409).json({ error: ride.status === 'in_progress' ? 'The trip has already started.' : 'This ride is already finished.' })
     }
 
-    let feeCents = 0
-    if (actor === 'rider') {
-      feeCents = cancellationFeeCents({
-        role: 'rider', status: ride.status, paymentStatus: ride.payment_status,
-        acceptedAt: ride.accepted_at, fareCents: chargeOf(ride), feeCents: FEE_CENTS, graceSeconds: GRACE_SECONDS,
-      })
-    } else if (actor === 'driver' && noShow) {
-      if (!noShowAllowed({ status: ride.status, arrivedAt: ride.arrived_at, waitSeconds: FREE_WAIT_SECONDS })) {
-        return res.status(409).json({ error: `You can mark a no-show after waiting ${Math.round(FREE_WAIT_SECONDS / 60)} minutes at the pickup.` })
-      }
-      feeCents = noShowFeeCents({
-        status: ride.status, paymentStatus: ride.payment_status, arrivedAt: ride.arrived_at,
-        fareCents: chargeOf(ride), feeCents: FEE_CENTS, waitSeconds: FREE_WAIT_SECONDS,
-      })
+    if (actor === 'driver' && noShow && !noShowAllowed({ status: ride.status, arrivedAt: ride.arrived_at, waitSeconds: FREE_WAIT_SECONDS })) {
+      return res.status(409).json({ error: `You can mark a no-show after waiting ${Math.round(FREE_WAIT_SECONDS / 60)} minutes at the pickup.` })
     }
 
     if (preview) {
       return res.status(200).json({
-        fee_cents: feeCents,
+        fee_cents: 0, // kept for apps already installed, which show a fee when it's above 0
+        late: actor === 'rider' && isLateCancel({ status: ride.status, acceptedAt: ride.accepted_at, graceSeconds: GRACE_SECONDS }),
         grace_seconds: GRACE_SECONDS,
         free_wait_seconds: FREE_WAIT_SECONDS,
         no_show_allowed: actor === 'driver' && noShowAllowed({ status: ride.status, arrivedAt: ride.arrived_at, waitSeconds: FREE_WAIT_SECONDS }),
@@ -89,7 +75,8 @@ export default async function handler(req, res) {
         cancelled_at: new Date().toISOString(),
         cancelled_by: actor,
         cancel_reason: reason,
-        ...(feeCents > 0 ? { cancel_fee_cents: feeCents, ...splitFee(feeCents) } : { platform_fee_cents: 0, driver_payout_cents: 0 }),
+        platform_fee_cents: 0,
+        driver_payout_cents: 0,
       })
       .eq('id', rideId)
       .eq('status', ride.status)
@@ -97,65 +84,44 @@ export default async function handler(req, res) {
     if (claimErr) throw claimErr
     if (!claimed?.length) return res.status(409).json({ error: 'The ride changed just now. Please try again.' })
 
-    // 2. Money: take the fee from the hold, or release the hold entirely.
-    if (ride.payment_intent_id && ride.payment_status === 'authorized') {
-      try {
-        if (feeCents > 0) {
-          await stripe.paymentIntents.capture(ride.payment_intent_id, { amount_to_capture: feeCents }, { idempotencyKey: `cancel-fee-${rideId}` })
-          await admin.from('rides').update({ payment_status: 'captured', paid_at: new Date().toISOString() }).eq('id', rideId)
-        } else {
-          await stripe.paymentIntents.cancel(ride.payment_intent_id)
-          await admin.from('rides').update({ payment_status: 'cancelled' }).eq('id', rideId)
-        }
-      } catch (err) {
-        // The ride is cancelled either way; a hold we couldn't release expires on its own within 7 days.
-        console.error('Cancel ride payment step failed:', err.message)
-        if (feeCents > 0) await admin.from('rides').update({ cancel_fee_cents: 0, platform_fee_cents: 0, driver_payout_cents: 0 }).eq('id', rideId)
-        feeCents = 0
-      }
-    }
-
-    // 3. Free the driver. If the driver cancelled, keep the rider's trip going with a new request
+    // 2. Free the driver. If the driver cancelled, keep the rider's trip going with a new request
     //    (same route, same upfront price, not offered to this driver again), like Uber's automatic re-match.
     if (ride.driver_id) {
       await admin.from('drivers').update({ status: 'online' }).eq('id', ride.driver_id).eq('status', 'on_trip')
     }
     const rebookedRideId = actor === 'driver' && !noShow ? await rebook(rideId, ride.driver_id) : null
 
-    // 4. Tell the other side.
+    // 3. Tell the other side.
     const people = await rideParticipants(rideId)
     if (actor === 'rider' && people.driverUserId) {
       await pushToUser(people.driverUserId, { title: 'Ride cancelled', body: 'The rider cancelled this trip.', url: '/driver/dashboard', tag: `ride-${rideId}` })
     } else if (actor !== 'rider' && people.riderUserId) {
       const minutes = Math.round(FREE_WAIT_SECONDS / 60)
       const body = noShow
-        ? `Your driver waited ${minutes} minutes and marked the ride as a no-show.`
+        ? `Your driver waited ${minutes} minutes and marked the ride as a no-show. Missed pickups can pause booking on your account.`
         : rebookedRideId
-          ? 'Your driver had to cancel. We’re finding you another driver now. You weren’t charged.'
-          : 'Your ride was cancelled. You weren’t charged. Request again and we’ll find you a driver.'
+          ? 'Your driver had to cancel. We’re finding you another driver now, at the same price.'
+          : 'Your ride was cancelled. Request again and we’ll find you a driver.'
       await pushToUser(people.riderUserId, { title: rebookedRideId ? 'Finding you a new driver' : 'Ride cancelled', body, url: '/book', tag: `ride-${rideId}` })
     }
     if (actor === 'admin' && people.driverUserId) {
       await pushToUser(people.driverUserId, { title: 'Trip cancelled', body: 'RideUp support cancelled this trip. You’re free for your next ride.', url: '/driver/dashboard', tag: `ride-${rideId}` })
     }
-    if (feeCents > 0 && people.riderEmail) {
-      await sendEmail({ to: people.riderEmail, ...cancellationFeeEmail({ ride, feeCents, noShow: !!noShow }) })
-    }
     if (actor === 'admin') {
-      await logAdminAction(user, { action: 'ride.cancel', targetType: 'ride', targetId: rideId, summary: `Cancelled a ${ride.status.replace(/_/g, ' ')} trip (no charge)` })
+      await logAdminAction(user, { action: 'ride.cancel', targetType: 'ride', targetId: rideId, summary: `Cancelled a ${ride.status.replace(/_/g, ' ')} trip` })
     }
 
-    return res.status(200).json({ success: true, fee_cents: feeCents, rebooked_ride_id: rebookedRideId })
+    return res.status(200).json({ success: true, fee_cents: 0, rebooked_ride_id: rebookedRideId })
   } catch (err) {
     return fail(res, 'Cancel ride error', err)
   }
 }
 
-// What a re-match copies from the cancelled trip: same route, same upfront price, paid the same way.
+// What a re-match copies from the cancelled trip: same route, same upfront price (paid in cash, like every trip).
 const REBOOK_FIELDS = ['rider_id', 'rider_name', 'pickup_address', 'pickup_lat', 'pickup_lng', 'dropoff_address', 'dropoff_lat', 'dropoff_lng',
   'vehicle_type', 'distance_miles', 'duration_minutes', 'fare_cents', 'booking_fee_cents', 'airport_fee_cents', 'promo_code',
   'promo_discount_cents', 'credit_applied_cents', 'surge_multiplier', 'stop_address', 'stop_lat', 'stop_lng', 'passenger_name',
-  'passenger_phone', 'payment_method']
+  'passenger_phone']
 
 // Creates a fresh request for the rider after their driver cancelled. Best effort: if it fails the rider
 // simply sees "ride cancelled" and can request again.

@@ -3,9 +3,6 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import path from 'node:path'
 
-// The Stripe routes create their client when loaded; give them a dummy key (no request is ever sent).
-process.env.STRIPE_SECRET_KEY ||= 'sk_test_dummy'
-
 const root = path.resolve(import.meta.dirname, '..')
 
 function mockRes() {
@@ -72,5 +69,5 @@ test('router sends each action to its handler and rejects unknown ones', async (
 test('router falls back to the URL when the query has no action', async () => {
   const { actionFrom } = await import('../api/[action].js')
   assert.equal(actionFrom({ query: {}, url: '/api/cancel-ride?x=1' }), 'cancel-ride')
-  assert.equal(actionFrom({ query: { action: ['add-tip', 'other'] }, url: '/api/[action]' }), 'add-tip')
+  assert.equal(actionFrom({ query: { action: ['cancel-ride', 'other'] }, url: '/api/[action]' }), 'cancel-ride')
 })

@@ -1,12 +1,13 @@
 import { admin, requireUser, rideRoles, fail } from '../_auth.js'
 import { rateLimit } from '../_rateLimit.js'
-import { captureRide } from '../_capture.js'
+import { settleRide } from '../_cash.js'
 
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
 
-// Captures the held payment once the ride is completed; on a cash trip, the driver's "Cash collected" tap.
-// Only the ride's driver (or an admin) may call it. The every-minute sweeper in dispatch-scheduled retries any
-// capture this call missed.
+// The driver's "Cash collected" tap once the trip is completed: marks the cash fare paid and sends the receipt.
+// Only the ride's driver (or an admin) may call it. If the driver never taps it, the every-minute sweeper in
+// dispatch-scheduled counts the cash as collected a while later. The name is kept from the card days so apps
+// already installed keep working.
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
@@ -33,9 +34,9 @@ export default async function handler(req, res) {
     const roles = await rideRoles(ride, user)
     if (!roles.driver && !roles.admin) return res.status(403).json({ error: 'Not allowed' })
 
-    const result = await captureRide(rideId)
+    const result = await settleRide(rideId)
     if (!result.ok) return res.status(result.status || 400).json({ error: result.error })
-    return res.status(200).json({ success: true, ...(result.already ? { already_captured: true } : {}) })
+    return res.status(200).json({ success: true, ...(result.already ? { already_settled: true } : {}) })
   } catch (err) {
     return fail(res, 'Capture payment error', err)
   }

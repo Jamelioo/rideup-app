@@ -5,7 +5,7 @@ import { rateLimit } from '../api/_rateLimit.js'
 import { rideAlertText } from '../api/_staffAlerts.js'
 import promoPreview, { promoProblem } from '../api/_routes/promo-preview.js'
 import { unpaidReportProblem } from '../api/_routes/cash-unpaid.js'
-import { tripReceiptEmail, cashUnpaidEmail } from '../api/_email.js'
+import { tripReceiptEmail, cashUnpaidEmail, refundEmail } from '../api/_email.js'
 
 test('promo check before an account: the code’s own rules, in the database’s words', () => {
   const now = Date.parse('2026-10-10T12:00:00Z')
@@ -51,26 +51,21 @@ test('ride alerts: a request nobody online can take asks the team to act while t
   assert.match(missed.emailHtml, /tel:\+12425550101/)
 })
 
-test('ride alerts say when the rider pays cash', () => {
-  const ride = { pickup_address: 'Cable Beach', dropoff_address: 'Downtown', fare_cents: 1868, payment_method: 'cash', riders: { name: 'Ann Rolle' } }
-  assert.equal(rideAlertText(ride, { notified: 1 }).body, 'Cable Beach → Downtown · $18.68 cash · 1 driver alerted')
-  const waiting = rideAlertText(ride, { notified: 0 })
-  assert.equal(waiting.title, 'Cash rider waiting: no driver taking cash')
-  assert.match(waiting.emailHtml, /No driver who takes cash is online/)
-})
-
-test('cash receipts say "Paid with Cash"; card receipts keep the card', () => {
-  const ride = { pickup_address: 'A', dropoff_address: 'B', fare_cents: 2000, booking_fee_cents: 250, promo_discount_cents: 500, promo_code: 'WELCOME5', completed_at: '2026-10-10T15:00:00Z' }
-  const cash = tripReceiptEmail({ ride: { ...ride, payment_method: 'cash' }, driverName: 'Dee' })
-  assert.match(cash.subject, /\$15\.00/)
-  assert.match(cash.html, /Total paid.*\$15\.00/s)
-  assert.match(cash.html, /Paid with<\/td><td[^>]*>Cash</)
-  const card = tripReceiptEmail({ ride: { ...ride, payment_brand: 'Visa', payment_last4: '4242' }, driverName: 'Dee' })
-  assert.match(card.html, /Total charged/)
-  assert.match(card.html, /Visa •••• 4242/)
+test('receipts: paid in cash to the driver, with every discount shown', () => {
+  const ride = { pickup_address: 'A', dropoff_address: 'B', fare_cents: 2000, booking_fee_cents: 250, promo_discount_cents: 500, promo_code: 'WELCOME5', completed_at: '2026-10-10T15:00:00Z', payment_method: 'cash' }
+  const receipt = tripReceiptEmail({ ride, driverName: 'Dee' })
+  assert.match(receipt.subject, /\$15\.00/)
+  assert.match(receipt.html, /Promo WELCOME5.*−\$5\.00/s)
+  assert.match(receipt.html, /Total paid.*\$15\.00/s)
+  assert.match(receipt.html, /Paid with<\/td><td[^>]*>Cash to your driver</)
+  assert.doesNotMatch(receipt.html, /card|charged/i)
   const unpaid = cashUnpaidEmail({ ride: { ...ride, pickup_address: '<b>x</b>' }, amountCents: 1500 })
   assert.match(unpaid.subject, /Payment needed.*\$15\.00/)
-  assert.doesNotMatch(unpaid.html, /<b>x/)
+  assert.match(unpaid.html, /booking is paused/)
+  assert.doesNotMatch(unpaid.html, /<b>x|card/)
+  const refund = refundEmail({ ride, amountCents: 500, target: 'fare' })
+  assert.match(refund.html, /\$5\.00 was added to your RideUp credit/)
+  assert.doesNotMatch(refund.html, /card/)
 })
 
 test('"Rider didn’t pay": a finished cash trip, by its driver within 24 hours (staff any time), once', () => {

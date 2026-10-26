@@ -1,8 +1,7 @@
-import Stripe from 'stripe'
 import { admin } from './_auth.js'
 import { calculateFare, BOOKING_FEE_CENTS, isAirportPickup, AIRPORT_FEE_CENTS } from '../src/lib/pricing.js'
 import { pushToUser, rideParticipants, usersWithPush } from './_push.js'
-import { captureRide } from './_capture.js'
+import { settleRide } from './_cash.js'
 import { notifyNearbyDrivers, DRIVER_IDLE_MIN, DRIVER_BACKGROUND_MIN } from './_notifyDrivers.js'
 import { alertRideRequest } from './_staffAlerts.js'
 import { REQUEST_SEARCH_MINUTES } from '../src/lib/dispatch.js'
@@ -14,13 +13,10 @@ import { sendEmail, docExpiryEmail } from './_email.js'
 //   Authorization: Bearer $CRON_SECRET
 // Vercel Cron sends that header automatically when CRON_SECRET is set.
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
-
 const DISPATCH_WINDOW_MIN = 3     // create the request this many minutes before pickup time
 const STALE_REQUEST_MIN = REQUEST_SEARCH_MINUTES // requests nobody answered within this long are cancelled
-const CAPTURE_GRACE_MIN = 2       // the driver's app captures at drop-off; after this the sweeper does it
-const CASH_CONFIRM_MIN = 30       // a cash trip the driver didn't confirm in the app counts as collected after this
-const PAYMENT_CONFIRM_SEC = 90     // a ride stuck in "confirming payment" this long is cancelled
+const CASH_CONFIRM_MIN = 30       // a trip the driver didn't mark "Cash collected" counts as collected after this
+const CONFIRM_STUCK_SEC = 90      // a ride a driver claimed but never confirmed (their app died) is cancelled after this
 const CHECKIN_STOPPED_MIN = 8     // trip check-in: the car hasn't moved for this long (while the driver's app is reporting)
 const CHECKIN_ESCALATE_MIN = 5    // no "I'm OK" within this long → safety report for the admin
 
@@ -173,7 +169,7 @@ export default async function handler(req, res) {
   if (!admin || !secret) return res.status(500).json({ error: 'Server is not configured' })
   if (req.headers.authorization !== `Bearer ${secret}`) return res.status(401).json({ error: 'Unauthorized' })
 
-  const result = { expired: 0, dispatched: 0, failed: 0, captured: 0, capture_failed: 0, drivers_offlined: 0, stuck_cancelled: 0, checkins: 0, escalated: 0, doc_reminders: 0, expired_offline: 0 }
+  const result = { expired: 0, dispatched: 0, failed: 0, settled: 0, settle_failed: 0, drivers_offlined: 0, stuck_cancelled: 0, checkins: 0, escalated: 0, doc_reminders: 0, expired_offline: 0 }
 
   try {
     const staleBefore = new Date(Date.now() - STALE_REQUEST_MIN * 60_000).toISOString()
@@ -214,11 +210,23 @@ export default async function handler(req, res) {
 
       const { data: rider } = await admin
         .from('riders')
-        .select('id, name, payment_method_id, auth_user_id')
+        .select('id, name, auth_user_id, cash_blocked')
         .eq('id', sr.rider_id)
         .maybeSingle()
       if (!rider) { await fail('failed'); continue }
-      if (!rider.payment_method_id) { await fail('payment_required'); continue }
+      // Booking paused (missed pickups or an unpaid fare), on this account or another on the same phone or card:
+      // same rule as booking in the app. Before migration 021 the check isn't there and only this account counts.
+      const { data: paused, error: pausedErr } = await admin.rpc('booking_paused', { p_rider_id: rider.id })
+      if (pausedErr ? rider.cash_blocked : paused) {
+        await fail('blocked')
+        await pushToUser(rider.auth_user_id, {
+          title: 'Scheduled ride not booked',
+          body: 'Booking is paused on your account because of missed pickups or an unpaid fare. Contact RideUp support to sort it out.',
+          url: '/support',
+          tag: `scheduled-${sr.id}`,
+        })
+        continue
+      }
 
       // Same floors as the DB trigger: never cheaper than the straight line.
       const straight = straightLineMiles(sr.pickup_lat, sr.pickup_lng, sr.dropoff_lat, sr.dropoff_lng)
@@ -257,45 +265,44 @@ export default async function handler(req, res) {
       result.dispatched++
     }
 
-    // Rides stuck between "driver accepted" and "card held" (the driver's app died, or the card check never
-    // finished): cancel them so the rider isn't left waiting and the driver can take other trips.
-    const stuckBefore = new Date(Date.now() - PAYMENT_CONFIRM_SEC * 1000).toISOString()
+    // Rides a driver claimed but never confirmed (their app died between the two steps): put them back up for
+    // other drivers, so the rider keeps waiting for a car instead of being left stuck, and the driver is freed.
+    const stuckBefore = new Date(Date.now() - CONFIRM_STUCK_SEC * 1000).toISOString()
     const { data: stuck } = await admin
       .from('rides')
-      .update({ status: 'cancelled', cancel_reason: 'payment_failed', cancelled_at: new Date().toISOString() })
+      .select('id, driver_id, declined_by')
       .eq('status', 'pending_driver_response')
       .lt('accepted_at', stuckBefore)
-      .select('id, payment_intent_id, payment_status')
+      .limit(20)
     for (const r of stuck || []) {
-      if (r.payment_intent_id && r.payment_status === 'authorized') {
-        await stripe.paymentIntents.cancel(r.payment_intent_id).catch((e) => console.error('Release stuck hold failed:', e.message))
-      }
+      const { data: reopened } = await admin
+        .from('rides')
+        .update({ status: 'requested', driver_id: null, accepted_at: null, declined_by: [...new Set([...(r.declined_by || []), r.driver_id].filter(Boolean))] })
+        .eq('id', r.id)
+        .eq('status', 'pending_driver_response')
+        .select('id')
+      if (!reopened?.length) continue
+      result.stuck_cancelled++
+      if (r.driver_id) await admin.from('drivers').update({ status: 'online' }).eq('id', r.driver_id).eq('status', 'on_trip')
+      await notifyNearbyDrivers(r.id)
     }
-    result.stuck_cancelled = stuck?.length || 0
 
     await offlineIdleDrivers(result)
 
-    // Safety net: charge completed trips whose capture call never arrived (e.g. the driver lost signal at drop-off).
-    // Cash trips the driver didn't confirm (they closed the app at drop-off) count as collected after a while, like
-    // Uber, so the rider gets their receipt; the driver can still report an unpaid fare for 24 hours.
-    const captureBefore = new Date(Date.now() - CAPTURE_GRACE_MIN * 60_000).toISOString()
+    // Trips the driver didn't mark "Cash collected" (they closed the app at drop-off) count as collected after a
+    // while, like Uber, so the rider gets their receipt; the driver can still report an unpaid fare for 24 hours.
     const cashBefore = new Date(Date.now() - CASH_CONFIRM_MIN * 60_000).toISOString()
-    const [{ data: uncaptured }, { data: unconfirmedCash }] = await Promise.all([
-      admin.from('rides').select('id')
-        .eq('status', 'completed').eq('payment_status', 'authorized').lt('completed_at', captureBefore)
-        .order('completed_at', { ascending: true }).limit(20),
-      admin.from('rides').select('id')
-        .eq('status', 'completed').eq('payment_status', 'cash_due').lt('completed_at', cashBefore)
-        .order('completed_at', { ascending: true }).limit(20),
-    ])
-    for (const r of [...(uncaptured || []), ...(unconfirmedCash || [])]) {
+    const { data: unconfirmed } = await admin.from('rides').select('id')
+      .eq('status', 'completed').eq('payment_status', 'cash_due').lt('completed_at', cashBefore)
+      .order('completed_at', { ascending: true }).limit(20)
+    for (const r of unconfirmed || []) {
       try {
-        const out = await captureRide(r.id)
-        if (out.ok) result.captured++
-        else result.capture_failed++
+        const out = await settleRide(r.id)
+        if (out.ok) result.settled++
+        else result.settle_failed++
       } catch (err) {
-        console.error('Sweeper capture failed:', r.id, err.message)
-        result.capture_failed++
+        console.error('Sweeper settle failed:', r.id, err.message)
+        result.settle_failed++
       }
     }
 

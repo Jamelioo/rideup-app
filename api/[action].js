@@ -1,10 +1,9 @@
 // One serverless function for all of the app's own JSON endpoints. Vercel's Hobby plan allows 12 functions per
 // deployment, so instead of one function per file, /api/<action> is routed here and handled by
 // api/_routes/<action>.js. The public URLs are unchanged (the app keeps calling /api/cancel-ride etc.).
-// Paths starting with "_" never become functions. Stripe's webhook, the cron job and CSP reports keep
-// their own files because outside services call them (and the webhook needs the raw request body).
+// Paths starting with "_" never become functions. The cron job and CSP reports keep their own files because
+// outside services call them.
 const routes = {
-  'add-tip': () => import('./_routes/add-tip.js'),
   'admin-assign': () => import('./_routes/admin-assign.js'),
   'admin-broadcast': () => import('./_routes/admin-broadcast.js'),
   'admin-complete': () => import('./_routes/admin-complete.js'),
@@ -16,18 +15,13 @@ const routes = {
   'cancel-ride': () => import('./_routes/cancel-ride.js'),
   'capture-payment': () => import('./_routes/capture-payment.js'),
   'cash-unpaid': () => import('./_routes/cash-unpaid.js'),
-  'create-setup-intent': () => import('./_routes/create-setup-intent.js'),
-  'create-setup-session': () => import('./_routes/create-setup-session.js'),
   'delete-account': () => import('./_routes/delete-account.js'),
   'health': () => import('./_routes/health.js'),
   'landing-offer': () => import('./_routes/landing-offer.js'),
   'notify-driver': () => import('./_routes/notify-driver.js'),
   'promo-preview': () => import('./_routes/promo-preview.js'),
-  'save-payment-method': () => import('./_routes/save-payment-method.js'),
-  'split-fare': () => import('./_routes/split-fare.js'),
   'track': () => import('./_routes/track.js'),
   'trip-event': () => import('./_routes/trip-event.js'),
-  'verify-session': () => import('./_routes/verify-session.js'),
 }
 
 export const ACTIONS = Object.keys(routes)
@@ -48,7 +42,7 @@ export default async function handler(req, res) {
   try {
     route = (await load()).default
   } catch (err) {
-    // e.g. a missing STRIPE_SECRET_KEY makes the Stripe routes fail to load; other routes keep working.
+    // A route that fails to load (e.g. a missing setting) answers 500; the other routes keep working.
     console.error(`API route ${action} failed to load:`, err.message)
     return res.status(500).json({ error: 'Server is not configured' })
   }

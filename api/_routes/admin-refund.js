@@ -1,4 +1,3 @@
-import Stripe from 'stripe'
 import { admin, requireUser, isAdmin, fail } from '../_auth.js'
 import { rateLimit } from '../_rateLimit.js'
 import { chargeOf } from '../../src/lib/discounts.js'
@@ -6,16 +5,15 @@ import { pushToUser } from '../_push.js'
 import { sendEmail, refundEmail } from '../_email.js'
 import { logAdminAction } from '../_audit.js'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
-const PAID = ['captured', 'paid', 'partially_refunded']
+// Fares that were paid: cash collected, or charged to a card before RideUp went cash-only.
+const PAID = ['cash_collected', 'captured', 'paid', 'partially_refunded', 'refunded']
 
-// Admin-only refunds and goodwill credit, recorded with a reason (Uber-style support tools).
-//   body: { rideId, target: 'fare'|'tip', method: 'card'|'credit', amountCents, reason, chargeDriver?: boolean }
-//   card   → refunded to the rider's card through Stripe
-//   credit → added to the rider's RideUp credit (used automatically on their next rides)
+// Admin-only refunds, recorded with a reason (Uber-style support tools). Fares are paid in cash, so a refund is
+// given as RideUp credit, used automatically on the rider's next rides (as Uber does for cash trips).
+//   body: { rideId, target: 'fare'|'tip', amountCents, reason, chargeDriver?: boolean }
 //   chargeDriver → the driver's share of the refunded amount comes off their earnings (e.g. a much longer route).
-//                  Tip refunds always come out of the driver's earnings, since tips are 100% theirs.
+//                  Tip refunds (old card tips) always come out of the driver's earnings, since tips are 100% theirs.
 //   { rideId, preview: true } returns what can still be refunded.
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -28,13 +26,14 @@ export default async function handler(req, res) {
   if (!user) return
   if (!isAdmin(user)) return res.status(403).json({ error: 'Admins only' })
 
-  const { rideId, target = 'fare', method = 'card', amountCents, reason, chargeDriver = false, preview } = req.body || {}
+  const { rideId, target = 'fare', amountCents, reason, chargeDriver = false, preview } = req.body || {}
+  const method = 'credit'
   if (!rideId) return res.status(400).json({ error: 'rideId is required' })
 
   try {
     const { data: ride } = await admin
       .from('rides')
-      .select('id, rider_id, status, payment_status, payment_intent_id, fare_cents, promo_discount_cents, credit_applied_cents, cancel_fee_cents, driver_payout_cents, tip_cents, tip_payment_intent_id, pickup_address, dropoff_address')
+      .select('id, rider_id, status, payment_status, fare_cents, promo_discount_cents, credit_applied_cents, cancel_fee_cents, driver_payout_cents, tip_cents, tip_payment_intent_id, pickup_address, dropoff_address')
       .eq('id', rideId)
       .maybeSingle()
     if (!ride) return res.status(404).json({ error: 'Ride not found' })
@@ -42,7 +41,7 @@ export default async function handler(req, res) {
     const limits = await refundable(ride)
     if (preview) return res.status(200).json(limits)
 
-    if (!['fare', 'tip'].includes(target) || !['card', 'credit'].includes(method)) return res.status(400).json({ error: 'Choose what to refund and how.' })
+    if (!['fare', 'tip'].includes(target)) return res.status(400).json({ error: 'Choose what to refund.' })
     const amount = Math.round(Number(amountCents))
     const note = String(reason || '').trim()
     if (!(amount > 0)) return res.status(400).json({ error: 'Enter an amount.' })
@@ -55,57 +54,61 @@ export default async function handler(req, res) {
     const driverDeduction = target === 'tip' ? amount
       : chargeDriver && base > 0 ? Math.round(amount * Math.max(0, ride.driver_payout_cents || 0) / base) : 0
 
-    let stripeRefundId = null
-    if (method === 'card') {
-      const intent = target === 'tip' ? ride.tip_payment_intent_id : ride.payment_intent_id
-      const refund = await stripe.refunds.create(
-        { payment_intent: intent, amount, reason: 'requested_by_customer', metadata: { ride_id: ride.id, target, admin_id: user.id } },
-        { idempotencyKey: `refund-${ride.id}-${target}-${limits.refund_count}-${amount}` }
-      )
-      stripeRefundId = refund.id
-    } else {
-      const { data: r } = await admin.from('riders').select('credit_cents').eq('id', ride.rider_id).maybeSingle()
-      const { error: creditErr } = await admin.from('riders').update({ credit_cents: (r?.credit_cents || 0) + amount }).eq('id', ride.rider_id)
-      if (creditErr) throw creditErr
-    }
-
+    // Record the refund first: if adding the credit then fails, the refund can't be given twice by a retry.
     const { data: saved, error: saveErr } = await admin.from('ride_refunds').insert({
       ride_id: ride.id, target, method, amount_cents: amount, driver_deduction_cents: driverDeduction,
-      reason: note, stripe_refund_id: stripeRefundId, created_by: user.id,
+      reason: note, created_by: user.id,
     }).select('*').single()
     if (saveErr) throw saveErr
-
-    if (method === 'card' && target === 'fare') {
-      const fully = amount >= limits.fare_left_cents
-      await admin.from('rides').update({ payment_status: fully ? 'refunded' : 'partially_refunded' }).eq('id', ride.id)
+    try {
+      await addCredit(ride.rider_id, amount)
+    } catch (err) {
+      await admin.from('ride_refunds').delete().eq('id', saved.id)
+      throw err
     }
 
     const { data: rider } = await admin.from('riders').select('auth_user_id, email').eq('id', ride.rider_id).maybeSingle()
-    const what = method === 'card' ? 'refunded to your card' : 'added to your RideUp credit'
-    await pushToUser(rider?.auth_user_id, { title: 'Refund issued', body: `$${(amount / 100).toFixed(2)} was ${what}.`, url: `/receipt/${ride.id}`, tag: `refund-${saved.id}` })
-    if (rider?.email) await sendEmail({ to: rider.email, ...refundEmail({ ride, amountCents: amount, method, target }) })
+    await pushToUser(rider?.auth_user_id, { title: 'Refund issued', body: `$${(amount / 100).toFixed(2)} was added to your RideUp credit.`, url: `/receipt/${ride.id}`, tag: `refund-${saved.id}` })
+    if (rider?.email) await sendEmail({ to: rider.email, ...refundEmail({ ride, amountCents: amount, target }) })
     await logAdminAction(user, {
-      action: method === 'card' ? 'ride.refund' : 'ride.credit',
+      action: 'ride.credit',
       targetType: 'ride', targetId: ride.id,
-      summary: `$${(amount / 100).toFixed(2)} ${target === 'tip' ? 'tip ' : ''}${method === 'card' ? 'refunded to card' : 'given as credit'}: ${note}`,
+      summary: `$${(amount / 100).toFixed(2)} ${target === 'tip' ? 'tip ' : ''}given as credit: ${note}`,
       details: { amount_cents: amount, target, method, driver_deduction_cents: driverDeduction },
     })
 
     return res.status(200).json({ ok: true, refund: saved, ...(await refundable(ride)) })
   } catch (err) {
-    if (err?.type === 'StripeInvalidRequestError') return res.status(400).json({ error: `Stripe: ${err.message}` })
     return fail(res, 'Admin refund error', err)
   }
 }
 
-// What was paid for the fare (or cancellation fee) and the tip, minus earlier refunds.
+// Adds to the rider's credit without losing a change made at the same moment (the rider booking a trip, another
+// admin): the update only applies if the balance is still the one read, else it reads again.
+async function addCredit(riderId, amount) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { data: r, error } = await admin.from('riders').select('credit_cents').eq('id', riderId).maybeSingle()
+    if (error) throw error
+    if (!r) throw new Error('Rider not found')
+    const { data: done, error: updErr } = await admin.from('riders')
+      .update({ credit_cents: (r.credit_cents || 0) + amount })
+      .eq('id', riderId)
+      .eq('credit_cents', r.credit_cents || 0)
+      .select('id')
+    if (updErr) throw updErr
+    if (done?.length) return
+  }
+  throw new Error('The rider’s credit changed while saving. Try again.')
+}
+
+// What was paid for the fare (or an old card cancellation fee) and the tip, minus earlier refunds.
 async function refundable(ride) {
   const { data: prior } = await admin.from('ride_refunds').select('target, method, amount_cents').eq('ride_id', ride.id)
   const sum = (t, m) => (prior || []).filter((p) => p.target === t && (!m || p.method === m)).reduce((s, p) => s + p.amount_cents, 0)
   const { data: splits } = await admin.from('fare_splits').select('share_cents').eq('ride_id', ride.id).eq('status', 'paid')
   const splitPaid = (splits || []).reduce((s, x) => s + (x.share_cents || 0), 0)
 
-  const farePaid = !PAID.includes(ride.payment_status) && ride.payment_status !== 'refunded' ? 0
+  const farePaid = !PAID.includes(ride.payment_status) ? 0
     : ride.status === 'completed' ? Math.max(0, chargeOf(ride) - splitPaid)
     : ride.status === 'cancelled' ? (ride.cancel_fee_cents || 0) : 0
   const tipPaid = ride.tip_payment_intent_id ? ride.tip_cents || 0 : 0

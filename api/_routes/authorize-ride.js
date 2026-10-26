@@ -1,12 +1,12 @@
 import { admin, requireUser, getDriverForUser, fail } from '../_auth.js'
 import { rateLimit } from '../_rateLimit.js'
-import { holdCardAndConfirm } from '../_hold.js'
+import { confirmRide } from '../_cash.js'
 
 const checkRate = rateLimit({ maxRequests: 20, windowMs: 60_000 })
 
-// Called by the driver right after claiming a ride (accept_ride RPC leaves it in
-// 'pending_driver_response'). Holds the rider's card (nothing to hold on a cash trip), then promotes the ride
-// to 'accepted'. If the hold fails the ride is cancelled and the driver is told so.
+// Called by the driver right after claiming a ride (accept_ride RPC leaves it in 'pending_driver_response'):
+// confirms it ('accepted', cash due at drop-off) and tells the rider their driver is on the way. The name is kept
+// from the card days so apps already installed keep working.
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
@@ -35,9 +35,9 @@ export default async function handler(req, res) {
     if (!ride) return res.status(404).json({ error: 'Ride not found' })
     if (ride.driver_id !== driver.id) return res.status(403).json({ error: 'Not your ride' })
 
-    const result = await holdCardAndConfirm(ride)
+    const result = await confirmRide(ride)
     if (!result.ok) return res.status(result.status).json({ success: false, error: result.error })
-    return res.status(200).json({ success: true, payment_intent_id: result.paymentIntentId })
+    return res.status(200).json({ success: true })
   } catch (err) {
     return fail(res, 'Authorize ride error', err)
   }
