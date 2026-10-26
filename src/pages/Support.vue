@@ -17,7 +17,12 @@ const faqs = ref([
   },
   {
     question: 'How do I pay?',
-    answer: 'RideUp accepts debit and credit card payments. Your card on file is charged automatically at the end of your ride. You\'ll always see the fare upfront before confirming.',
+    answer: 'In cash, to your driver at drop-off. You pay the price you saw when you booked, less any promo or RideUp credit. No card is needed. Exact change helps, and we email your receipt once your driver confirms the cash.',
+    open: false,
+  },
+  {
+    question: 'Why is booking paused on my account?',
+    answer: 'Booking pauses after two late cancellations or missed pickups within 30 days, or if a driver reports a fare wasn\'t paid. Contact us below and we\'ll sort it out with you; once it\'s settled we turn booking back on.',
     open: false,
   },
   {
@@ -27,7 +32,7 @@ const faqs = ref([
   },
   {
     question: 'How do I cancel a ride?',
-    answer: 'You can cancel a ride at any time before the trip starts. Tap "Cancel ride" on your ride screen. If you cancel within 2 minutes of a driver accepting, or before one accepts, it\'s free. After that a $5.00 cancellation fee applies, and we show it to you before you confirm. If your driver cancels, you\'re never charged.',
+    answer: 'Tap "Cancel ride" on your ride screen at any time before the trip starts. Cancelling is always free. Please cancel early: more than 2 minutes after a driver accepts, it counts as a late cancellation, and two late cancellations or missed pickups within 30 days pause booking on your account. If your driver cancels, we look for another driver at the same price.',
     open: false,
   },
   {

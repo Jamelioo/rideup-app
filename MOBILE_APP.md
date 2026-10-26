@@ -86,9 +86,9 @@ App Store Connect, then use TestFlight before submitting for review.
 - **Terms:** https://rideupnassau.com/terms
 - **Support URL / email:** required by both stores
 - **Account deletion:** done in the app (Profile › Delete account, and in the driver profile). Mention it in the review notes.
-- **Demo accounts for reviewers:** create one rider account (with Stripe test card) and one approved driver account, and put both logins in the review notes.
-- **Payments:** rides are real-world services, so Stripe is allowed (no Apple/Google in-app purchase needed).
-- **Data safety / privacy labels:** declare location (precise), name, email, phone, payment info (handled by Stripe), and usage analytics.
+- **Demo accounts for reviewers:** create one rider account and one approved driver account, and put both logins in the review notes.
+- **Payments:** rides are paid in cash to the driver at drop-off, so there's nothing in-app to buy (no Apple/Google in-app purchase needed).
+- **Data safety / privacy labels:** declare location (precise), name, email, phone, purchase history (trip fares), and usage analytics. No payment card data is collected.
 - **Native value:** Apple rejects "just a website" apps (guideline 4.2). Native push notifications, location and the full
   booking flow are what get it approved.
 

@@ -2,7 +2,8 @@
 
 An Uber-style ride app for New Providence: riders book and track trips, drivers accept and run them, and admins
 approve drivers, handle safety reports and pay drivers out. Vue 3 + Vite + Tailwind on the front end, Supabase
-(Postgres, auth, storage, realtime) for data, Stripe for payments, Vercel serverless functions in `api/`.
+(Postgres, auth, storage, realtime) for data, Vercel serverless functions in `api/`. Every trip is paid in cash to
+the driver at drop-off; RideUp's share comes off drivers' balances (Admin › Payouts).
 
 Without Supabase keys the app runs in **demo mode** (sample data, no backend) so you can click through every screen.
 
@@ -10,7 +11,7 @@ Without Supabase keys the app runs in **demo mode** (sample data, no backend) so
 
 **Riders**
 - Book with Google Places search, see upfront prices for Go ($2.00 + $1.25/mile + $0.35/min with live traffic, $10 minimum, plus a $2.50 booking fee and a $3 LPIA pickup fee; XL and Premium appear once an admin turns them on), promo codes and referrals ($5 off a friend's first ride, $5 credit to the referrer), book as a
-  guest or with an account, schedule rides.
+  guest (name and mobile number only) or with an account, schedule rides.
 - First-ride offer: every new visitor gets a code automatically (WELCOME5, $5 off; Admin › Promos picks the code
   or turns it off), shown on the home and airport pages. Popular trips open booking with the route filled in and
   priced (`/book?from=airport&to=cable-beach`, places in `src/lib/places.js`).
@@ -18,13 +19,13 @@ Without Supabase keys the app runs in **demo mode** (sample data, no backend) so
   chat only while the trip is active; chat stays open 30 minutes after drop-off for lost items).
 - Safety: share a live trip link (`/track/<token>`, no login needed), optional pickup PIN, report a problem,
   emergency call (919).
-- Cancel with a clear fee preview (free for 2 minutes after a driver accepts, then $5). If the driver cancels, the
-  app finds another driver automatically at the same price.
-- After the trip: rate the driver, add a tip (100% to the driver), receipt page and receipt email.
-- Pay by card or, while an admin has **Accept cash** on, in cash to the driver. Cash needs an account (not a guest)
-  with a mobile number and isn't offered for rides booked for someone else. It's turned off for a rider whose driver
-  reports an unpaid fare, or after two missed or late-cancelled cash trips in 30 days (and for their other accounts
-  on the same phone or card). For every rider, three cancellations in an hour pause booking for a while.
+- Pay in cash to the driver at drop-off (the fare less any promo or credit); no card needed.
+- Cancel for free. More than 2 minutes after a driver accepts it counts as a late cancellation (the app says so
+  before you confirm). If the driver cancels, the app finds another driver automatically at the same price.
+- Booking pauses for a rider whose driver reports an unpaid fare, or after two late cancellations or missed pickups
+  in 30 days (and for their other accounts on the same phone). For every rider, three cancellations in an hour
+  pause booking for a while.
+- After the trip: rate the driver (tips are welcome in cash), receipt page and receipt email.
 - Password reset, email confirmation, saving a guest account, optional SMS phone verification.
 
 **Drivers**
@@ -32,19 +33,20 @@ Without Supabase keys the app runs in **demo mode** (sample data, no backend) so
   profile photo (re-reviewed when changed).
 - Go online, see nearby requests with distance and earnings but only an approximate pickup until accepting, accept
   or decline, navigate, arrive, start (with PIN if required), complete, rate the rider.
-- No-show: after 5 minutes waiting at pickup the driver can cancel and the rider pays the no-show fee.
-- Cash trips (drivers can turn them off in Profile): the request shows the cash to collect; at drop-off the driver
-  taps "Cash collected" (the rider's receipt goes out) or reports "Rider didn't pay" (up to 24 hours later, from
-  Earnings). RideUp's share comes off the driver's balance; a driver holding more than they've earned owes RideUp.
-- Earnings: today and this week, balance (or what's owed to RideUp), tips and payouts.
+- No-show: after 5 minutes waiting at pickup the driver can cancel as a no-show (it counts against the rider).
+- Every trip is cash: the request shows the cash to collect; at drop-off the driver taps "Cash collected" (the
+  rider's receipt goes out) or reports "Rider didn't pay" (up to 24 hours later, from Earnings). RideUp's share
+  comes off the driver's balance; a driver holding more than they've earned owes RideUp.
+- Earnings: today and this week, balance (or what's owed to RideUp) and payouts.
 - Drivers whose app has been closed for 30 minutes are set offline automatically.
 
 **Admins** (`/admin`, needs the admin role)
 - Live: requests waiting for a driver, trips under way, requests nobody took today (call them back) and who's
-  online, updating instantly. Assign a request to a driver, cancel a trip, or complete a stuck one and charge it.
+  online, updating instantly. Assign a request to a driver, cancel a trip, or complete a stuck one (the cash counts as
+  collected).
 - Ride alerts: a push notification and an email to the team for every request, and when one goes unanswered.
-- Cash: turn it on or off (Settings), see cash trips and unpaid fares (Rides, Live, Money), turn cash off or back on
-  for a rider (Riders), and record cash a driver hands over (Payouts).
+- Cash: see unpaid fares (Rides, Live, Money), pause or restore a rider's booking (Riders), give refunds as RideUp
+  credit (Rides), and record cash a driver hands over (Payouts).
 - Dashboard, rides (CSV download), riders (contact, credit, suspend), drivers (document review with checklist,
   expiry dates, background check, vehicle class, approve / reject with a note, low-rating flags), money and payouts
   (CSV downloads), support, safety reports (with reporter, trip and phone numbers), and trip settings.
@@ -66,7 +68,7 @@ npm install
 
 1. Create a project at [supabase.com/dashboard](https://supabase.com/dashboard).
 2. In **SQL Editor**, run these files **in order**: `supabase-schema.sql`, then everything in
-   `supabase/migrations/` (`001` … `020`). Each migration can be re-run safely.
+   `supabase/migrations/` (`001` … `021`). Each migration can be re-run safely.
 3. Make yourself an admin (SQL Editor, use your account's email):
    ```sql
    update auth.users set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb
@@ -101,12 +103,10 @@ cp .env.example .env
 |---|---|
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | the app (leave empty for demo mode) |
 | `VITE_GOOGLE_MAPS_API_KEY` | maps, address search, routes |
-| `VITE_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | payments (see `STRIPE_INTEGRATION_TODO.md`) |
 | `SUPABASE_SERVICE_ROLE_KEY` | every protected `/api/*` route (they refuse to run without it) |
-| `DOMAIN` | Stripe redirect URLs |
 | `CRON_SECRET` | the every-minute job below |
-| `CANCEL_FEE_CENTS`, `CANCEL_GRACE_SECONDS`, `FREE_WAIT_SECONDS` | cancellation / no-show policy (defaults $5, 2 min, 5 min); set `VITE_CANCEL_GRACE_SECONDS` / `VITE_FREE_WAIT_SECONDS` to match |
-| `RESEND_API_KEY`, `EMAIL_FROM` | optional: receipts, fee and tip receipts, driver approval emails |
+| `CANCEL_GRACE_SECONDS`, `FREE_WAIT_SECONDS` | when a cancellation counts as late, and free waiting at pickup before a no-show (defaults 2 min, 5 min); set `VITE_CANCEL_GRACE_SECONDS` / `VITE_FREE_WAIT_SECONDS` to match |
+| `RESEND_API_KEY`, `EMAIL_FROM` | optional: receipts, refund and unpaid-fare emails, driver approval emails |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `VITE_VAPID_PUBLIC_KEY` | optional: push notifications (`npx web-push generate-vapid-keys`) |
 | `APNS_KEY`, `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_BUNDLE_ID`, `APNS_PRODUCTION` | optional: push in the App Store app (see MOBILE_APP.md) |
 | `FCM_SERVICE_ACCOUNT` | optional: push in the Google Play app (Firebase service-account JSON; see MOBILE_APP.md) |
@@ -127,8 +127,10 @@ Pro plan sends it automatically; Supabase `pg_cron` + `pg_net` or any external p
 - cancels requests nobody accepted within 5 minutes and tells the team about them (riders can request when no
   driver is online: the team gets a "Rider waiting" alert and the request stays open for those 5 minutes),
 - sets drivers offline whose app hasn't checked in for 3 minutes,
-- charges completed trips whose payment capture didn't arrive from the driver's phone,
-- cancels trips stuck on "confirming payment",
+- counts the cash as collected (and sends the receipt) for trips the driver didn't mark "Cash collected" within
+  30 minutes; the driver can still report an unpaid fare for 24 hours,
+- puts requests a driver claimed but never confirmed (their app died) back up for other drivers,
+- skips scheduled rides for riders whose booking is paused,
 - sends trip check-ins ("Everything OK?") when a trip stops moving for 8 minutes or runs far longer than
   expected, and opens a safety report if nobody answers within 5 minutes,
 - once an hour, reminds drivers 30 days and 7 days before their licence or insurance expires (and on expiry,
@@ -147,12 +149,15 @@ warning when it hasn't run for 5 minutes.
   last 5 minutes, and 503 with the reason otherwise. Set it to check every minute and alert you by SMS/email.
 - **Errors:** create a free Sentry project (platform: JavaScript) and set `VITE_SENTRY_DSN` (app crashes on riders' and
   drivers' phones) and `SENTRY_DSN` (server errors) in Vercel, using the same DSN for both. Reports carry the user id and page,
-  never names, phone numbers or card details.
+  never names or phone numbers.
 
-### 6. Stripe webhook
+### Payments: cash only
 
-Add `https://YOUR_DOMAIN/api/webhook` in Stripe → Developers → Webhooks. Events and testing are in
-`STRIPE_INTEGRATION_TODO.md`.
+Riders pay the driver in cash at drop-off; there are no card payments, holds, card tips, split fares or cancellation
+fees. Guests book with a name and mobile number. Two late cancellations or missed pickups in 30 days, or a driver's
+unpaid-fare report, pause booking for the rider and their other accounts on the same phone (`riders.cash_blocked`,
+migrations 019 and 021); an admin turns it back on in Users. Refunds are given as RideUp credit. Drivers keep the
+cash, so RideUp's 30% (less RideUp-funded discounts) comes off their balance; record cash they hand over in Payouts.
 
 ## Develop and test
 
@@ -160,27 +165,27 @@ Every pull request runs **CI** (`.github/workflows/ci.yml`): unit tests and the 
 mode, and a Postgres job that applies the schema and every migration to a fresh database, re-runs the newest
 migration, and checks the money and safety rules in `supabase/tests/money_rules.sql` (fares, busy pricing, stops,
 promos and abuse checks, referrals, incentives, refunds, check-ins, who can see what, account deletion, cash
-payments and the cancellation pause).
+payments and the booking pause).
 
 
 ```bash
 npm run dev          # http://localhost:5173 (demo mode without .env)
-npm test             # unit tests: pricing, fees, auth helpers, API helpers
+npm test             # unit tests: pricing, cancellation rules, auth helpers, API helpers
 npx playwright test  # end-to-end tests in e2e/ (runs against the dev server)
 npm run build        # production build into dist/
 ```
 
 Fares are computed in two places that must agree: `src/lib/pricing.js` (shown to riders) and the
-`guard_rides_insert` trigger (charged). `tests/pricing.test.js` pins the expected values.
+`guard_rides_insert` trigger (what the rider pays). `tests/pricing.test.js` pins the expected values.
 
 ## Project layout
 
 - `src/pages/rider`, `src/pages/driver`, `src/pages/admin`: the three apps; `src/components`: shared pieces.
 - `src/lib`: auth (`useAuth`), driver session (`useDriver`), pricing, policy, push, settings, helpers.
 - `api/`: serverless functions. To stay within Vercel's 12-function Hobby limit, every endpoint the app calls runs
-  in one function, `api/[action].js`, which hands `/api/<action>` to `api/_routes/<action>.js` (payments:
-  `authorize-ride`, `capture-payment`, `cancel-ride`, `cash-unpaid`, `add-tip`, card setup; notifications: `trip-event`,
-  `notify-driver`). Stripe's `webhook`, the cron (`dispatch-scheduled`) and `csp-report` are separate functions.
+  in one function, `api/[action].js`, which hands `/api/<action>` to `api/_routes/<action>.js` (trips:
+  `authorize-ride` (confirm), `capture-payment` ("Cash collected"), `cancel-ride`, `cash-unpaid`; notifications:
+  `trip-event`, `notify-driver`). The cron (`dispatch-scheduled`) and `csp-report` are separate functions.
   Files and folders starting with `_` are shared code, not functions. Add new endpoints to `api/_routes/` and
   register them in `api/[action].js`; `tests/router.test.js` fails if the app calls an unregistered route or the
   function count goes over 12.

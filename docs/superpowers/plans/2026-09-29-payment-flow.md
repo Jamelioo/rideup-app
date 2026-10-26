@@ -1,5 +1,7 @@
 # Payment Flow Implementation Plan
 
+> **Superseded (October 26, 2026):** RideUp no longer takes card payments. Every trip is paid in cash to the driver at drop-off (migration 021). Kept for history.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Require card payment for all rides — save card at booking via Stripe SetupIntent, pre-authorize when driver accepts, capture after ride completes.
