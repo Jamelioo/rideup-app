@@ -2,8 +2,9 @@
 import BrandLogo from '../components/BrandLogo.vue'
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { calculateFare, formatFare, AIRPORT, AIRPORT_FEE_CENTS, BOOKING_FEE_CENTS } from '../lib/pricing'
-import { applyLandingOffer, landingPill as pill, landingPillReady as pillReady } from '../lib/landingOffer'
+import { calculateFare, formatFare, formatAmount, AIRPORT, AIRPORT_FEE_CENTS, BOOKING_FEE_CENTS } from '../lib/pricing'
+import { DRIVER_CANCEL_CREDIT_CENTS } from '../lib/policy'
+import { applyLandingOffer, landingPill as pill, landingPillReady as pillReady, landingOfferCents as offerCents } from '../lib/landingOffer'
 import { useSettings } from '../lib/settings'
 import { trackStep } from '../lib/funnel'
 import { tripLink } from '../lib/places'
@@ -15,6 +16,13 @@ const router = useRouter()
 // The first-ride offer (Admin › Promos) or an ad link's code, applied for them; the pill keeps its space while it loads.
 applyLandingOffer()
 const settings = useSettings()
+const credit = DRIVER_CANCEL_CREDIT_CENTS > 0 ? formatAmount(DRIVER_CANCEL_CREDIT_CENTS) : ''
+const trust = [
+  'Price locked when you book',
+  'No account, app or card',
+  'Pay cash at drop-off',
+  ...(credit ? [`${credit} credit if your driver cancels`] : []),
+]
 const pickup = { lat: AIRPORT.lat, lng: AIRPORT.lng }
 // Each opens booking from the airport with the destination filled in and priced (src/lib/places.js).
 const DESTINATIONS = [
@@ -58,11 +66,14 @@ onUnmounted(() => document.querySelector('meta[name="description"]')?.setAttribu
         </p>
       </div>
       <h1 class="text-[34px] md:text-[48px] leading-[1.05] font-bold tracking-tight max-w-2xl">Nassau airport rides with the price up front</h1>
-      <p class="mt-4 text-[17px] text-[var(--color-text-secondary)] max-w-xl">Landed at Lynden Pindling (NAS)? Book a RideUp from the arrivals area, see your price before you ride and follow your driver on the map.</p>
+      <p class="mt-4 text-[17px] text-[var(--color-text-secondary)] max-w-xl">Landed at Lynden Pindling (NAS)? Book from arrivals, see your exact price first, and pay your driver in cash at your hotel. No haggling at the curb.</p>
       <div class="mt-6 flex flex-wrap gap-3">
         <button @click="router.push(fromAirport)" class="px-6 py-4 rounded-2xl bg-[#2b8659] text-white font-bold text-[16px] shadow-[0_4px_16px_rgba(43,134,89,0.3)]">Book from the airport</button>
         <button v-if="SCHEDULING_ENABLED" @click="router.push(fromAirport)" class="px-6 py-4 rounded-2xl border-2 border-[var(--color-border)] font-semibold text-[16px]">Schedule a pickup</button>
       </div>
+      <ul class="mt-5 grid gap-y-1.5 sm:grid-cols-2 sm:gap-x-5 max-w-lg text-[14px] text-[var(--color-text-secondary)]">
+        <li v-for="t in trust" :key="t" class="flex gap-2"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>{{ t }}</li>
+      </ul>
     </header>
 
     <section class="max-w-5xl mx-auto px-5 pb-10" aria-labelledby="fares-title">
@@ -73,7 +84,7 @@ onUnmounted(() => document.querySelector('meta[name="description"]')?.setAttribu
           <router-link :to="f.link" class="flex items-center justify-between gap-3 px-5 py-4 hover:bg-[var(--color-surface-secondary)] transition-colors">
             <span>
               <span class="block font-semibold text-[15px]">{{ f.name }}</span>
-              <span class="block text-[13px] text-[var(--color-text-muted)]">about {{ f.minutes }} min</span>
+              <span class="block text-[13px] text-[var(--color-text-muted)]">about {{ f.minutes }} min<template v-if="offerCents"> · <span class="font-semibold text-[var(--color-brand)]">{{ formatFare(Math.max(0, f.fare - offerCents)) }} {{ pill.title.startsWith('First ride') ? 'on your first ride' : 'with your code' }}</span></template></span>
             </span>
             <span class="flex items-center gap-2 ml-3">
               <span class="text-[18px] font-bold whitespace-nowrap">about {{ formatFare(f.fare) }}</span>
@@ -82,6 +93,14 @@ onUnmounted(() => document.querySelector('meta[name="description"]')?.setAttribu
           </router-link>
         </li>
       </ul>
+    </section>
+
+    <section class="max-w-5xl mx-auto px-5 pb-10" aria-labelledby="guarantee-title">
+      <div class="rounded-3xl bg-[#0F3D2A] text-white p-6 sm:p-8">
+        <h2 id="guarantee-title" class="text-[22px] sm:text-[26px] font-bold mb-2">The RideUp Guarantee</h2>
+        <p class="text-[16px] leading-[1.5] text-white/90 max-w-2xl">If your driver cancels, we find you another driver at the same price{{ credit ? ` and add ${credit} credit to your account` : ', automatically' }}. If no driver accepts, you pay nothing.</p>
+        <p class="mt-2 text-[13px] text-white/75"><template v-if="credit">Credit once every 24 hours, used automatically on your next booking. </template><router-link to="/terms" class="underline underline-offset-2 inline-block py-2 -my-2">Terms</router-link></p>
+      </div>
     </section>
 
     <section class="max-w-5xl mx-auto px-5 pb-14 grid md:grid-cols-3 gap-4" aria-label="How it works">

@@ -61,7 +61,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
     <nav class="sticky top-0 z-40 bg-[var(--color-surface)]/95 backdrop-blur-md border-b border-[var(--color-border)]">
       <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         <router-link to="/" class="text-xl font-semibold"><BrandLogo /></router-link>
-        <router-link to="/driver/dashboard" class="inline-flex items-center min-h-[44px] text-[14px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">Already a driver? <span class="text-[var(--color-text-primary)] font-semibold">Log in</span></router-link>
+        <router-link to="/driver/dashboard" class="inline-flex items-center min-h-[44px] text-[14px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">Already a driver?&nbsp;<span class="text-[var(--color-text-primary)] font-semibold">Log in</span></router-link>
       </div>
     </nav>
 
@@ -103,10 +103,10 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
             </div>
             <h1 class="text-white leading-[1.05] font-medium tracking-tight mb-4">
               <span class="block text-[44px] sm:text-[56px] lg:text-[68px]">Keep <span class="text-[var(--color-brand)]">70%</span></span>
-              <span class="block text-[32px] sm:text-[40px] lg:text-[46px] text-white/80">of Every Fare.</span>
+              <span class="block text-[32px] sm:text-[40px] lg:text-[46px] text-white/80">of every fare, in cash.</span>
             </h1>
             <p class="text-white/55 text-[16px] leading-relaxed max-w-md mb-6">
-              Drive with RideUp across New Providence. Your car, your hours, your money. We take 30% of the trip fare — you keep the rest.
+              Riders pay you in cash at drop-off, so you go home with your money the same day. Your car, your hours. RideUp’s 30% comes off your balance in the app.
             </p>
 
             <!-- CTA -->
@@ -114,18 +114,14 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
               @click="goToApply"
               class="inline-flex items-center gap-2 px-8 py-4 bg-[#2b8659] hover:bg-[#236e49] text-white font-bold rounded-xl text-[16px] transition-colors active:scale-[0.98] shadow-lg shadow-[#2b8659]/25 mb-4"
             >
-              Start Driving
+              Apply to drive
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             </button>
-            <div class="flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-white/70">
-              <span>Simple online application</span>
-              <span class="text-white/15">|</span>
-              <span>Use your own car</span>
-              <span class="text-white/15">|</span>
-              <span>No lease required</span>
-            </div>
+            <ul class="flex flex-wrap gap-x-5 gap-y-1.5 text-[14px] text-white/80">
+              <li v-for="t in ['No sign-up fee', 'Use your own car', 'No lease', 'Stop any time']" :key="t" class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[#4cc48a]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>{{ t }}</li>
+            </ul>
           </div>
 
           <!-- Right: Driver app phone mockup -->
@@ -261,8 +257,8 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
               </svg>
             </div>
-            <h3 class="text-[16px] font-bold mb-1.5">Clear payouts</h3>
-            <p class="text-[var(--color-text-secondary)] text-[14px] leading-relaxed">Your earnings show up in the app for every trip, with your 70% share calculated for you.</p>
+            <h3 class="text-[16px] font-bold mb-1.5">Cash in hand, every trip</h3>
+            <p class="text-[var(--color-text-secondary)] text-[14px] leading-relaxed">No waiting for a payout: the rider pays you at drop-off. The app shows every trip and your 70% share.</p>
           </div>
 
           <div class="bg-[var(--color-surface)] rounded-2xl p-6 border border-[var(--color-border)] text-center hover:border-[#2b8659]/20 transition-colors">
@@ -308,7 +304,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
           <div class="bg-[#2b8659]/[0.06] rounded-2xl md:rounded-l-none p-7 border border-[#2b8659]/10 md:border-l-0">
             <div class="w-12 h-12 rounded-2xl bg-[#2b8659] text-white font-bold text-[18px] flex items-center justify-center mb-5 shadow-lg shadow-[#2b8659]/20">3</div>
             <h3 class="text-[17px] font-bold mb-2">Start earning</h3>
-            <p class="text-[var(--color-text-muted)] text-[14px] leading-relaxed">Open RideUp, go online, and accept your first ride. Payouts are arranged directly with RideUp.</p>
+            <p class="text-[var(--color-text-muted)] text-[14px] leading-relaxed">Open RideUp, go online and accept your first ride. The rider pays you in cash at drop-off.</p>
           </div>
         </div>
       </div>
@@ -469,24 +465,20 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
       <div class="absolute bottom-8 right-[8%] w-28 h-28 rounded-full border border-[#2b8659]/8 hidden lg:block"></div>
 
       <div class="relative max-w-6xl mx-auto px-6 py-20 md:py-24 text-center">
-        <h2 class="text-[28px] sm:text-[36px] font-medium mb-3">Ready to start earning?</h2>
-        <p class="text-[var(--color-text-muted)] text-[15px] mb-8 max-w-lg mx-auto">Apply to drive with RideUp across New Providence and earn on your own schedule. No lease, no upfront fees.</p>
+        <h2 class="text-[28px] sm:text-[36px] font-medium mb-3">Start with nothing to lose</h2>
+        <p class="text-[var(--color-text-muted)] text-[15px] mb-8 max-w-lg mx-auto">No sign-up fee, no lease, no minimum hours, and you can stop any time. We’re just getting started in Nassau, and early drivers get first pick of requests as we grow.</p>
         <button
           @click="goToApply"
           class="inline-flex items-center gap-2 px-8 py-4 bg-[#2b8659] hover:bg-[#236e49] text-white font-bold rounded-xl text-[16px] transition-colors active:scale-[0.98] shadow-lg shadow-[#2b8659]/20 mb-4"
         >
-          Start Driving
+          Apply to drive
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
         </button>
-        <div class="flex flex-wrap justify-center gap-x-5 gap-y-1 text-[13px] text-[var(--color-text-muted)]">
-          <span>Simple online application</span>
-          <span class="text-[var(--color-text-muted)]">|</span>
-          <span>Use your own car</span>
-          <span class="text-[var(--color-text-muted)]">|</span>
-          <span>No lease required</span>
-        </div>
+        <ul class="flex flex-wrap justify-center gap-x-5 gap-y-1.5 text-[14px] text-[var(--color-text-secondary)]">
+          <li v-for="t in ['Simple online application', 'Use your own car', 'Cash every trip']" :key="t" class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>{{ t }}</li>
+        </ul>
         <p class="text-[var(--color-text-muted)] text-[14px] mt-8">Questions? Call us at <a href="tel:+12424529911" class="underline hover:text-[var(--color-text-secondary)]">(242) 452-9911</a></p>
       </div>
     </section>
