@@ -7,6 +7,7 @@ import { DEMO_MODE } from '../../lib/demoMode'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
 import { chargeOf } from '../../lib/discounts'
 import { isCashRide } from '../../lib/cash'
+import { guaranteeNote } from '../../lib/guaranteeNote'
 
 const router = useRouter()
 const step = ref(DEMO_MODE || !supabaseConfigured ? 'booking' : 'checking') // checking | booking | searching
@@ -75,9 +76,10 @@ function handleCancelled() {
   step.value = 'booking'
 }
 
-function handleReplaced(newRideId) {
+function handleReplaced(newRideId, oldRideId) {
   activeRide.value = { id: newRideId }
   notice.value = 'Your driver had to cancel. We’re finding you another driver at the same price.'
+  if (oldRideId) guaranteeNote(oldRideId).then((note) => { if (note && activeRide.value?.id === newRideId) notice.value += note })
 }
 </script>
 

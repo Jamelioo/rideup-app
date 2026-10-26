@@ -14,6 +14,7 @@ import { apiPost } from '../../lib/api'
 import { formatFare } from '../../lib/pricing'
 import { chargeOf } from '../../lib/discounts'
 import { isCashRide } from '../../lib/cash'
+import { guaranteeNote } from '../../lib/guaranteeNote'
 import { etaMinutes as estimateEta } from '../../lib/eta'
 import { loadSettings } from '../../lib/settings'
 import { enablePushNotifications } from '../../lib/push'
@@ -125,8 +126,10 @@ function applyRide(row) {
     if (cancelling.value) return
     if (row.replaced_by_ride_id) {
       // The driver cancelled and the server already booked a new request: go back to searching.
-      try { sessionStorage.setItem('rideup_notice', 'Your driver had to cancel. We’re finding you another driver at the same price.') } catch { /* private mode */ }
-      router.replace({ name: 'book' })
+      guaranteeNote(row.id).then((note) => {
+        try { sessionStorage.setItem('rideup_notice', `Your driver had to cancel. We’re finding you another driver at the same price.${note}`) } catch { /* private mode */ }
+        router.replace({ name: 'book' })
+      })
       return
     }
     if (row.cancel_reason === 'driver_cancelled' && rematchChecks < 3) {
@@ -135,7 +138,8 @@ function applyRide(row) {
       setTimeout(refreshRide, 2000)
       return
     }
-    endedBy.value = { reason: row.cancel_reason }
+    endedBy.value = { reason: row.cancel_reason, note: '' }
+    if (row.cancel_reason === 'driver_cancelled') guaranteeNote(row.id).then((note) => { if (endedBy.value) endedBy.value.note = note })
     return
   }
   if (row.status === 'requested' || row.status === 'pending_driver_response') {
@@ -274,7 +278,7 @@ const endedMessage = computed(() => {
   if (endedBy.value.reason === 'rider_no_show') {
     return 'Your driver waited at the pickup and marked the ride as a no-show. Missed pickups can pause booking on your account.'
   }
-  if (endedBy.value.reason === 'driver_cancelled') return 'Your driver had to cancel. Request again and we’ll find you another driver.'
+  if (endedBy.value.reason === 'driver_cancelled') return `Your driver had to cancel. Request again and we’ll find you another driver.${endedBy.value.note || ''}`
   return 'This ride was cancelled. You don’t owe anything.'
 })
 </script>

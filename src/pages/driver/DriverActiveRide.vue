@@ -531,7 +531,7 @@ onUnmounted(() => {
         <h2 id="confirm-title" class="text-xl font-bold mb-2">{{ confirm === 'noshow' ? 'Mark as no-show?' : 'Cancel this trip?' }}</h2>
         <p class="text-[13px] text-[var(--color-text-secondary)] mb-5">
           <template v-if="confirm === 'noshow'">You waited {{ formatClock(waitedSeconds) }}. There’s no fee, but missed pickups count against the rider: two in 30 days pause their booking.</template>
-          <template v-else>The rider will be matched with another driver at the same price. Frequent cancellations can affect your account.</template>
+          <template v-else>The rider will be matched with another driver at the same price, and RideUp gives them credit for the trouble. Frequent cancellations can affect your account.</template>
         </p>
         <p v-if="actionError" class="text-[13px] text-[var(--color-danger)] mb-3" role="alert">{{ actionError }}</p>
         <button @click="doCancel(confirm === 'noshow')" :disabled="busy" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl disabled:opacity-50">

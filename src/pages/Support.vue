@@ -32,7 +32,7 @@ const faqs = ref([
   },
   {
     question: 'How do I cancel a ride?',
-    answer: 'Tap "Cancel ride" on your ride screen at any time before the trip starts. Cancelling is always free. Please cancel early: more than 2 minutes after a driver accepts, it counts as a late cancellation, and two late cancellations or missed pickups within 30 days pause booking on your account. If your driver cancels, we look for another driver at the same price.',
+    answer: 'Tap "Cancel ride" on your ride screen at any time before the trip starts. Cancelling is always free. Please cancel early: more than 2 minutes after a driver accepts, it counts as a late cancellation, and two late cancellations or missed pickups within 30 days pause booking on your account. If your driver cancels after accepting, we look for another driver at the same price and add $5 RideUp credit to your account, used automatically on your next booking (once every 24 hours).',
     open: false,
   },
   {
