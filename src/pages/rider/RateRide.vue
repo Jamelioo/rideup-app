@@ -6,9 +6,9 @@ import StarRating from '../../components/StarRating.vue'
 import AccountConversionCard from '../../components/AccountConversionCard.vue'
 import ReportSafety from '../../components/ReportSafety.vue'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
-import { apiPost } from '../../lib/api'
 import { formatFare } from '../../lib/pricing'
 import { chargeOf } from '../../lib/discounts'
+import { isCashRide } from '../../lib/cash'
 import { useAuth } from '../../lib/useAuth'
 import { DEMO_MODE } from '../../lib/demoMode'
 
@@ -17,8 +17,6 @@ const router = useRouter()
 const rideId = computed(() => route.params.rideId)
 const { user, needsLogin } = useAuth()
 
-const TIP_WINDOW_MS = 72 * 3600_000
-const TIP_PRESETS = [200, 500, 1000]
 const STAR_LABELS = ['', 'Terrible', 'Bad', 'OK', 'Good', 'Great']
 const COMPLIMENTS = ['Great conversation', 'Clean car', 'Smooth driving', 'Good music', 'Safe driving', 'Friendly']
 const ISSUES = ['Late pickup', 'Unsafe driving', 'Rude', 'Car not clean', 'Wrong route', 'Other']
@@ -27,17 +25,12 @@ const loading = ref(true)
 const loadError = ref('')
 const ride = ref(null)
 const driver = ref(null)
-const hasCard = ref(false)
 
 const rating = ref(0)
 const tags = ref([])
 const feedback = ref('')
-const tipCents = ref(0)
-const customTip = ref('')
-const showCustomTip = ref(false)
 
 const ratingSaved = ref(false)
-const tipSaved = ref(false)
 const submitting = ref(false)
 const error = ref('')
 const step = ref('rate') // rate | thanks
@@ -45,14 +38,13 @@ const showReport = ref(false)
 
 const DEMO_RIDE = {
   id: 'demo', status: 'completed', fare_cents: 1375, pickup_address: 'Cable Beach', dropoff_address: 'Lynden Pindling Intl Airport',
-  completed_at: new Date().toISOString(), tip_cents: 0, rider_rating: null,
+  completed_at: new Date().toISOString(), rider_rating: null, payment_method: 'cash', payment_status: 'cash_collected',
 }
 
 onMounted(async () => {
   if (DEMO_MODE || !supabaseConfigured) {
     ride.value = DEMO_RIDE
     driver.value = { name: 'Marcus', vehicle_make: 'Toyota', vehicle_model: 'Corolla', vehicle_color: 'Silver', license_plate: 'TX 4471', rating: 4.9 }
-    hasCard.value = true
     loading.value = false
     return
   }
@@ -71,14 +63,9 @@ onMounted(async () => {
     ratingSaved.value = true
     rating.value = data.rider_rating
   }
-  if (data.tip_cents > 0) tipSaved.value = true
 
-  const [{ data: d }, { data: rider }] = await Promise.all([
-    supabase.rpc('get_ride_driver', { p_ride_id: rideId.value }),
-    supabase.from('riders').select('payment_method_id').eq('auth_user_id', user.value?.id).maybeSingle(),
-  ])
+  const { data: d } = await supabase.rpc('get_ride_driver', { p_ride_id: rideId.value })
   driver.value = Array.isArray(d) ? d[0] : d
-  hasCard.value = !!rider?.payment_method_id
   loading.value = false
 })
 
@@ -86,23 +73,17 @@ const driverName = computed(() => driver.value?.name || 'your driver')
 const vehicle = computed(() => [driver.value?.vehicle_color, driver.value?.vehicle_make, driver.value?.vehicle_model].filter(Boolean).join(' '))
 const completed = computed(() => ride.value?.status === 'completed')
 const canRate = computed(() => completed.value && !ratingSaved.value)
-const canTip = computed(() =>
-  completed.value && !tipSaved.value && hasCard.value && !!ride.value?.completed_at &&
-  Date.now() - new Date(ride.value.completed_at).getTime() < TIP_WINDOW_MS
-)
 const tagOptions = computed(() => (rating.value > 0 && rating.value <= 3 ? ISSUES : COMPLIMENTS))
 const tripDate = computed(() => {
   const d = ride.value?.completed_at ? new Date(ride.value.completed_at) : null
   return d ? d.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : ''
 })
-const submitLabel = computed(() => {
-  if (submitting.value) return 'Submitting…'
-  if (tipCents.value > 0 && canTip.value) {
-    return canRate.value && rating.value ? `Submit with ${formatFare(tipCents.value)} tip` : `Add ${formatFare(tipCents.value)} tip`
-  }
-  return 'Submit'
+const canSubmit = computed(() => canRate.value && rating.value > 0)
+// How the fare was paid, next to the amount.
+const paidNote = computed(() => {
+  if (!isCashRide(ride.value)) return ''
+  return ride.value.payment_status === 'cash_unpaid' ? 'cash not paid' : 'paid in cash'
 })
-const canSubmit = computed(() => (canRate.value && rating.value > 0) || (canTip.value && tipCents.value > 0))
 
 function setRating(value) {
   // Switching between a low and a high rating swaps the chip set.
@@ -116,72 +97,34 @@ function toggleTag(tag) {
   else tags.value.push(tag)
 }
 
-function pickTip(cents) {
-  showCustomTip.value = false
-  customTip.value = ''
-  tipCents.value = tipCents.value === cents ? 0 : cents
-}
-
-function onCustomTip() {
-  const cents = Math.round(Number(customTip.value) * 100)
-  tipCents.value = Number.isFinite(cents) && cents > 0 ? cents : 0
-}
-
 async function submit() {
   error.value = ''
   if (!canSubmit.value || submitting.value) return
-  if (canTip.value && tipCents.value > 0 && (tipCents.value < 100 || tipCents.value > 10000)) {
-    error.value = 'Tips can be between $1 and $100.'
-    return
-  }
   submitting.value = true
 
-  if (canRate.value && rating.value > 0) {
-    const low = rating.value <= 3
-    const note = [low && tags.value.length ? `Issues: ${tags.value.join(', ')}` : '', feedback.value.trim()].filter(Boolean).join('. ')
-    if (!DEMO_MODE && supabaseConfigured) {
-      const { error: err } = await supabase
-        .from('rides')
-        .update({
-          rider_rating: rating.value,
-          rider_feedback: note.slice(0, 1000) || null,
-          rider_compliments: !low && tags.value.length ? tags.value : null,
-        })
-        .eq('id', rideId.value)
-      if (err) {
-        submitting.value = false
-        if (/once/i.test(err.message || '')) {
-          ratingSaved.value = true
-          error.value = 'You’ve already rated this trip.'
-        } else {
-          error.value = 'We couldn’t save your rating. Check your connection and try again.'
-        }
-        return
+  const low = rating.value <= 3
+  const note = [low && tags.value.length ? `Issues: ${tags.value.join(', ')}` : '', feedback.value.trim()].filter(Boolean).join('. ')
+  if (!DEMO_MODE && supabaseConfigured) {
+    const { error: err } = await supabase
+      .from('rides')
+      .update({
+        rider_rating: rating.value,
+        rider_feedback: note.slice(0, 1000) || null,
+        rider_compliments: !low && tags.value.length ? tags.value : null,
+      })
+      .eq('id', rideId.value)
+    if (err) {
+      submitting.value = false
+      if (/once/i.test(err.message || '')) {
+        ratingSaved.value = true
+        error.value = 'You’ve already rated this trip.'
+      } else {
+        error.value = 'We couldn’t save your rating. Check your connection and try again.'
       }
+      return
     }
-    ratingSaved.value = true
   }
-
-  if (canTip.value && tipCents.value > 0) {
-    if (!DEMO_MODE && supabaseConfigured) {
-      let res
-      let body = {}
-      try {
-        res = await apiPost('/api/add-tip', { rideId: rideId.value, amountCents: tipCents.value })
-        body = await res.json().catch(() => ({}))
-      } catch (e) {
-        body = { error: e.message }
-      }
-      if (!res?.ok) {
-        submitting.value = false
-        const reason = body.error || 'Please try again.'
-        error.value = ratingSaved.value ? `Your rating was saved, but the tip didn’t go through. ${reason}` : `The tip didn’t go through. ${reason}`
-        if (/already tipped/i.test(reason)) tipSaved.value = true
-        return
-      }
-    }
-    tipSaved.value = true
-  }
+  ratingSaved.value = true
 
   submitting.value = false
   step.value = 'thanks'
@@ -207,7 +150,6 @@ function done() {
       <DotMascot pose="arrived" class="w-32 h-32 mb-4" />
       <h2 class="text-xl font-bold mb-1" aria-live="polite">Thanks for your feedback</h2>
       <p class="text-[var(--color-text-muted)] text-sm text-center mb-6">
-        <template v-if="tipSaved && tipCents">{{ driverName }} gets 100% of your {{ formatFare(tipCents) }} tip. </template>
         Ratings help keep RideUp safe and friendly.
       </p>
       <div v-if="needsLogin" class="w-full mb-4">
@@ -237,7 +179,7 @@ function done() {
           <span v-if="vehicle">{{ vehicle }}<span v-if="driver?.license_plate"> · {{ driver.license_plate }}</span> · </span>{{ tripDate }}
         </p>
         <p class="text-[13px] text-[var(--color-text-secondary)] mt-1 truncate max-w-full">{{ ride.pickup_address }} → {{ ride.dropoff_address }}</p>
-        <p v-if="completed" class="text-[15px] font-bold mt-1">{{ formatFare(chargeOf(ride)) }}<span v-if="ride.payment_method === 'cash'" class="font-medium text-[var(--color-text-secondary)]"> · {{ ride.payment_status === 'cash_unpaid' ? 'cash not paid' : 'paid in cash' }}</span></p>
+        <p v-if="completed" class="text-[15px] font-bold mt-1">{{ formatFare(chargeOf(ride)) }}<span v-if="paidNote" class="font-medium text-[var(--color-text-secondary)]"> · {{ paidNote }}</span></p>
       </div>
 
       <template v-if="completed">
@@ -270,41 +212,20 @@ function done() {
           </div>
         </template>
 
-        <!-- Tip -->
-        <div v-if="canTip" class="px-6 mb-4">
-          <p class="text-[13px] font-semibold text-center text-[var(--color-text-secondary)] mb-2">Add a tip for {{ driverName }}?</p>
-          <div class="grid grid-cols-4 gap-2">
-            <button v-for="c in TIP_PRESETS" :key="c" @click="pickTip(c)" :aria-pressed="tipCents === c && !showCustomTip"
-                    :class="['py-3 rounded-xl text-[15px] font-bold border transition-colors',
-                             tipCents === c && !showCustomTip ? 'bg-[#2b8659] text-white border-[#2b8659]' : 'border-[var(--color-border)]']">
-              {{ formatFare(c).replace('.00', '') }}
-            </button>
-            <button @click="showCustomTip = !showCustomTip; tipCents = 0; customTip = ''" :aria-pressed="showCustomTip"
-                    :class="['py-3 rounded-xl text-[14px] font-semibold border transition-colors', showCustomTip ? 'bg-[#2b8659] text-white border-[#2b8659]' : 'border-[var(--color-border)]']">
-              Other
-            </button>
-          </div>
-          <label v-if="showCustomTip" class="block mt-2">
-            <span class="sr-only">Tip amount in dollars</span>
-            <input v-model="customTip" @input="onCustomTip" type="number" inputmode="decimal" min="1" max="100" step="0.5" placeholder="Amount ($1–$100)"
-                   class="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[15px]" />
-          </label>
-          <p class="text-[12px] text-[var(--color-text-muted)] text-center mt-2">100% goes to your driver. Charged to your card on file.</p>
-        </div>
-        <p v-else-if="tipSaved" class="px-6 mb-4 text-center text-[13px] text-[var(--color-brand)] font-semibold">You tipped {{ formatFare(ride.tip_cents || tipCents) }}. Thank you!</p>
+        <p class="px-6 mb-4 text-center text-[12px] text-[var(--color-text-muted)]">Want to tip {{ driverName }}? Tips are welcome in cash and go 100% to your driver.</p>
       </template>
 
       <div class="flex-1"></div>
 
       <div class="sticky bottom-0 px-6 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] bg-[var(--color-surface)]">
         <p v-if="error" class="text-[13px] text-[var(--color-danger)] text-center mb-2" role="alert">{{ error }}</p>
-        <button v-if="completed && (canRate || canTip)" @click="submit" :disabled="!canSubmit || submitting"
+        <button v-if="completed && canRate" @click="submit" :disabled="!canSubmit || submitting"
                 :class="['w-full py-4 rounded-2xl font-bold text-[15px] transition-colors',
                          canSubmit ? 'bg-[#2b8659] text-white active:bg-[#237a4d]' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] cursor-not-allowed']">
-          {{ submitLabel }}
+          {{ submitting ? 'Submitting…' : 'Submit' }}
         </button>
         <button @click="router.push('/book')" class="w-full py-3 mt-1 text-sm text-[var(--color-text-muted)] font-medium">
-          {{ completed && (canRate || canTip) ? 'Skip' : 'Done' }}
+          {{ completed && canRate ? 'Skip' : 'Done' }}
         </button>
       </div>
     </div>

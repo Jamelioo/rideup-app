@@ -445,8 +445,8 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
                   </svg>
                 </div>
                 <div>
-                  <div class="text-white text-[15px] font-semibold mb-1">Riders pay by card</div>
-                  <div class="text-white/70 text-[14px]">Every rider has a payment card on file before they can request a ride</div>
+                  <div class="text-white text-[15px] font-semibold mb-1">Paid in cash at drop-off</div>
+                  <div class="text-white/70 text-[14px]">Every rider pays you the fare shown in the app, and gives a mobile number you can call at pickup</div>
                 </div>
               </div>
             </div>

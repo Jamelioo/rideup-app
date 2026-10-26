@@ -18,7 +18,7 @@ const props = defineProps({
   // Whether drivers were alerted when it was booked: false when nobody was online (RideUp's team was alerted
   // instead), null when unknown (e.g. after reopening the app).
   driversAlerted: { type: Boolean, default: null },
-  cashCents: { type: Number, default: null }, // a cash trip, as booked (the loaded ride has the final say)
+  cashCents: { type: Number, default: null }, // the cash to pay at drop-off, as booked (the loaded ride has the final say)
 })
 // Alerted drivers answer within seconds or not at all, so 90 seconds is enough. Otherwise give the team time to
 // see the alert and go online or assign a driver; the server ends the request at the same point.
@@ -29,16 +29,16 @@ const ride = ref(null)
 const driverFound = ref(false)
 const timedOut = ref(false)
 const elapsedSeconds = ref(0)
-const paymentFailed = ref(false)
+const confirmFailed = ref(false)
 const cancelling = ref(false)
 const cancelError = ref('')
-const confirming = ref(false) // a driver accepted; the card hold is being placed
-// A cash trip: nothing to hold, the rider pays the driver at drop-off.
-const cashCents = computed(() => (ride.value ? (isCashRide(ride.value) ? chargeOf(ride.value) : null) : props.cashCents))
+const confirming = ref(false) // a driver accepted; their app is confirming the trip
+// What the rider pays the driver in cash at drop-off.
+const cashCents = computed(() => (ride.value ? (isCashRide(ride.value) && chargeOf(ride.value) > 0 ? chargeOf(ride.value) : null) : props.cashCents))
 let replacementDeadline = null
 let confirmDeadline = null
 let handleLatest = () => {} // set in onMounted to the status handler
-const CONFIRM_TIMEOUT_MS = 45_000 // holding a card takes seconds; after this, stop waiting
+const CONFIRM_TIMEOUT_MS = 45_000 // confirming takes a second; after this the driver's app has dropped, so stop waiting
 let channel = null
 let demoTimer = null
 let timeoutTimer = null
@@ -139,9 +139,9 @@ onMounted(async () => {
     ride.value = updatedRide
     confirming.value = updatedRide.status === 'pending_driver_response'
     if (confirming.value && !confirmDeadline) {
-      // A driver is found, so the "no drivers" timeout no longer applies; the payment timeout does.
+      // A driver is found, so the "no drivers" timeout no longer applies; the confirm timeout does.
       if (timeoutTimer) clearTimeout(timeoutTimer)
-      confirmDeadline = setTimeout(giveUpOnPayment, CONFIRM_TIMEOUT_MS)
+      confirmDeadline = setTimeout(giveUpOnConfirm, CONFIRM_TIMEOUT_MS)
     }
     if (updatedRide.status === 'cancelled' && updatedRide.replaced_by_ride_id) {
       // The driver cancelled and the server already booked a fresh request: follow it.
@@ -153,7 +153,7 @@ onMounted(async () => {
       if (!replacementDeadline) replacementDeadline = setTimeout(() => emit('cancelled'), 8000)
       return
     }
-    if (updatedRide.status === 'cancelled' && updatedRide.cancel_reason !== 'payment_failed') {
+    if (updatedRide.status === 'cancelled' && updatedRide.cancel_reason !== 'payment_failed') { // payment_failed: older trips
       if (elapsedTimer) clearInterval(elapsedTimer)
       if (timeoutTimer) clearTimeout(timeoutTimer)
       if (pollTimer) clearInterval(pollTimer)
@@ -171,7 +171,7 @@ onMounted(async () => {
       if (elapsedTimer) clearInterval(elapsedTimer)
       if (timeoutTimer) clearTimeout(timeoutTimer)
       if (pollTimer) clearInterval(pollTimer)
-      paymentFailed.value = true
+      confirmFailed.value = true
     }
   }
 
@@ -185,7 +185,7 @@ onMounted(async () => {
 
   // Polling fallback — checks every 5 seconds in case realtime misses the update
   pollTimer = setInterval(async () => {
-    if (driverFound.value || timedOut.value || paymentFailed.value) return
+    if (driverFound.value || timedOut.value || confirmFailed.value) return
     const { data: polledRide } = await supabase.from('rides').select('*').eq('id', props.rideId).single()
     if (polledRide && polledRide.status !== 'requested') {
       handleRideUpdate(polledRide)
@@ -203,10 +203,11 @@ onUnmounted(() => {
   if (confirmDeadline) clearTimeout(confirmDeadline)
 })
 
-// A driver accepted but the card hold never completed (declined card, or the driver's app dropped).
-// Re-check once, then cancel for free so the rider isn't stuck on "Confirming your payment method…".
-async function giveUpOnPayment() {
-  if (driverFound.value || paymentFailed.value) return
+// A driver accepted but their app never confirmed the trip (it closed or lost signal). Re-check once, then cancel
+// for free so the rider isn't stuck on "Confirming your ride…". (If this screen is closed, the server puts the
+// request back up for other drivers instead.)
+async function giveUpOnConfirm() {
+  if (driverFound.value || confirmFailed.value) return
   const { data: latest } = await supabase.from('rides').select('*').eq('id', props.rideId).maybeSingle()
   if (latest && latest.status !== 'pending_driver_response') {
     confirmDeadline = null
@@ -218,7 +219,7 @@ async function giveUpOnPayment() {
   if (elapsedTimer) clearInterval(elapsedTimer)
   if (timeoutTimer) clearTimeout(timeoutTimer)
   if (pollTimer) clearInterval(pollTimer)
-  paymentFailed.value = true
+  confirmFailed.value = true
 }
 
 // Nobody answered: withdraw the request so it doesn't sit in drivers' queues.
@@ -275,7 +276,7 @@ async function cancelRequest() {
       <div class="text-lg font-semibold"><BrandLogo /></div>
     </div>
     <div class="relative flex-1 flex flex-col items-center justify-center gap-6 px-6">
-      <template v-if="!timedOut && !paymentFailed">
+      <template v-if="!timedOut && !confirmFailed">
         <div class="relative w-28 h-28 rounded-full border border-[#2b8659]/35 flex items-center justify-center">
           <div class="absolute -inset-4 rounded-full border border-[#2b8659]/20"></div>
           <div class="absolute -inset-8 rounded-full border border-[#2b8659]/10"></div>
@@ -284,12 +285,12 @@ async function cancelRequest() {
         <div v-if="notice" class="w-full max-w-sm rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-4 py-3 text-[13px] text-[var(--color-text-primary)] text-center" role="status">{{ notice }}</div>
         <div class="text-center">
           <div class="text-xl font-medium mb-1.5">{{ driverFound || confirming ? 'Driver found' : 'Looking for a driver' }}</div>
-          <div class="text-[var(--color-text-secondary)] text-[13px] max-w-xs mx-auto">{{ driverFound ? 'Connecting you now…' : confirming ? (cashCents != null ? 'Confirming your ride…' : 'Confirming your payment method…') : driversAlerted === false ? 'No drivers are online right now, so we’ve alerted our team.' : 'Connecting you with a nearby driver' }}</div>
+          <div class="text-[var(--color-text-secondary)] text-[13px] max-w-xs mx-auto">{{ driverFound ? 'Connecting you now…' : confirming ? 'Confirming your ride…' : driversAlerted === false ? 'No drivers are online right now, so we’ve alerted our team.' : 'Connecting you with a nearby driver' }}</div>
           <p v-if="driversAlerted === false && !driverFound && !confirming" class="text-[var(--color-text-muted)] text-xs mt-2 max-w-xs mx-auto">
-            This can take a few minutes. {{ cashCents != null ? 'You pay your driver in cash at drop-off.' : 'You’re only charged if a driver accepts.' }}
+            This can take a few minutes. You pay your driver in cash at drop-off.
           </p>
           <p v-else-if="cashCents != null && !driverFound" class="text-[var(--color-text-muted)] text-xs mt-2 max-w-xs mx-auto">
-            Paying cash: have {{ formatFare(cashCents) }} ready for your driver.
+            Pay in cash: have {{ formatFare(cashCents) }} ready for your driver.
           </p>
           <p v-if="!timedOut && elapsedSeconds > 10" class="text-[var(--color-text-muted)] text-xs mt-2">
             Searching… {{ elapsedLabel }}
@@ -301,7 +302,7 @@ async function cancelRequest() {
       <div v-if="timedOut" class="text-center px-6">
         <DotMascot pose="sleepy" class="w-28 h-28 mx-auto mb-3" />
         <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-2">No drivers available</h2>
-        <p class="text-[var(--color-text-muted)] text-sm mb-6">We couldn’t find a driver near you right now. You haven’t been charged.</p>
+        <p class="text-[var(--color-text-muted)] text-sm mb-6">We couldn’t find a driver near you right now. You don’t owe anything.</p>
         <button @click="retrySearch" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mb-3">
           Try again
         </button>
@@ -309,29 +310,17 @@ async function cancelRequest() {
           Cancel ride
         </button>
       </div>
-      <div v-if="paymentFailed" class="text-center px-6">
+      <div v-if="confirmFailed" class="text-center px-6">
         <div class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
           <svg class="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
           </svg>
         </div>
-        <template v-if="cashCents != null">
-          <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-2">Your driver couldn’t confirm</h2>
-          <p class="text-[var(--color-text-muted)] text-sm mb-6">The driver’s app didn’t confirm the trip in time, so it was cancelled. You don’t owe anything. Request again and we’ll find you a driver.</p>
-          <button @click="emit('cancelled')" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mb-2">
-            Try again
-          </button>
-        </template>
-        <template v-else>
-          <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-2">Payment issue</h2>
-          <p class="text-[var(--color-text-muted)] text-sm mb-6">Your card couldn’t be charged (for example, it was declined or has insufficient funds), so the ride was cancelled. You weren’t charged.</p>
-          <button @click="router.push('/payments')" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mb-2">
-            Use a different card
-          </button>
-          <button @click="emit('cancelled')" class="w-full py-3 text-[var(--color-text-secondary)] font-semibold text-[14px]">
-            Try again with the same card
-          </button>
-        </template>
+        <h2 class="text-xl font-bold text-[var(--color-text-primary)] mb-2">Your driver couldn’t confirm</h2>
+        <p class="text-[var(--color-text-muted)] text-sm mb-6">The driver’s app didn’t confirm the trip in time, so it was cancelled. You don’t owe anything. Request again and we’ll find you a driver.</p>
+        <button @click="emit('cancelled')" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl text-[15px] mb-2">
+          Try again
+        </button>
       </div>
     </div>
   </div>

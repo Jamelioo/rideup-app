@@ -100,7 +100,7 @@ async function restoreActiveRide() {
   }
 
   if (ride.status === 'pending_driver_response') {
-    // The card hold never finished (app closed mid-accept). Finish it now; the server cancels if the card fails.
+    // Confirming never finished (the app closed mid-accept). Finish it now; if the ride is gone, it's gone.
     const ok = await authorize(ride.id)
     if (!ok) return null
     ride.status = 'accepted'
@@ -258,9 +258,6 @@ function stopFakeRequests() {
 
 // --- Accept / decline -------------------------------------------------------------------------------------
 const ACCEPT_ERRORS = {
-  no_payment_method: 'The rider’s card couldn’t be verified, so the ride was cancelled.',
-  card_declined: 'The rider’s card was declined, so the ride was cancelled.',
-  payment_failed: 'The rider’s payment couldn’t be authorized, so the ride was cancelled.',
   ride_unavailable: 'This ride is no longer available.',
 }
 
@@ -270,10 +267,10 @@ async function authorize(rideId) {
     const result = await res.json().catch(() => ({}))
     if (res.ok && result.success) return true
     if (res.status === 500 && /not configured/i.test(result.error || '')) {
-      // SUPABASE_SERVICE_ROLE_KEY or STRIPE_SECRET_KEY is missing in Vercel.
-      acceptError.value = 'Payments aren’t set up on the server yet (missing Stripe or Supabase keys). Contact RideUp support.'
+      // SUPABASE_SERVICE_ROLE_KEY is missing in Vercel.
+      acceptError.value = 'The server isn’t set up yet (missing Supabase keys). Contact RideUp support.'
     } else {
-      acceptError.value = ACCEPT_ERRORS[result.error] || result.error || `Couldn’t confirm payment for this ride (error ${res.status}). Please try another.`
+      acceptError.value = ACCEPT_ERRORS[result.error] || result.error || `Couldn’t confirm this ride (error ${res.status}). Please try another.`
     }
   } catch (err) {
     acceptError.value = err?.message || 'Connection problem. Please try again.'
@@ -281,8 +278,8 @@ async function authorize(rideId) {
   return false
 }
 
-// Returns true only when the ride is claimed AND the rider's card is held.
-// The request card stays on screen ("Confirming the rider's payment…") until this finishes,
+// Returns true only when the ride is claimed AND confirmed.
+// The request card stays on screen ("Confirming…") until this finishes,
 // so polling is paused meanwhile (otherwise it would close the card once the ride leaves the open list).
 async function acceptRide(ride) {
   acceptError.value = ''
@@ -322,7 +319,7 @@ async function claimAndAuthorize(ride) {
     return false
   }
 
-  // 2. Hold the rider's card. Without it the ride doesn't go ahead.
+  // 2. Confirm it (the rider is told their driver is on the way and how much cash to have ready).
   if (!(await authorize(ride.id))) return false
 
   stopPolling()
@@ -394,7 +391,7 @@ async function refreshCurrentRide() {
   return currentRide.value
 }
 
-// Driver cancels (free for the rider), or marks a no-show after the free wait (rider pays the fee).
+// Driver cancels (the rider is re-matched), or marks a no-show after the free wait (counts against the rider).
 async function cancelCurrentRide({ noShow = false } = {}) {
   if (!currentRide.value) return { ok: false }
   if (DEMO_MODE) { completeRide(); return { ok: true } }
@@ -404,7 +401,7 @@ async function cancelCurrentRide({ noShow = false } = {}) {
     if (!res.ok) return { ok: false, error: data.error || 'Couldn’t cancel. Try again.' }
     driver.value = { ...driver.value, status: 'online' }
     completeRide()
-    return { ok: true, feeCents: data.fee_cents || 0 }
+    return { ok: true }
   } catch {
     return { ok: false, error: 'Connection problem. Try again.' }
   }

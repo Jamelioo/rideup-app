@@ -46,7 +46,7 @@
     <!-- Daily rider payments -->
     <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5 mb-6">
       <h2 class="text-sm font-semibold text-[var(--color-text-primary)]">Rider payments per day</h2>
-      <p class="text-xs text-[var(--color-text-muted)] mb-4">Trips, tips and cancellation fees charged, Nassau time. Hover a bar for the day’s numbers.</p>
+      <p class="text-xs text-[var(--color-text-muted)] mb-4">What riders paid for trips (in cash to drivers), Nassau time. Hover a bar for the day’s numbers.</p>
       <div class="relative" @mouseleave="hover = null">
         <div class="flex items-end h-44 border-b border-[var(--color-border)]" :style="{ gap: rows.length > 60 ? '1px' : '2px' }" role="img"
              :aria-label="`Bar chart of rider payments per day over the last ${days} days. The table below lists every day.`">
@@ -84,15 +84,15 @@
           <div v-if="sum.cash_trips" class="flex justify-between pl-3 text-xs"><dt class="text-[var(--color-text-muted)]">paid in cash to drivers ({{ sum.cash_trips }} trip{{ sum.cash_trips === 1 ? '' : 's' }})</dt><dd class="text-[var(--color-text-muted)]">{{ money(sum.cash_cents) }}</dd></div>
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">Drivers’ share of fares</dt><dd>−{{ money(sum.driver_fare_cents) }}</dd></div>
           <div class="flex justify-between font-semibold border-t border-[var(--color-border)] pt-2"><dt>RideUp fees</dt><dd>{{ money(sum.platform_fee_cents) }}</dd></div>
-          <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">+ Cancellation &amp; no-show fees (RideUp part)</dt><dd>{{ money(sum.cancel_platform_cents) }}</dd></div>
+          <div v-if="sum.cancel_platform_cents" class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">+ Cancellation fees from older card trips (RideUp part)</dt><dd>{{ money(sum.cancel_platform_cents) }}</dd></div>
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">− Promo &amp; referral discounts</dt><dd>−{{ money(sum.promo_cents) }}</dd></div>
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">− Ride credit used</dt><dd>−{{ money(sum.credit_cents) }}</dd></div>
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">− Driver incentives</dt><dd>−{{ money(sum.quest_reward_cents) }}</dd></div>
-          <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">− Card fees (estimate)</dt><dd>−{{ money(sum.est_card_fee_cents) }}</dd></div>
-          <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">− Card refunds (RideUp part)</dt><dd>−{{ money(sum.refund_cents - sum.refund_driver_cents) }}</dd></div>
+          <div v-if="sum.est_card_fee_cents" class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">− Card fees on older card trips (estimate)</dt><dd>−{{ money(sum.est_card_fee_cents) }}</dd></div>
+          <div v-if="sum.refund_cents || sum.refund_driver_cents" class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">− Refunds (RideUp part)</dt><dd>{{ sum.refund_cents - sum.refund_driver_cents < 0 ? '+' : '−' }}{{ money(Math.abs(sum.refund_cents - sum.refund_driver_cents)) }}</dd></div>
           <div class="flex justify-between font-bold text-base border-t border-[var(--color-border)] pt-2"><dt>RideUp net</dt><dd :class="totalNet < 0 && 'text-[var(--color-danger)]'">{{ money(totalNet) }}</dd></div>
         </dl>
-        <p class="text-xs text-[var(--color-text-muted)] mt-3">Card fees are estimated at 2.9% + 30¢ per charge; check Stripe for exact amounts. Tips go 100% to drivers. RideUp’s share of cash trips is collected from drivers’ balances (Payouts).</p>
+        <p class="text-xs text-[var(--color-text-muted)] mt-3">Riders pay drivers in cash, so RideUp’s share is collected from drivers’ balances (Payouts). Refunds are given as ride credit, counted above when riders use it; a refund the driver was at fault for comes back from the driver’s balance.</p>
       </div>
 
       <!-- What RideUp owes -->
@@ -106,8 +106,8 @@
         <h2 class="text-sm font-semibold text-[var(--color-text-primary)] mt-6 mb-3">Drivers earned, last {{ days }} days</h2>
         <dl class="text-sm space-y-2">
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">Fares</dt><dd>{{ money(sum.driver_fare_cents) }}</dd></div>
-          <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">Tips</dt><dd>{{ money(sum.tips_cents) }}</dd></div>
-          <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">Cancellation fees</dt><dd>{{ money(sum.cancel_fee_cents - sum.cancel_platform_cents) }}</dd></div>
+          <div v-if="sum.tips_cents" class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">Tips (older card trips)</dt><dd>{{ money(sum.tips_cents) }}</dd></div>
+          <div v-if="sum.cancel_fee_cents" class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">Cancellation fees (older card trips)</dt><dd>{{ money(sum.cancel_fee_cents - sum.cancel_platform_cents) }}</dd></div>
           <div class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">Incentives</dt><dd>{{ money(sum.quest_reward_cents) }}</dd></div>
           <div v-if="sum.refund_driver_cents" class="flex justify-between"><dt class="text-[var(--color-text-secondary)]">Refund deductions</dt><dd>−{{ money(sum.refund_driver_cents) }}</dd></div>
           <div class="flex justify-between font-semibold border-t border-[var(--color-border)] pt-2"><dt>Total</dt><dd>{{ money(driverTotal) }}</dd></div>
@@ -202,7 +202,8 @@ const hover = ref(null)
 
 const money = (c) => `${c < 0 ? '−' : ''}$${(Math.abs(c || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const fmtDay = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-// Card refunds cost RideUp whatever part didn't come out of the driver's earnings.
+// Card refunds (older trips) cost RideUp whatever part didn't come out of the driver's earnings; credit refunds are
+// counted when the credit is used.
 const net = (d) => d.platform_fee_cents + d.cancel_platform_cents - d.promo_cents - d.credit_cents - d.quest_reward_cents - d.est_card_fee_cents
   - (d.refund_cents - d.refund_driver_cents)
 
@@ -223,10 +224,10 @@ const funnelRows = computed(() => {
   }))
 })
 const tiles = computed(() => [
-  { label: 'Rider payments', value: money(sum.value.rider_paid_cents - sum.value.refund_cents), note: `${sum.value.trips} trips${sum.value.cash_trips ? ` (${sum.value.cash_trips} in cash)` : ''}${sum.value.refund_cents ? ` · after ${money(sum.value.refund_cents)} refunds` : ''}` },
-  { label: 'RideUp net', value: money(totalNet.value), note: 'after discounts, incentives and card fees' },
+  { label: 'Rider payments', value: money(sum.value.rider_paid_cents - sum.value.refund_cents), note: `${sum.value.trips} trips${sum.value.cash_trips === sum.value.trips ? ', all in cash' : sum.value.cash_trips ? ` (${sum.value.cash_trips} in cash)` : ''}${sum.value.refund_cents ? ` · after ${money(sum.value.refund_cents)} card refunds` : ''}` },
+  { label: 'RideUp net', value: money(totalNet.value), note: 'after discounts and incentives' },
   { label: 'Drivers earned', value: money(driverTotal.value) },
-  { label: 'Average trip fare', value: money(sum.value.trips ? Math.round(sum.value.gross_fare_cents / sum.value.trips) : 0), note: `${sum.value.cancelled_trips} cancellation fees` },
+  { label: 'Average trip fare', value: money(sum.value.trips ? Math.round(sum.value.gross_fare_cents / sum.value.trips) : 0), note: 'per completed trip' },
 ])
 
 function nassauDate(offsetDays = 0) {

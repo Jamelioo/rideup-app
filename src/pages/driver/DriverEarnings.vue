@@ -20,16 +20,16 @@ const PAID = ['captured', 'paid', 'partially_refunded', 'cash_collected']
 const RIDE_COLUMNS = 'id, status, fare_cents, driver_payout_cents, tip_cents, tip_payment_intent_id, payment_status, completed_at, cancelled_at, created_at, dropoff_address, distance_miles, cancel_reason, promo_discount_cents, credit_applied_cents'
 const UNPAID_REPORT_MS = 24 * 3_600_000 // drivers can report an unpaid cash fare this long after drop-off
 
-// Every earning line: completed trips (your 70% + 100% of tips) and your share of cancellation/no-show fees.
-// Cash trips show the cash collected; one the rider didn't pay earns nothing (and costs the driver nothing).
+// Every earning line: completed trips (your 70%), with the cash collected. A trip the rider didn't pay earns nothing
+// (and costs the driver nothing). Tips and fees from before RideUp went cash-only still show on those old trips.
 const items = ref([])
-const summary = ref(null) // driver_earnings_summary: balance, paid out, tips
+const summary = ref(null) // driver_earnings_summary: balance and paid out
 const payouts = ref([])
 
 if (DEMO_MODE) {
   const fake = generateFakeEarnings()
-  items.value = fake.today.map((t, i) => ({ id: t.id, kind: 'trip', at: t.completed_at, label: t.dropoff_address, miles: t.distance_miles, amount: driverPayout(t), tip: i % 3 === 0 ? 300 : 0, processing: false }))
-  summary.value = { balance_cents: 4820, paid_out_cents: 9600, tips_cents: 900 }
+  items.value = fake.today.map((t, i) => ({ id: t.id, kind: 'trip', at: t.completed_at, label: t.dropoff_address, miles: t.distance_miles, amount: driverPayout(t), tip: 0, processing: false, cash: true, cashCents: t.fare_cents }))
+  summary.value = { balance_cents: -1450, paid_out_cents: 9600 }
   payouts.value = [{ id: 'p1', amount_cents: 9600, method: 'bank_transfer', created_at: new Date(Date.now() - 6 * 86_400_000).toISOString(), reference: 'TX-1042' }]
 }
 
@@ -141,7 +141,7 @@ function goBack() {
       <div class="rounded-2xl bg-[#191f1c] text-white p-5 mb-6">
         <p class="text-[12px] font-semibold uppercase tracking-wide text-white/70">{{ owesRideUp ? 'You owe RideUp' : 'Balance' }}</p>
         <p class="text-[34px] font-bold leading-tight">{{ summary ? formatFare(Math.abs(summary.balance_cents || 0)) : (loading ? '…' : '$0.00') }}</p>
-        <p class="text-[12px] text-white/70 mt-1" v-if="summary">Paid out so far {{ formatFare(summary.paid_out_cents || 0) }} · Tips {{ formatFare(summary.tips_cents || 0) }}</p>
+        <p class="text-[12px] text-white/70 mt-1" v-if="summary">Paid out so far {{ formatFare(summary.paid_out_cents || 0) }}</p>
         <p v-if="owesRideUp" class="text-[12px] text-white/80 mt-3 leading-relaxed">This is RideUp’s share of the cash fares you collected. It comes off your next earnings, or you can hand it to RideUp; either way it shows below.</p>
         <p v-else class="text-[12px] text-white/80 mt-3 leading-relaxed">Your balance includes incentive rewards. RideUp pays it by bank transfer, cash or mobile money. Each payout you receive is listed below.</p>
       </div>

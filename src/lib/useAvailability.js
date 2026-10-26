@@ -6,10 +6,10 @@ const REFRESH_MS = 30_000
 // A failed check keeps the last answer this long, then shows nothing rather than guessing (never blocks).
 const KEEP_LAST_MS = 2 * 60_000
 
-// Demo only: /book?cars=none or ?cars=busy previews those screens (?cars=no_cash while paying cash).
-function demoAvailability(cash) {
+// Demo only: /book?cars=none or ?cars=busy previews those screens.
+function demoAvailability() {
   const mode = new URLSearchParams(window.location.search).get('cars')
-  const forced = mode === 'none' || mode === 'busy' || (mode === 'no_cash' && cash) ? { state: mode } : null
+  const forced = mode === 'none' || mode === 'busy' ? { state: mode } : null
   return {
     checkedAt: Date.now(),
     types: {
@@ -20,10 +20,9 @@ function demoAvailability(cash) {
   }
 }
 
-// Live "can a car come to this pickup?" for the booking screen. `pickup` is a ref to { lat, lng }; `cash`, a ref
-// that's true while the rider pays cash (only drivers who take cash count then).
-// Checks when the pickup or the payment changes, and every 30 seconds while the screen is showing.
-export function useAvailability(pickup, { cash = ref(false) } = {}) {
+// Live "can a car come to this pickup?" for the booking screen. `pickup` is a ref to { lat, lng }.
+// Checks when the pickup changes, and every 30 seconds while the screen is showing.
+export function useAvailability(pickup) {
   const availability = ref(null) // { types, checkedAt }, or null while unknown
   let seq = 0
   let timer = null
@@ -31,7 +30,7 @@ export function useAvailability(pickup, { cash = ref(false) } = {}) {
   async function refresh({ timeoutMs = 8000 } = {}) {
     const mine = ++seq
     if (DEMO_MODE) {
-      availability.value = demoAvailability(cash.value)
+      availability.value = demoAvailability()
       return availability.value
     }
     const p = pickup.value
@@ -40,7 +39,7 @@ export function useAvailability(pickup, { cash = ref(false) } = {}) {
       return null
     }
     try {
-      const res = await apiPost('/api/availability', { lat: p.lat, lng: p.lng, ...(cash.value ? { cash: true } : {}) }, { timeoutMs })
+      const res = await apiPost('/api/availability', { lat: p.lat, lng: p.lng }, { timeoutMs })
       const body = await res.json().catch(() => ({}))
       if (!res.ok || !body.types) throw new Error(body.error || `Availability check failed (${res.status})`)
       if (mine === seq) availability.value = { types: body.types, checkedAt: Date.now() }
@@ -62,8 +61,8 @@ export function useAvailability(pickup, { cash = ref(false) } = {}) {
     document.removeEventListener('visibilitychange', onVisibility)
   }
 
-  watch(() => (pickup.value ? `${pickup.value.lat},${pickup.value.lng},${cash.value ? 'cash' : 'card'}` : ''), () => {
-    availability.value = null // the old answer was for a different pickup, or the other way to pay
+  watch(() => (pickup.value ? `${pickup.value.lat},${pickup.value.lng}` : ''), () => {
+    availability.value = null // the old answer was for a different pickup
     refresh()
   }, { immediate: true })
   onMounted(start)

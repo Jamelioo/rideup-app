@@ -4,6 +4,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { RATES } from '../../lib/pricing'
+import { isCashRide } from '../../lib/cash'
 
 const router = useRouter()
 const route = useRoute()
@@ -29,9 +30,6 @@ onMounted(async () => {
     // Drivers' rows are private; the RPC returns them for this ride's participants only.
     const { data: rpc } = await supabase.rpc('get_ride_driver', { p_ride_id: rideId })
     const driver = Array.isArray(rpc) ? rpc[0] : rpc
-    // Split fare: what friends paid comes off this rider's total.
-    const { data: splits } = await supabase.from('fare_splits').select('share_cents').eq('ride_id', rideId).eq('status', 'paid')
-    const splitPaid = (splits || []).reduce((sum, x) => sum + (x.share_cents || 0), 0)
     const { data: refunds } = await supabase.from('ride_refunds').select('amount_cents, method, target, created_at').eq('ride_id', rideId).order('created_at')
 
     // Rebuild the line items from the same rates the fare was computed with.
@@ -52,16 +50,11 @@ onMounted(async () => {
 
     const d = new Date(data.completed_at || data.cancelled_at || data.created_at)
     const cancelled = data.status === 'cancelled'
-    const tip = data.tip_payment_intent_id ? (data.tip_cents || 0) : 0
     receipt.value = {
       cancelled,
-      cancelFee: cancelled ? (data.cancel_fee_cents || 0) : 0,
       noShow: data.cancel_reason === 'rider_no_show',
-      tip,
-      grandTotal: cancelled ? (data.cancel_fee_cents || 0) : total - (data.promo_discount_cents || 0) - (data.credit_applied_cents || 0) - splitPaid + tip,
-      splitPaid,
+      grandTotal: cancelled ? 0 : total - (data.promo_discount_cents || 0) - (data.credit_applied_cents || 0),
       refunds: refunds || [],
-      splitFriends: (splits || []).length,
       date: `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`,
       time: d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
       pickup: data.pickup_address || 'Pickup',
@@ -83,10 +76,8 @@ onMounted(async () => {
       promoLabel: data.promo_code === 'REFERRAL' ? 'Friend referral' : `Promo ${data.promo_code || ''}`,
       creditApplied: data.credit_applied_cents || 0,
       total,
-      paymentLast4: data.payment_last4 || '',
-      paymentBrand: data.payment_brand || '',
-      cash: data.payment_method === 'cash',
-      paid: ['captured', 'paid', 'cash_collected'].includes(data.payment_status),
+      cash: isCashRide(data),
+      unpaid: data.payment_status === 'cash_unpaid',
       hasDriver: !!driver,
       driverName: driver?.name || 'Your driver',
       driverRating: driver?.rating != null ? Number(driver.rating) : null,
@@ -188,18 +179,17 @@ async function shareReceipt() {
         <!-- Cancelled trip -->
         <div v-if="receipt.cancelled" class="mb-5 space-y-3">
           <div class="flex items-center justify-between">
-            <span class="text-sm text-[var(--color-text-secondary)]">{{ receipt.cancelFee ? (receipt.noShow ? 'No-show fee' : 'Cancellation fee') : 'Trip cancelled' }}</span>
-            <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.cancelFee) }}</span>
+            <span class="text-sm text-[var(--color-text-secondary)]">{{ receipt.noShow ? 'Missed pickup' : 'Trip cancelled' }}</span>
+            <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(0) }}</span>
           </div>
-          <p v-if="!receipt.cancelFee" class="text-xs text-[var(--color-text-muted)]">{{ receipt.cash ? 'No charge.' : 'No charge. Any hold on your card has been released.' }}</p>
-          <p v-else class="text-xs text-[var(--color-text-muted)]">{{ receipt.noShow ? 'Charged because the driver waited at pickup and you didn’t arrive.' : 'Charged because the trip was cancelled after the free cancellation window.' }} Think this is wrong? Report an issue below.</p>
+          <p class="text-xs text-[var(--color-text-muted)]">{{ receipt.noShow ? 'Your driver waited at the pickup and you didn’t arrive. Nothing to pay, but missed pickups can pause booking on your account.' : 'Nothing to pay.' }}</p>
           <div class="border-b border-[var(--color-border)]"></div>
           <div class="flex items-center justify-between">
             <span class="text-base font-bold text-[var(--color-text-primary)]">Total</span>
             <span class="text-base font-bold text-[var(--color-text-primary)]">{{ formatCents(receipt.grandTotal) }}</span>
           </div>
           <div v-for="(r, i) in receipt.refunds" :key="i" class="flex items-center justify-between">
-            <span class="text-sm text-[var(--color-text-secondary)]">{{ r.method === 'card' ? 'Refunded to your card' : 'Refunded as RideUp credit' }}{{ r.target === 'tip' ? ' (tip)' : '' }}</span>
+            <span class="text-sm text-[var(--color-text-secondary)]">{{ r.method === 'credit' ? 'Refunded as RideUp credit' : 'Refunded' }}{{ r.target === 'tip' ? ' (tip)' : '' }}</span>
             <span class="text-sm text-[var(--color-brand)]">−{{ formatCents(r.amount_cents) }}</span>
           </div>
         </div>
@@ -250,20 +240,12 @@ async function shareReceipt() {
             <span class="text-sm text-[var(--color-text-secondary)]">RideUp credit</span>
             <span class="text-sm text-[var(--color-brand)]">−{{ formatCents(receipt.creditApplied) }}</span>
           </div>
-          <div v-if="receipt.splitPaid" class="flex items-center justify-between">
-            <span class="text-sm text-[var(--color-text-secondary)]">Split with {{ receipt.splitFriends }} friend{{ receipt.splitFriends === 1 ? '' : 's' }}</span>
-            <span class="text-sm text-[var(--color-brand)]">−{{ formatCents(receipt.splitPaid) }}</span>
-          </div>
-          <div v-if="receipt.tip" class="flex items-center justify-between">
-            <span class="text-sm text-[var(--color-text-secondary)]">Tip (100% to your driver)</span>
-            <span class="text-sm text-[var(--color-text-primary)]">{{ formatCents(receipt.tip) }}</span>
-          </div>
           <div class="flex items-center justify-between">
-            <span class="text-base font-bold text-[var(--color-text-primary)]">Total</span>
+            <span class="text-base font-bold text-[var(--color-text-primary)]">{{ receipt.cash ? (receipt.unpaid ? 'Total (not paid)' : 'Total paid in cash') : 'Total' }}</span>
             <span class="text-base font-bold text-[var(--color-text-primary)]">{{ formatCents(receipt.grandTotal) }}</span>
           </div>
           <div v-for="(r, i) in receipt.refunds" :key="i" class="flex items-center justify-between">
-            <span class="text-sm text-[var(--color-text-secondary)]">{{ r.method === 'card' ? 'Refunded to your card' : 'Refunded as RideUp credit' }}{{ r.target === 'tip' ? ' (tip)' : '' }}</span>
+            <span class="text-sm text-[var(--color-text-secondary)]">{{ r.method === 'credit' ? 'Refunded as RideUp credit' : 'Refunded' }}{{ r.target === 'tip' ? ' (tip)' : '' }}</span>
             <span class="text-sm text-[var(--color-brand)]">−{{ formatCents(r.amount_cents) }}</span>
           </div>
         </div>
@@ -278,11 +260,7 @@ async function shareReceipt() {
             <svg v-if="receipt.cash" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
               <rect x="2" y="6" width="20" height="12" rx="2" /><circle cx="12" cy="12" r="2.5" /><path d="M6 12h.01M18 12h.01" />
             </svg>
-            <!-- Card icon -->
-            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-            </svg>
-            <span class="text-sm font-medium text-[var(--color-text-primary)]">{{ receipt.cash ? 'Cash' : receipt.paymentLast4 ? `${receipt.paymentBrand ? receipt.paymentBrand.charAt(0).toUpperCase() + receipt.paymentBrand.slice(1) : 'Card'} •••• ${receipt.paymentLast4}` : 'Card' }}</span>
+            <span class="text-sm font-medium text-[var(--color-text-primary)]">{{ receipt.cash ? 'Cash to your driver' : 'Card' }}</span>
           </div>
         </div>
 

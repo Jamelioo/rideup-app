@@ -5,7 +5,7 @@ import { formatFare } from '../lib/pricing'
 import { DEMO_MODE } from '../lib/demoMode'
 
 // Driver app: "Rider didn't pay" on a cash trip, up to 24 hours after drop-off. Asks first, then reports it:
-// RideUp follows up with the rider and turns cash off for them, and the driver owes RideUp nothing for the trip.
+// RideUp follows up with the rider and pauses their booking, and the driver owes RideUp nothing for the trip.
 const props = defineProps({
   rideId: { type: String, required: true },
   riderName: { type: String, default: 'The rider' },
@@ -50,7 +50,7 @@ async function report() {
            class="bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-3xl p-6 max-w-sm w-full text-center">
         <h2 id="unpaid-title" class="text-xl font-bold mb-2">Report an unpaid fare?</h2>
         <p id="unpaid-body" class="text-[13px] text-[var(--color-text-secondary)] mb-5">
-          Only if {{ riderName }} didn’t pay the {{ formatFare(amountCents) }}. RideUp will follow up with them and turn cash off on their account. You won’t owe RideUp anything for this trip.
+          Only if {{ riderName }} didn’t pay the {{ formatFare(amountCents) }}. RideUp will follow up with them and pause booking on their account. You won’t owe RideUp anything for this trip.
         </p>
         <p v-if="error" class="text-[13px] text-[var(--color-danger)] mb-3" role="alert">{{ error }}</p>
         <button type="button" @click="report" :disabled="busy" class="w-full py-3.5 bg-[#2b8659] text-white font-bold rounded-2xl disabled:opacity-50">

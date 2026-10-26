@@ -121,12 +121,12 @@ const statusTabs = ['All', 'Waiting', 'Active', 'Completed', 'Cancelled']
 // Database status → tab and label.
 const GROUP = { requested: 'Waiting', pending_driver_response: 'Active', accepted: 'Active', driver_arrived: 'Active', in_progress: 'Active', completed: 'Completed', cancelled: 'Cancelled' }
 const LABEL = {
-  requested: 'Waiting for driver', pending_driver_response: 'Holding card', accepted: 'Driver on the way',
+  requested: 'Waiting for driver', pending_driver_response: 'Confirming', accepted: 'Driver on the way',
   driver_arrived: 'Driver at pickup', in_progress: 'On trip', completed: 'Completed', cancelled: 'Cancelled',
 }
 const CANCEL_REASON = {
   no_drivers: 'no driver', rider_cancelled: 'by rider', driver_cancelled: 'by driver', rider_no_show: 'rider no-show',
-  admin_cancelled: 'by RideUp', payment_failed: 'card failed',
+  admin_cancelled: 'by RideUp', payment_failed: 'not confirmed',
 }
 // Status column, with cash trips marked (and an unpaid cash fare called out).
 function statusLabel(r) {
@@ -253,7 +253,7 @@ function exportCsv() {
     { label: 'Tip', value: (r) => dollars(r.tip_payment_intent_id ? r.tip_cents : 0) },
     { label: 'Driver earns', value: (r) => dollars(r.driver_payout_cents) },
     { label: 'RideUp keeps', value: (r) => dollars(r.platform_fee_cents) },
-    { label: 'Paid with', value: (r) => r.payment_method || 'card' },
+    { label: 'Paid with', value: (r) => r.payment_method || 'cash' },
     { label: 'Payment', value: (r) => r.payment_status || '' },
   ])
   downloadCsv(`rideup-rides-${fromDate.value}-to-${toDate.value}.csv`, csv)

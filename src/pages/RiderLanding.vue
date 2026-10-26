@@ -3,7 +3,6 @@ import BrandLogo from '../components/BrandLogo.vue'
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
-import { useSettings, loadSettings } from '../lib/settings'
 import { applyLandingOffer, landingPill as pill, landingPillReady as pillReady } from '../lib/landingOffer'
 import { trackStep } from '../lib/funnel'
 import { placeById, tripLink } from '../lib/places'
@@ -23,11 +22,6 @@ const year = new Date().getFullYear()
 
 // The first-ride offer (Admin › Promos), applied for them. The pill keeps its space while it loads.
 applyLandingOffer()
-// Cash follows Admin › Settings. The hero line that depends on it waits for the setting, so it doesn't change on screen.
-const settings = useSettings()
-const settingsReady = ref(false)
-loadSettings().then(() => { settingsReady.value = true })
-const cash = computed(() => !!settings.value.accept_cash)
 
 onMounted(() => trackStep('landing'))
 
@@ -40,8 +34,8 @@ const graceLabel = CANCEL_GRACE_SECONDS % 60 === 0 ? `${CANCEL_GRACE_SECONDS / 6
 
 const PROMISE = [
   { icon: 'lock', title: 'Price lock', text: 'Your price is set when you book. Traffic or a longer route won’t change it.' },
-  { icon: 'card', title: 'No driver, no charge', text: 'If nobody accepts your request, you pay nothing.' },
-  { icon: 'clock', title: 'Free cancellation', text: `Cancel free until a driver accepts, and for ${graceLabel} after.` },
+  { icon: 'cash', title: 'Pay when you arrive', text: 'No card needed. Pay your driver the price you saw, in cash, at drop-off.' },
+  { icon: 'clock', title: 'Free cancellation', text: 'Cancelling never costs a cent. Cancel early if your plans change, so your driver isn’t left waiting.' },
   { icon: 'repeat', title: 'We re-match you', text: 'If your driver cancels, we find you another at the same price, automatically.' },
 ]
 
@@ -63,23 +57,22 @@ const popularTrips = POPULAR_TRIPS.map((t) => {
 const steps = computed(() => [
   { title: 'Enter where you’re going', text: 'Your exact price shows straight away, before you commit to anything.' },
   { title: 'Request your ride', text: 'No account needed. A nearby approved driver accepts, and you see their name, car and plate.' },
-  { title: 'Ride and pay', text: cash.value ? 'Follow your car on the map. Pay by card automatically, or in cash at drop-off.' : 'Follow your car on the map. Your card is charged when you arrive, and your receipt is emailed.' },
+  { title: 'Ride and pay cash', text: 'Follow your car on the map, then pay your driver in cash at drop-off. Exact change helps.' },
 ])
 
 const go = RATES.standard
 const faqs = computed(() => [
   { q: 'How much does a ride cost?', a: `You see the exact price before you book. RideUp Go is ${formatAmount(go.base)} plus ${formatAmount(go.perMile)} a mile and ${formatAmount(go.perMinute)} a minute (${formatAmount(go.minimum)} minimum), plus a ${formatAmount(BOOKING_FEE_CENTS)} booking fee. Airport pickups add ${formatAmount(AIRPORT_FEE_CENTS)}. At busy times it can cost more, and you see that before you book too.` },
-  { q: 'Do I need an account or the app?', a: 'No. Book right here in your browser as a guest with your name, phone and card. A free account saves your details and trips for next time.' },
-  { q: 'Can I pay with cash?', a: cash.value ? 'Yes, with a free account and a mobile number. Choose Cash before you request, then pay your driver at drop-off. Exact change helps.' : 'Rides are paid by card for now. Your card is charged when you arrive, and your receipt is emailed to you.' },
-  { q: 'What if no driver accepts?', a: 'You pay nothing. Your request simply ends, and you can try again whenever you like.' },
+  { q: 'Do I need an account or the app?', a: 'No. Book right here in your browser as a guest with just your name and mobile number. A free account saves your details and trips for next time.' },
+  { q: 'How do I pay?', a: 'In cash, to your driver at drop-off: the price you saw when you booked, less any promo or credit. No card needed. Exact change helps, and you get a receipt once your driver confirms it.' },
+  { q: 'What if no driver accepts?', a: 'Nothing happens and you owe nothing. Your request simply ends, and you can try again whenever you like.' },
   { q: 'Is RideUp safe?', a: 'Every driver is approved by RideUp before their first trip. You see their name, photo, car and plate before pickup, you can share your trip live with family, and you can call for help from the trip screen.' },
-  { q: 'Can I cancel?', a: `Yes. It’s free until a driver accepts and for ${graceLabel} after. Later than that there’s a $5 fee, because your driver is on the way, and you see it before you confirm. If your driver cancels, you’re never charged.` },
+  { q: 'Can I cancel?', a: `Yes, and it’s always free. Please cancel early: after a driver has been on the way for ${graceLabel}, it counts as a late cancellation, and two late cancellations or missed pickups in 30 days pause booking on your account. If your driver cancels, we find you another one.` },
   { q: 'Can I book for someone else, or from the airport?', a: `Yes. Tap “Someone else?” when you book and we’ll text them the driver’s details. At the airport, book from arrivals; airport pickups add ${formatAmount(AIRPORT_FEE_CENTS)}.` },
 ])
 
 const accountPerks = computed(() => [
-  { title: 'Book faster', text: 'Your details and card are saved for next time.' },
-  ...(cash.value ? [{ title: 'Pay with cash', text: 'Pay your driver at drop-off. Cash needs an account with a mobile number.' }] : []),
+  { title: 'Book faster', text: 'Your name, number and saved places are ready for next time.' },
   { title: '$5 for every friend', text: 'Friends get $5 off their first ride with your code, and you get $5 credit when they ride.' },
   { title: 'Trips and receipts', text: 'Every trip and receipt in one place.' },
 ])
@@ -177,8 +170,8 @@ const showStickyCta = computed(() => !heroInView.value && !finalReached.value)
           <ul class="mt-4 grid gap-y-1.5 sm:grid-cols-2 sm:gap-x-5 max-w-lg text-[14px] text-[var(--color-text-secondary)]">
             <li class="flex gap-2"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Price locked when you book</li>
             <li class="flex gap-2"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>No account or app needed</li>
-            <li class="flex gap-2" :class="!settingsReady && 'invisible'"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>{{ cash ? 'Pay by card or cash' : 'Card charged when you arrive' }}</li>
-            <li class="flex gap-2"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>No charge if nobody accepts</li>
+            <li class="flex gap-2"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Pay cash at drop-off</li>
+            <li class="flex gap-2"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>No card needed</li>
           </ul>
         </div>
 
@@ -251,7 +244,7 @@ const showStickyCta = computed(() => !heroInView.value && !finalReached.value)
           <li v-for="item in PROMISE" :key="item.title" class="rounded-2xl bg-[var(--color-surface-secondary)] p-5">
             <div class="w-10 h-10 rounded-xl bg-[#2b8659]/12 text-[var(--color-brand)] flex items-center justify-center mb-3">
               <svg v-if="item.icon === 'lock'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path stroke-linecap="round" d="M8 11V7a4 4 0 118 0v4"/></svg>
-              <svg v-else-if="item.icon === 'card'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path stroke-linecap="round" d="M2 10h20M7 15h3"/></svg>
+              <svg v-else-if="item.icon === 'cash'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path stroke-linecap="round" d="M6 12h.01M18 12h.01"/></svg>
               <svg v-else-if="item.icon === 'clock'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>
               <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 9a8 8 0 0114-3l2 2M20 15a8 8 0 01-14 3l-2-2M20 4v4h-4M4 20v-4h4"/></svg>
             </div>

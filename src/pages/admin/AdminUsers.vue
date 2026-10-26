@@ -119,11 +119,10 @@
             <dt class="text-[var(--color-text-muted)]">Phone</dt><dd>{{ open.phoneText || '—' }}</dd>
             <dt class="text-[var(--color-text-muted)]">Joined</dt><dd>{{ open.joinedLong }}</dd>
             <dt class="text-[var(--color-text-muted)]">Came from</dt><dd>{{ open.source }}</dd>
-            <dt class="text-[var(--color-text-muted)]">Card</dt><dd>{{ open.card || 'No card saved' }}</dd>
             <dt class="text-[var(--color-text-muted)]">Credit</dt><dd class="font-semibold">{{ formatFare(open.creditCents) }}</dd>
             <template v-if="open.cashKnown">
-              <dt class="text-[var(--color-text-muted)]">Cash</dt>
-              <dd :class="open.cashBlocked && 'text-[var(--color-danger)] font-semibold'">{{ open.cashBlocked ? `Off: ${CASH_REASONS[open.cashReason] || 'turned off'}${open.cashSince ? ` (${when(open.cashSince)})` : ''}` : 'Can pay cash' }}</dd>
+              <dt class="text-[var(--color-text-muted)]">Booking</dt>
+              <dd :class="open.cashBlocked && 'text-[var(--color-danger)] font-semibold'">{{ open.cashBlocked ? `Paused: ${PAUSE_REASONS[open.cashReason] || 'paused'}${open.cashSince ? ` (${when(open.cashSince)})` : ''}` : 'Can book' }}</dd>
             </template>
             <dt class="text-[var(--color-text-muted)]">Referral code</dt><dd>{{ open.referralCode || '—' }}</dd>
             <dt class="text-[var(--color-text-muted)]">Referred by</dt><dd>{{ open.referredBy || '—' }}</dd>
@@ -168,13 +167,13 @@
           <router-link v-if="rides.length" to="/admin/rides" class="mt-2 inline-block text-sm font-semibold text-[var(--color-brand)]">Open Rides to refund or see details →</router-link>
         </section>
 
-        <!-- Cash -->
+        <!-- Booking pause -->
         <template v-if="isAdmin && open.cashKnown">
-        <button @click="toggleCash(open)" :disabled="busy"
+        <button @click="toggleBooking(open)" :disabled="busy"
                 class="w-full h-11 mb-2 rounded-xl text-sm font-semibold border border-[var(--color-border)] disabled:opacity-50">
-          {{ open.cashBlocked ? 'Turn cash back on' : 'Turn cash off' }}
+          {{ open.cashBlocked ? 'Let them book again' : 'Pause booking' }}
         </button>
-        <p class="mb-4 text-[12px] text-[var(--color-text-muted)]">{{ open.cashBlocked ? 'They can pay by card meanwhile. Turn cash back on once an unpaid fare is sorted out.' : 'They can still pay by card. Cash is turned off automatically for riders who don’t pay, or who miss or cancel late on two cash trips in 30 days.' }}</p>
+        <p class="mb-4 text-[12px] text-[var(--color-text-muted)]">{{ open.cashBlocked ? 'Turn booking back on once an unpaid fare or the missed pickups are sorted out. Their other accounts on the same phone are paused too while this one is.' : 'Booking pauses automatically for riders who don’t pay, or who miss or cancel late on two trips in 30 days.' }}</p>
         </template>
 
         <!-- Suspend -->
@@ -247,13 +246,13 @@ const firstName = (name) => String(name || '').trim().split(/\s+/)[0] || 'there'
 function welcomeMail(u) {
   const subject = 'Welcome to RideUp: $5 off your first ride'
   const body = `Hi ${firstName(u.name)},\n\nThanks for joining RideUp! Your first ride is $5 off with the code WELCOME5.\n\n` +
-    'See your exact price before you book, pay by card, and ride with approved local drivers across Nassau.\n\n' +
+    'See your exact price before you book, ride with approved local drivers across Nassau, and pay your driver in cash at drop-off.\n\n' +
     'Book here: https://www.rideupnassau.com/book\n\nLet’s ride,\nRideUp'
   return `mailto:${u.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 }
 // Typed into WhatsApp for you to check and send.
 const welcomeText = (u) => `Hi ${firstName(u.name)}, it's RideUp. Thanks for signing up! Your first ride is $5 off with the code WELCOME5. ` +
-  'You see the price before you book and pay by card: https://www.rideupnassau.com/book'
+  'You see the price before you book and pay your driver in cash at drop-off: https://www.rideupnassau.com/book'
 
 const when = (iso) => new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 const short = (address) => String(address || '—').split(',')[0]
@@ -319,11 +318,12 @@ async function addCredit() {
   }
 }
 
-// Paying cash: off for riders who didn't pay or kept missing pickups (set by the database), and switchable here.
-const CASH_REASONS = { unpaid: 'didn’t pay for a cash trip', no_shows: 'missed or cancelled late on 2 cash trips', admin: 'turned off by RideUp' }
-async function toggleCash(user) {
+// Booking pause (riders.cash_blocked): set by the database for riders who didn't pay or kept missing pickups, and
+// switchable here.
+const PAUSE_REASONS = { unpaid: 'didn’t pay for a trip', no_shows: 'missed or cancelled late on 2 trips', admin: 'paused by RideUp' }
+async function toggleBooking(user) {
   const off = !user.cashBlocked
-  if (off && !window.confirm(`Turn cash off for ${user.name}? They'll need to pay by card.`)) return
+  if (off && !window.confirm(`Pause booking for ${user.name}? They won't be able to request rides until you turn it back on.`)) return
   actionError.value = ''
   notice.value = ''
   busy.value = true
@@ -334,7 +334,7 @@ async function toggleCash(user) {
   busy.value = false
   if (error) { actionError.value = `Couldn't update ${user.name}: ${error.message}`; return }
   Object.assign(user, { cashBlocked: off, cashReason: off ? 'admin' : '', cashSince: change.cash_blocked_at })
-  notice.value = off ? `Cash is off for ${firstName(user.name)}.` : `${firstName(user.name)} can pay cash again.`
+  notice.value = off ? `Booking is paused for ${firstName(user.name)}.` : `${firstName(user.name)} can book again.`
 }
 
 // Suspension is enforced by the database: suspended riders can't request rides.
@@ -372,7 +372,6 @@ onMounted(async () => {
       joinedLong: r.created_at ? new Date(r.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—',
       status: r.suspended ? 'Suspended' : 'Active',
       guest: !!r.is_guest,
-      card: r.card_last4 ? `${r.card_brand ? r.card_brand[0].toUpperCase() + r.card_brand.slice(1) : 'Card'} •••• ${r.card_last4}` : '',
       creditCents: r.credit_cents || 0,
       referralCode: r.referral_code || '',
       referredBy: r.referred_by ? names.get(r.referred_by) || 'Another rider' : '',

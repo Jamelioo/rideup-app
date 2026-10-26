@@ -2,8 +2,8 @@ import { formatAmount } from './pricing.js'
 
 // The first-ride offer every new visitor gets, applied automatically. Admin › Promos picks the code ("Show on
 // landing page"), stored as app_settings.landing_promo. Shared by the server (api/_routes/landing-offer.js) and
-// the app (src/lib/landingOffer.js). The database still checks each rider's own rules (first ride, same card or
-// phone) when they book.
+// the app (src/lib/landingOffer.js). The database still checks each rider's own rules (first ride, same phone)
+// when they book.
 
 export const DEFAULT_LANDING_PROMO = 'WELCOME5'
 

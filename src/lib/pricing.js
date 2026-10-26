@@ -1,6 +1,4 @@
-// Fare calculation for on-demand rides — point-to-point, priced by
-// distance + time. Airport transfer flat rates stay on the existing
-// Stripe/WordPress setup separately.
+// Fare calculation for on-demand rides — point-to-point, priced by distance + time.
 
 export const RATES = {
   standard: { base: 200, perMile: 125, perMinute: 35, minimum: 1000 }, // small cars (Fit, March…): $2 + $1.25/mi + $0.35/min, $10 min
@@ -8,7 +6,7 @@ export const RATES = {
   premium:  { base: 700, perMile: 320, perMinute: 40, minimum: 2000 },
 }
 
-// $2.50 per trip kept by RideUp (covers card processing and maps); drivers keep 70% of everything else.
+// $2.50 per trip kept by RideUp (covers maps, texts and support); drivers keep 70% of everything else.
 export const BOOKING_FEE_CENTS = 250
 // Driver share of the fare after the booking fee. Must match set_ride_fee() (migration 015).
 export const DRIVER_SHARE = 0.7

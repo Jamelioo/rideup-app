@@ -8,9 +8,8 @@
       </div>
     </div>
     <p class="text-sm text-[var(--color-text-secondary)] mb-6">
-      What each driver has earned (their 70% of paid trips, their share of cancellation and no-show fees, and 100% of tips) minus what you’ve already paid them.
-      Pay drivers by bank transfer, cash or mobile money, then record it here so balances and the driver’s earnings page stay correct.
-      On cash trips the driver keeps the cash, so RideUp’s share comes off their balance; a driver who holds more than they’ve earned owes RideUp. Record cash they hand over with “Record cash received”.
+      Riders pay drivers in cash, so drivers keep the fares and owe RideUp its share. Each balance is what a driver has earned (70% of paid trips, plus incentives and RideUp-funded discounts) minus the cash they collected and what you’ve already settled.
+      A negative balance means the driver owes RideUp: record the cash they hand over with “Record cash received”. A positive one (for example from incentives) is paid by bank transfer, cash or mobile money; record it here so balances and the driver’s earnings page stay correct.
     </p>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
