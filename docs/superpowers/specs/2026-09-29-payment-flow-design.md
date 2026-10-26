@@ -1,5 +1,7 @@
 # Payment Flow — Design Spec
 
+> **Superseded (October 26, 2026):** RideUp no longer takes card payments. Every trip is paid in cash to the driver at drop-off (migration 021). Kept for history.
+
 **Goal:** Require card payment for all rides (guest and logged-in). Save card at booking time via Stripe SetupIntent, pre-authorize when driver accepts, capture after ride completes.
 
 **Architecture:** Client-side Stripe Elements for card collection. Server-side (Vercel serverless) for SetupIntent creation, PaymentIntent creation/capture/cancellation. Supabase stores Stripe IDs on rider and ride records.

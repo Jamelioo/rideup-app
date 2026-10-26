@@ -8,9 +8,7 @@
     "allowNavigation": [
       "rideupnassau.com",
       "*.rideupnassau.com",
-      "*.supabase.co",
-      "*.stripe.com",
-      "*.stripe.network"
+      "*.supabase.co"
     ]
   },
   "appendUserAgent": "RideUpApp",

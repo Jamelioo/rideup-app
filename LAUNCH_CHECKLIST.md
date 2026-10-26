@@ -4,10 +4,8 @@ Work through this top to bottom before opening to the public. Tick each box only
 
 ## 1. Switch from test to live
 
-- [ ] **Stripe live keys** in Vercel (Production): `STRIPE_SECRET_KEY` (`sk_live_…`) and `VITE_STRIPE_PUBLISHABLE_KEY` (`pk_live_…`).
-- [ ] **Stripe live webhook**: Stripe › Developers › Webhooks (live mode) › Add endpoint
-      `https://www.rideupnassau.com/api/webhook` with events `checkout.session.completed`, `charge.refunded`,
-      `charge.dispute.created`, `payment_intent.payment_failed`. Put its signing secret in `STRIPE_WEBHOOK_SECRET`.
+- [ ] **Payments are cash only**: no payment keys are needed. Remove any old `STRIPE_*`, `VITE_STRIPE_*` and
+      `CANCEL_FEE_CENTS` variables from Vercel; nothing reads them any more.
 - [ ] **Redeploy** after changing keys (Vercel › Deployments › latest › Redeploy).
 - [ ] **Google Maps key** restricted to `https://rideupnassau.com/*` and `https://www.rideupnassau.com/*`
       (plus `https://rideup-app.vercel.app/*`), with only Maps JavaScript, Places, Directions and Geocoding enabled,
@@ -20,7 +18,7 @@ Work through this top to bottom before opening to the public. Tick each box only
 
 ## 2. Database and settings
 
-- [ ] Migrations `001` … `015` all run in the Supabase SQL Editor, in order.
+- [ ] Migrations `001` … `021` all run in the Supabase SQL Editor, in order.
 - [ ] Your admin account has `{"role":"admin"}` in its app metadata, and Admin pages open without errors.
 - [ ] Admin › Settings reviewed: busy-time pricing, pickup PIN, XL / Premium offered only when you have those drivers,
       verified phone numbers only if SMS is set up in Supabase.
@@ -38,23 +36,23 @@ Work through this top to bottom before opening to the public. Tick each box only
 
 ## 4. Test rides (two phones, about 45 minutes)
 
-Use a rider account on one phone and an approved driver account on another. Use a real card for a few small trips
-after switching to live keys, and refund them afterwards.
+Use a rider account on one phone and an approved driver account on another, and a third phone (or a private
+window) for a guest booking. Pay the driver real cash for a few small trips.
 
 | # | Do this | You should see |
 |---|---|---|
 | 1 | Rider: enter pickup and drop-off | Upfront price; "Busy" only if it really is busy |
 | 2 | Rider: book | Driver phone gets the request (sound/alert) |
-| 3 | Driver: accept | Rider sees the driver and car; Stripe shows an **uncaptured** payment for the fare |
+| 3 | Driver: accept | Rider sees the driver and car, and "Pay $X in cash at drop-off" |
 | 4 | Driver: "I've arrived" | Rider gets "Your driver has arrived"; wait timer starts |
 | 5 | Driver: start (enter PIN if on) | Trip in progress on both phones; driver's position moves on the rider's map |
-| 6 | Driver: slide to complete | Stripe payment **captured**; receipt email arrives; rider is asked to rate |
-| 7 | Rider: add a $1 tip | Tip receipt; driver's earnings go up by $1 |
-| 8 | New trip: rider cancels more than 2 minutes after accept | Cancellation fee charged and on the receipt |
-| 9 | New trip: driver waits 5 minutes, then "Rider didn't show up" | No-show fee charged |
+| 6 | Driver: slide to complete, collect the cash, tap "Cash collected" | Receipt email arrives; rider is asked to rate; driver's balance drops by RideUp's share |
+| 7 | Guest (logged out): book with just a name and mobile number | Driver gets the request with the guest's name and number |
+| 8 | New trip: rider cancels more than 2 minutes after accept | "Counts as a late cancellation" before confirming; no charge |
+| 9 | New trip: driver waits 5 minutes, then "Rider didn't show up" | No charge; after a second late cancel or no-show the rider sees "Booking is paused" (turn it back on in Admin › Users) |
 | 10 | New trip with an extra stop | Price includes the stop; driver gets "Stop done" |
 | 11 | New trip: "Someone else?", with a third phone number | Driver sees the passenger's name and phone; the passenger gets a text (if Twilio is set) |
-| 12 | During a trip: Split fare with a third account | Friend accepts; both charged their share at the end |
+| 12 | Driver: finish a trip, then Earnings › "Rider didn't pay" | Rider's booking is paused and they're emailed; the team gets an alert |
 | 13 | Admin › Rides › a trip › refund $1 as credit | Rider is notified; credit is used on the next trip |
 | 14 | Admin › Money | The day's trips, payments and RideUp's share look right |
 | 15 | Delete a test rider account from Profile | Logged out; the account can't sign in again |
