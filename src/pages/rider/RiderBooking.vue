@@ -549,16 +549,18 @@ async function requestRide() {
 async function ensureRider(user, guestInfo = null) {
   const { data: existing } = await supabase
     .from('riders')
-    .select('id, name, phone')
+    .select('id, name, phone, is_guest')
     .eq('auth_user_id', user.id)
     .maybeSingle()
 
   if (existing) {
-    if (guestInfo && (existing.name !== guestInfo.name || existing.phone !== guestInfo.phone)) {
-      await supabase
+    if (guestInfo && (existing.name !== guestInfo.name || existing.phone !== guestInfo.phone || !existing.is_guest)) {
+      const { error: updErr } = await supabase
         .from('riders')
         .update({ name: guestInfo.name, phone: guestInfo.phone, is_guest: true })
         .eq('id', existing.id)
+      // Without the name and number the driver can't find them: ask them to try again rather than carry on.
+      if (updErr && !(existing.name && existing.phone)) return null
     }
     return existing
   }
@@ -679,7 +681,9 @@ async function handleGuestSubmit({ name, phone }) {
     const { data: { session } } = await supabase.auth.getSession()
     let user = session?.user || null
     if (!user) {
-      const { data, error: authErr } = await supabase.auth.signInAnonymously()
+      // The name and number go in with the account itself: the database copies them onto the rider profile as
+      // the account is created, so a dropped connection afterwards can't leave a blank guest behind.
+      const { data, error: authErr } = await supabase.auth.signInAnonymously({ options: { data: { name, phone } } })
       if (authErr || !data.user) {
         guestSheetRef.value?.setError('Could not start your booking. Check your connection and try again.')
         return

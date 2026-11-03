@@ -56,7 +56,7 @@
               class="border-t border-[var(--color-border)] hover:bg-[var(--color-surface-secondary)] transition-colors"
             >
               <td data-label="Name" class="px-4 py-3 text-[var(--color-text-primary)] font-medium">
-                <button @click="openUser(user)" class="font-medium text-left hover:underline">{{ user.name }}</button>
+                <button @click="openUser(user)" class="font-medium text-left hover:underline" :class="user.blank && 'text-[var(--color-text-muted)] font-normal italic'" :title="user.blank ? 'Started booking as a guest but their name and number never saved' : undefined">{{ user.name }}</button>
                 <span v-if="user.guest" class="ml-1 text-xs font-medium px-1.5 py-0.5 rounded bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)]">Guest</span>
               </td>
               <td data-label="Email" class="px-4 py-3 text-[var(--color-text-muted)]">{{ user.email || '—' }}</td>
@@ -209,11 +209,12 @@ const users = ref([])
 const actionError = ref('')
 const notice = ref('')
 
-const neverBookedCount = computed(() => users.value.filter((u) => !u.booked && u.status === 'Active').length)
+// "Never booked" is a call list, so it leaves out sign-ups with no name, email or phone to contact.
+const neverBookedCount = computed(() => users.value.filter((u) => !u.booked && u.status === 'Active' && !u.blank).length)
 
 const filteredUsers = computed(() => {
   let list = users.value
-  if (activeFilter.value === 'Never booked') list = list.filter((u) => !u.booked && u.status === 'Active')
+  if (activeFilter.value === 'Never booked') list = list.filter((u) => !u.booked && u.status === 'Active' && !u.blank)
   else if (activeFilter.value !== 'All') list = list.filter((u) => u.status === activeFilter.value)
   const q = search.value.trim().toLowerCase()
   if (q) {
@@ -361,7 +362,9 @@ onMounted(async () => {
     const names = new Map(data.map((r) => [r.id, r.name]))
     users.value = data.map((r) => ({
       id: r.id,
-      name: r.name || 'Unknown',
+      // A guest whose name and number never saved (they left, or lost signal, mid-booking): nothing to follow up on.
+      blank: !r.name && !r.email && !r.phone,
+      name: r.name || (r.email ? r.email.split('@')[0] : r.is_guest ? 'Guest' : 'Unfinished sign-up'),
       email: r.email || '',
       phone: r.phone || '',
       phoneText: r.phone ? formatPhone(r.phone) || r.phone : '',
