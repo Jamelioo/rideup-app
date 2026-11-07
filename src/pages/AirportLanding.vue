@@ -1,6 +1,7 @@
 <script setup>
 import BrandLogo from '../components/BrandLogo.vue'
-import { computed, onMounted, onUnmounted } from 'vue'
+import ProofStrip from '../components/ProofStrip.vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { calculateFare, formatFare, formatAmount, AIRPORT, AIRPORT_FEE_CENTS, BOOKING_FEE_CENTS } from '../lib/pricing'
 import { DRIVER_CANCEL_CREDIT_CENTS } from '../lib/policy'
@@ -32,20 +33,24 @@ const DESTINATIONS = [
   { name: 'Paradise Island & Atlantis', miles: 13, minutes: 30, to: 'paradise-island' },
 ]
 const fromAirport = { path: '/book', query: { from: 'airport' } }
+
+// The questions visitors have at the airport, answered from how the app works.
+const faqs = computed(() => [
+  { q: 'Where do I meet my driver?', a: 'Book from the arrivals area. You see your driver’s name, photo, car and plate, and you can message or call them in the app to agree the exact spot.' },
+  { q: 'Can I use my phone number from home?', a: 'Yes. Numbers from the Bahamas, the US and Canada work as they are; for anywhere else, start with + and your country code. Your driver uses it to reach you at pickup.' },
+  { q: 'Do I need to download an app?', a: 'No. Book right here in your browser with your name and mobile number. No account or card needed.' },
+  { q: 'How much does it cost?', a: `The fares above include the ${formatFare(AIRPORT_FEE_CENTS)} airport pickup fee and the ${formatFare(BOOKING_FEE_CENTS)} booking fee. Your exact price shows before you book and doesn’t change during the trip. At busy times it can cost more, and you see that before you book too.` },
+  { q: 'What if no driver accepts, or my driver cancels?', a: `If no driver accepts, you pay nothing. If your driver cancels, we find you another driver at the same price${credit ? ` and add ${credit} credit to your account` : ''}.` },
+  { q: 'Is there room for a group?', a: 'RideUp Go seats up to 4 riders. When RideUp XL is offered, it seats up to 6.' },
+])
 const fares = computed(() => DESTINATIONS.map((d) => ({
   ...d,
   fare: calculateFare(d.miles, d.minutes, 'standard', { pickup }),
   link: d.to ? tripLink('airport', d.to) : fromAirport,
 })))
 
-let previousDescription = ''
-onMounted(() => {
-  const meta = document.querySelector('meta[name="description"]')
-  previousDescription = meta?.getAttribute('content') || ''
-  meta?.setAttribute('content', 'Rides from Lynden Pindling International Airport (NAS) to Cable Beach, Baha Mar, downtown Nassau and Paradise Island. See your price before you ride.')
-  trackStep('landing')
-})
-onUnmounted(() => document.querySelector('meta[name="description"]')?.setAttribute('content', previousDescription))
+// The page title and description come from src/lib/seoPages.js (set by the router), like every public page.
+onMounted(() => trackStep('landing'))
 </script>
 
 <template>
@@ -74,6 +79,7 @@ onUnmounted(() => document.querySelector('meta[name="description"]')?.setAttribu
       <ul class="mt-5 grid gap-y-1.5 sm:grid-cols-2 sm:gap-x-5 max-w-lg text-[14px] text-[var(--color-text-secondary)]">
         <li v-for="t in trust" :key="t" class="flex gap-2"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>{{ t }}</li>
       </ul>
+      <ProofStrip class="mt-4" />
     </header>
 
     <section class="max-w-5xl mx-auto px-5 pb-10" aria-labelledby="fares-title">
@@ -108,5 +114,35 @@ onUnmounted(() => document.querySelector('meta[name="description"]')?.setAttribu
       <div class="rounded-2xl bg-[var(--color-surface-secondary)] p-5"><p class="font-bold mb-1">2. Meet your driver</p><p class="text-[14px] text-[var(--color-text-secondary)]">See your driver’s name, photo, car and plate. Message or call them in the app{{ settings.require_pickup_pin ? ', and use your PIN to start the trip' : '' }}.</p></div>
       <div class="rounded-2xl bg-[var(--color-surface-secondary)] p-5"><p class="font-bold mb-1">3. Ride and pay cash</p><p class="text-[14px] text-[var(--color-text-secondary)]">Share your trip with family, then pay your driver in cash at drop-off. No card needed.</p></div>
     </section>
+
+    <!-- What visitors ask before they book -->
+    <section class="max-w-3xl mx-auto px-5 pb-14" aria-labelledby="airport-faq-title">
+      <h2 id="airport-faq-title" class="text-[22px] font-bold mb-4">Questions</h2>
+      <div class="divide-y divide-[var(--color-border)] border-y border-[var(--color-border)]">
+        <details v-for="f in faqs" :key="f.q" class="group">
+          <summary class="flex items-center justify-between gap-4 py-4 min-h-[56px] cursor-pointer list-none text-[16px] font-semibold [&::-webkit-details-marker]:hidden">
+            {{ f.q }}
+            <svg class="w-5 h-5 shrink-0 text-[var(--color-text-muted)] transition-transform group-open:rotate-180 motion-reduce:transition-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="pb-5 -mt-1 text-[15px] leading-[1.6] text-[var(--color-text-secondary)]">{{ f.a }}</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- Final call to action: the page never ends without a way to book -->
+    <section class="bg-[var(--color-surface-secondary)] px-5 py-12 text-center" aria-labelledby="airport-cta-title">
+      <h2 id="airport-cta-title" class="text-[26px] font-bold mb-2">Ready when you land</h2>
+      <p class="text-[15px] text-[var(--color-text-secondary)] mb-6">See your exact fare in seconds. No account, app or card.</p>
+      <button @click="router.push(fromAirport)" class="px-8 py-4 rounded-2xl bg-[#2b8659] text-white font-bold text-[16px] shadow-[0_4px_16px_rgba(43,134,89,0.3)]">Book from the airport</button>
+      <p v-if="pill" class="mt-4 text-[14px] text-[var(--color-text-secondary)]"><strong class="text-[var(--color-brand)]">{{ pill.title }}</strong> · {{ pill.note }}</p>
+    </section>
+
+    <footer class="max-w-5xl mx-auto px-5 py-8 flex flex-wrap gap-x-6 gap-y-1 text-[14px] text-[var(--color-text-muted)]">
+      <router-link to="/" class="py-2.5">RideUp home</router-link>
+      <router-link to="/support" class="py-2.5">Help</router-link>
+      <a href="tel:+12424529911" class="py-2.5">(242) 452-9911</a>
+      <router-link to="/terms" class="py-2.5">Terms</router-link>
+      <router-link to="/privacy" class="py-2.5">Privacy</router-link>
+    </footer>
   </div>
 </template>
