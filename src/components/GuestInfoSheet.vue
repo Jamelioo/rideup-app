@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { toE164, tidyPhone, PHONE_HINT } from '../lib/phone'
 import { formatFare } from '../lib/pricing'
 
@@ -33,7 +33,11 @@ function handleSubmit() {
   const e164 = toE164(phone.value)
   nameError.value = cleanName.length >= 2 ? '' : 'Enter your name so your driver knows who to look for.'
   phoneError.value = e164 ? '' : PHONE_HINT
-  if (nameError.value || phoneError.value) return
+  if (nameError.value || phoneError.value) {
+    // Put the cursor where the problem is, so the keyboard stays up and they can fix it straight away.
+    nextTick(() => document.getElementById(nameError.value ? 'guest-name' : 'guest-phone')?.focus())
+    return
+  }
   error.value = ''
   submitting.value = true
   emit('submit', { name: cleanName.slice(0, 80), phone: e164 })
@@ -75,13 +79,13 @@ defineExpose({ reset, setError })
           <div v-if="error" role="alert" class="bg-red-500/10 border border-red-500/20 text-[var(--color-danger)] text-[13px] px-4 py-2.5 rounded-xl mb-4">{{ error }}</div>
 
           <label for="guest-name" class="text-[12px] font-medium text-[var(--color-text-muted)] mb-1 block">Your name</label>
-          <input id="guest-name" v-model="name" type="text" autocomplete="name" autocapitalize="words" maxlength="80" placeholder="e.g. Marcus"
+          <input id="guest-name" v-model="name" type="text" autocomplete="name" autocapitalize="words" maxlength="80" placeholder="e.g. Marcus" autofocus enterkeyhint="next"
                  :aria-invalid="nameError ? 'true' : undefined" :aria-describedby="nameError ? 'guest-name-error' : undefined"
                  class="w-full bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 text-[16px] font-medium outline-none focus:ring-2 focus:ring-[#2b8659] transition-all min-h-[48px] placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
           <p v-if="nameError" id="guest-name-error" role="alert" class="text-[var(--color-danger)] text-[13px] mt-1">{{ nameError }}</p>
 
           <label for="guest-phone" class="text-[12px] font-medium text-[var(--color-text-muted)] mb-1 mt-3 block">Mobile number</label>
-          <input id="guest-phone" v-model="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(242) 555-0100"
+          <input id="guest-phone" v-model="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(242) 555-0100" enterkeyhint="go"
                  :aria-invalid="phoneError ? 'true' : undefined" :aria-describedby="phoneError ? 'guest-phone-error' : undefined"
                  @blur="phone = tidyPhone(phone)"
                  class="w-full bg-[var(--color-surface-secondary)] rounded-xl px-4 py-3 text-[16px] font-medium outline-none focus:ring-2 focus:ring-[#2b8659] transition-all min-h-[48px] placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />

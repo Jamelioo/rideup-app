@@ -243,7 +243,7 @@ const showStickyCta = computed(() => !heroInView.value && !finalReached.value)
                   </div>
                 </div>
                 <div class="px-3.5 pb-3.5">
-                  <div class="bg-[#2b8659] text-white text-[11px] font-bold text-center py-2 rounded-xl">Choose RideUp Go</div>
+                  <div class="bg-[#2b8659] text-white text-[11px] font-bold text-center py-2 rounded-xl">Request RideUp Go</div>
                 </div>
               </div>
             </div>

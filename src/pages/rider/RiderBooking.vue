@@ -152,9 +152,12 @@ onUnmounted(() => {
 })
 
 let directionsService = null
-let placesAutocompletePickup = null
-let placesAutocompleteDropoff = null
+let autocompleteService = null
+let geocoder = null
+let islandBounds = null
 let debounceTimer = null
+// A note under an address field when what was typed couldn't be matched to a place.
+const fieldHint = ref({ pickup: '', dropoff: '', stop: '' })
 
 onMounted(async () => {
   // Initialize sheet to mid position
@@ -172,6 +175,7 @@ onMounted(async () => {
     await nextTick()
     setupAutocomplete(maps)
     maybeCalculateRoute() // a trip a link filled in (prefillTrip) is priced as soon as Maps is ready
+    prefillPickupFromLocation()
   } catch (err) {
     error.value = 'Could not load maps. Check your connection and try again.'
   }
@@ -179,12 +183,19 @@ onMounted(async () => {
 
 function setupAutocomplete(maps) {
   const bounds = new maps.LatLngBounds({ lat: 24.95, lng: -77.55 }, { lat: 25.15, lng: -77.25 })
+  islandBounds = bounds
+  autocompleteService = new maps.places.AutocompleteService()
+  geocoder = new maps.Geocoder()
   const attach = (input, kind) => {
     if (!input) return
     const ac = new maps.places.Autocomplete(input, { bounds, strictBounds: true, fields: ['formatted_address', 'geometry'] })
+    // Typed but not picked from the list (left the field, or pressed Enter): use the best match instead of nothing.
+    input.addEventListener('blur', () => setTimeout(() => resolveTyped(kind, input), 350))
     ac.addListener('place_changed', () => {
       const place = ac.getPlace()
-      if (!place.geometry) return
+      if (!place.geometry) { resolveTyped(kind, input); return }
+      fieldHint.value[kind] = ''
+      chosenText[kind] = input.value
       const location = { address: place.formatted_address, lat: place.geometry.location.lat(), lng: place.geometry.location.lng() }
       if (kind === 'pickup') {
         pickup.value = location
@@ -205,6 +216,49 @@ function setupAutocomplete(maps) {
   attach(stopInput.value, 'stop')
   attach(stopInputDesktop.value, 'stop')
   syncAddressFields()
+}
+
+const locationOf = (kind) => (kind === 'pickup' ? pickup.value : kind === 'stop' ? stop.value : dropoff.value)
+function setLocation(kind, location) {
+  if (kind === 'pickup') pickup.value = location
+  else if (kind === 'stop') stop.value = location
+  else dropoff.value = location
+}
+
+// What's in an address field should always be what gets priced. If the rider typed an address without choosing a
+// suggestion (or changed a chosen one), look up the best match on the island; an emptied field clears that place.
+const resolving = { pickup: 0, dropoff: 0, stop: 0 }
+// The text Google put in the field when a suggestion was chosen (it can differ from the saved address).
+const chosenText = { pickup: '', dropoff: '', stop: '' }
+async function resolveTyped(kind, input) {
+  const text = (input?.value || '').trim()
+  const current = locationOf(kind)
+  if (!text) {
+    fieldHint.value[kind] = ''
+    if (current) { setLocation(kind, null); maybeCalculateRoute() }
+    return
+  }
+  if (current && (current.address === input.value || chosenText[kind] === input.value)) return
+  if (!autocompleteService || !geocoder) return
+  const token = ++resolving[kind]
+  const predictions = await new Promise((resolve) => {
+    autocompleteService.getPlacePredictions({ input: text, locationRestriction: islandBounds }, (list) => resolve(list || []))
+  })
+  if (token !== resolving[kind] || locationOf(kind)?.address === input.value) return // a suggestion was chosen meanwhile
+  const result = predictions.length
+    ? await new Promise((resolve) => geocoder.geocode({ placeId: predictions[0].place_id }, (r, status) => resolve(status === 'OK' ? r?.[0] : null)))
+    : null
+  if (token !== resolving[kind] || locationOf(kind)?.address === input.value) return
+  if (!result) {
+    fieldHint.value[kind] = 'We couldn’t find that place in Nassau. Try a street, hotel or landmark and choose it from the list.'
+    if (current) { setLocation(kind, null); maybeCalculateRoute() }
+    return
+  }
+  fieldHint.value[kind] = ''
+  const location = { address: result.formatted_address, lat: result.geometry.location.lat(), lng: result.geometry.location.lng() }
+  setLocation(kind, location)
+  input.value = location.address
+  maybeCalculateRoute()
 }
 
 // Whichever copy of the field is on screen (phone sheet or desktop panel).
@@ -303,9 +357,9 @@ async function handleMarkerDrag(type, latlng) {
   maybeCalculateRoute()
 }
 
-async function useCurrentLocation() {
+async function useCurrentLocation({ quiet = false } = {}) {
   if (!navigator.geolocation) {
-    showToast('Location not supported on this device')
+    if (!quiet) showToast('Location not supported on this device')
     return
   }
   isLocating.value = true
@@ -318,17 +372,35 @@ async function useCurrentLocation() {
     })
     const { latitude, longitude } = pos.coords
     const address = await reverseGeocode(latitude, longitude)
+    if (quiet && (pickup.value || visibleInput('pickup')?.value)) { isLocating.value = false; return } // they typed one meanwhile: keep theirs
     pickup.value = { lat: latitude, lng: longitude, address }
     pickupText.value = address
+    fieldHint.value.pickup = ''
+    if (activeInput.value === 'pickup') activeInput.value = 'dropoff'
     isLocating.value = false
+    if (directionsService) maybeCalculateRoute()
   } catch (err) {
     isLocating.value = false
-    showToast(err.code === 1 ? 'Location access denied' : 'Could not get location')
+    if (!quiet) showToast(err.code === 1 ? 'Location access off. Type your pickup, or allow location in your browser settings.' : 'Couldn’t find your location. Type your pickup instead.')
   }
 }
 
+// Like Uber: start from where the rider is, but only when they already allowed location (never a surprise prompt).
+async function prefillPickupFromLocation() {
+  if (DEMO_MODE || pickup.value || visibleInput('pickup')?.value || !navigator.permissions?.query) return
+  try {
+    const status = await navigator.permissions.query({ name: 'geolocation' })
+    if (status.state === 'granted' && !pickup.value) useCurrentLocation({ quiet: true })
+  } catch { /* older browsers: the button is still there */ }
+}
+
 function maybeCalculateRoute() {
-  if (!pickup.value || !dropoff.value) return
+  if (!pickup.value || !dropoff.value || !directionsService) {
+    // One end was cleared: don't keep showing the old trip's price.
+    distanceMiles.value = null
+    durationMinutes.value = null
+    return
+  }
   isCalculating.value = true
   error.value = null
   directionsService.route(
@@ -442,6 +514,15 @@ const optionLine = (type) => {
 }
 const canRequest = computed(() => routeReady.value && !carsUnavailable.value && !bookingPaused.value)
 const hasRoute = computed(() => distanceMiles.value && !isCalculating.value)
+// Phones: open the sheet up once there's a price, so the ride option and the button are both in view (Uber does
+// the same); back to the middle when the trip is cleared.
+watch(hasRoute, (ready) => {
+  if (ready && window.innerWidth < 768 && sheetSnap.value !== 'full') snapTo('full')
+})
+// Only when the trip is gone, not while a new price is being worked out (that would make the sheet bounce).
+watch(() => !!distanceMiles.value, (has) => {
+  if (!has && window.innerWidth < 768 && sheetSnap.value === 'full') snapTo('mid')
+})
 
 const emit = defineEmits(['requested', 'existing-ride'])
 
@@ -506,6 +587,8 @@ async function requestRide() {
       dropoff_address: dropoff.value.address,
       vehicle_type: selectedVehicle.value,
       fare_cents: fare,
+      promo_discount_cents: discounts.value.discount || 0,
+      credit_applied_cents: discounts.value.credit || 0,
       status: 'requested',
       payment_method: 'cash',
       demo: true,
@@ -847,8 +930,9 @@ async function scheduleRide({ date, time, summary }) {
                      class="bg-transparent outline-none w-full py-3 -my-3 text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
             <p v-if="pickupArea" class="px-1 text-[12px] leading-snug text-[var(--color-text-secondary)]">Change this to your exact pickup spot so your driver can find you.</p>
+            <p v-if="fieldHint.pickup" role="alert" class="px-1 text-[12px] leading-snug text-[var(--color-danger)]">{{ fieldHint.pickup }}</p>
             <button
-              @click="useCurrentLocation"
+              @click="useCurrentLocation()"
               :disabled="isLocating"
               class="flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium text-[var(--color-brand)] active:bg-[var(--color-surface-secondary)] rounded-lg transition-colors min-h-[44px]"
             >
@@ -878,6 +962,8 @@ async function scheduleRide({ date, time, summary }) {
                      @focus="activeInput = 'dropoff'"
                      class="bg-transparent outline-none w-full py-3 -my-3 text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
+            <p v-if="fieldHint.stop" role="alert" class="px-1 text-[12px] leading-snug text-[var(--color-danger)]">{{ fieldHint.stop }}</p>
+            <p v-if="fieldHint.dropoff" role="alert" class="px-1 text-[12px] leading-snug text-[var(--color-danger)]">{{ fieldHint.dropoff }}</p>
             <button v-if="!DEMO_MODE && !stopOpen" type="button" @click="openStop"
                     class="flex items-center gap-2 px-3 py-2 text-[13px] font-medium text-[var(--color-brand)] rounded-lg min-h-[44px]">
               <span aria-hidden="true" class="text-[16px] leading-none">+</span> Add stop
@@ -888,7 +974,7 @@ async function scheduleRide({ date, time, summary }) {
 
         <p v-if="DEMO_MODE && !hasRoute" class="text-[var(--color-brand)] text-[12px] mt-3 ml-[22px] font-medium">Demo mode — enter any two spots to see live pricing</p>
         <div v-if="!mapsReady && !error && !DEMO_MODE" class="text-[var(--color-text-muted)] text-sm text-center py-10">Loading map...</div>
-        <div v-if="error" class="bg-red-50 border border-red-200 text-[var(--color-danger)] text-[13px] rounded-xl px-4 py-3 mt-3">{{ error }}</div>
+        <div v-if="error" role="alert" class="bg-red-500/10 border border-red-500/20 text-[var(--color-danger)] text-[13px] rounded-xl px-4 py-3 mt-3">{{ error }}</div>
         <div v-if="isCalculating" class="flex items-center gap-2.5 text-[var(--color-text-muted)] text-[13px] mt-4 ml-[22px]">
           <span class="w-4 h-4 border-2 border-[var(--color-border)] border-t-[#2b8659] rounded-full animate-spin"></span>
           Calculating route...
@@ -915,7 +1001,7 @@ async function scheduleRide({ date, time, summary }) {
           </div>
           <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2.5 px-1">Choose your ride</p>
           <div class="space-y-2">
-            <button v-for="vehicle in availableVehicles" :key="vehicle.id" @click="selectedVehicle = vehicle.id"
+            <button v-for="vehicle in availableVehicles" :key="vehicle.id" type="button" @click="selectedVehicle = vehicle.id" :aria-pressed="selectedVehicle === vehicle.id"
                     class="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border-2 transition-all duration-200"
                     :class="selectedVehicle === vehicle.id ? 'border-[#2b8659] bg-[#2b8659]/[0.06] shadow-[0_0_0_3px_rgba(43,134,89,0.08)]' : 'border-transparent bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-secondary)] active:scale-[0.99]'">
               <div class="flex items-center gap-3">
@@ -959,8 +1045,8 @@ async function scheduleRide({ date, time, summary }) {
                 <button v-if="promo" type="button" @click="removePromo" class="text-[var(--color-text-muted)] py-1">Remove {{ promo.code }}</button>
               </div>
               <form v-if="promoOpen" @submit.prevent="applyPromo" class="flex gap-2">
-                <label class="sr-only" for="promo-code">Promo code</label>
-                <input id="promo-code" v-model="promoInput" autocapitalize="characters" autocomplete="off" placeholder="Promo code"
+                <label class="sr-only" for="promo-code-m">Promo code</label>
+                <input id="promo-code-m" v-model="promoInput" autocapitalize="characters" autocomplete="off" placeholder="Promo code"
                        class="flex-1 min-w-0 px-3 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] uppercase" />
                 <button type="submit" :disabled="promoBusy" class="px-4 rounded-xl bg-[#2b8659] text-white font-semibold disabled:opacity-50">{{ promoBusy ? '…' : 'Apply' }}</button>
                 <button type="button" @click="promoOpen = false; promoError = ''" class="px-2 text-[var(--color-text-muted)]" aria-label="Close">✕</button>
@@ -972,7 +1058,7 @@ async function scheduleRide({ date, time, summary }) {
           <div class="flex gap-2.5">
             <button @click="requestRide" :disabled="!canRequest"
                     class="flex-1 py-4 bg-[#2b8659] disabled:bg-[var(--color-surface-secondary)] disabled:text-[var(--color-text-muted)] text-white font-bold rounded-2xl text-[15px] transition-all active:scale-[0.98] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:shadow-none">
-              {{ isSubmitting ? 'Requesting…' : bookingPaused ? 'Booking paused' : carsUnavailable ? 'No cars available' : `Choose ${VEHICLE_TYPES.find(v => v.id === selectedVehicle)?.name || 'ride'}` }}
+              {{ isSubmitting ? 'Requesting…' : bookingPaused ? 'Booking paused' : carsUnavailable ? 'No cars available' : `Request ${VEHICLE_TYPES.find(v => v.id === selectedVehicle)?.name || 'ride'}` }}
             </button>
             <button v-if="SCHEDULING_ENABLED" @click="showSchedulePicker = true" :disabled="!routeReady || bookingPaused"
                     class="w-[52px] flex-shrink-0 flex items-center justify-center bg-[var(--color-surface-secondary)] disabled:bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] disabled:text-[var(--color-text-muted)] rounded-2xl transition-all active:scale-[0.97] border border-[var(--color-border)]"
@@ -1022,8 +1108,9 @@ async function scheduleRide({ date, time, summary }) {
                      class="bg-transparent outline-none w-full py-3 -my-3 text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
             <p v-if="pickupArea" class="px-1 text-[12px] leading-snug text-[var(--color-text-secondary)]">Change this to your exact pickup spot so your driver can find you.</p>
+            <p v-if="fieldHint.pickup" role="alert" class="px-1 text-[12px] leading-snug text-[var(--color-danger)]">{{ fieldHint.pickup }}</p>
             <button
-              @click="useCurrentLocation"
+              @click="useCurrentLocation()"
               :disabled="isLocating"
               class="flex items-center gap-2 px-3 py-2 text-[13px] font-medium text-[var(--color-brand)] hover:bg-[var(--color-surface-secondary)] rounded-lg transition-colors"
             >
@@ -1053,6 +1140,8 @@ async function scheduleRide({ date, time, summary }) {
                      @focus="activeInput = 'dropoff'"
                      class="bg-transparent outline-none w-full py-3 -my-3 text-[15px] font-medium placeholder:text-[var(--color-text-muted)] placeholder:font-normal" />
             </div>
+            <p v-if="fieldHint.stop" role="alert" class="px-1 text-[12px] leading-snug text-[var(--color-danger)]">{{ fieldHint.stop }}</p>
+            <p v-if="fieldHint.dropoff" role="alert" class="px-1 text-[12px] leading-snug text-[var(--color-danger)]">{{ fieldHint.dropoff }}</p>
             <button v-if="!DEMO_MODE && !stopOpen" type="button" @click="openStop"
                     class="flex items-center gap-2 px-3 py-2 text-[13px] font-medium text-[var(--color-brand)] rounded-lg min-h-[44px]">
               <span aria-hidden="true" class="text-[16px] leading-none">+</span> Add stop
@@ -1063,7 +1152,7 @@ async function scheduleRide({ date, time, summary }) {
 
         <p v-if="DEMO_MODE && !hasRoute" class="text-[var(--color-brand)] text-[12px] mt-3 ml-[22px] font-medium">Demo mode — enter any two spots to see live pricing</p>
         <div v-if="!mapsReady && !error && !DEMO_MODE" class="text-[var(--color-text-muted)] text-sm text-center py-10">Loading map...</div>
-        <div v-if="error" class="bg-red-50 border border-red-200 text-[var(--color-danger)] text-[13px] rounded-xl px-4 py-3 mt-3">{{ error }}</div>
+        <div v-if="error" role="alert" class="bg-red-500/10 border border-red-500/20 text-[var(--color-danger)] text-[13px] rounded-xl px-4 py-3 mt-3">{{ error }}</div>
         <div v-if="isCalculating" class="flex items-center gap-2.5 text-[var(--color-text-muted)] text-[13px] mt-4 ml-[22px]">
           <span class="w-4 h-4 border-2 border-[var(--color-border)] border-t-[#2b8659] rounded-full animate-spin"></span>
           Calculating route...
@@ -1090,7 +1179,7 @@ async function scheduleRide({ date, time, summary }) {
           </div>
           <p class="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3 px-1">Choose your ride</p>
           <div class="space-y-2">
-            <button v-for="vehicle in availableVehicles" :key="vehicle.id" @click="selectedVehicle = vehicle.id"
+            <button v-for="vehicle in availableVehicles" :key="vehicle.id" type="button" @click="selectedVehicle = vehicle.id" :aria-pressed="selectedVehicle === vehicle.id"
                     class="w-full flex items-center justify-between px-4 py-4 rounded-2xl border-2 transition-all duration-200"
                     :class="selectedVehicle === vehicle.id ? 'border-[#2b8659] bg-[#2b8659]/[0.06] shadow-[0_0_0_3px_rgba(43,134,89,0.08)]' : 'border-transparent bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-secondary)]'">
               <div class="flex items-center gap-3.5">
@@ -1134,8 +1223,8 @@ async function scheduleRide({ date, time, summary }) {
                 <button v-if="promo" type="button" @click="removePromo" class="text-[var(--color-text-muted)] py-1">Remove {{ promo.code }}</button>
               </div>
               <form v-if="promoOpen" @submit.prevent="applyPromo" class="flex gap-2">
-                <label class="sr-only" for="promo-code">Promo code</label>
-                <input id="promo-code" v-model="promoInput" autocapitalize="characters" autocomplete="off" placeholder="Promo code"
+                <label class="sr-only" for="promo-code-d">Promo code</label>
+                <input id="promo-code-d" v-model="promoInput" autocapitalize="characters" autocomplete="off" placeholder="Promo code"
                        class="flex-1 min-w-0 px-3 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] uppercase" />
                 <button type="submit" :disabled="promoBusy" class="px-4 rounded-xl bg-[#2b8659] text-white font-semibold disabled:opacity-50">{{ promoBusy ? '…' : 'Apply' }}</button>
                 <button type="button" @click="promoOpen = false; promoError = ''" class="px-2 text-[var(--color-text-muted)]" aria-label="Close">✕</button>
@@ -1147,7 +1236,7 @@ async function scheduleRide({ date, time, summary }) {
           <div class="flex gap-2.5">
             <button @click="requestRide" :disabled="!canRequest"
                     class="flex-1 py-4 bg-[#2b8659] disabled:bg-[var(--color-surface-secondary)] disabled:text-[var(--color-text-muted)] text-white font-bold rounded-2xl text-[15px] transition-all hover:bg-[#236e49] shadow-[0_4px_16px_rgba(43,134,89,0.3)] disabled:shadow-none">
-              {{ isSubmitting ? 'Requesting…' : bookingPaused ? 'Booking paused' : carsUnavailable ? 'No cars available' : `Choose ${VEHICLE_TYPES.find(v => v.id === selectedVehicle)?.name || 'ride'}` }}
+              {{ isSubmitting ? 'Requesting…' : bookingPaused ? 'Booking paused' : carsUnavailable ? 'No cars available' : `Request ${VEHICLE_TYPES.find(v => v.id === selectedVehicle)?.name || 'ride'}` }}
             </button>
             <button v-if="SCHEDULING_ENABLED" @click="showSchedulePicker = true" :disabled="!routeReady || bookingPaused"
                     class="w-[52px] flex-shrink-0 flex items-center justify-center bg-[var(--color-surface-secondary)] disabled:bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] disabled:text-[var(--color-text-muted)] rounded-2xl transition-all hover:opacity-90 active:scale-[0.97] border border-[var(--color-border)]"
