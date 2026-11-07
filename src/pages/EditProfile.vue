@@ -1,4 +1,5 @@
 <script setup>
+import { goBack as backOr } from '../lib/goBack'
 import { useRouter } from 'vue-router'
 import { ref, onMounted } from 'vue'
 import { useAuth } from '../lib/useAuth'
@@ -45,7 +46,7 @@ function onFileSelected(e) {
 }
 
 function cancel() {
-  router.back()
+  backOr(router, '/profile')
 }
 
 async function handleSave() {

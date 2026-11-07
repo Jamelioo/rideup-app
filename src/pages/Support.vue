@@ -1,4 +1,5 @@
 <script setup>
+import { goBack as backOr } from '../lib/goBack'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -47,7 +48,7 @@ function toggleFaq(index) {
 }
 
 function close() {
-  router.back()
+  backOr(router, '/')
 }
 </script>
 

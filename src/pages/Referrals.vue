@@ -1,4 +1,5 @@
 <script setup>
+import { goBack as backOr } from '../lib/goBack'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { loadRewards, redeemReferral } from '../lib/rewards'
@@ -69,7 +70,7 @@ const steps = [
   <div class="min-h-dvh bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
     <!-- Top Bar -->
     <div class="flex items-center gap-3 px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
-      <button @click="router.back()" class="w-11 h-11 flex items-center justify-center" aria-label="Back">
+      <button @click="backOr(router, '/book')" class="w-11 h-11 flex items-center justify-center" aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -120,6 +121,7 @@ const steps = [
           <a
             :href="whatsappUrl"
             target="_blank"
+            rel="noopener"
             class="flex items-center justify-center gap-2 py-3.5 bg-[#25D366] text-[#0b2f21] font-bold text-[14px] rounded-xl active:scale-[0.97] transition-all"
           >
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">

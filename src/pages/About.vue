@@ -1,10 +1,20 @@
 <script setup>
+import { goBack as backOr } from '../lib/goBack'
 import { useRouter } from 'vue-router'
+import { formatAmount } from '../lib/pricing'
+import { DRIVER_CANCEL_CREDIT_CENTS } from '../lib/policy'
 
 const router = useRouter()
+const credit = DRIVER_CANCEL_CREDIT_CENTS > 0 ? formatAmount(DRIVER_CANCEL_CREDIT_CENTS) : ''
+// What RideUp promises, all of it true in the app today.
+const promises = [
+  { title: 'Your price, locked', text: 'You see the exact fare before you book. Traffic or a longer route won’t change it.' },
+  { title: 'Pay your driver cash', text: 'No card and no app to download. Pay the price you saw at drop-off.' },
+  { title: 'Approved local drivers', text: 'Every driver is approved by RideUp. You see their name, photo, car and plate before pickup.' },
+]
 
 function goBack() {
-  router.back()
+  backOr(router, '/')
 }
 
 const menuItems = [
@@ -49,16 +59,38 @@ function handleMenuClick(item) {
       <div class="w-10 h-10"></div>
     </div>
 
-    <!-- Title -->
-    <div class="px-5 mb-6">
-      <h1 class="text-3xl font-bold font-serif">About</h1>
+    <!-- Title and what RideUp stands for -->
+    <div class="px-5 mb-8 max-w-2xl">
+      <h1 class="text-3xl font-bold mb-3">About RideUp</h1>
+      <p class="text-[16px] leading-[1.6] text-[var(--color-text-secondary)]">RideUp is a ride service made in Nassau for New Providence. Book in your browser, know the fare before you ride, and pay your driver in cash. A local team answers when you call.</p>
     </div>
 
-    <!-- Spacer -->
-    <div class="h-4"></div>
+    <div class="px-5 max-w-2xl space-y-3 mb-6">
+      <div v-for="item in promises" :key="item.title" class="rounded-2xl bg-[var(--color-surface-secondary)] p-4">
+        <h2 class="text-[16px] font-bold mb-0.5">{{ item.title }}</h2>
+        <p class="text-[14px] leading-[1.5] text-[var(--color-text-secondary)]">{{ item.text }}</p>
+      </div>
+      <div class="rounded-2xl bg-[#0F3D2A] text-white p-4">
+        <h2 class="text-[16px] font-bold mb-0.5">The RideUp Guarantee</h2>
+        <p class="text-[14px] leading-[1.5] text-white/90">If your driver cancels, we find you another driver at the same price{{ credit ? ` and add ${credit} credit to your account` : '' }}. If no driver accepts, you pay nothing.</p>
+      </div>
+    </div>
+
+    <div class="px-5 max-w-2xl flex flex-wrap gap-3 mb-10">
+      <router-link to="/book" class="inline-flex items-center justify-center min-h-[48px] px-6 rounded-xl bg-[#2b8659] text-white font-bold text-[16px]">See my price</router-link>
+      <router-link to="/drive" class="inline-flex items-center justify-center min-h-[48px] px-6 rounded-xl border-2 border-[var(--color-text-primary)] font-bold text-[16px]">Drive with RideUp</router-link>
+    </div>
+
+    <div class="px-5 max-w-2xl mb-2">
+      <h2 class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Contact</h2>
+      <p class="text-[15px] mt-2 leading-[1.8]">
+        <a href="tel:+12424529911" class="font-semibold text-[var(--color-brand)] inline-block py-1">(242) 452-9911</a> · call or WhatsApp<br />
+        <a href="mailto:support@rideupnassau.com" class="font-semibold text-[var(--color-brand)] inline-block py-1">support@rideupnassau.com</a>
+      </p>
+    </div>
 
     <!-- Menu Items -->
-    <div class="px-5 flex-1">
+    <div class="px-5 flex-1 max-w-2xl w-full">
       <!-- Version -->
       <div class="flex items-center justify-between py-4 border-b border-[var(--color-border)]">
         <div class="flex items-center gap-4">

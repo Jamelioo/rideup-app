@@ -1,4 +1,5 @@
 <script setup>
+import { goBack as backOr } from '../../lib/goBack'
 import { isGuaranteeCredit } from '../../lib/guarantee'
 import BrandLogo from '../../components/BrandLogo.vue'
 import { ref, onMounted } from 'vue'
@@ -119,7 +120,7 @@ async function shareReceipt() {
     <div class="mb-4 flex items-center">
       <button
         class="flex h-11 w-11 items-center justify-center rounded-full transition-colors active:bg-[var(--color-surface-secondary)]"
-        @click="router.back()"
+        @click="backOr(router, '/my-rides')"
        aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[var(--color-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />

@@ -1,4 +1,5 @@
 <script setup>
+import { goBack as backOr } from '../lib/goBack'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
@@ -49,7 +50,7 @@ const initials = computed(() =>
 )
 
 function goBack() {
-  router.back()
+  backOr(router, '/book')
 }
 
 function goToSavedPlaces() {

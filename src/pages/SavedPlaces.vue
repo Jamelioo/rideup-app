@@ -1,4 +1,5 @@
 <script setup>
+import { goBack as backOr } from '../lib/goBack'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
@@ -116,7 +117,7 @@ async function handleDelete() {
 }
 
 function goBack() {
-  router.back()
+  backOr(router, '/profile')
 }
 
 function getIcon(label) {
