@@ -1,4 +1,5 @@
 <script setup>
+import ProofStrip from '../components/ProofStrip.vue'
 import BrandLogo from '../components/BrandLogo.vue'
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -133,6 +134,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
             <ul class="flex flex-wrap gap-x-5 gap-y-1.5 text-[14px] text-white/80">
               <li v-for="t in ['No sign-up fee', 'Use your own car', 'No lease', 'Stop any time']" :key="t" class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[#4cc48a]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>{{ t }}</li>
             </ul>
+            <ProofStrip class="mt-4" audience="driver" on-dark />
           </div>
 
           <!-- Right: Driver app phone mockup -->

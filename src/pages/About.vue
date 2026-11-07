@@ -1,4 +1,5 @@
 <script setup>
+import RiderQuotes from '../components/RiderQuotes.vue'
 import { goBack as backOr } from '../lib/goBack'
 import { useRouter } from 'vue-router'
 import { formatAmount } from '../lib/pricing'
@@ -75,6 +76,8 @@ function handleMenuClick(item) {
         <p class="text-[14px] leading-[1.5] text-white/90">If your driver cancels, we find you another driver at the same price{{ credit ? ` and add ${credit} credit to your account` : '' }}. If no driver accepts, you pay nothing.</p>
       </div>
     </div>
+
+    <RiderQuotes class="px-5 max-w-2xl mb-8" />
 
     <div class="px-5 max-w-2xl flex flex-wrap gap-3 mb-10">
       <router-link to="/book" class="inline-flex items-center justify-center min-h-[48px] px-6 rounded-xl bg-[#2b8659] text-white font-bold text-[16px]">See my price</router-link>

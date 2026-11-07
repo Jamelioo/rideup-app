@@ -1,4 +1,5 @@
 <script setup>
+import RiderQuotes from '../components/RiderQuotes.vue'
 import BrandLogo from '../components/BrandLogo.vue'
 import ProofStrip from '../components/ProofStrip.vue'
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
@@ -7,7 +8,7 @@ import { useAuth } from '../lib/useAuth'
 import { applyLandingOffer, landingPill as pill, landingPillReady as pillReady, landingOfferCents as offerCents } from '../lib/landingOffer'
 import { trackStep } from '../lib/funnel'
 import { placeById, tripLink } from '../lib/places'
-import { CANCEL_GRACE_SECONDS, DRIVER_CANCEL_CREDIT_CENTS } from '../lib/policy'
+import { CANCEL_GRACE_SECONDS, DRIVER_CANCEL_CREDIT_CENTS, FREE_WAIT_SECONDS } from '../lib/policy'
 import { calculateFare, formatFare, formatAmount, RATES, AIRPORT_FEE_CENTS, BOOKING_FEE_CENTS } from '../lib/pricing'
 
 // Booking first, sign-up second. The offer, the promise and the answers only say what the app really does.
@@ -31,6 +32,7 @@ function goToBooking(field) {
   router.push(field ? { path: '/book', query: { focus: field } } : '/book')
 }
 
+const waitMinutes = Math.round(FREE_WAIT_SECONDS / 60)
 const graceLabel = CANCEL_GRACE_SECONDS % 60 === 0 ? `${CANCEL_GRACE_SECONDS / 60} minutes` : `${CANCEL_GRACE_SECONDS} seconds`
 
 // The RideUp guarantee (api/_credit.js): a re-match at the same price, plus credit when the credit is switched on.
@@ -43,7 +45,7 @@ const guaranteeLine = credit
 const PROMISE = [
   { icon: 'lock', title: 'Price lock', text: 'Your price is set when you book. Traffic or a longer route won’t change it.' },
   { icon: 'cash', title: 'Pay when you arrive', text: 'No card and no app. Pay your driver the price you saw, in cash, at drop-off.' },
-  { icon: 'clock', title: 'Free cancellation', text: 'Cancelling never costs a cent. Cancel early if your plans change, so your driver isn’t left waiting.' },
+  { icon: 'clock', title: 'Free cancellation and waiting', text: `Cancelling never costs a cent, and your driver waits up to ${waitMinutes} minutes at pickup for free.` },
   { icon: 'shield', title: 'Approved drivers', text: 'See your driver’s name, photo, car and plate before pickup, and share your trip live with family.' },
 ]
 
@@ -87,7 +89,7 @@ const firstRideStack = computed(() => [
   'Your price locked when you book',
   'Pay cash at drop-off: no card, no app',
   credit ? `The RideUp Guarantee: same price and ${credit} credit if your driver cancels` : 'The RideUp Guarantee: a new driver at the same price if yours cancels',
-  'Free cancellation',
+  `Free cancellation, and ${waitMinutes} minutes of free waiting at pickup`,
 ])
 
 const accountPerks = computed(() => [
@@ -288,6 +290,7 @@ const showStickyCta = computed(() => !heroInView.value && !finalReached.value)
           <svg class="w-5 h-5 mt-0.5 shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.95.68l1.5 4.49a1 1 0 01-.5 1.21l-2.26 1.13a11 11 0 005.52 5.52l1.13-2.26a1 1 0 011.21-.5l4.49 1.5a1 1 0 01.68.95V19a2 2 0 01-2 2h-1C9.72 21 3 14.28 3 6V5z"/></svg>
           <span>A Nassau company with real people on the line. Questions before you ride? Call or WhatsApp <a href="tel:+12424529911" class="font-semibold text-[var(--color-brand)] whitespace-nowrap">(242) 452-9911</a>.</span>
         </p>
+        <RiderQuotes class="mt-12" />
       </div>
     </section>
 
@@ -371,7 +374,7 @@ const showStickyCta = computed(() => !heroInView.value && !finalReached.value)
       <button type="button" @click="goToBooking()" class="px-10 py-3.5 bg-[#2b8659] text-white font-bold rounded-xl text-[16px] hover:bg-[#236e49] transition-colors active:scale-[0.98]">
         See my price
       </button>
-      <p class="mt-4 text-[14px] text-[var(--color-text-secondary)]">See your exact price in seconds. No account or app needed.</p>
+      <p class="mt-4 text-[14px] text-[var(--color-text-secondary)]">See your exact price in seconds and book in about a minute. No account or app needed.</p>
     </section>
 
     <!-- DRIVER RECRUITMENT -->

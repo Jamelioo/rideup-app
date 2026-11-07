@@ -29,6 +29,14 @@ const driver = ref(null)
 const rating = ref(0)
 const tags = ref([])
 const feedback = ref('')
+// Riders who loved the trip can let RideUp quote them on the website (migration 022). Off unless they tick it;
+// an admin checks every quote before it's shown.
+const shareQuote = ref(false)
+const quoteShared = ref(false)
+const QUOTE_MIN = 10
+const QUOTE_MAX = 280
+const quoteLength = computed(() => feedback.value.trim().length)
+const canShareQuote = computed(() => rating.value === 5 && quoteLength.value >= QUOTE_MIN && quoteLength.value <= QUOTE_MAX)
 
 const ratingSaved = ref(false)
 const submitting = ref(false)
@@ -126,6 +134,14 @@ async function submit() {
   }
   ratingSaved.value = true
 
+  if (shareQuote.value && canShareQuote.value && !DEMO_MODE && supabaseConfigured) {
+    // Best effort: the rating is already saved, so a failure here never loses it.
+    const { error: shareErr } = await supabase.rpc('share_testimonial', { p_ride_id: rideId.value, p_quote: feedback.value.trim() })
+    quoteShared.value = !shareErr
+  } else if (shareQuote.value && canShareQuote.value) {
+    quoteShared.value = true // demo
+  }
+
   submitting.value = false
   step.value = 'thanks'
   if (!needsLogin.value) setTimeout(done, 2500)
@@ -150,7 +166,7 @@ function done() {
       <DotMascot pose="arrived" class="w-32 h-32 mb-4" />
       <h2 class="text-xl font-bold mb-1" aria-live="polite">Thanks for your feedback</h2>
       <p class="text-[var(--color-text-muted)] text-sm text-center mb-6">
-        Ratings help keep RideUp safe and friendly.
+        {{ quoteShared ? 'Thanks for letting us share your comment. We’ll check it before it appears on our website.' : 'Ratings help keep RideUp safe and friendly.' }}
       </p>
       <div v-if="needsLogin" class="w-full mb-4">
         <AccountConversionCard :show-skip="false" subtitle="Keep this trip’s receipt and book faster next time." />
@@ -207,6 +223,11 @@ function done() {
             <textarea id="rate-feedback" v-model="feedback" rows="2" maxlength="500" :placeholder="rating <= 3 ? 'Tell us more (optional)' : 'Add a comment (optional)'"
                       class="w-full bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-2xl px-4 py-3 text-sm placeholder:text-[var(--color-text-muted)] resize-none focus:outline-none focus:border-[#2b8659]"></textarea>
           </div>
+          <label v-if="rating === 5 && quoteLength >= QUOTE_MIN" class="px-6 mb-4 flex items-start gap-3 text-[13px] leading-snug text-[var(--color-text-secondary)]">
+            <input type="checkbox" v-model="shareQuote" :disabled="!canShareQuote" class="mt-0.5 w-5 h-5 accent-[#2b8659] shrink-0" />
+            <span v-if="canShareQuote">RideUp can show this comment on its website with my first name and last initial. We check every comment first, and you can ask us to remove it any time.</span>
+            <span v-else>Comments up to {{ QUOTE_MAX }} characters can be shared on our website. Yours is {{ quoteLength }}.</span>
+          </label>
           <div v-if="rating <= 2" class="px-6 mb-4">
             <button @click="showReport = true" class="w-full py-3 rounded-xl border border-[var(--color-border)] text-[14px] font-semibold text-[var(--color-danger)]">Report a safety issue</button>
           </div>

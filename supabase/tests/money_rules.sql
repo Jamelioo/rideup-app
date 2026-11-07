@@ -531,4 +531,56 @@ set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-00000000
 select pg_temp.check(count(*) = 2 and sum(visitors) = 3, 'admins can read the funnel') from funnel_daily;
 reset role; select pg_temp.as_server();
 
+\echo '== Rider quotes'
+-- Q has two finished trips: one rated 5 stars, one rated 4.
+insert into auth.users (id, email, phone) values ('00000000-0000-0000-0000-0000000000e9', 'q@test', '+12425550909');
+update riders set name = 'Quinn Quarterly', phone = '+12425550909' where auth_user_id = '00000000-0000-0000-0000-0000000000e9';
+select id as rq from riders where auth_user_id = '00000000-0000-0000-0000-0000000000e9' \gset
+insert into rides (id, rider_id, driver_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, fare_cents, status, payment_status, completed_at, rider_rating)
+values ('70000000-0000-0000-0000-0000000000e1', :'rq', '20000000-0000-0000-0000-0000000000d1', 25.04, -77.35, 25.08, -77.33, 1500, 'completed', 'cash_collected', now(), 5),
+       ('70000000-0000-0000-0000-0000000000e2', :'rq', '20000000-0000-0000-0000-0000000000d1', 25.04, -77.35, 25.08, -77.33, 1500, 'completed', 'cash_collected', now(), 4);
+set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000e9');
+select public.share_testimonial('70000000-0000-0000-0000-0000000000e1', '  Clean car,   friendly driver and the price was exactly what the app said.  ');
+select public.share_testimonial('70000000-0000-0000-0000-0000000000e1', 'Sharing the same trip twice changes nothing.');
+do $$ begin
+  perform public.share_testimonial('70000000-0000-0000-0000-0000000000e2', 'Good trip overall, thanks!');
+  raise exception 'FAIL: a 4-star trip was shared';
+exception when invalid_parameter_value then raise notice 'ok  only 5-star trips can be shared';
+end $$;
+do $$ begin
+  perform public.share_testimonial('70000000-0000-0000-0000-0000000000e1', 'Too short');
+  raise exception 'FAIL: a 9-character comment was shared';
+exception when invalid_parameter_value then raise notice 'ok  a comment needs 10 to 280 characters';
+end $$;
+select pg_temp.check(count(*) = 0, 'riders can''t read the quotes table') from testimonials;
+do $$ begin
+  insert into testimonials (ride_id, rider_id, quote, display_name)
+  select '70000000-0000-0000-0000-0000000000e2', id, 'Best ride ever, five stars!', 'Quinn Q.' from riders where auth_user_id = auth.uid();
+  raise exception 'FAIL: a rider added a quote without the checks';
+exception when insufficient_privilege then raise notice 'ok  riders can''t add quotes directly';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+do $$ begin
+  perform public.share_testimonial('70000000-0000-0000-0000-0000000000e1', 'I never took this trip but it was great');
+  raise exception 'FAIL: a rider shared someone else''s trip';
+exception when invalid_parameter_value then raise notice 'ok  riders can only share their own trips';
+end $$;
+reset role; set role anon; select pg_temp.as_server();
+select pg_temp.check(count(*) = 0, 'visitors can''t read quotes directly (the website gets approved ones from the server)') from testimonials;
+do $$ begin
+  perform public.share_testimonial('70000000-0000-0000-0000-0000000000e1', 'Anonymous visitors cannot share');
+  raise exception 'FAIL: a visitor shared a quote';
+exception when insufficient_privilege then raise notice 'ok  visitors can''t share quotes';
+end $$;
+reset role;
+set role authenticated; select pg_temp.as_user('00000000-0000-0000-0000-0000000000ad', '{"role":"admin"}');
+select pg_temp.check(count(*) = 1 and min(display_name) = 'Quinn Q.' and min(status) = 'pending'
+  and min(quote) = 'Clean car, friendly driver and the price was exactly what the app said.',
+  'a shared comment waits for approval, tidied and signed "Quinn Q."') from testimonials;
+update testimonials set status = 'approved', reviewed_at = now() where ride_id = '70000000-0000-0000-0000-0000000000e1';
+select pg_temp.check(status = 'approved', 'admins approve quotes') from testimonials where ride_id = '70000000-0000-0000-0000-0000000000e1';
+reset role; select pg_temp.as_server();
+select public.erase_account_data('00000000-0000-0000-0000-0000000000e9');
+select pg_temp.check(count(*) = 0, 'deleting the account deletes the rider''s quotes') from testimonials;
+
 \echo 'All money and safety rules passed.'

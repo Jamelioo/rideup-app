@@ -1,6 +1,7 @@
 <script setup>
 import BrandLogo from '../components/BrandLogo.vue'
 import ProofStrip from '../components/ProofStrip.vue'
+import RiderQuotes from '../components/RiderQuotes.vue'
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { calculateFare, formatFare, formatAmount, AIRPORT, AIRPORT_FEE_CENTS, BOOKING_FEE_CENTS } from '../lib/pricing'
@@ -100,6 +101,8 @@ onMounted(() => trackStep('landing'))
         </li>
       </ul>
     </section>
+
+    <RiderQuotes class="max-w-5xl mx-auto px-5 pb-10" />
 
     <section class="max-w-5xl mx-auto px-5 pb-10" aria-labelledby="guarantee-title">
       <div class="rounded-3xl bg-[#0F3D2A] text-white p-6 sm:p-8">

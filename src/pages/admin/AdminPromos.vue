@@ -20,6 +20,18 @@
                 class="sm:ml-auto text-xs font-semibold px-3 py-2 rounded-lg border border-[var(--color-border)] disabled:opacity-50">No landing offer</button>
       </div>
       <p v-if="featureError" class="mt-2 text-[var(--color-danger)]" role="alert">{{ featureError }}</p>
+      <!-- A real deadline is the only honest urgency: the pages say "ends …" once it's 30 days away or less. -->
+      <form v-if="featuredCodeRow && featuredStatus.ok" @submit.prevent="setFeaturedEnd" class="mt-4 pt-4 border-t border-[var(--color-border)]">
+        <p class="text-[var(--color-text-secondary)] mb-2">
+          <template v-if="featuredCodeRow.expires_at">Ends {{ new Date(featuredCodeRow.expires_at).toLocaleDateString('en-US', { timeZone: 'America/Nassau', month: 'long', day: 'numeric', year: 'numeric' }) }}. The landing pages say so in the last 30 days.</template>
+          <template v-else>No end date. Add one and the landing pages will say when the offer ends (in its last 30 days), which gives visitors a real reason to book now.</template>
+        </p>
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="sr-only" for="featured-end">End date</label>
+          <input id="featured-end" v-model="featuredEnd" type="date" :min="todayIso" class="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]" />
+          <button type="submit" :disabled="!featuredEnd || featureSaving" class="text-xs font-semibold px-3 py-2 rounded-lg bg-[#2b8659] text-white disabled:opacity-50">{{ featuredCodeRow.expires_at ? 'Change end date' : 'Set end date' }}</button>
+        </div>
+      </form>
     </section>
 
     <form @submit.prevent="createCode" class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 mb-8 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
@@ -84,6 +96,31 @@
       </table>
     </div>
     <p class="text-xs text-[var(--color-text-muted)] mt-4">Referral rewards ($5 off a friend’s first ride, $5 credit to the referrer) run automatically and don’t need a code here.</p>
+
+    <!-- Rider quotes (migration 022): shared by riders after a 5-star trip, shown on the website once approved. -->
+    <section class="mt-10" aria-labelledby="quotes-title">
+      <h2 id="quotes-title" class="text-base font-bold mb-1">Rider quotes for the website</h2>
+      <p class="text-sm text-[var(--color-text-secondary)] mb-4">
+        After a 5-star trip, riders can let RideUp show their comment with their first name and last initial. Approve the ones to show on the
+        home, airport and About pages (newest three); hide one at any time. Changes show within 10 minutes.
+      </p>
+      <p v-if="quotesError" class="text-sm text-[var(--color-danger)] mb-3" role="alert">{{ quotesError }}</p>
+      <p v-else-if="!quotesLoading && !quotes.length" class="text-sm text-[var(--color-text-muted)]">No quotes yet. They appear here as riders share them.</p>
+      <ul class="space-y-3">
+        <li v-for="q in quotes" :key="q.id" class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-sm">
+          <p class="text-[15px] text-[var(--color-text-primary)]">“{{ q.quote }}”</p>
+          <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span class="font-semibold">{{ q.display_name }}</span>
+            <span class="text-xs text-[var(--color-text-muted)]">{{ new Date(q.created_at).toLocaleDateString('en-US', { timeZone: 'America/Nassau' }) }}</span>
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full" :class="q.status === 'approved' ? 'bg-[#2b8659]/10 text-[var(--color-brand)]' : q.status === 'hidden' ? 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]' : 'bg-amber-500/15 text-[var(--color-text-primary)]'">{{ { pending: 'Waiting for review', approved: 'On the website', hidden: 'Hidden' }[q.status] }}</span>
+            <span class="sm:ml-auto flex gap-2">
+              <button v-if="q.status !== 'approved'" type="button" @click="review(q, 'approved')" :disabled="q.busy" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#2b8659] text-white disabled:opacity-50">Approve</button>
+              <button v-if="q.status !== 'hidden'" type="button" @click="review(q, 'hidden')" :disabled="q.busy" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--color-border)] disabled:opacity-50">Hide</button>
+            </span>
+          </div>
+        </li>
+      </ul>
+    </section>
   </div>
 </template>
 
@@ -94,6 +131,9 @@ import { formatFare, formatAmount } from '../../lib/pricing'
 import { DEMO_MODE } from '../../lib/demoMode'
 import { featuredCode } from '../../lib/landingOfferRules'
 import { nassauMidnight } from '../../lib/nassauTime'
+import { useAuth } from '../../lib/useAuth'
+
+const { user } = useAuth()
 
 const codes = ref(DEMO_MODE ? [{ code: 'WELCOME5', amount_cents: 500, uses: 12, max_uses: 100, first_ride_only: true, active: true, description: '$5 off your first ride' }] : [])
 const loading = ref(!DEMO_MODE)
@@ -116,6 +156,47 @@ const featuredStatus = computed(() => {
   if (c.max_uses != null && c.uses >= c.max_uses) return { ok: false, text: 'This code is fully used, so visitors see no offer.' }
   return { ok: true, text: `Shown as “${c.first_ride_only ? `First ride ${formatAmount(c.amount_cents)} off` : `${formatAmount(c.amount_cents)} off your next ride`}” and applied for them.` }
 })
+
+// The landing offer's code row, for its end date.
+const featuredCodeRow = computed(() => codes.value.find((x) => x.code === featured.value) || null)
+const featuredEnd = ref('')
+const todayIso = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Nassau' })
+async function setFeaturedEnd() {
+  const c = featuredCodeRow.value
+  if (!c || !featuredEnd.value) return
+  featureError.value = ''
+  featureSaving.value = true
+  // The end of that day in Nassau, as for new codes.
+  const expiresAt = new Date(Date.parse(nassauMidnight(featuredEnd.value, 1)) - 1000).toISOString()
+  if (!DEMO_MODE) {
+    const { error: err } = await supabase.from('promo_codes').update({ expires_at: expiresAt }).eq('code', c.code)
+    if (err) { featureSaving.value = false; featureError.value = `Couldn’t save: ${err.message}`; return }
+  }
+  c.expires_at = expiresAt
+  featuredEnd.value = ''
+  featureSaving.value = false
+}
+
+// Rider quotes waiting for review first, then the rest, newest first.
+const quotes = ref([])
+const quotesLoading = ref(!DEMO_MODE)
+const quotesError = ref('')
+async function loadQuotes() {
+  if (!supabaseConfigured || DEMO_MODE) { quotesLoading.value = false; return }
+  const { data, error: err } = await supabase.from('testimonials').select('id, quote, display_name, status, created_at').order('created_at', { ascending: false })
+  quotesLoading.value = false
+  if (err) { quotesError.value = err.code === 'PGRST205' || err.code === '42P01' ? 'Run migration 022 to start collecting rider quotes.' : `Couldn’t load quotes: ${err.message}`; return }
+  const order = { pending: 0, approved: 1, hidden: 2 }
+  quotes.value = (data || []).sort((a, b) => order[a.status] - order[b.status])
+}
+async function review(q, status) {
+  q.busy = true
+  quotesError.value = ''
+  const { error: err } = await supabase.from('testimonials').update({ status, reviewed_at: new Date().toISOString(), reviewed_by: user.value?.id || null }).eq('id', q.id)
+  q.busy = false
+  if (err) { quotesError.value = `Couldn’t save: ${err.message}`; return }
+  q.status = status
+}
 
 async function setFeatured(code) {
   featureError.value = ''
@@ -176,4 +257,5 @@ async function toggle(c) {
 }
 
 onMounted(load)
+onMounted(loadQuotes)
 </script>

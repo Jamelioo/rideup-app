@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { proofLines, PROOF_MIN_TRIPS, PROOF_MIN_RATINGS } from '../src/lib/proofRules.js'
+import { proofLines, driverProofLines, quotesToShow, PROOF_MIN_TRIPS, PROOF_MIN_RATINGS, PROOF_MIN_REQUESTS } from '../src/lib/proofRules.js'
 import { statsHandler, loadStats } from '../api/_routes/stats.js'
 
 test('landing-page proof stays hidden until the real numbers mean something', () => {
@@ -13,24 +13,43 @@ test('landing-page proof stays hidden until the real numbers mean something', ()
   assert.deepEqual(proofLines({ completed_trips: 40, ratings: 30, average_rating: 4.2 }).map((l) => l.kind), ['trips'])
 })
 
-function fakeDb({ completed = 0, ratings = [], error = null } = {}) {
+test('the driver page shows demand only once there is some', () => {
+  assert.deepEqual(driverProofLines({ requests_30d: PROOF_MIN_REQUESTS - 1, completed_trips: 3 }), [])
+  assert.deepEqual(driverProofLines({ requests_30d: 140, completed_trips: 90 }).map((l) => l.text),
+    ['140 ride requests in Nassau in the last 30 days', '90 trips completed so far'])
+})
+
+test('rider quotes: only approved ones the server sent, at most three, never empty ones', () => {
+  assert.deepEqual(quotesToShow(null), [])
+  assert.deepEqual(quotesToShow({ quotes: [] }), [], 'no quotes yet: the section stays hidden')
+  const four = [1, 2, 3, 4].map((i) => ({ quote: `Great ride number ${i}`, name: `Rider ${i}.` }))
+  assert.deepEqual(quotesToShow({ quotes: [{ quote: '', name: 'X.' }, ...four] }).map((q) => q.name), ['Rider 1.', 'Rider 2.', 'Rider 3.'])
+})
+
+// A stand-in for the Supabase client: rides counts and ratings, approved quotes, or "no quotes table yet".
+function fakeDb({ completed = 0, requested = 0, ratings = [], quotes = [], quotesError = null, error = null } = {}) {
   return {
     from(table) {
-      assert.equal(table, 'rides')
       let head = false
       const filters = []
-      const result = () => (error ? { data: null, count: null, error }
-        : head ? { count: completed, error: null } : { data: ratings.map((r) => ({ rider_rating: r })), error: null })
+      const result = () => {
+        if (error) return { data: null, count: null, error }
+        if (table === 'testimonials') {
+          assert.deepEqual(filters, [['status', 'approved']], 'only approved quotes go out')
+          return quotesError ? { data: null, error: quotesError } : { data: quotes, error: null }
+        }
+        assert.equal(table, 'rides')
+        if (head) return { count: filters.some(([c]) => c === 'created_at>=') ? requested : completed, error: null }
+        return { data: ratings.map((r) => ({ rider_rating: r })), error: null }
+      }
       const chain = {
         select: (_cols, opts) => { head = !!opts?.head; return chain },
         eq: (col, val) => { filters.push([col, val]); return chain },
+        gte: (col, val) => { filters.push([`${col}>=`, val]); return chain },
         not: () => chain,
         order: () => chain,
         limit: () => chain,
-        then: (resolve, reject) => {
-          assert.deepEqual(filters[0], ['status', 'completed'], 'only completed trips count')
-          return Promise.resolve(result()).then(resolve, reject)
-        },
+        then: (resolve, reject) => Promise.resolve(result()).then(resolve, reject),
       }
       return chain
     },
@@ -43,13 +62,20 @@ function call(handler, method = 'GET') {
   return handler({ method, headers: {}, query: {} }, res).then(() => res)
 }
 
-test('stats endpoint: completed trips and riders’ average rating, cached by the CDN', async () => {
-  assert.deepEqual(await loadStats(fakeDb({ completed: 3, ratings: [5, 4, 5, 9, 0] })), { completed_trips: 3, ratings: 3, average_rating: 4.7 }, 'out-of-range ratings are ignored')
-  const res = await call(statsHandler(fakeDb({ completed: 120, ratings: [5, 5, 4] })))
+test('stats endpoint: real trips, ratings, requests and approved quotes, cached by the CDN', async () => {
+  assert.deepEqual(await loadStats(fakeDb({ completed: 3, requested: 9, ratings: [5, 4, 5, 9, 0] })),
+    { completed_trips: 3, ratings: 3, average_rating: 4.7, requests_30d: 9, quotes: [] }, 'out-of-range ratings are ignored')
+  const res = await call(statsHandler(fakeDb({ completed: 120, requested: 300, ratings: [5, 5, 4],
+    quotes: [{ quote: 'Price was exactly what the app said.', display_name: 'Ann R.' }] })))
   assert.equal(res.statusCode, 200)
-  assert.deepEqual(res.body, { completed_trips: 120, ratings: 3, average_rating: 4.7 })
+  assert.deepEqual(res.body, { completed_trips: 120, ratings: 3, average_rating: 4.7, requests_30d: 300,
+    quotes: [{ quote: 'Price was exactly what the app said.', name: 'Ann R.' }] })
   assert.match(res.headers['Cache-Control'], /s-maxage=600/)
-  assert.deepEqual((await call(statsHandler(fakeDb()))).body, { completed_trips: 0, ratings: 0, average_rating: null })
+  // Before migration 022 there's no quotes table: everything else still works.
+  const noTable = await call(statsHandler(fakeDb({ completed: 5, quotesError: { code: 'PGRST205', message: 'Could not find the table' } })))
+  assert.equal(noTable.statusCode, 200)
+  assert.deepEqual(noTable.body.quotes, [])
+  assert.equal((await call(statsHandler(fakeDb({ quotesError: { code: 'XX000', message: 'boom' } })))).statusCode, 500, 'other quote errors are real errors')
   assert.equal((await call(statsHandler(fakeDb()), 'POST')).statusCode, 405)
   assert.equal((await call(statsHandler(null))).statusCode, 500)
   const broken = await call(statsHandler(fakeDb({ error: { message: 'boom' } })))

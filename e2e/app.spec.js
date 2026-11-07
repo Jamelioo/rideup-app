@@ -541,3 +541,36 @@ test('landing pages never show sample proof numbers', async ({ page }) => {
     await expect(page.getByText(/trips completed|average driver rating/)).toHaveCount(0)
   }
 })
+
+// ─── Real proof: rider quotes and demand (never sample ones) ───
+
+test('after a 5-star trip with a comment, riders can choose to share it, off by default', async ({ page }) => {
+  await page.goto('/rate/demo')
+  await page.getByRole('button', { name: '4 stars' }).click()
+  await page.getByLabel('Comments').fill('Clean car and a friendly driver, right on time.')
+  await expect(page.getByText(/can show this comment on its website/)).toHaveCount(0)
+  await page.getByRole('button', { name: '5 stars' }).click()
+  const consent = page.getByRole('checkbox', { name: /can show this comment on its website/ })
+  await expect(consent).not.toBeChecked()
+  await consent.check()
+  await page.getByRole('button', { name: 'Submit' }).click()
+  await expect(page.getByText(/We’ll check it before it appears on our website/)).toBeVisible()
+})
+
+test('admins review rider quotes and can give the landing offer a real end date', async ({ page }) => {
+  await page.goto('/admin/promos')
+  await expect(page.getByRole('heading', { name: 'Rider quotes for the website' })).toBeVisible()
+  await expect(page.getByText('No quotes yet.', { exact: false })).toBeVisible()
+  await expect(page.getByText(/No end date\. Add one and the landing pages will say when the offer ends/)).toBeVisible()
+  await page.getByLabel('End date').fill('2099-01-31')
+  await page.getByRole('button', { name: 'Set end date' }).click()
+  await expect(page.getByText(/Ends January 31, 2099/)).toBeVisible()
+})
+
+test('landing pages never show sample quotes or demand numbers', async ({ page }) => {
+  for (const path of ['/', '/airport', '/about', '/drive']) {
+    await page.goto(path)
+    await expect(page.getByRole('heading', { name: 'What riders say' })).toHaveCount(0)
+    await expect(page.getByText(/ride requests in Nassau|RideUp rider$/)).toHaveCount(0)
+  }
+})

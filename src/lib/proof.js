@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { DEMO_MODE } from './demoMode'
-export { proofLines } from './proofRules.js'
+export { proofLines, driverProofLines, quotesToShow } from './proofRules.js'
 
 // The landing pages' proof numbers (src/lib/proofRules.js decides what's shown). Never sample numbers, even in
 // demo mode, so a screenshot can't pass off made-up proof.
