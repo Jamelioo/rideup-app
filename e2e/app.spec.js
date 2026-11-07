@@ -116,7 +116,7 @@ test('landing answers questions without leaving the page, and offers a free acco
 test('airport page: each fare opens booking from the airport, priced', async ({ page }) => {
   await page.goto('/airport')
   await expect(page.getByText('First ride $5 off').first()).toBeVisible()
-  await page.getByRole('link', { name: /^Paradise Island & Atlantis about 30 min about \$/ }).click()
+  await page.getByRole('link', { name: /^Paradise Island & Atlantis about 30 min/ }).click()
   await expect(page).toHaveURL('/book')
   await expect(page.locator('input[data-field="dropoff"]:visible')).toHaveValue('Paradise Island, Nassau')
   await expect(page.getByText(/You pay \$\d+\.\d{2}/).filter({ visible: true }).first()).toBeVisible()
@@ -280,7 +280,7 @@ test('booking shows how soon a car can come', async ({ page }) => {
   await page.goto('/book')
   await enterDemoTrip(page)
   await expect(page.getByText('5 min away').filter({ visible: true }).first()).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Choose RideUp Go' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Request RideUp Go' })).toBeEnabled()
 })
 
 test('with no driver online, riders can still request and are told how it works', async ({ page }) => {
@@ -288,8 +288,8 @@ test('with no driver online, riders can still request and are told how it works'
   await enterDemoTrip(page)
   await expect(page.getByText('No drivers online right now').filter({ visible: true }).first()).toBeVisible()
   await expect(page.getByText('keep looking for up to 5 minutes.', { exact: false }).filter({ visible: true }).first()).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Choose RideUp Go' })).toBeEnabled()
-  await page.getByRole('button', { name: 'Choose RideUp Go' }).filter({ visible: true }).click()
+  await expect(page.getByRole('button', { name: 'Request RideUp Go' })).toBeEnabled()
+  await page.getByRole('button', { name: 'Request RideUp Go' }).filter({ visible: true }).click()
   await expect(page.getByText('No drivers are online right now, so we’ve alerted our team.')).toBeVisible()
   await expect(page.getByText('You pay your driver in cash at drop-off.', { exact: false })).toBeVisible()
 })
@@ -300,7 +300,7 @@ test('every trip is cash: booking says what to pay, and the search what to have 
   await expect(page.getByText(/^Cash · pay \$\d+\.\d\d to your driver at drop-off$/).filter({ visible: true }).first()).toBeVisible()
   await expect(page.getByRole('button', { name: /^Paying with/ })).toHaveCount(0) // nothing to choose
   await expect(page.getByText(/Visa|••••|Add a card/).filter({ visible: true })).toHaveCount(0)
-  await page.getByRole('button', { name: 'Choose RideUp Go' }).filter({ visible: true }).click()
+  await page.getByRole('button', { name: 'Request RideUp Go' }).filter({ visible: true }).click()
   await expect(page.getByText(/Pay in cash: have \$\d+\.\d\d ready for your driver\./)).toBeVisible()
 })
 
@@ -313,7 +313,7 @@ test('booking for someone else is paid in cash too', async ({ page }) => {
   await page.getByLabel('Passenger’s phone').fill('242 555 1234')
   await page.getByRole('button', { name: 'Done' }).click()
   await expect(page.getByText(/^Cash · pay \$\d+\.\d\d to your driver at drop-off$/).filter({ visible: true }).first()).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Choose RideUp Go' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Request RideUp Go' })).toBeEnabled()
 })
 
 test('old card links land somewhere useful', async ({ page }) => {
@@ -412,7 +412,7 @@ test('phone mockup hidden on mobile', async ({ page }) => {
 test('phone mockup visible on desktop', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/')
-  await expect(page.getByText('Choose RideUp Go', { exact: true })).toBeVisible()
+  await expect(page.getByText('Request RideUp Go', { exact: true })).toBeVisible()
 })
 
 // ─── Admin operations (demo data) ───
@@ -455,4 +455,48 @@ test('admin Team and Activity pages load', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Add someone' })).toBeVisible()
   await page.goto('/admin/activity')
   await expect(page.getByText('Suspended a rider')).toBeVisible()
+})
+
+// ─── Onboarding and booking audit ───
+
+test('signup shows each problem under its field and puts the cursor on the first one', async ({ page }) => {
+  await page.goto('/signup')
+  await page.getByRole('button', { name: 'Sign up' }).click()
+  await expect(page.getByLabel('Full name')).toBeFocused()
+  await expect(page.getByLabel('Full name')).toHaveAttribute('aria-invalid', 'true')
+  await expect(page.getByText('Please enter your name.')).toBeVisible()
+  await expect(page.getByText('Please enter a valid email address.')).toBeVisible()
+  await page.getByLabel('Full name').fill('Ann')
+  await expect(page.getByText('Please enter your name.')).toHaveCount(0)
+})
+
+test('signup keeps the referral field tucked away and offers booking without an account', async ({ page }) => {
+  await page.goto('/signup')
+  await expect(page.getByLabel(/referral code/)).toHaveCount(0)
+  await page.getByRole('button', { name: 'Have a friend’s referral code?' }).click()
+  await expect(page.getByLabel(/referral code/)).toBeFocused()
+  await page.getByRole('link', { name: 'Just need a ride? Book without an account' }).click()
+  await expect(page).toHaveURL('/book')
+})
+
+test('phones: once a trip is priced, the ride option and the Request button are both on screen', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/book')
+  await page.locator('input[data-field="pickup"]:visible').fill('Cable Beach')
+  await page.locator('input[data-field="dropoff"]:visible').fill('Downtown Nassau')
+  const request = page.getByRole('button', { name: 'Request RideUp Go' }).filter({ visible: true })
+  await expect(request).toBeInViewport({ ratio: 1 })
+  await expect(page.getByRole('button', { name: /RideUp Go Everyday rides/ }).filter({ visible: true })).toBeInViewport()
+  await expect(page.getByRole('button', { name: /RideUp Go Everyday rides/ }).filter({ visible: true })).toHaveAttribute('aria-pressed', 'true')
+})
+
+test('driver application says which field is wrong, under that field', async ({ page }) => {
+  await page.goto('/driver/apply')
+  await page.getByLabel('Full name').fill('Dee Driver')
+  await page.getByLabel('Email address').fill('dee@example.com')
+  await page.getByLabel('Phone number').fill('12')
+  await page.getByRole('button', { name: 'Submit Application' }).click()
+  await expect(page.getByLabel('Phone number')).toBeFocused()
+  await expect(page.getByLabel('Phone number')).toHaveAttribute('aria-invalid', 'true')
+  await expect(page.getByText(/Please enter a valid mobile number/)).toBeVisible()
 })

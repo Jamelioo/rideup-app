@@ -18,8 +18,10 @@ const notice = ref('')
 const submitting = ref(false)
 const needsConfirmation = ref(false)
 
+// Back to wherever they came from (booking, the landing page…), or home if they opened this page directly.
 function goBack() {
-  router.push('/')
+  if (window.history.state?.back) router.back()
+  else router.push('/')
 }
 
 async function forgotPassword() {
@@ -102,12 +104,12 @@ const inputClass = 'w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] round
       <div class="space-y-4 mb-3">
         <div>
           <label for="login-email" class="block text-[14px] font-medium text-[var(--color-text-secondary)] mb-1.5">Email address</label>
-          <input id="login-email" v-model="email" type="email" autocomplete="email" inputmode="email" :class="inputClass" />
+          <input id="login-email" v-model="email" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" enterkeyhint="next" :class="inputClass" />
         </div>
         <div>
           <label for="login-password" class="block text-[14px] font-medium text-[var(--color-text-secondary)] mb-1.5">Password</label>
           <div class="relative">
-            <input id="login-password" v-model="password" :type="showPassword ? 'text' : 'password'" autocomplete="current-password" :class="inputClass" class="pr-16" />
+            <input id="login-password" v-model="password" :type="showPassword ? 'text' : 'password'" autocomplete="current-password" enterkeyhint="go" :class="inputClass" class="pr-16" />
             <button type="button" @click="showPassword = !showPassword" class="absolute right-1 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[var(--color-brand)] min-w-[48px] min-h-[44px] px-2"
                     :aria-pressed="showPassword" :aria-label="showPassword ? 'Hide password' : 'Show password'">{{ showPassword ? 'Hide' : 'Show' }}</button>
           </div>

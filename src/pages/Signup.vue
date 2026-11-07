@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth, friendlyAuthError, MIN_PASSWORD } from '../lib/useAuth'
 import { safeRedirect } from '../lib/safeRedirect'
@@ -19,35 +19,40 @@ const phone = ref('')
 const password = ref('')
 const showPassword = ref(false)
 const error = ref('')
+// One message per field, shown under it (and the cursor moved there), instead of one line at the bottom.
+const fieldErrors = ref({ name: '', email: '', phone: '', password: '' })
 const notice = ref('')
 const submitting = ref(false)
 const confirmationSent = ref(false)
 // A friend's referral code ($5 off the first ride). Prefilled from a /r/CODE link; applied after sign-up.
 const referral = ref(getPendingReferral() || '')
+// Most people don't have one: keep the form short and show the field only when asked for (or already filled in).
+const showReferral = ref(!!referral.value)
+function openReferral() {
+  showReferral.value = true
+  nextTick(() => document.getElementById('su-referral')?.focus())
+}
 
 const redirect = () => safeRedirect(route.query.redirect, '/book')
 
+// Back to wherever they came from (booking, the landing page…), or home if they opened this page directly.
 function goBack() {
-  router.push('/')
+  if (window.history.state?.back) router.back()
+  else router.push('/')
 }
 
 async function handleSignup() {
   error.value = ''
-  if (!name.value.trim()) {
-    error.value = 'Please enter your name.'
-    return
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
-    error.value = 'Please enter a valid email address.'
-    return
-  }
   const mobile = toE164(phone.value)
-  if (!mobile) {
-    error.value = PHONE_HINT
-    return
+  fieldErrors.value = {
+    name: name.value.trim() ? '' : 'Please enter your name.',
+    email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim()) ? '' : 'Please enter a valid email address.',
+    phone: mobile ? '' : PHONE_HINT,
+    password: password.value.length >= MIN_PASSWORD ? '' : `Password must be at least ${MIN_PASSWORD} characters.`,
   }
-  if (password.value.length < MIN_PASSWORD) {
-    error.value = `Password must be at least ${MIN_PASSWORD} characters.`
+  const firstProblem = ['name', 'email', 'phone', 'password'].find((f) => fieldErrors.value[f])
+  if (firstProblem) {
+    nextTick(() => document.getElementById(`su-${firstProblem}`)?.focus())
     return
   }
 
@@ -82,6 +87,7 @@ async function resend() {
   notice.value = 'Sent again. It can take a minute; check your spam folder too.'
 }
 
+const errorRing = '!border-[var(--color-danger)]'
 const inputClass = 'w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] rounded-xl border border-[var(--color-border)] text-[15px] outline-none focus:border-[#2b8659] transition-colors placeholder:text-[var(--color-text-muted)]'
 </script>
 
@@ -127,33 +133,42 @@ const inputClass = 'w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] round
       <!-- Form -->
       <form v-else @submit.prevent="handleSignup" novalidate>
         <h1 class="text-[28px] font-bold leading-tight mb-2">Create your account</h1>
-        <p class="text-[var(--color-text-muted)] text-[14px] mb-8">Enter your details to get started</p>
+        <p class="text-[var(--color-text-muted)] text-[14px] mb-8">Takes about a minute. Your details are saved for faster booking.</p>
 
         <div class="space-y-4 mb-4">
           <div>
             <label for="su-name" class="block text-[14px] font-medium text-[var(--color-text-secondary)] mb-1.5">Full name</label>
-            <input id="su-name" v-model="name" type="text" autocomplete="name" :class="inputClass" />
+            <input id="su-name" v-model="name" type="text" autocomplete="name" autocapitalize="words" enterkeyhint="next" :class="[inputClass, fieldErrors.name && errorRing]"
+                   :aria-invalid="fieldErrors.name ? 'true' : undefined" :aria-describedby="fieldErrors.name ? 'su-name-error' : undefined" @input="fieldErrors.name = ''" />
+            <p v-if="fieldErrors.name" id="su-name-error" class="text-[var(--color-danger)] text-[13px] mt-1.5 px-1">{{ fieldErrors.name }}</p>
           </div>
           <div>
             <label for="su-email" class="block text-[14px] font-medium text-[var(--color-text-secondary)] mb-1.5">Email address</label>
-            <input id="su-email" v-model="email" type="email" autocomplete="email" inputmode="email" :class="inputClass" />
+            <input id="su-email" v-model="email" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" enterkeyhint="next" :class="[inputClass, fieldErrors.email && errorRing]"
+                   :aria-invalid="fieldErrors.email ? 'true' : undefined" :aria-describedby="fieldErrors.email ? 'su-email-error' : undefined" @input="fieldErrors.email = ''" />
+            <p v-if="fieldErrors.email" id="su-email-error" class="text-[var(--color-danger)] text-[13px] mt-1.5 px-1">{{ fieldErrors.email }}</p>
           </div>
           <div>
             <label for="su-phone" class="block text-[14px] font-medium text-[var(--color-text-secondary)] mb-1.5">Mobile number</label>
-            <input id="su-phone" v-model="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(242) 555-0100" aria-describedby="su-phone-hint"
-                   :class="inputClass" @blur="phone = tidyPhone(phone)" />
-            <p id="su-phone-hint" class="text-[12px] text-[var(--color-text-muted)] mt-1.5 px-1">Your driver calls or texts this number at pickup</p>
+            <input id="su-phone" v-model="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(242) 555-0100" enterkeyhint="next" :aria-describedby="fieldErrors.phone ? 'su-phone-error' : 'su-phone-hint'"
+                   :aria-invalid="fieldErrors.phone ? 'true' : undefined" :class="[inputClass, fieldErrors.phone && errorRing]" @blur="phone = tidyPhone(phone)" @input="fieldErrors.phone = ''" />
+            <p v-if="fieldErrors.phone" id="su-phone-error" class="text-[var(--color-danger)] text-[13px] mt-1.5 px-1">{{ fieldErrors.phone }}</p>
+            <p v-else id="su-phone-hint" class="text-[12px] text-[var(--color-text-muted)] mt-1.5 px-1">Your driver calls or texts this number at pickup</p>
           </div>
           <div>
             <label for="su-password" class="block text-[14px] font-medium text-[var(--color-text-secondary)] mb-1.5">Password</label>
             <div class="relative">
-              <input id="su-password" v-model="password" :type="showPassword ? 'text' : 'password'" aria-describedby="su-password-hint" autocomplete="new-password" :class="inputClass" class="pr-16" />
+              <input id="su-password" v-model="password" :type="showPassword ? 'text' : 'password'" :aria-describedby="fieldErrors.password ? 'su-password-error' : 'su-password-hint'" autocomplete="new-password" enterkeyhint="go"
+                     :aria-invalid="fieldErrors.password ? 'true' : undefined" :class="[inputClass, fieldErrors.password && errorRing]" class="pr-16" @input="fieldErrors.password = ''" />
               <button type="button" @click="showPassword = !showPassword" class="absolute right-1 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[var(--color-brand)] min-w-[48px] min-h-[44px] px-2"
                       :aria-pressed="showPassword" :aria-label="showPassword ? 'Hide password' : 'Show password'">{{ showPassword ? 'Hide' : 'Show' }}</button>
             </div>
-            <p id="su-password-hint" class="text-[12px] text-[var(--color-text-muted)] mt-1.5 px-1">At least {{ MIN_PASSWORD }} characters</p>
+            <p v-if="fieldErrors.password" id="su-password-error" class="text-[var(--color-danger)] text-[13px] mt-1.5 px-1">{{ fieldErrors.password }}</p>
+            <p v-else id="su-password-hint" class="text-[12px] text-[var(--color-text-muted)] mt-1.5 px-1">At least {{ MIN_PASSWORD }} characters</p>
           </div>
-          <div>
+          <button v-if="!showReferral" type="button" @click="openReferral"
+                  class="text-[14px] font-semibold text-[var(--color-brand)] min-h-[44px] px-1">Have a friend’s referral code?</button>
+          <div v-else>
             <label for="su-referral" class="block text-[14px] font-medium text-[var(--color-text-secondary)] mb-1.5">Friend’s referral code <span class="font-normal text-[var(--color-text-muted)]">(optional)</span></label>
             <input id="su-referral" v-model="referral" type="text" autocapitalize="characters" autocomplete="off" :class="inputClass" class="uppercase" />
           </div>
@@ -171,6 +186,8 @@ const inputClass = 'w-full px-4 py-3.5 bg-[var(--color-surface-secondary)] round
           Already have an account?
           <router-link :to="{ path: '/login', query: route.query.redirect ? { redirect: route.query.redirect } : {} }" class="text-[var(--color-brand)] font-semibold">Log in</router-link>
         </div>
+        <!-- Riding doesn't need an account: never make sign-up the only way forward. -->
+        <router-link to="/book" class="block w-full py-3 mt-3 text-center text-[14px] font-semibold text-[var(--color-text-muted)]">Just need a ride? Book without an account</router-link>
       </form>
     </div>
 
