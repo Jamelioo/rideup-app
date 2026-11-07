@@ -1,4 +1,5 @@
 <script setup>
+import { goBack as backOr } from '../../lib/goBack'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDriver } from '../../lib/useDriver'
@@ -100,7 +101,7 @@ async function handleFileUpload(doc, event) {
 }
 
 function goBack() {
-  router.back()
+  backOr(router, '/driver/dashboard')
 }
 </script>
 

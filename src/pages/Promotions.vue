@@ -1,4 +1,5 @@
 <script setup>
+import { goBack as backOr } from '../lib/goBack'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import PromoInput from '../components/PromoInput.vue'
@@ -40,7 +41,7 @@ function removePromo() {
 <template>
   <div class="min-h-dvh bg-[var(--color-surface)] font-[var(--font-sans)] text-[var(--color-text-primary)] flex flex-col">
     <div class="flex items-center gap-3 px-4 pt-[max(3rem,env(safe-area-inset-top))] pb-4 max-w-lg mx-auto w-full">
-      <button @click="router.back()" class="w-11 h-11 flex items-center justify-center" aria-label="Back">
+      <button @click="backOr(router, '/book')" class="w-11 h-11 flex items-center justify-center" aria-label="Back">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>

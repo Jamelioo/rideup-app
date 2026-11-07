@@ -3,6 +3,7 @@ export default { name: 'ScheduledRides' }
 </script>
 
 <script setup>
+import { goBack as backOr } from '../../lib/goBack'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase'
@@ -120,7 +121,7 @@ onMounted(fetchScheduledRides)
     <!-- Header -->
     <div class="bg-[var(--color-surface)] border-b border-[var(--color-border)]">
       <div class="max-w-lg mx-auto px-5 pt-[max(1.5rem,env(safe-area-inset-top))] pb-4 flex items-center gap-3">
-        <button @click="router.back()" class="w-11 h-11 rounded-full hover:bg-[var(--color-text-primary)]/5 flex items-center justify-center transition-colors -ml-2" aria-label="Back">
+        <button @click="backOr(router, '/book')" class="w-11 h-11 rounded-full hover:bg-[var(--color-text-primary)]/5 flex items-center justify-center transition-colors -ml-2" aria-label="Back">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>

@@ -1,4 +1,5 @@
 <script setup>
+import { goBack as backOr } from '../lib/goBack'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
@@ -70,7 +71,7 @@ async function removeContact(id) {
 }
 
 function goBack() {
-  router.back()
+  backOr(router, '/profile')
 }
 </script>
 

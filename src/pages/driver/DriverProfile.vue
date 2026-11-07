@@ -1,4 +1,5 @@
 <script setup>
+import { goBack as backOr } from '../../lib/goBack'
 import DeleteAccountSheet from '../../components/DeleteAccountSheet.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -113,7 +114,7 @@ async function handleLogout() {
 }
 
 function goBack() {
-  router.back()
+  backOr(router, '/driver/dashboard')
 }
 
 const editingPhone = ref(false)

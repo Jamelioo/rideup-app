@@ -1,4 +1,5 @@
 <script setup>
+import { goBack as backOr } from '../../lib/goBack'
 import DriverQuests from '../../components/DriverQuests.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -119,7 +120,7 @@ function timeLabel(isoString) {
 }
 
 function goBack() {
-  router.back()
+  backOr(router, '/driver/dashboard')
 }
 </script>
 
