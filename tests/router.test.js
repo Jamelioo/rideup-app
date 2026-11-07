@@ -43,7 +43,7 @@ test('every /api route the app calls is handled', async () => {
 
 test('router sends each action to its handler and rejects unknown ones', async () => {
   const { default: handler, ACTIONS } = await import('../api/[action].js')
-  const GET_ONLY = ['health', 'landing-offer']
+  const GET_ONLY = ['health', 'landing-offer', 'stats']
   for (const action of ACTIONS.filter((a) => !GET_ONLY.includes(a))) {
     const res = mockRes()
     await handler({ method: 'GET', query: { action }, headers: {}, url: `/api/${action}` }, res)

@@ -500,3 +500,44 @@ test('driver application says which field is wrong, under that field', async ({ 
   await expect(page.getByLabel('Phone number')).toHaveAttribute('aria-invalid', 'true')
   await expect(page.getByText(/Please enter a valid mobile number/)).toBeVisible()
 })
+
+// ─── Marketing pages audit ───
+
+test('About sells the promise and leads to booking', async ({ page }) => {
+  await page.goto('/about')
+  await expect(page.getByRole('heading', { level: 1, name: 'About RideUp' })).toBeVisible()
+  await expect(page.getByText('The RideUp Guarantee')).toBeVisible()
+  await page.getByRole('link', { name: 'See my price' }).click()
+  await expect(page).toHaveURL('/book')
+})
+
+test('airport page answers visitors’ questions and ends with a way to book', async ({ page }) => {
+  await page.goto('/airport')
+  await page.getByText('Where do I meet my driver?').click()
+  await expect(page.getByText(/Book from the arrivals area/)).toBeVisible()
+  const book = page.getByRole('button', { name: 'Book from the airport' })
+  await expect(book).toHaveCount(2) // top of the page and the end
+  await book.last().click()
+  await expect(page).toHaveURL(/\/book/)
+})
+
+test('driver page answers how drivers get paid', async ({ page }) => {
+  await page.goto('/drive')
+  await page.getByText('How do I get paid?').click()
+  await expect(page.getByText(/Riders pay you the fare in cash at drop-off/)).toBeVisible()
+})
+
+test('Back on a page opened directly (from Google or a link) stays on the site', async ({ page }) => {
+  for (const [path, button] of [['/support', 'Close'], ['/terms', 'Back'], ['/about', 'Back']]) {
+    await page.goto(path)
+    await page.getByRole('button', { name: button, exact: true }).first().click()
+    await expect(page).toHaveURL('/')
+  }
+})
+
+test('landing pages never show sample proof numbers', async ({ page }) => {
+  for (const path of ['/', '/airport']) {
+    await page.goto(path)
+    await expect(page.getByText(/trips completed|average driver rating/)).toHaveCount(0)
+  }
+})

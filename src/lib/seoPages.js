@@ -15,14 +15,14 @@ export const SEO_PAGES = [
   {
     path: '/airport',
     title: 'Nassau Airport Rides — RideUp',
-    description: 'Rides from Lynden Pindling International Airport (LPIA) to Cable Beach, Paradise Island and downtown Nassau, with the price shown before you book.',
+    description: 'Rides from Lynden Pindling Airport (LPIA) to Cable Beach, Paradise Island and downtown Nassau. See the price before you book, pay your driver cash.',
     h1: 'Nassau airport rides with the price up front',
     intro: 'Book from arrivals, see your exact price first, and pay your driver in cash at your hotel. No haggling at the curb.',
   },
   {
     path: '/drive',
     title: 'Drive with RideUp — Nassau',
-    description: 'Drive with RideUp in Nassau. Use your own car, choose your hours and keep 70% of every trip fare plus 100% of tips. Apply online.',
+    description: 'Drive with RideUp in Nassau. Riders pay you cash at drop-off; you keep 70% of every fare and all tips. Your car, your hours. Apply online.',
     h1: 'Keep 70% of every fare, in cash',
     intro: 'Riders pay you in cash at drop-off. Your car, your hours. No sign-up fee, no lease. Apply online.',
   },
@@ -36,9 +36,9 @@ export const SEO_PAGES = [
   {
     path: '/about',
     title: 'About — RideUp',
-    description: 'RideUp is a Nassau ride service with upfront prices and approved local drivers across New Providence.',
+    description: 'RideUp is a ride service made in Nassau: know the fare before you ride, pay your driver in cash, and get approved local drivers.',
     h1: 'About RideUp',
-    intro: 'Rides across New Providence with the price shown before you book.',
+    intro: 'Book in your browser, know the fare before you ride, and pay your driver in cash. A local team answers when you call.',
   },
   {
     path: '/support',

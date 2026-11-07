@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
 import { DEMO_MODE } from '../lib/demoMode'
 import { calculateFare, driverPayout, formatFare, AIRPORT, BOOKING_FEE_CENTS } from '../lib/pricing'
+import { FREE_WAIT_SECONDS } from '../lib/policy'
 
 const router = useRouter()
 const whatsappLink = 'https://wa.me/12424529911?text=' + encodeURIComponent("Hi! I'd like to apply to drive for RideUp Nassau.")
@@ -50,6 +51,17 @@ const routeExamples = [
   return { route: r.route, distance: `${r.miles} mi`, fare: formatFare(fare), yourCut: formatFare(cents), cents }
 })
 const earningsExamples = routeExamples
+
+// What drivers ask before applying, answered from how the app really works.
+const waitMinutes = Math.round(FREE_WAIT_SECONDS / 60)
+const driverFaqs = [
+  { q: 'How do I get paid?', a: 'Riders pay you the fare in cash at drop-off. The app shows every trip and your 70% share. RideUp’s 30% comes off your balance in Earnings, or you can hand it to RideUp.' },
+  { q: 'Does it cost anything to join?', a: 'No. There’s no sign-up fee, no lease and no minimum hours.' },
+  { q: 'What do I need?', a: 'A valid Bahamian driver’s licence, a 2015 or newer vehicle, a clean driving record and a smartphone with data. After you apply, you upload your licence, vehicle registration, insurance certificate and a photo of your car for review.' },
+  { q: 'Can I choose when I drive?', a: 'Yes. Go online in the app when you want requests and go offline when you’re done. Stop whenever you like.' },
+  { q: 'What if a rider doesn’t show up?', a: `Wait ${waitMinutes} minutes at the pickup, then you can mark a no-show. It counts against the rider, not you.` },
+  { q: 'Who do I call if something goes wrong?', a: 'Call or WhatsApp RideUp on (242) 452-9911. From the trip screen you can also call emergency services or report a safety problem.' },
+]
 const avgCut = routeExamples.reduce((sum, r) => sum + r.cents, 0) / routeExamples.length
 const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
 </script>
@@ -102,8 +114,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
               Now recruiting drivers in Nassau
             </div>
             <h1 class="text-white leading-[1.05] font-medium tracking-tight mb-4">
-              <span class="block text-[44px] sm:text-[56px] lg:text-[68px]">Keep <span class="text-[var(--color-brand)]">70%</span></span>
-              <span class="block text-[32px] sm:text-[40px] lg:text-[46px] text-white/80">of every fare, in cash.</span>
+              <span class="block text-[44px] sm:text-[56px] lg:text-[68px]">Keep <span class="text-[var(--color-brand)]">70%</span></span> <span class="block text-[32px] sm:text-[40px] lg:text-[46px] text-white/80">of every fare, in cash.</span>
             </h1>
             <p class="text-white/55 text-[16px] leading-relaxed max-w-md mb-6">
               Riders pay you in cash at drop-off, so you go home with your money the same day. Your car, your hours. RideUp’s 30% comes off your balance in the app.
@@ -199,7 +210,7 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
         <div class="mt-10 pt-8 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
           <div>
             <div class="text-[22px] font-semibold text-white">70%</div>
-            <div class="text-white/70 text-[12px]">Driver payout</div>
+            <div class="text-white/70 text-[12px]">Of every fare, yours</div>
           </div>
           <div>
             <div class="text-[22px] font-semibold text-white">Free</div>
@@ -455,6 +466,22 @@ const weeklyExample = (trips) => formatFare(Math.round(avgCut * trips))
         <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full" preserveAspectRatio="none">
           <path d="M0 30C240 60 480 0 720 30C960 60 1200 0 1440 30V60H0V30Z" fill="var(--color-surface)"/>
         </svg>
+      </div>
+    </section>
+
+    <!-- ==================== DRIVER QUESTIONS ==================== -->
+    <section aria-labelledby="driver-faq-title">
+      <div class="max-w-3xl mx-auto px-6 pt-16 md:pt-20">
+        <h2 id="driver-faq-title" class="text-[28px] sm:text-[36px] font-medium mb-6">Questions drivers ask</h2>
+        <div class="divide-y divide-[var(--color-border)] border-y border-[var(--color-border)]">
+          <details v-for="f in driverFaqs" :key="f.q" class="group">
+            <summary class="flex items-center justify-between gap-4 py-4 min-h-[56px] cursor-pointer list-none text-[17px] font-semibold [&::-webkit-details-marker]:hidden">
+              {{ f.q }}
+              <svg class="w-5 h-5 shrink-0 text-[var(--color-text-muted)] transition-transform group-open:rotate-180 motion-reduce:transition-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </summary>
+            <p class="pb-5 -mt-1 text-[16px] leading-[1.6] text-[var(--color-text-secondary)]">{{ f.a }}</p>
+          </details>
+        </div>
       </div>
     </section>
 

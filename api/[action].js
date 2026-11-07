@@ -20,6 +20,7 @@ const routes = {
   'landing-offer': () => import('./_routes/landing-offer.js'),
   'notify-driver': () => import('./_routes/notify-driver.js'),
   'promo-preview': () => import('./_routes/promo-preview.js'),
+  'stats': () => import('./_routes/stats.js'),
   'track': () => import('./_routes/track.js'),
   'trip-event': () => import('./_routes/trip-event.js'),
 }

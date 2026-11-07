@@ -1,5 +1,6 @@
 <script setup>
 import BrandLogo from '../components/BrandLogo.vue'
+import ProofStrip from '../components/ProofStrip.vue'
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../lib/useAuth'
@@ -72,6 +73,7 @@ const faqs = computed(() => [
   { q: 'How much does a ride cost?', a: `You see the exact price before you book. RideUp Go is ${formatAmount(go.base)} plus ${formatAmount(go.perMile)} a mile and ${formatAmount(go.perMinute)} a minute (${formatAmount(go.minimum)} minimum), plus a ${formatAmount(BOOKING_FEE_CENTS)} booking fee. Airport pickups add ${formatAmount(AIRPORT_FEE_CENTS)}. At busy times it can cost more, and you see that before you book too.` },
   { q: 'Do I need an account or the app?', a: 'No. Book right here in your browser as a guest with just your name and mobile number. A free account saves your details and trips for next time.' },
   { q: 'How do I pay?', a: 'In cash, to your driver at drop-off: the price you saw when you booked, less any promo or credit. No card needed. Exact change helps, and you get a receipt once your driver confirms it.' },
+  { q: 'How soon will a driver get to me?', a: 'It depends on how many drivers are near you. Before you book, the booking screen shows whether a driver can come and about how many minutes away they are. Then you follow your car on the map.' },
   { q: 'What if no driver accepts?', a: 'Nothing happens and you owe nothing. Your request simply ends, and you can try again whenever you like.' },
   { q: 'Is RideUp safe?', a: 'Every driver is approved by RideUp before their first trip. You see their name, photo, car and plate before pickup, you can share your trip live with family, and you can call for help from the trip screen.' },
   { q: 'Can I cancel?', a: `Yes, and it’s always free. Please cancel early: after a driver has been on the way for ${graceLabel}, it counts as a late cancellation, and two late cancellations or missed pickups in 30 days pause booking on your account. ` },
@@ -190,6 +192,7 @@ const showStickyCta = computed(() => !heroInView.value && !finalReached.value)
             <li class="flex gap-2"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Pay cash at drop-off</li>
             <li v-if="credit" class="flex gap-2"><svg class="w-4 h-4 mt-[3px] shrink-0 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>{{ credit }} credit if your driver cancels</li>
           </ul>
+          <ProofStrip class="mt-4 max-w-lg" />
         </div>
 
         <!-- Phone mockup — desktop only -->
